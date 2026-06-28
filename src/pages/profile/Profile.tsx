@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCircle, MapPin, Phone, Mail, Building, ShieldCheck, Check, X, MessageSquare } from 'lucide-react';
+import { UserCircle, MapPin, Phone, Mail, Building, ShieldCheck, Check, MessageSquare } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { LayoutDashboard } from 'lucide-react';
@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 
 export default function Profile() {
   const { user, setUser } = useAuthStore();
-  const [isEditing, setIsEditing] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',

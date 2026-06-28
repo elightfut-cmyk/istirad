@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Store, Search, Filter, Star, ShoppingCart, X, Heart, Users, CreditCard } from 'lucide-react';
+import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -15,7 +15,7 @@ export default function Marketplace() {
   const navigate = useNavigate();
   
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>(fallbackCategories);
+  const [categories] = useState<string[]>(fallbackCategories);
   const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 

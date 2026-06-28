@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, Menu, UserCircle, DollarSign, Bell, Trash2 } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2 } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: ReactNode;

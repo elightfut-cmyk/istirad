@@ -49,7 +49,6 @@ export default function Profile() {
         telegram_chat_id: formData.telegram_chat_id || undefined
       });
       
-      setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('حدث خطأ أثناء تحديث البيانات');

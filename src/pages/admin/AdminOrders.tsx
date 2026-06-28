@@ -110,7 +110,7 @@ export default function AdminOrders() {
 
         <div className="overflow-x-auto">
           {activeTab === 'custom' ? (
-            <table className="w-full text-right border-collapse">
+            <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
                   <th className="p-4 font-bold text-gray-700 w-12"></th>
@@ -254,7 +254,7 @@ export default function AdminOrders() {
               </tbody>
             </table>
           ) : (
-            <table className="w-full text-right border-collapse">
+            <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
                   <th className="p-4 font-bold text-gray-700">عنوان الطلب</th>

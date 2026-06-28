@@ -157,9 +157,9 @@ export default function MerchantWallet() {
         ) : (
           <div className="space-y-4">
             {transactions.map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${
+                  <div className={`p-3 rounded-xl shrink-0 ${
                     tx.type === 'deposit' ? 'bg-blue-50 text-blue-600' :
                     tx.type === 'refund' ? 'bg-green-50 text-green-600' :
                     'bg-red-50 text-red-600'
@@ -174,14 +174,14 @@ export default function MerchantWallet() {
                        tx.type === 'refund' ? 'استرداد مبلغ' : 
                        'دفع عربون طلب'}
                     </h4>
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                      <Clock size={14} />
-                      {new Date(tx.created_at).toLocaleDateString('ar-MA')}
-                      {tx.description && <span className="mr-2 border-r pr-2">{tx.description}</span>}
+                    <p className="text-sm text-gray-500 flex flex-wrap items-center gap-1 mt-1">
+                      <Clock size={14} className="shrink-0" />
+                      <span className="whitespace-nowrap">{new Date(tx.created_at).toLocaleDateString('ar-MA')}</span>
+                      {tx.description && <span className="mr-0 sm:mr-2 sm:border-r sm:pr-2 w-full sm:w-auto mt-1 sm:mt-0">{tx.description}</span>}
                     </p>
                   </div>
                 </div>
-                <div className={`font-black text-lg ${
+                <div className={`font-black text-lg sm:text-right mr-16 sm:mr-0 ${
                   tx.type === 'payment' ? 'text-red-600' : 'text-green-600'
                 }`}>
                   {tx.type === 'payment' ? '-' : '+'}{formatCurrency(tx.amount)}

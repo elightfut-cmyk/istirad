@@ -115,7 +115,7 @@ export default function SupplierFinancials() {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
+          <table className="w-full text-right whitespace-nowrap">
             <thead>
               <tr className="bg-gray-50 text-gray-500 text-sm">
                 <th className="px-6 py-4 font-medium">التاريخ</th>

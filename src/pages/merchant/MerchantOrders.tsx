@@ -72,7 +72,7 @@ export default function MerchantOrders() {
             supabase.from('wallet_transactions').insert({
               merchant_id: user.referred_by,
               amount: commission,
-              type: 'referral_commission',
+              type: 'deposit',
               description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
             }).then(() => {
               supabase.from('users').update({ has_made_first_order: true }).eq('id', user.id).then();
@@ -307,7 +307,7 @@ export default function MerchantOrders() {
           await supabase.from('wallet_transactions').insert({
             merchant_id: user.referred_by,
             amount: commission,
-            type: 'referral_commission',
+            type: 'deposit',
             description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
           });
           await supabase.from('users').update({ has_made_first_order: true }).eq('id', user.id);

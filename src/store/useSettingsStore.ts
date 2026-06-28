@@ -6,7 +6,7 @@ export type Currency = 'USD' | 'DZD';
 
 interface SettingsState {
   currency: Currency;
-  exchangeRate: number; // 1 USD = 135 DZD
+  exchangeRate: number; // dynamically fetched from DB, default 135
   minQuantity: number;
   adTitle: string | null;
   adSubtitle: string | null;
@@ -51,8 +51,9 @@ export const useSettingsStore = create<SettingsState>()(
         try {
           const { data, error } = await supabase.from('platform_settings').select('*').eq('id', 1).single();
           if (data && !error) {
-            set({ 
+            set({
               minQuantity: data.min_request_quantity,
+              exchangeRate: data.exchange_rate || 135,
               adTitle: data.ad_title,
               adSubtitle: data.ad_subtitle,
               adImageUrl: data.ad_image_url,

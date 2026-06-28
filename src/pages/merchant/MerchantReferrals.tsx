@@ -39,9 +39,10 @@ export default function MerchantReferrals() {
       // Fetch total commissions from wallet
       const { data: walletData, error: walletError } = await supabase
         .from('wallet_transactions')
-        .select('amount')
+        .select('amount, description')
         .eq('merchant_id', user?.id)
-        .eq('type', 'referral_commission');
+        .eq('type', 'deposit')
+        .ilike('description', '%عمولة إحالة%');
 
       if (walletError) throw walletError;
 
@@ -141,7 +142,7 @@ export default function MerchantReferrals() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-right">
+            <table className="w-full text-right whitespace-nowrap">
               <thead>
                 <tr className="border-b border-gray-100 text-gray-500 text-sm">
                   <th className="pb-4 font-medium">اسم المستخدم / المتجر</th>

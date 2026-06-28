@@ -9,6 +9,7 @@ export default function AdminSettings() {
   
   const [localSettings, setLocalSettings] = useState({
     minQuantity: settingsStore.minQuantity,
+    exchangeRate: settingsStore.exchangeRate || 135,
     adTitle: settingsStore.adTitle || '',
     adSubtitle: settingsStore.adSubtitle || '',
     adImageUrl: settingsStore.adImageUrl || '',
@@ -21,6 +22,7 @@ export default function AdminSettings() {
   useEffect(() => {
     setLocalSettings({
       minQuantity: settingsStore.minQuantity,
+      exchangeRate: settingsStore.exchangeRate || 135,
       adTitle: settingsStore.adTitle || '',
       adSubtitle: settingsStore.adSubtitle || '',
       adImageUrl: settingsStore.adImageUrl || '',
@@ -29,7 +31,7 @@ export default function AdminSettings() {
       referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
       platformFeePercentage: settingsStore.platformFeePercentage || 0
     });
-  }, [settingsStore.minQuantity, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,6 +74,7 @@ export default function AdminSettings() {
         .from('platform_settings')
         .update({ 
           min_request_quantity: parseInt(localSettings.minQuantity.toString()) || 1,
+          exchange_rate: parseFloat(localSettings.exchangeRate.toString()) || 135,
           ad_title: localSettings.adTitle || null,
           ad_subtitle: localSettings.adSubtitle || null,
           ad_image_url: localSettings.adImageUrl || null,
@@ -114,6 +117,28 @@ export default function AdminSettings() {
         </div>
         <p className="text-gray-500 text-sm mt-2">
           هذا الرقم سيظهر كتوجيه أولي للتجار عند فتحهم لطلب استيراد مخصص جديد.
+        </p>
+      </div>
+
+      {/* Exchange Rate */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات التحويل (العملة)</h3>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          سعر الصرف (1 دولار كم يساوي بالدينار)
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            name="exchangeRate"
+            value={localSettings.exchangeRate}
+            onChange={handleChange}
+            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+        </div>
+        <p className="text-gray-500 text-sm mt-2">
+          ملاحظة مهمة: يجب عليك إضافة عمود `exchange_rate` في قاعدة البيانات (جدول `platform_settings`) لكي يتم حفظ هذا التعديل.
         </p>
       </div>
 

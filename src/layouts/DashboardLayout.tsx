@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2 } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -88,20 +88,35 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         {/* Topbar */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
           <div className="flex items-center md:hidden">
-            <Link to="/" className="text-xl font-bold text-[#065f46] mr-4 hover:opacity-80 transition-opacity">إستيراد</Link>
+            <Link to="/" className="text-[#065f46] mr-4 hover:opacity-80 transition-opacity">
+              <Package size={28} />
+            </Link>
           </div>
           <h1 className="text-xl font-bold text-gray-800 hidden md:block">{title}</h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
 
             <button
               onClick={toggleCurrency}
-              className="bg-gray-100 hover:bg-gray-200 text-[#065f46] font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+              className="bg-gray-100 hover:bg-gray-200 text-[#065f46] font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
               title="تغيير العملة (دولار / دينار)"
             >
               <DollarSign size={16} />
               <span>{currency === 'USD' ? 'USD' : 'DZD'}</span>
             </button>
             
+            <Link to="/profile" className="flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
+              <span className="text-sm font-medium text-gray-700 hidden md:inline">{user?.name}</span>
+              <UserCircle size={28} className="text-gray-400 hover:text-[#065f46] transition-colors" />
+            </Link>
+            
+            <button 
+              onClick={handleLogout}
+              className="md:hidden text-gray-500 hover:text-red-600 transition-colors"
+              title="تسجيل الخروج"
+            >
+              <LogOut size={20} />
+            </button>
+
             <div className="relative" ref={notificationRef}>
               <button 
                 onClick={() => {
@@ -122,7 +137,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               </button>
               
               {isNotificationsOpen && (
-                <div className="absolute left-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-50 bg-gray-50 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800">التنبيهات</h3>
                   </div>
@@ -156,17 +171,6 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 </div>
               )}
             </div>
-            <button 
-              onClick={handleLogout}
-              className="md:hidden text-gray-500 hover:text-red-600 transition-colors"
-              title="تسجيل الخروج"
-            >
-              <LogOut size={20} />
-            </button>
-            <Link to="/profile" className="flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
-              <span className="text-sm font-medium text-gray-700">{user?.name}</span>
-              <UserCircle size={28} className="text-gray-400 hover:text-[#065f46] transition-colors" />
-            </Link>
           </div>
         </header>
 

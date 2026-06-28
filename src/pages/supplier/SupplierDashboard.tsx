@@ -89,10 +89,10 @@ export default function SupplierDashboard() {
         ))}
       </div>
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <h3 className="text-lg font-bold text-gray-800 mb-4">أحدث الطلبات الواردة (الصفقات الناجحة)</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
+          <table className="w-full text-right whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 text-gray-500 text-sm">
                 <th className="pb-3 font-medium">الطلب / السلعة</th>

@@ -300,6 +300,7 @@ export default function MerchantOrders() {
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع العربون لطلب من المحفظة`, 'info');
       } else {
         await supabase.from('supplier_bids').update({ is_fully_paid: true }).eq('id', selectedBidForPayment.id);
+        await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });
         sendNotification(selectedBidForPayment.supplier_id, 'دفع المبلغ المتبقي', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلب: ${selectedBidForPayment.reqId}`, 'success');
         sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع المبلغ المتبقي للمورد من محفظتك لطلب: ${selectedBidForPayment.reqId}`, 'success');
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلب من المحفظة`, 'info');

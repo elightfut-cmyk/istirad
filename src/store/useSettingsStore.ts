@@ -15,6 +15,9 @@ interface SettingsState {
   chargilyLiveKey: string | null;
   referralCommissionPercentage: number;
   platformFeePercentage: number;
+  loyaltyPointsPerOrder: number;
+  loyaltyPointsToDzdRatio: number;
+  loyaltyPointsMinConversion: number;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -34,6 +37,9 @@ export const useSettingsStore = create<SettingsState>()(
       chargilyLiveKey: null,
       referralCommissionPercentage: 0,
       platformFeePercentage: 0,
+      loyaltyPointsPerOrder: 50,
+      loyaltyPointsToDzdRatio: 10,
+      loyaltyPointsMinConversion: 500,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amountInUSD: number) => {
@@ -60,7 +66,10 @@ export const useSettingsStore = create<SettingsState>()(
               adLinkUrl: data.ad_link_url,
               chargilyLiveKey: data.chargily_live_key,
               referralCommissionPercentage: data.referral_commission_percentage || 0,
-              platformFeePercentage: data.platform_fee_percentage || 0
+              platformFeePercentage: data.platform_fee_percentage || 0,
+              loyaltyPointsPerOrder: data.loyalty_points_per_order || 50,
+              loyaltyPointsToDzdRatio: data.loyalty_points_to_dzd_ratio || 10,
+              loyaltyPointsMinConversion: data.loyalty_points_min_conversion || 500
             });
           }
         } catch (error) {

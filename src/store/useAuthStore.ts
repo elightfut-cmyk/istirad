@@ -13,7 +13,10 @@ export interface User {
   address?: string;
   telegram_chat_id?: string;
   referred_by?: string;
+  created_at: string;
   has_made_first_order?: boolean;
+  loyalty_points?: number;
+  has_successful_referral?: boolean;
 }
 
 interface AuthState {

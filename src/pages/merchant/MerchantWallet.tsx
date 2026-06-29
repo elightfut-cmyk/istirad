@@ -62,28 +62,67 @@ export default function MerchantWallet() {
         merchant_id: user.id,
         amount: amountInUSD,
         type: 'deposit',
-        description: `شحن رصيد بواسطة (${topupCurrency} ${topupAmount})`
+        status: 'completed',
+        description: `شحن الرصيد (${topupAmount} ${topupCurrency})`
       });
 
       if (error) throw error;
       
+      const newBalance = (user.wallet_balance || 0) + amountInUSD;
+      await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', user.id);
+      useAuthStore.getState().setUser({ ...user, wallet_balance: newBalance });
+      
+      alert('تم شحن الرصيد بنجاح (لأغراض الاختبار)');
       setShowTopupModal(false);
       setTopupAmount(0);
       fetchTransactions();
-      alert('تم شحن الرصيد بنجاح!');
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء الشحن. يرجى التأكد من إضافة جدول wallet_transactions.');
+      alert('حدث خطأ أثناء شحن الرصيد');
     } finally {
       setProcessing(false);
     }
   };
 
-  const availableBalance = transactions.reduce((acc, curr) => {
-    if (curr.type === 'deposit' || curr.type === 'refund') return acc + curr.amount;
-    if (curr.type === 'payment') return acc - curr.amount;
-    return acc;
-  }, 0);
+  const handleConvertPoints = async () => {
+    if (!user || !user.loyalty_points) return;
+    const minConversion = useSettingsStore.getState().loyaltyPointsMinConversion;
+    if (user.loyalty_points < minConversion) {
+      alert(`الحد الأدنى للتحويل هو ${minConversion} نقطة`);
+      return;
+    }
+
+    if (confirm(`هل أنت متأكد أنك تريد تحويل ${user.loyalty_points} نقطة إلى رصيد في محفظتك؟`)) {
+      setProcessing(true);
+      try {
+        const { data, error } = await supabase.rpc('convert_loyalty_points_to_wallet', { 
+          p_user_id: user.id, 
+          p_points: user.loyalty_points 
+        });
+
+        if (error) throw error;
+
+        if (data && data.success) {
+          alert('تم تحويل النقاط بنجاح!');
+          // reload user
+          const { data: updatedUser } = await supabase.from('users').select('*').eq('id', user.id).single();
+          if (updatedUser) {
+            useAuthStore.getState().setUser(updatedUser);
+          }
+          fetchTransactions();
+        } else {
+          alert(data?.message || 'حدث خطأ أثناء تحويل النقاط');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('حدث خطأ أثناء تحويل النقاط');
+      } finally {
+        setProcessing(false);
+      }
+    }
+  };
+
+  const availableBalance = user?.wallet_balance || 0;
 
   const totalPayments = transactions.reduce((acc, curr) => {
     if (curr.type === 'payment') return acc + curr.amount;
@@ -107,7 +146,7 @@ export default function MerchantWallet() {
         { label: 'المفضلة', href: '/merchant/wishlist', icon: <Heart size={20} /> },
       ]}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-[#065f46] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">الرصيد المتاح</h3>
@@ -142,6 +181,25 @@ export default function MerchantWallet() {
               <ArrowDownLeft size={20} />
             </div>
           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl shadow-sm border border-orange-100 flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-orange-800 text-sm font-medium">نقاط الولاء</h3>
+              <p className="text-3xl font-bold mt-1 text-orange-600">{user?.loyalty_points || 0}</p>
+            </div>
+            <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
+              <Heart size={20} />
+            </div>
+          </div>
+          <button 
+            onClick={handleConvertPoints}
+            className="mt-4 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-700 transition-colors w-full disabled:opacity-50"
+            disabled={processing || (user?.loyalty_points || 0) < useSettingsStore.getState().loyaltyPointsMinConversion}
+          >
+            تحويل إلى رصيد
+          </button>
         </div>
       </div>
 

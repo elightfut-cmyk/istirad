@@ -16,7 +16,10 @@ export default function AdminSettings() {
     adLinkUrl: settingsStore.adLinkUrl || '',
     chargilyLiveKey: settingsStore.chargilyLiveKey || '',
     referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
-    platformFeePercentage: settingsStore.platformFeePercentage || 0
+    platformFeePercentage: settingsStore.platformFeePercentage || 0,
+    loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
+    loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
+    loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500
   });
 
   useEffect(() => {
@@ -29,9 +32,12 @@ export default function AdminSettings() {
       adLinkUrl: settingsStore.adLinkUrl || '',
       chargilyLiveKey: settingsStore.chargilyLiveKey || '',
       referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
-      platformFeePercentage: settingsStore.platformFeePercentage || 0
+      platformFeePercentage: settingsStore.platformFeePercentage || 0,
+      loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
+      loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
+      loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -81,7 +87,10 @@ export default function AdminSettings() {
           ad_link_url: localSettings.adLinkUrl || null,
           chargily_live_key: localSettings.chargilyLiveKey || null,
           referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
-          platform_fee_percentage: parseFloat(localSettings.platformFeePercentage.toString()) || 0
+          platform_fee_percentage: parseFloat(localSettings.platformFeePercentage.toString()) || 0,
+          loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
+          loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
+          loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0
         })
         .eq('id', 1);
 
@@ -176,7 +185,54 @@ export default function AdminSettings() {
               onChange={handleChange}
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
             />
-            <p className="text-xs text-gray-500 mt-1">تُحسب من ربح المنصة للطلب الأول للتاجر المدعو.</p>
+            <p className="text-xs text-gray-500 mt-1">تؤخذ من ربح المنصة.</p>
+          </div>
+        </div>
+
+        <h3 className="text-lg font-bold text-gray-800 mb-4 mt-8 border-b pb-2">نظام نقاط الولاء</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              النقاط عن كل طلب
+            </label>
+            <input
+              type="number"
+              min="0"
+              name="loyaltyPointsPerOrder"
+              value={localSettings.loyaltyPointsPerOrder}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">النقاط الممنوحة عند اكتمال الطلب.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              قيمة النقطة (دج)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              name="loyaltyPointsToDzdRatio"
+              value={localSettings.loyaltyPointsToDzdRatio}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">قيمة النقطة الواحدة بالدينار.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              الحد الأدنى للتحويل
+            </label>
+            <input
+              type="number"
+              min="0"
+              name="loyaltyPointsMinConversion"
+              value={localSettings.loyaltyPointsMinConversion}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">أقل عدد نقاط يمكن تحويله.</p>
           </div>
         </div>
       </div>

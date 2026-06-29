@@ -6,11 +6,8 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  const { data: users, error: usersErr } = await supabase.from('users').select('id, name, loyalty_points, has_successful_referral');
-  console.log("Users:", usersErr || JSON.stringify(users, null, 2));
-
-  const { data: settings, error: setErr } = await supabase.from('platform_settings').select('*');
-  console.log("Platform Settings:", setErr || JSON.stringify(settings, null, 2));
+  const { data, error } = await supabase.from('supplier_bids').select('*').limit(1);
+  console.log("supplier_bids columns:", data && data[0] ? Object.keys(data[0]) : "No data");
 }
 
 run();

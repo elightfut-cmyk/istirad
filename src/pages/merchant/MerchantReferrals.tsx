@@ -99,37 +99,49 @@ export default function MerchantReferrals() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">رابط الدعوة الخاص بك</h2>
-        <p className="text-gray-500 text-sm mb-6">
-          شارك هذا الرابط مع التجار والموردين. ستحصل على عمولة من ربح المنصة عند إتمامهم لأول طلب.
-        </p>
-        
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-600 text-sm overflow-x-auto">
-            <LinkIcon size={16} className="mr-2 flex-shrink-0 text-gray-400" />
-            {referralLink}
+      {!user?.has_successful_referral ? (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-2">رابط الدعوة الخاص بك</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            شارك هذا الرابط مع التجار والموردين. ستحصل على عمولة من ربح المنصة عند إتمامهم لأول طلب.
+          </p>
+          
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-600 text-sm overflow-x-auto">
+              <LinkIcon size={16} className="mr-2 flex-shrink-0 text-gray-400" />
+              {referralLink}
+            </div>
+            <button 
+              onClick={handleCopy}
+              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${
+                copied ? 'bg-green-100 text-green-700' : 'bg-[#065f46] text-white hover:bg-[#044c38]'
+              }`}
+            >
+              {copied ? (
+                <>
+                  <CheckCircle2 size={20} />
+                  تم النسخ
+                </>
+              ) : (
+                <>
+                  <Copy size={20} />
+                  نسخ الرابط
+                </>
+              )}
+            </button>
           </div>
-          <button 
-            onClick={handleCopy}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${
-              copied ? 'bg-green-100 text-green-700' : 'bg-[#065f46] text-white hover:bg-[#044c38]'
-            }`}
-          >
-            {copied ? (
-              <>
-                <CheckCircle2 size={20} />
-                تم النسخ
-              </>
-            ) : (
-              <>
-                <Copy size={20} />
-                نسخ الرابط
-              </>
-            )}
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-green-50 p-6 rounded-2xl shadow-sm border border-green-100 mb-8 text-center">
+          <div className="mx-auto bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle2 size={32} className="text-green-600" />
+          </div>
+          <h2 className="text-xl font-bold text-green-800 mb-2">تهانينا! لقد أكملت إحالتك الأولى بنجاح</h2>
+          <p className="text-green-700 text-sm">
+            بما أن المنصة تقبل إحالة واحدة كحد أقصى لكل مستخدم، فقد تم إخفاء رابط الدعوة الخاص بك. نشكرك على ثقتك ودعوتك لأصدقائك!
+          </p>
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-bold text-gray-800 mb-6">سجل المدعوين</h2>

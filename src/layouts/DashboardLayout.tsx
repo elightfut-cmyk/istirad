@@ -152,7 +152,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                               e.stopPropagation();
                               deleteNotification(notif.id);
                             }}
-                            className="absolute top-4 right-4 text-red-500 hover:text-red-700 transition-opacity"
+                            className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 p-1 rounded-md"
                             title="حذف التنبيه"
                           >
                             <Trash2 size={16} />

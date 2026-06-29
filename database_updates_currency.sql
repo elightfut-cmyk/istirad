@@ -1,5 +1,5 @@
--- 1. Add USD columns to supplier_products
-ALTER TABLE public.supplier_products
+-- 1. Add USD columns to products
+ALTER TABLE public.products
 ADD COLUMN IF NOT EXISTS price_usd NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS cost_price_usd NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS discount_price_usd NUMERIC DEFAULT 0;
@@ -14,8 +14,8 @@ CREATE OR REPLACE FUNCTION update_dzd_prices_on_exchange_rate_change()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.exchange_rate IS DISTINCT FROM OLD.exchange_rate THEN
-    -- Update supplier products
-    UPDATE public.supplier_products
+    -- Update products
+    UPDATE public.products
     SET price = price_usd * NEW.exchange_rate,
         cost_price = cost_price_usd * NEW.exchange_rate,
         discount_price = CASE WHEN discount_price_usd > 0 THEN discount_price_usd * NEW.exchange_rate ELSE 0 END

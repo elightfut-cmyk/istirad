@@ -23,17 +23,21 @@ export async function createChargilyCheckout(amountInDZD: number, successUrl: st
 
   if (customerData) {
     try {
+      const payload: any = {
+        name: customerData.name || 'Unknown',
+        email: customerData.email,
+      };
+      if (customerData.phone && customerData.phone.trim() !== '') {
+        payload.phone = customerData.phone;
+      }
+
       const custRes = await fetch(`${baseUrl}/customers`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${secretKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-        })
+        body: JSON.stringify(payload)
       });
       if (custRes.ok) {
         const custData = await custRes.json();

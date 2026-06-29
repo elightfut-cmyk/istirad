@@ -65,24 +65,29 @@ export default function MerchantOrders() {
           const price = parseFloat(pBidPrice);
           const cost = pBidCost ? parseFloat(pBidCost) : (price * 0.8);
           const profit = price - cost;
-          const platformProfit = profit * ((platformFeePercentage || 0) / 100);
-          const commission = platformProfit * ((referralCommissionPercentage || 0) / 100);
           
-          if (commission > 0) {
-            supabase.rpc('grant_referral_commission', {
-              p_referrer_id: user.referred_by,
-              p_referred_id: user.id,
-              p_commission_amount: commission,
-              p_description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
-            }).then(({ error }) => {
-              if (!error) {
-                sendNotification(user.referred_by as string, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
-                useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
-              } else {
-                console.error("Failed to grant commission:", error);
-              }
-            });
-          }
+          supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single().then(({ data: settings }) => {
+            const pFee = settings?.platform_fee_percentage || 0;
+            const rComm = settings?.referral_commission_percentage || 0;
+            const platformProfit = profit * (pFee / 100);
+            const commission = platformProfit * (rComm / 100);
+            
+            if (commission > 0) {
+              supabase.rpc('grant_referral_commission', {
+                p_referrer_id: user.referred_by,
+                p_referred_id: user.id,
+                p_commission_amount: commission,
+                p_description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
+              }).then(({ error }) => {
+                if (!error) {
+                  sendNotification(user.referred_by as string, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
+                  useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
+                } else {
+                  console.error("Failed to grant commission:", error);
+                }
+              });
+            }
+          });
         }
 
       } else if (pStatus === 'failure') {
@@ -302,9 +307,13 @@ export default function MerchantOrders() {
 
       // Commission Logic (Easiest Option: on successful wallet payment)
       if (user && user.referred_by && !user.has_made_first_order) {
+        const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single();
+        const pFee = settings?.platform_fee_percentage || 0;
+        const rComm = settings?.referral_commission_percentage || 0;
+        
         const profit = selectedBidForPayment.price - (selectedBidForPayment.cost_price || 0);
-        const platformProfit = profit * ((platformFeePercentage || 0) / 100);
-        const commission = platformProfit * ((referralCommissionPercentage || 0) / 100);
+        const platformProfit = profit * (pFee / 100);
+        const commission = platformProfit * (rComm / 100);
         
         if (commission > 0) {
           await supabase.rpc('grant_referral_commission', {

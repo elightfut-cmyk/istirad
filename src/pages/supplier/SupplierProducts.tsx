@@ -269,6 +269,10 @@ export default function SupplierProducts() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">
               {editingProductId ? 'تعديل المنتج' : 'إضافة منتج جديد'}
             </h2>
+
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 text-sm text-blue-800">
+              <strong>ملاحظة هامة:</strong> يرجى إدخال جميع الأسعار بالدينار الجزائري (د.ج) دائماً. سيقوم النظام تلقائياً بتحويلها وعرضها بالدولار للتجار الذين يفضلون ذلك، مع الحفاظ على تسعيرتك الأصلية ثابتة مهما تغير سعر الصرف.
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -309,7 +313,7 @@ export default function SupplierProducts() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة ({currency})</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة (د.ج)</label>
                   <input 
                     type="number" step="0.01" required min="0"
                     value={form.price || ''} 
@@ -329,7 +333,7 @@ export default function SupplierProducts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للوحدة ({currency})</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للوحدة (د.ج)</label>
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
@@ -348,7 +352,7 @@ export default function SupplierProducts() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض ({currency})</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض (د.ج)</label>
                   <input 
                     type="number" step="0.01" min="0"
                     value={form.discount_price || ''} 

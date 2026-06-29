@@ -234,11 +234,14 @@ export default function SupplierRequests() {
           <div className="flex min-h-full items-center justify-center">
             <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
               <h2 className="text-xl font-bold text-gray-900 mb-2">تقديم عرض سعر</h2>
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
+                <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار الجزائري (د.ج) دائماً. سيتم تحويله تلقائياً للتجار الذين يفضلون العرض بالدولار.
+              </div>
             <p className="text-sm text-gray-500 mb-6 border-b pb-4">{biddingRequest.title}</p>
             
             <form onSubmit={handleSubmitBid} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">السعر الإجمالي المطلوب ({currency})</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">السعر الإجمالي المطلوب (د.ج)</label>
                 <input 
                   type="number" required min="1" step="0.01"
                   value={bidForm.price || ''} 
@@ -248,7 +251,7 @@ export default function SupplierRequests() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">سعر التكلفة الحقيقي ({currency})</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">سعر التكلفة الحقيقي (د.ج)</label>
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"

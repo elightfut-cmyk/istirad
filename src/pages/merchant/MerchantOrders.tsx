@@ -311,7 +311,9 @@ export default function MerchantOrders() {
         const pFee = settings?.platform_fee_percentage || 0;
         const rComm = settings?.referral_commission_percentage || 0;
         
-        const profit = selectedBidForPayment.price - (selectedBidForPayment.cost_price || 0);
+        const price = selectedBidForPayment.price;
+        const cost = selectedBidForPayment.cost_price ? selectedBidForPayment.cost_price : (price * 0.8);
+        const profit = price - cost;
         const platformProfit = profit * (pFee / 100);
         const commission = platformProfit * (rComm / 100);
         

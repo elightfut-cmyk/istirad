@@ -126,11 +126,14 @@ export default function SupplierProducts() {
         const { error } = await supabase.from('products').update({
           title: form.title,
           description: form.description,
-          price: form.price,
-          cost_price: form.cost_price,
+          price: Math.round(form.price_usd * exchangeRate),
+          price_usd: form.price_usd,
+          cost_price: Math.round(form.cost_price_usd * exchangeRate),
+          cost_price_usd: form.cost_price_usd,
           moq: form.moq,
           advance_percentage: form.advance_percentage,
-          discount_price: form.discount_price > 0 ? form.discount_price : null,
+          discount_price: form.discount_price_usd > 0 ? Math.round(form.discount_price_usd * exchangeRate) : null,
+          discount_price_usd: form.discount_price_usd > 0 ? form.discount_price_usd : null,
           images: finalImageUrl ? [finalImageUrl] : [],
           category: form.category
         }).eq('id', editingProductId);
@@ -140,11 +143,14 @@ export default function SupplierProducts() {
           supplier_id: user.id,
           title: form.title,
           description: form.description,
-          price: form.price,
-          cost_price: form.cost_price,
+          price: Math.round(form.price_usd * exchangeRate),
+          price_usd: form.price_usd,
+          cost_price: Math.round(form.cost_price_usd * exchangeRate),
+          cost_price_usd: form.cost_price_usd,
           moq: form.moq,
           advance_percentage: form.advance_percentage,
-          discount_price: form.discount_price > 0 ? form.discount_price : null,
+          discount_price: form.discount_price_usd > 0 ? Math.round(form.discount_price_usd * exchangeRate) : null,
+          discount_price_usd: form.discount_price_usd > 0 ? form.discount_price_usd : null,
           images: finalImageUrl ? [finalImageUrl] : [],
           category: form.category
         };

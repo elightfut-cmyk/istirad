@@ -19,8 +19,11 @@ export default function AdminSettings() {
     platformFeePercentage: settingsStore.platformFeePercentage || 0,
     loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
     loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
-    loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500
+    loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
+    productCategories: settingsStore.productCategories || []
   });
+
+  const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
     setLocalSettings({
@@ -35,9 +38,10 @@ export default function AdminSettings() {
       platformFeePercentage: settingsStore.platformFeePercentage || 0,
       loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
       loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
-      loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500
+      loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
+      productCategories: settingsStore.productCategories || []
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -90,7 +94,8 @@ export default function AdminSettings() {
           platform_fee_percentage: parseFloat(localSettings.platformFeePercentage.toString()) || 0,
           loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
           loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
-          loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0
+          loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
+          product_categories: localSettings.productCategories
         })
         .eq('id', 1);
 
@@ -237,8 +242,62 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* Chargily */}
+      {/* Product Categories */}
       <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">تصنيفات المنتجات</h3>
+        <p className="text-gray-500 text-sm mb-4">
+          أضف أو احذف التصنيفات التي يمكن للموردين اختيارها لمنتجاتهم والتي تظهر كفلاتر في صفحة المنتجات.
+        </p>
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="إضافة تصنيف جديد..."
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (newCategory.trim() && !localSettings.productCategories.includes(newCategory.trim())) {
+                  setLocalSettings(prev => ({ ...prev, productCategories: [...prev.productCategories, newCategory.trim()] }));
+                  setNewCategory('');
+                }
+              }
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+          <button
+            onClick={() => {
+              if (newCategory.trim() && !localSettings.productCategories.includes(newCategory.trim())) {
+                setLocalSettings(prev => ({ ...prev, productCategories: [...prev.productCategories, newCategory.trim()] }));
+                setNewCategory('');
+              }
+            }}
+            className="px-4 py-2 bg-[#065f46] text-white rounded-xl text-sm font-bold hover:bg-[#044c38] transition-colors"
+          >
+            إضافة
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {localSettings.productCategories.map((cat, index) => (
+            <div key={index} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+              <span className="text-sm font-medium text-gray-700">{cat}</span>
+              <button
+                onClick={() => setLocalSettings(prev => ({ ...prev, productCategories: prev.productCategories.filter(c => c !== cat) }))}
+                className="text-red-500 hover:text-red-700 font-bold"
+                title="حذف"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+          {localSettings.productCategories.length === 0 && (
+            <span className="text-sm text-gray-400">لا توجد تصنيفات، يرجى إضافة بعضها.</span>
+          )}
+        </div>
+      </div>
+
+      {/* Chargily */}
+      <div className="mt-8">
         <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات الدفع (Chargily)</h3>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           مفتاح Live السري (Live Secret Key)

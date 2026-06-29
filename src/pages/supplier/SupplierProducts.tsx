@@ -7,16 +7,16 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 
 export default function SupplierProducts() {
   const { user } = useAuthStore();
-  const { formatCurrency, currency, exchangeRate } = useSettingsStore();
+  const { formatCurrency, currency, exchangeRate, productCategories } = useSettingsStore();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0 });
+  const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   const handleOpenAddModal = () => {
-    setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0 });
+    setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: productCategories[0] || '' });
     setImageFile(null);
     setEditingProductId(null);
     setIsModalOpen(true);
@@ -31,6 +31,7 @@ export default function SupplierProducts() {
       moq: product.moq,
       advance_percentage: product.advance_percentage || 20,
       discount_price: product.discount_price || 0,
+      category: product.category || productCategories[0] || '',
       image_url: product.images && product.images.length > 0 ? product.images[0] : ''
     });
     setImageFile(null);
@@ -64,7 +65,7 @@ export default function SupplierProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id')
+        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category')
         .eq('supplier_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -129,11 +130,12 @@ export default function SupplierProducts() {
           moq: form.moq,
           advance_percentage: form.advance_percentage,
           discount_price: form.discount_price > 0 ? form.discount_price : null,
-          images: finalImageUrl ? [finalImageUrl] : []
+          images: finalImageUrl ? [finalImageUrl] : [],
+          category: form.category
         }).eq('id', editingProductId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('products').insert({
+        const productData = {
           supplier_id: user.id,
           title: form.title,
           description: form.description,
@@ -142,13 +144,15 @@ export default function SupplierProducts() {
           moq: form.moq,
           advance_percentage: form.advance_percentage,
           discount_price: form.discount_price > 0 ? form.discount_price : null,
-          images: finalImageUrl ? [finalImageUrl] : []
-        });
+          images: finalImageUrl ? [finalImageUrl] : [],
+          category: form.category
+        };
+        const { error } = await supabase.from('products').insert(productData);
         if (error) throw error;
       }
       
       setIsModalOpen(false);
-      setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0 });
+      setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
       setImageFile(null);
       setEditingProductId(null);
       fetchProducts();
@@ -276,6 +280,21 @@ export default function SupplierProducts() {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                   placeholder="مثال: حقيبة سفر جلدية"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
+                <select 
+                  required 
+                  value={form.category} 
+                  onChange={e => setForm({...form, category: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                >
+                  <option value="" disabled>اختر التصنيف</option>
+                  {productCategories.map((cat, index) => (
+                    <option key={index} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
 
               <div>

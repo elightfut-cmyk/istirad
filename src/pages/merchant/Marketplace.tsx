@@ -11,11 +11,11 @@ const fallbackCategories = ['الكل', 'إلكترونيات', 'ملابس', '�
 
 export default function Marketplace() {
   const { user } = useAuthStore();
-  const { formatCurrency } = useSettingsStore();
+  const { formatCurrency, productCategories } = useSettingsStore();
   const navigate = useNavigate();
   
   const [products, setProducts] = useState<any[]>([]);
-  const [categories] = useState<string[]>(fallbackCategories);
+  const [categories, setCategories] = useState<string[]>(['الكل']);
   const [loading, setLoading] = useState(true);
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
@@ -27,6 +27,10 @@ export default function Marketplace() {
   const [orderingProduct, setOrderingProduct] = useState<any | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [submittingOrder, setSubmittingOrder] = useState(false);
+
+  useEffect(() => {
+    setCategories(['الكل', ...(productCategories || [])]);
+  }, [productCategories]);
 
   useEffect(() => {
     fetchProducts();
@@ -82,7 +86,7 @@ export default function Marketplace() {
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, supplier_id, created_at, status,
+          id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, supplier_id, created_at, status, category,
           supplier:users!supplier_id(company_name)
         `)
         .eq('status', 'active')
@@ -108,8 +112,7 @@ export default function Marketplace() {
       const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         desc.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Since category is complex without a categories table join, we skip strict category matching unless implemented.
-      const matchesCategory = selectedCategory === 'الكل'; 
+      const matchesCategory = selectedCategory === 'الكل' || product.category === selectedCategory; 
       const matchesPrice = product.price <= maxPrice;
 
       return matchesSearch && matchesCategory && matchesPrice;

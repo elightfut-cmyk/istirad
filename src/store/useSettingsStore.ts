@@ -18,6 +18,7 @@ interface SettingsState {
   loyaltyPointsPerOrder: number;
   loyaltyPointsToDzdRatio: number;
   loyaltyPointsMinConversion: number;
+  productCategories: string[];
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -40,6 +41,7 @@ export const useSettingsStore = create<SettingsState>()(
       loyaltyPointsPerOrder: 50,
       loyaltyPointsToDzdRatio: 10,
       loyaltyPointsMinConversion: 500,
+      productCategories: ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء'],
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amountInUSD: number) => {
@@ -58,8 +60,7 @@ export const useSettingsStore = create<SettingsState>()(
           const { data, error } = await supabase.from('platform_settings').select('*').eq('id', 1).single();
           if (data && !error) {
             set({
-              minQuantity: data.min_request_quantity,
-              exchangeRate: data.exchange_rate || 135,
+              minQuantity: data.min_request_quantity || 1,
               adTitle: data.ad_title,
               adSubtitle: data.ad_subtitle,
               adImageUrl: data.ad_image_url,
@@ -67,9 +68,11 @@ export const useSettingsStore = create<SettingsState>()(
               chargilyLiveKey: data.chargily_live_key,
               referralCommissionPercentage: data.referral_commission_percentage || 0,
               platformFeePercentage: data.platform_fee_percentage || 0,
+              exchangeRate: data.exchange_rate || 135,
               loyaltyPointsPerOrder: data.loyalty_points_per_order || 50,
               loyaltyPointsToDzdRatio: data.loyalty_points_to_dzd_ratio || 10,
-              loyaltyPointsMinConversion: data.loyalty_points_min_conversion || 500
+              loyaltyPointsMinConversion: data.loyalty_points_min_conversion || 500,
+              productCategories: data.product_categories || ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء']
             });
           }
         } catch (error) {

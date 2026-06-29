@@ -53,7 +53,7 @@ export default function SupplierFinancials() {
         if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
           const profit = bid.price - (bid.cost_price || 0);
-          const fee = (bid.status === 'delivered' || bid.status === 'completed') && profit > 0 ? (profit * pFee / 100) : 0;
+          const fee = profit > 0 ? (profit * pFee / 100) : 0;
           
           totalSales += bid.price;
           platformFees += fee;

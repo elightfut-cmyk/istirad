@@ -104,18 +104,11 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               <span>{currency === 'USD' ? 'USD' : 'DZD'}</span>
             </button>
             
-            <Link to="/profile" className="flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
+            <Link to="/profile" className="hidden md:flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
               <span className="text-sm font-medium text-gray-700 hidden md:inline">{user?.name}</span>
               <UserCircle size={28} className="text-gray-400 hover:text-[#065f46] transition-colors" />
             </Link>
-            
-            <button 
-              onClick={handleLogout}
-              className="md:hidden text-gray-500 hover:text-red-600 transition-colors"
-              title="تسجيل الخروج"
-            >
-              <LogOut size={20} />
-            </button>
+
 
             <div className="relative" ref={notificationRef}>
               <button 
@@ -159,7 +152,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                               e.stopPropagation();
                               deleteNotification(notif.id);
                             }}
-                            className="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-4 right-4 text-red-500 hover:text-red-700 transition-opacity"
                             title="حذف التنبيه"
                           >
                             <Trash2 size={16} />
@@ -202,7 +195,13 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       {/* Bottom Navigation for Mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.05)] border-t border-gray-100 z-50">
         <div className="flex w-full overflow-x-auto">
-          {sidebarLinks.map((link) => {
+          {(() => {
+            const links = [...sidebarLinks];
+            if (links.length > 0) {
+              links.splice(1, 0, { label: 'حسابي', href: '/profile', icon: <UserCircle size={20} /> } as any);
+            }
+            return links;
+          })().map((link) => {
             const isActive = location.pathname === link.href;
             return (
               <Link
@@ -222,6 +221,15 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               </Link>
             );
           })}
+          <button
+            onClick={handleLogout}
+            className="flex-1 min-w-[70px] flex flex-col items-center justify-center py-3 px-1 transition-colors relative text-gray-500 hover:bg-red-50 hover:text-red-600"
+          >
+            <div className="mb-1 transition-transform duration-200">
+              <LogOut size={20} />
+            </div>
+            <span className="text-[10px] font-medium whitespace-nowrap">خروج</span>
+          </button>
         </div>
       </nav>
     </div>

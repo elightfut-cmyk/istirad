@@ -61,9 +61,9 @@ export default function MerchantOrders() {
         }
 
         // Commission Logic (Easiest Option: on successful payment callback)
-        if (user && user.referred_by && !user.has_made_first_order && pBidPrice && pBidCost) {
+        if (user && user.referred_by && !user.has_made_first_order && pBidPrice) {
           const price = parseFloat(pBidPrice);
-          const cost = parseFloat(pBidCost);
+          const cost = pBidCost ? parseFloat(pBidCost) : (price * 0.8);
           const profit = price - cost;
           const platformProfit = profit * ((platformFeePercentage || 0) / 100);
           const commission = platformProfit * ((referralCommissionPercentage || 0) / 100);
@@ -161,8 +161,8 @@ export default function MerchantOrders() {
     e.preventDefault();
     if (!user) return;
 
-    if (!imageFile && !formData.image_url && !formData.product_link) {
-      alert('يجب إدخال إما رابط المنتج أو صورة المنتج على الأقل.');
+    if (!formData.product_link) {
+      alert('يجب إدخال رابط المنتج.');
       return;
     }
 
@@ -744,12 +744,12 @@ export default function MerchantOrders() {
               </div>
 
               <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <p className="text-xs text-blue-800 font-bold mb-3">يجب إدخال رابط المنتج أو صورته على الأقل لتوضيح طلبك للموردين.</p>
+                <p className="text-xs text-blue-800 font-bold mb-3">يجب إدخال رابط المنتج لتوضيح طلبك للموردين (ويمكن إضافة صورة كخيار إضافي).</p>
                 <div className="space-y-3">
                   <div className="relative">
                     <LinkIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input 
-                      type="url" value={formData.product_link} onChange={e => setFormData({...formData, product_link: e.target.value})}
+                      type="url" required value={formData.product_link} onChange={e => setFormData({...formData, product_link: e.target.value})}
                       placeholder="رابط المنتج (مثال من علي بابا وغيرها)..."
                       className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
                     />

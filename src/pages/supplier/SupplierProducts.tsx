@@ -7,7 +7,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 
 export default function SupplierProducts() {
   const { user } = useAuthStore();
-  const { formatCurrency, currency, exchangeRate, productCategories } = useSettingsStore();
+  const { formatCurrency, productCategories } = useSettingsStore();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

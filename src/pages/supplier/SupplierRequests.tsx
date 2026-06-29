@@ -8,7 +8,7 @@ import { sendNotification } from '../../store/useNotificationStore';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
-  const { formatCurrency, currency, exchangeRate } = useSettingsStore();
+  const { formatCurrency } = useSettingsStore();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [biddingRequest, setBiddingRequest] = useState<any>(null);

@@ -17,6 +17,7 @@ export interface User {
   has_made_first_order?: boolean;
   loyalty_points?: number;
   has_successful_referral?: boolean;
+  wallet_balance?: number;
 }
 
 interface AuthState {

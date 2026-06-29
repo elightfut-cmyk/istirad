@@ -7,7 +7,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 
 // We fetch categories dynamically if available, otherwise just use 'الكل'
-const fallbackCategories = ['الكل', 'إلكترونيات', 'ملابس', 'أثاث', 'معدات صناعية'];
 
 export default function Marketplace() {
   const { user } = useAuthStore();

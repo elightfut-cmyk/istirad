@@ -10,7 +10,7 @@ import { createChargilyCheckout } from '../../lib/chargily';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
-  const { formatCurrency, minQuantity, platformFeePercentage, referralCommissionPercentage } = useSettingsStore();
+  const { formatCurrency, minQuantity } = useSettingsStore();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

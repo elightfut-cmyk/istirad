@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const { formatCurrency } = useSettingsStore();
   const [stats, setStats] = useState({ totalMerchants: 0, totalSuppliers: 0, totalSales: 0 });
   const [obligations, setObligations] = useState({ supplierDues: 0, walletDues: 0, pointsDues: 0 });
+  const [platformProfits, setPlatformProfits] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,15 +42,36 @@ export default function AdminDashboard() {
         pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
       
-      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio').single();
+      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, platform_fee_percentage').single();
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
-      // Fetch supplier dues (cost_price of completed/delivered/accepted bids that are not paid to supplier)
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('cost_price, status, is_fully_paid');
+      // Fetch supplier dues and platform profits
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('price, cost_price, status, advance_percentage');
       let supplierSum = 0;
+      let profitsSum = 0;
       if (bidsData && !bidsError) {
-        supplierSum = bidsData.filter(b => b.status === 'completed' || b.status === 'delivered' || b.status === 'accepted').reduce((acc, bid) => acc + (bid.cost_price || 0), 0);
+        const pFee = settingsData?.platform_fee_percentage || 0;
+        bidsData.forEach(bid => {
+          const price = bid.price || 0;
+          const cost = bid.cost_price || 0;
+          const advancePct = bid.advance_percentage || 20;
+          const advancePaid = (price * advancePct) / 100;
+          
+          if (bid.status === 'accepted') {
+            supplierSum += advancePaid;
+          } else if (bid.status === 'delivered' || bid.status === 'completed') {
+            const profitMargin = price - cost;
+            const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
+            profitsSum += fee;
+            supplierSum += (price - fee);
+          } else if (bid.status === 'cancelled') {
+            const fee = advancePaid * pFee / 100;
+            profitsSum += fee;
+          }
+        });
       }
+      
+      setPlatformProfits(profitsSum);
       
       setObligations({ supplierDues: supplierSum, walletDues: walletSum, pointsDues: pointsDues });
 
@@ -70,11 +92,12 @@ export default function AdminDashboard() {
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[
           { title: 'إجمالي التجار', value: loading ? '...' : stats.totalMerchants.toString(), color: 'text-blue-600', bg: 'bg-blue-50', icon: <Users size={24} className="text-blue-600" /> },
           { title: 'إجمالي الموردين', value: loading ? '...' : stats.totalSuppliers.toString(), color: 'text-green-600', bg: 'bg-green-50', icon: <Users size={24} className="text-green-600" /> },
-          { title: 'المبيعات الكلية للمنصة', value: loading ? '...' : formatCurrency(stats.totalSales), color: 'text-purple-600', bg: 'bg-purple-50', icon: <ShoppingBag size={24} className="text-purple-600" /> },
+          { title: 'إجمالي المبيعات', value: loading ? '...' : formatCurrency(stats.totalSales), color: 'text-purple-600', bg: 'bg-purple-50', icon: <ShoppingBag size={24} className="text-purple-600" /> },
+          { title: 'أرباح المنصة الصافية', value: loading ? '...' : formatCurrency(platformProfits), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <TrendingUp size={24} className="text-emerald-600" /> },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
             <div className={`p-4 rounded-xl ${stat.bg}`}>

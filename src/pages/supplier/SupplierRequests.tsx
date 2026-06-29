@@ -230,10 +230,9 @@ export default function SupplierRequests() {
 
       {/* Bid Modal */}
       {biddingRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center">
-            <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">تقديم عرض سعر</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 pb-12 max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">تقديم عرض سعر</h2>
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
                 <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار الجزائري (د.ج) دائماً. سيتم تحويله تلقائياً للتجار الذين يفضلون العرض بالدولار.
               </div>
@@ -299,7 +298,6 @@ export default function SupplierRequests() {
                 </button>
               </div>
             </form>
-            </div>
           </div>
         </div>
       )}

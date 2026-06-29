@@ -10,7 +10,7 @@ export default function SupplierFinancials() {
   const { formatCurrency } = useSettingsStore();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalEarned: 0, advanceTotal: 0, pending: 0 });
+  const [stats, setStats] = useState({ totalSales: 0, platformFees: 0, netEarned: 0, advanceTotal: 0, pending: 0 });
 
   useEffect(() => {
     if (user) {
@@ -25,6 +25,7 @@ export default function SupplierFinancials() {
         .select(`
           id,
           price,
+          cost_price,
           advance_percentage,
           status,
           shipping_status,
@@ -37,24 +38,35 @@ export default function SupplierFinancials() {
 
       if (error) throw error;
 
-      let totalEarned = 0;
+      let totalSales = 0;
+      let platformFees = 0;
+      let netEarned = 0;
       let advanceTotal = 0;
       let pending = 0;
       
+      const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
+      const pFee = settings?.platform_fee_percentage || 0;
+
       const successfulTransactions: any[] = [];
 
       (data || []).forEach(bid => {
-        if (bid.status === 'accepted') {
+        if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
-          totalEarned += bid.price;
+          const profit = bid.price - (bid.cost_price || 0);
+          const fee = (bid.status === 'delivered' || bid.status === 'completed') && profit > 0 ? (profit * pFee / 100) : 0;
+          
+          totalSales += bid.price;
+          platformFees += fee;
+          netEarned += (bid.price - fee);
           advanceTotal += advancePaid;
-          successfulTransactions.push(bid);
+          
+          successfulTransactions.push({...bid, platform_fee: fee});
         } else if (bid.status === 'pending') {
           pending += bid.price;
         }
       });
 
-      setStats({ totalEarned, advanceTotal, pending });
+      setStats({ totalSales, platformFees, netEarned, advanceTotal, pending });
       setTransactions(successfulTransactions);
 
     } catch (error) {
@@ -77,24 +89,33 @@ export default function SupplierFinancials() {
         <p className="text-gray-500 mt-1">تتبع أرباحك، العربون المدفوع، وسجل العمليات المالية الخاصة بك</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-[#065f46] to-[#044c38] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="relative z-10">
-            <h3 className="text-green-100 text-sm font-medium mb-1">إجمالي المبيعات المؤكدة</h3>
-            <p className="text-4xl font-bold">{loading ? '...' : formatCurrency(stats.totalEarned)}</p>
-          </div>
-          <Wallet size={120} className="absolute -left-8 -bottom-8 text-white opacity-10" />
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+              <Activity size={20} />
+            </div>
+            <h3 className="text-gray-500 text-sm font-medium">إجمالي المبيعات (قيمة الصفقات)</h3>
+          </div>
+          <p className="text-3xl font-bold text-gray-900 mt-2">{loading ? '...' : formatCurrency(stats.totalSales)}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-red-50 text-red-600 rounded-lg">
               <ArrowDownLeft size={20} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">إجمالي العربون المستلم</h3>
+            <h3 className="text-gray-500 text-sm font-medium">عمولة المنصة المقتطعة</h3>
           </div>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{loading ? '...' : formatCurrency(stats.advanceTotal)}</p>
-          <p className="text-xs text-gray-400 mt-2">تم دفعها من قبل التجار عبر المنصة</p>
+          <p className="text-3xl font-bold text-red-600 mt-2">{loading ? '...' : formatCurrency(stats.platformFees)}</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#065f46] to-[#044c38] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+          <div className="relative z-10">
+            <h3 className="text-green-100 text-sm font-medium mb-1">صافي مستحقاتك (الربح الفعلي)</h3>
+            <p className="text-4xl font-bold">{loading ? '...' : formatCurrency(stats.netEarned)}</p>
+          </div>
+          <Wallet size={120} className="absolute -left-8 -bottom-8 text-white opacity-10" />
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -102,10 +123,9 @@ export default function SupplierFinancials() {
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <ArrowUpRight size={20} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">أرباح قيد المراجعة</h3>
+            <h3 className="text-gray-500 text-sm font-medium">عروض قيد المراجعة</h3>
           </div>
           <p className="text-3xl font-bold text-gray-900 mt-2">{loading ? '...' : formatCurrency(stats.pending)}</p>
-          <p className="text-xs text-gray-400 mt-2">قيمة العروض التي تنتظر موافقة التاجر</p>
         </div>
       </div>
 
@@ -122,8 +142,10 @@ export default function SupplierFinancials() {
                 <th className="px-6 py-4 font-medium">البيان (الطلب)</th>
                 <th className="px-6 py-4 font-medium">التاجر</th>
                 <th className="px-6 py-4 font-medium">إجمالي الصفقة</th>
+                <th className="px-6 py-4 font-medium text-red-500">عمولة المنصة</th>
+                <th className="px-6 py-4 font-medium text-green-600">الصافي لك</th>
                 <th className="px-6 py-4 font-medium">العربون المحصل</th>
-                <th className="px-6 py-4 font-medium">المبلغ المتبقي</th>
+                <th className="px-6 py-4 font-medium">حالة الدفع</th>
               </tr>
             </thead>
             <tbody>
@@ -134,7 +156,8 @@ export default function SupplierFinancials() {
               ) : (
                 transactions.map((tx) => {
                   const advancePaid = (tx.price * (tx.advance_percentage || 0)) / 100;
-                  const remainingAmount = tx.price - advancePaid;
+                  const fee = tx.platform_fee || 0;
+                  const netAmount = tx.price - fee;
                   const merchantData = Array.isArray(tx.custom_requests?.users) ? tx.custom_requests.users[0] : tx.custom_requests?.users;
                   const merchantName = merchantData?.name || merchantData?.company_name || 'تاجر غير معروف';
                   return (
@@ -150,10 +173,12 @@ export default function SupplierFinancials() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{merchantName}</td>
                       <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatCurrency(tx.price)}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-green-600">{formatCurrency(advancePaid)}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-red-500">{fee > 0 ? `-${formatCurrency(fee)}` : '0'}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-green-600">{formatCurrency(netAmount)}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-blue-600">{formatCurrency(advancePaid)}</td>
                       <td className="px-6 py-4 text-sm">
-                        <span className={`font-bold ${tx.is_fully_paid || tx.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
-                          {tx.is_fully_paid || tx.shipping_status === 'delivered' ? 'تم الدفع' : formatCurrency(remainingAmount)}
+                        <span className={`font-bold ${tx.is_fully_paid || tx.shipping_status === 'delivered' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {tx.is_fully_paid || tx.shipping_status === 'delivered' ? 'مكتمل' : 'بانتظار الباقي'}
                         </span>
                       </td>
                     </tr>

@@ -133,7 +133,7 @@ export default function SupplierDashboard() {
                         {order.is_fully_paid || order.shipping_status === 'delivered' ? 'تم الدفع' : formatCurrency(remainingAmount)}
                       </span>
                     </td>
-                    <td className="py-4 text-sm text-gray-500">{new Date(order.created_at).toLocaleString('ar-MA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                    <td className="py-4 text-sm text-gray-500">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
                     <td className="py-4 text-sm">
                       <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-medium">
                         تم التأكيد والدفع

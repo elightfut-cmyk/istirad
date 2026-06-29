@@ -369,7 +369,11 @@ export default function MerchantOrders() {
         window.location.origin + `/merchant/orders?payment=success&supplier_id=${selectedBidForPayment.supplier_id}&type=${paymentType}&bid_price=${selectedBidForPayment.price}&bid_cost=${selectedBidForPayment.cost_price || 0}`,
         window.location.origin + `/merchant/orders?payment=failure&supplier_id=${selectedBidForPayment.supplier_id}&type=${paymentType}`,
         { bid_id: selectedBidForPayment.id, request_id: selectedBidForPayment.reqId, payment_type: paymentType },
-        user ? { name: user.name || user.company_name || 'Merchant', email: user.email, phone: user.phone } : undefined
+        { 
+          name: (user && (user.name || user.company_name)) ? (user.name || user.company_name || '') : 'زبون منصة استيراد', 
+          email: (user && user.email) ? user.email : 'customer@isttirad.com', 
+          phone: (user && user.phone) ? user.phone : undefined 
+        }
       );
 
       window.location.href = checkoutUrl;
@@ -630,7 +634,7 @@ export default function MerchantOrders() {
                     )}
                     <div className="text-left text-sm text-gray-500">
                       <Clock size={16} className="inline mr-1" />
-                      {new Date(req.created_at).toLocaleString('ar-MA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                      {new Date(req.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                     </div>
                   </div>
                 </div>

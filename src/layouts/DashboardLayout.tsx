@@ -145,7 +145,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                           <div className="pr-6">
                             <h4 className="text-sm font-bold text-gray-800 mb-1">{notif.title}</h4>
                             <p className="text-xs text-gray-600 leading-relaxed">{notif.message}</p>
-                            <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('ar-SA')}</span>
+                            <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('en-GB')}</span>
                           </div>
                           <button 
                             onClick={(e) => {

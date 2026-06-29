@@ -129,7 +129,7 @@ export default function SupplierOrders() {
               <div className="w-px h-8 bg-gray-200 hidden md:block"></div>
               <div>
                 <span className="block text-gray-500 text-xs mb-1">تاريخ الطلب</span>
-                <span className="font-bold text-gray-900">{new Date(order.created_at).toLocaleString('ar-MA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                <span className="font-bold text-gray-900">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
               </div>
               
               <div className="flex gap-2 ml-auto">

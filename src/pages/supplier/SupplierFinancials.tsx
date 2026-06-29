@@ -139,7 +139,7 @@ export default function SupplierFinancials() {
                   const merchantName = merchantData?.name || merchantData?.company_name || 'تاجر غير معروف';
                   return (
                     <tr key={tx.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 text-sm text-gray-500">{new Date(tx.created_at).toLocaleString('ar-MA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{new Date(tx.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         {tx.custom_requests?.title}
                         {tx.custom_requests?.request_type === 'direct' ? (

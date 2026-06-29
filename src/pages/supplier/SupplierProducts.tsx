@@ -312,11 +312,8 @@ export default function SupplierProducts() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة ({currency})</label>
                   <input 
                     type="number" step="0.01" required min="0"
-                    value={form.price ? (currency === 'USD' ? form.price : Math.round(form.price * exchangeRate)) : ''} 
-                    onChange={e => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setForm({...form, price: currency === 'USD' ? val : val / exchangeRate});
-                    }}
+                    value={form.price || ''} 
+                    onChange={e => setForm({...form, price: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                   />
                 </div>
@@ -336,11 +333,8 @@ export default function SupplierProducts() {
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
-                  value={form.cost_price ? (currency === 'USD' ? form.cost_price : Math.round(form.cost_price * exchangeRate)) : ''} 
-                  onChange={e => {
-                    const val = parseFloat(e.target.value) || 0;
-                    setForm({...form, cost_price: currency === 'USD' ? val : val / exchangeRate});
-                  }}
+                  value={form.cost_price || ''} 
+                  onChange={e => setForm({...form, cost_price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
                 />
               </div>
@@ -357,11 +351,8 @@ export default function SupplierProducts() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض ({currency})</label>
                   <input 
                     type="number" step="0.01" min="0"
-                    value={form.discount_price ? (currency === 'USD' ? form.discount_price : Math.round(form.discount_price * exchangeRate)) : ''} 
-                    onChange={e => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setForm({...form, discount_price: currency === 'USD' ? val : val / exchangeRate});
-                    }}
+                    value={form.discount_price || ''} 
+                    onChange={e => setForm({...form, discount_price: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                     placeholder="اختياري"
                   />

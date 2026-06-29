@@ -193,6 +193,9 @@ export default function MerchantWallet() {
               <Heart size={20} />
             </div>
           </div>
+          <p className="text-xs text-orange-700 mt-2 opacity-80">
+            يمكنك تحويل نقاطك إلى رصيد بعد بلوغ الحد الأدنى ({useSettingsStore.getState().loyaltyPointsMinConversion} نقطة).
+          </p>
           <button 
             onClick={handleConvertPoints}
             className="mt-4 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-700 transition-colors w-full disabled:opacity-50"

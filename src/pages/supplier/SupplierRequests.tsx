@@ -241,11 +241,8 @@ export default function SupplierRequests() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">السعر الإجمالي المطلوب ({currency})</label>
                 <input 
                   type="number" required min="1" step="0.01"
-                  value={bidForm.price ? (currency === 'USD' ? bidForm.price : Math.round(bidForm.price * exchangeRate)) : ''} 
-                  onChange={e => {
-                    const val = parseFloat(e.target.value) || 0;
-                    setBidForm({...bidForm, price: currency === 'USD' ? val : val / exchangeRate});
-                  }}
+                  value={bidForm.price || ''} 
+                  onChange={e => setBidForm({...bidForm, price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                 />
               </div>
@@ -255,11 +252,8 @@ export default function SupplierRequests() {
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
-                  value={bidForm.cost_price ? (currency === 'USD' ? bidForm.cost_price : Math.round(bidForm.cost_price * exchangeRate)) : ''} 
-                  onChange={e => {
-                    const val = parseFloat(e.target.value) || 0;
-                    setBidForm({...bidForm, cost_price: currency === 'USD' ? val : val / exchangeRate});
-                  }}
+                  value={bidForm.cost_price || ''} 
+                  onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
                 />
               </div>

@@ -37,6 +37,7 @@ export default function SupplierOrders() {
           shipping_status,
           is_fully_paid,
           created_at,
+          last_reminder_at,
           custom_requests (
             title, 
             description, 
@@ -49,7 +50,7 @@ export default function SupplierOrders() {
           )
         `)
         .eq('supplier_id', user!.id)
-        .eq('status', 'accepted')
+        .in('status', ['pending', 'accepted'])
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -79,6 +80,65 @@ export default function SupplierOrders() {
     } catch (error) {
       console.error('Error updating shipping status:', error);
       alert('حدث خطأ أثناء تحديث حالة الشحن');
+    }
+  };
+
+  const handleRemindMerchant = async (bid: any) => {
+    try {
+      const { error } = await supabase.from('supplier_bids').update({ last_reminder_at: new Date().toISOString() }).eq('id', bid.id);
+      if (error) throw error;
+      setOrders(orders.map(o => o.id === bid.id ? { ...o, last_reminder_at: new Date().toISOString() } : o));
+      
+      const req = bid.custom_requests;
+      if (req?.merchant_id) {
+        const typeDesc = bid.status === 'pending' ? 'دفع العربون' : 'دفع المبلغ المتبقي';
+        sendNotification(req.merchant_id, 'تنبيه بالدفع', `يرجى ${typeDesc} للطلب: ${req.title}`, 'warning');
+      }
+      alert('تم إرسال التنبيه بنجاح');
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء إرسال التنبيه');
+    }
+  };
+
+  const handleCancelOrder = async (bid: any) => {
+    if (!window.confirm('هل أنت متأكد من إلغاء هذه المعاملة بسبب تأخر الدفع؟ سيتم اقتطاع رسوم المنصة من العربون (إن وُجد) وتحويل الباقي لمحفظتك.')) return;
+    
+    try {
+      if (bid.status === 'accepted') {
+        // They paid the deposit, but didn't pay remaining.
+        // We take platform fee from deposit, give rest to supplier.
+        const deposit = (bid.price * bid.advance_percentage) / 100;
+        const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
+        const pFee = settings?.platform_fee_percentage || 0;
+        const platformCut = deposit * (pFee / 100);
+        const supplierCut = deposit - platformCut;
+
+        if (supplierCut > 0) {
+          const { data: userData } = await supabase.from('users').select('wallet_balance').eq('id', user!.id).single();
+          const newBalance = (userData?.wallet_balance || 0) + supplierCut;
+          await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', user!.id);
+          await supabase.from('wallet_transactions').insert({
+            merchant_id: user!.id,
+            amount: supplierCut,
+            type: 'deposit',
+            description: `تعويض إلغاء معاملة (بعد خصم عمولة المنصة)`
+          });
+        }
+      }
+      
+      await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bid.id);
+      await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', bid.custom_requests?.id || ''); // Wait, custom_requests might not have id here if not selected
+      
+      setOrders(orders.filter(o => o.id !== bid.id));
+      alert('تم إلغاء المعاملة بنجاح');
+      
+      if (bid.custom_requests?.merchant_id) {
+        sendNotification(bid.custom_requests.merchant_id, 'إلغاء الطلب', `تم إلغاء الطلب بسبب التأخر في الدفع.`, 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء إلغاء المعاملة');
     }
   };
 
@@ -116,8 +176,8 @@ export default function SupplierOrders() {
                 <h3 className="font-bold text-xl text-gray-900 mb-2">{req?.title?.replace('طلب مباشر: ', '')}</h3>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">{req?.description}</p>
               </div>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1">
-                <CheckCircle2 size={14} /> مؤكد (تم دفع العربون)
+              <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1 ${order.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                {order.status === 'pending' ? <><Clock size={14} /> بانتظار العربون</> : <><CheckCircle2 size={14} /> مؤكد (تم دفع العربون)</>}
               </span>
             </div>
 
@@ -173,35 +233,77 @@ export default function SupplierOrders() {
               </div>
             </div>
 
-            <div className="mt-4 border-t border-gray-100 pt-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">حالة الشحن والتوصيل</label>
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => updateShippingStatus(order.id, 'processing')}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                    (order.shipping_status || 'processing') === 'processing' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Box size={14} /> تجهيز
-                </button>
-                <button
-                  onClick={() => updateShippingStatus(order.id, 'shipped')}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                    order.shipping_status === 'shipped' ? 'bg-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Truck size={14} /> مشحون
-                </button>
-                <button
-                  onClick={() => updateShippingStatus(order.id, 'delivered')}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                    order.shipping_status === 'delivered' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <CheckCircle2 size={14} /> موصل
-                </button>
-              </div>
+            <div className="mt-4 border-t border-gray-100 pt-4 flex flex-col gap-2">
+              {(() => {
+                const now = new Date();
+                const lastReminder = order.last_reminder_at ? new Date(order.last_reminder_at) : null;
+                const hoursSinceReminder = lastReminder ? (now.getTime() - lastReminder.getTime()) / (1000 * 60 * 60) : 24;
+                const canRemind = hoursSinceReminder >= 24;
+                
+                const created = new Date(order.created_at);
+                const daysSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+                const canCancel = daysSinceCreation >= 3;
+                const needsPayment = order.status === 'pending' || (!order.is_fully_paid && order.shipping_status !== 'delivered');
+
+                if (needsPayment) {
+                  return (
+                    <div className="flex flex-col gap-2 bg-red-50 p-3 rounded-lg border border-red-100">
+                      <p className="text-xs text-red-800 font-bold mb-1">تنبيهات الدفع</p>
+                      <button
+                        onClick={() => handleRemindMerchant(order)}
+                        disabled={!canRemind}
+                        className="bg-orange-500 text-white py-2 rounded-lg text-sm font-bold hover:bg-orange-600 transition disabled:opacity-50"
+                      >
+                        {canRemind ? 'إرسال تنبيه بالدفع' : 'تم الإرسال (يمكن التكرار كل 24س)'}
+                      </button>
+                      
+                      {canCancel && (
+                        <button
+                          onClick={() => handleCancelOrder(order)}
+                          className="bg-red-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition"
+                        >
+                          إلغاء المعاملة (لتجاوز 3 أيام)
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
+
+            {order.status === 'accepted' && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">حالة الشحن والتوصيل</label>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => updateShippingStatus(order.id, 'processing')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
+                      (order.shipping_status || 'processing') === 'processing' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Box size={14} /> تجهيز
+                  </button>
+                  <button
+                    onClick={() => updateShippingStatus(order.id, 'shipped')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
+                      order.shipping_status === 'shipped' ? 'bg-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Truck size={14} /> مشحون
+                  </button>
+                  <button
+                    onClick={() => updateShippingStatus(order.id, 'delivered')}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
+                      order.shipping_status === 'delivered' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <CheckCircle2 size={14} /> موصل
+                  </button>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       );

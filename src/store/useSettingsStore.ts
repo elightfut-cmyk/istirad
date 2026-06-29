@@ -44,14 +44,15 @@ export const useSettingsStore = create<SettingsState>()(
       productCategories: ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء'],
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
-      formatCurrency: (amountInUSD: number) => {
+      formatCurrency: (amount: number) => {
         const { currency, exchangeRate } = get();
         if (currency === 'USD') {
-          const parts = amountInUSD.toFixed(2).split('.');
+          const usdAmount = amount / exchangeRate;
+          const parts = usdAmount.toFixed(2).split('.');
           parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           return `$${parts.join(',')}`;
         } else {
-          const dzd = Math.round(amountInUSD * exchangeRate);
+          const dzd = Math.round(amount);
           return `${dzd.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج`;
         }
       },

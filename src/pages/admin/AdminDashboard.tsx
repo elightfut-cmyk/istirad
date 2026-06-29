@@ -8,7 +8,7 @@ import AdminSettings from '../../components/admin/AdminSettings';
 export default function AdminDashboard() {
   const { formatCurrency } = useSettingsStore();
   const [stats, setStats] = useState({ totalMerchants: 0, totalSuppliers: 0, totalSales: 0 });
-  const [obligations, setObligations] = useState({ supplierDues: 0, walletDues: 0 });
+  const [obligations, setObligations] = useState({ supplierDues: 0, walletDues: 0, pointsDues: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,23 +32,26 @@ export default function AdminDashboard() {
         });
       }
 
-      // Fetch wallet dues
-      const { data: usersData, error: usersError } = await supabase.from('users').select('wallet_balance');
+      // Fetch wallet dues and points
+      const { data: usersData, error: usersError } = await supabase.from('users').select('wallet_balance, loyalty_points');
       let walletSum = 0;
+      let pointsSum = 0;
       if (usersData && !usersError) {
         walletSum = usersData.reduce((acc, user) => acc + (user.wallet_balance || 0), 0);
-      }
-
-      // Fetch supplier dues (cost_price of completed/delivered bids that are not paid to supplier)
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('cost_price, status');
-      let supplierSum = 0;
-      if (bidsData && !bidsError) {
-        // Since we just added is_paid_to_supplier, let's assume currently unpaid if status is completed/delivered
-        // We'll refine this if is_paid_to_supplier is fully implemented. For now, we sum completed and delivered.
-        supplierSum = bidsData.filter(b => b.status === 'completed' || b.status === 'delivered').reduce((acc, bid) => acc + (bid.cost_price || 0), 0);
+        pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
       
-      setObligations({ supplierDues: supplierSum, walletDues: walletSum });
+      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio').single();
+      const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
+
+      // Fetch supplier dues (cost_price of completed/delivered/accepted bids that are not paid to supplier)
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('cost_price, status, is_fully_paid');
+      let supplierSum = 0;
+      if (bidsData && !bidsError) {
+        supplierSum = bidsData.filter(b => b.status === 'completed' || b.status === 'delivered' || b.status === 'accepted').reduce((acc, bid) => acc + (bid.cost_price || 0), 0);
+      }
+      
+      setObligations({ supplierDues: supplierSum, walletDues: walletSum, pointsDues: pointsDues });
 
     } catch (error) {
       console.error('Error fetching admin stats:', error);
@@ -87,13 +90,13 @@ export default function AdminDashboard() {
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
         <h2 className="text-xl font-bold mb-6 text-gray-800">الالتزامات المالية للمنصة (الديون)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-orange-50 p-6 rounded-2xl shadow-sm border border-orange-100 flex items-center gap-4">
             <div className="p-4 rounded-xl bg-orange-100">
               <ShoppingBag size={24} className="text-orange-600" />
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium">مستحقات الموردين (تكلفة الطلبات المكتملة)</h3>
+              <h3 className="text-gray-600 text-sm font-medium">مستحقات الموردين</h3>
               <p className="text-2xl font-bold mt-1 text-orange-600">{loading ? '...' : formatCurrency(obligations.supplierDues)}</p>
             </div>
           </div>
@@ -102,8 +105,17 @@ export default function AdminDashboard() {
               <Users size={24} className="text-teal-600" />
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium">أرصدة محافظ المستخدمين (عمولات وإيداعات)</h3>
+              <h3 className="text-gray-600 text-sm font-medium">أرصدة محافظ المستخدمين</h3>
               <p className="text-2xl font-bold mt-1 text-teal-600">{loading ? '...' : formatCurrency(obligations.walletDues)}</p>
+            </div>
+          </div>
+          <div className="bg-purple-50 p-6 rounded-2xl shadow-sm border border-purple-100 flex items-center gap-4">
+            <div className="p-4 rounded-xl bg-purple-100">
+              <Users size={24} className="text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-gray-600 text-sm font-medium">قيمة نقاط الولاء (احتياطي)</h3>
+              <p className="text-2xl font-bold mt-1 text-purple-600">{loading ? '...' : formatCurrency(obligations.pointsDues)}</p>
             </div>
           </div>
         </div>

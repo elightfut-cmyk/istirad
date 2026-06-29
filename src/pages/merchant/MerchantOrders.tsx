@@ -69,15 +69,18 @@ export default function MerchantOrders() {
           const commission = platformProfit * ((referralCommissionPercentage || 0) / 100);
           
           if (commission > 0) {
-            supabase.from('wallet_transactions').insert({
-              merchant_id: user.referred_by,
-              amount: commission,
-              type: 'deposit',
-              description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
-            }).then(() => {
-              supabase.from('users').update({ has_made_first_order: true }).eq('id', user.id).then();
-              sendNotification(user.referred_by as string, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
-              useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
+            supabase.rpc('grant_referral_commission', {
+              p_referrer_id: user.referred_by,
+              p_referred_id: user.id,
+              p_commission_amount: commission,
+              p_description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
+            }).then(({ error }) => {
+              if (!error) {
+                sendNotification(user.referred_by as string, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
+                useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
+              } else {
+                console.error("Failed to grant commission:", error);
+              }
             });
           }
         }
@@ -304,13 +307,12 @@ export default function MerchantOrders() {
         const commission = platformProfit * ((referralCommissionPercentage || 0) / 100);
         
         if (commission > 0) {
-          await supabase.from('wallet_transactions').insert({
-            merchant_id: user.referred_by,
-            amount: commission,
-            type: 'deposit',
-            description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
+          await supabase.rpc('grant_referral_commission', {
+            p_referrer_id: user.referred_by,
+            p_referred_id: user.id,
+            p_commission_amount: commission,
+            p_description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
           });
-          await supabase.from('users').update({ has_made_first_order: true }).eq('id', user.id);
           sendNotification(user.referred_by, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
           useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
         }

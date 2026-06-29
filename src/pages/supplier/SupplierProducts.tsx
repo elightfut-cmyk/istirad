@@ -12,11 +12,12 @@ export default function SupplierProducts() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
+  const [form, setForm] = useState({ title: '', description: '', price_usd: 0, cost_price_usd: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price_usd: 0, category: '' });
+  const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   const handleOpenAddModal = () => {
-    setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: productCategories[0] || '' });
+    setForm({ title: '', description: '', price_usd: 0, cost_price_usd: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price_usd: 0, category: productCategories[0] || '' });
     setImageFile(null);
     setEditingProductId(null);
     setIsModalOpen(true);
@@ -26,11 +27,11 @@ export default function SupplierProducts() {
     setForm({
       title: product.title,
       description: product.description,
-      price: product.price,
-      cost_price: product.cost_price || 0,
+      price_usd: product.price_usd || (product.price / exchangeRate),
+      cost_price_usd: product.cost_price_usd || (product.cost_price / exchangeRate),
+      discount_price_usd: product.discount_price_usd || (product.discount_price ? product.discount_price / exchangeRate : 0),
       moq: product.moq,
       advance_percentage: product.advance_percentage || 20,
-      discount_price: product.discount_price || 0,
       category: product.category || productCategories[0] || '',
       image_url: product.images && product.images.length > 0 ? product.images[0] : ''
     });
@@ -65,7 +66,7 @@ export default function SupplierProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category')
+        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd')
         .eq('supplier_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -88,8 +89,8 @@ export default function SupplierProducts() {
     e.preventDefault();
     if (!user) return;
     
-    const sellingPrice = form.discount_price > 0 ? form.discount_price : form.price;
-    if (sellingPrice <= form.cost_price) {
+    const sellingPrice = form.discount_price_usd > 0 ? form.discount_price_usd : form.price_usd;
+    if (sellingPrice <= form.cost_price_usd) {
       alert('الرجاء التأكد من أن السعر (أو السعر بعد التخفيض) أكبر من سعر التكلفة لتحقيق ربح.');
       return;
     }
@@ -152,7 +153,7 @@ export default function SupplierProducts() {
       }
       
       setIsModalOpen(false);
-      setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
+      setForm({ title: '', description: '', price_usd: 0, cost_price_usd: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price_usd: 0, category: '' });
       setImageFile(null);
       setEditingProductId(null);
       fetchProducts();
@@ -313,13 +314,14 @@ export default function SupplierProducts() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة (د.ج)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة بالدولار ($)</label>
                   <input 
                     type="number" step="0.01" required min="0"
-                    value={form.price || ''} 
-                    onChange={e => setForm({...form, price: parseFloat(e.target.value) || 0})}
+                    value={form.price_usd || ''} 
+                    onChange={e => setForm({...form, price_usd: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                   />
+                  <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((form.price_usd || 0) * exchangeRate))}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">نسبة الدفعة المقدمة (العربون) %</label>
@@ -333,33 +335,35 @@ export default function SupplierProducts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للوحدة (د.ج)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للوحدة بالدولار ($)</label>
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
-                  value={form.cost_price || ''} 
-                  onChange={e => setForm({...form, cost_price: parseFloat(e.target.value) || 0})}
+                  value={form.cost_price_usd || ''} 
+                  onChange={e => setForm({...form, cost_price_usd: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
                 />
+                <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((form.cost_price_usd || 0) * exchangeRate))}</p>
               </div>
 
-              {((form.discount_price > 0 ? form.discount_price : form.price) > form.cost_price && form.cost_price > 0) && (
+              {((form.discount_price_usd > 0 ? form.discount_price_usd : form.price_usd) > form.cost_price_usd && form.cost_price_usd > 0) && (
                 <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex justify-between items-center text-sm">
                   <span className="text-green-700 font-bold">ربحك الصافي للوحدة:</span>
-                  <span className="font-bold text-green-800">{formatCurrency((form.discount_price > 0 ? form.discount_price : form.price) - form.cost_price)}</span>
+                  <span className="font-bold text-green-800">{formatCurrency(Math.round(((form.discount_price_usd > 0 ? form.discount_price_usd : form.price_usd) - form.cost_price_usd) * exchangeRate))}</span>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض (د.ج)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض بالدولار ($)</label>
                   <input 
                     type="number" step="0.01" min="0"
-                    value={form.discount_price || ''} 
-                    onChange={e => setForm({...form, discount_price: parseFloat(e.target.value) || 0})}
+                    value={form.discount_price_usd || ''} 
+                    onChange={e => setForm({...form, discount_price_usd: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
                     placeholder="اختياري"
                   />
+                  {form.discount_price_usd > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((form.discount_price_usd || 0) * exchangeRate))}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">أقل كمية للطلب (MOQ)</label>

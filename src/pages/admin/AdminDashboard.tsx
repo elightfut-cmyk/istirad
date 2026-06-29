@@ -57,13 +57,16 @@ export default function AdminDashboard() {
           const advancePct = bid.advance_percentage || 20;
           const advancePaid = (price * advancePct) / 100;
           
-          if (bid.status === 'accepted') {
-            supplierSum += advancePaid;
-          } else if (bid.status === 'delivered' || bid.status === 'completed') {
+          if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
             const profitMargin = price - cost;
             const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
             profitsSum += fee;
-            supplierSum += (price - fee);
+            
+            if (bid.status === 'accepted') {
+              supplierSum += advancePaid;
+            } else {
+              supplierSum += (price - fee);
+            }
           } else if (bid.status === 'cancelled') {
             const fee = advancePaid * pFee / 100;
             profitsSum += fee;

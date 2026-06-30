@@ -108,7 +108,7 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="relative hidden lg:block h-[500px]">
+          <div className="relative mt-12 lg:mt-0 h-[300px] sm:h-[400px] lg:h-[500px] w-full">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#065f46] to-green-400 rounded-[3rem] rotate-3 opacity-10 transform scale-105"></div>
             
             {/* Image Slider Container */}

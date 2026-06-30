@@ -56,8 +56,10 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[600px] h-[600px] bg-green-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
-          <div className="text-right">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10">
+          
+          {/* Title and Description */}
+          <div className="text-right lg:col-start-1 lg:row-start-1 lg:self-end">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-[#065f46] font-bold text-sm mb-6">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#065f46] opacity-75"></span>
@@ -69,46 +71,13 @@ export default function LandingPage() {
               استورد منتجاتك <br />
               <span className="text-[#065f46]">بكل سهولة وأمان</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-lg">
+            <p className="text-xl text-gray-600 leading-relaxed max-w-lg lg:mb-0">
               منصة "إستيراد" هي حلقة الوصل المثالية بين الموردين الموثوقين وتجار التجارة الإلكترونية. تصفح آلاف المنتجات بأسعار الجملة، أدر طلباتك، وانطلق بمتجرك نحو القمة.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              {user ? (
-                <Link to={`/${user.role}`} className="bg-[#065f46] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#044c38] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
-                  الذهاب للوحة التحكم الخاصة بك
-                  <ArrowLeft size={20} />
-                </Link>
-              ) : (
-                <>
-                  <Link to="/register" className="bg-[#065f46] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#044c38] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
-                    سجل كتاجر أو مورد
-                    <ArrowLeft size={20} />
-                  </Link>
-                  <Link to="/login" className="bg-white text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-[#065f46] hover:text-[#065f46] transition-all flex items-center justify-center">
-                    لدي حساب بالفعل
-                  </Link>
-                </>
-              )}
-            </div>
-            
-            <div className="mt-12 flex items-center gap-6 text-gray-500 text-sm font-medium">
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={20} className="text-green-500" />
-                <span>موردين معتمدين</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe size={20} className="text-blue-500" />
-                <span>شحن عالمي</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp size={20} className="text-purple-500" />
-                <span>أسعار تنافسية</span>
-              </div>
-            </div>
           </div>
-          
-          <div className="relative mt-12 lg:mt-0 h-[300px] sm:h-[400px] lg:h-[500px] w-full">
+
+          {/* Image Slider */}
+          <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] w-full lg:col-start-2 lg:row-start-1 lg:row-span-2">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#065f46] to-green-400 rounded-[3rem] rotate-3 opacity-10 transform scale-105"></div>
             
             {/* Image Slider Container */}
@@ -147,6 +116,44 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* Buttons and Features */}
+          <div className="text-right lg:col-start-1 lg:row-start-2 lg:self-start lg:mt-10">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {user ? (
+                <Link to={`/${user.role}`} className="bg-[#065f46] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#044c38] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
+                  الذهاب للوحة التحكم الخاصة بك
+                  <ArrowLeft size={20} />
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register" className="bg-[#065f46] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#044c38] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
+                    سجل كتاجر أو مورد
+                    <ArrowLeft size={20} />
+                  </Link>
+                  <Link to="/login" className="bg-white text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-[#065f46] hover:text-[#065f46] transition-all flex items-center justify-center">
+                    لدي حساب بالفعل
+                  </Link>
+                </>
+              )}
+            </div>
+            
+            <div className="mt-12 flex items-center gap-6 text-gray-500 text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={20} className="text-green-500" />
+                <span>موردين معتمدين</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe size={20} className="text-blue-500" />
+                <span>شحن عالمي</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp size={20} className="text-purple-500" />
+                <span>أسعار تنافسية</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </div>

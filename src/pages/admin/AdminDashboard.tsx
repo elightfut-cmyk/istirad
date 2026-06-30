@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
       // Fetch supplier dues and platform profits
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('price, cost_price, status, advance_percentage');
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('price, cost_price, status, advance_percentage, is_fully_paid');
       let supplierSum = 0;
       let profitsSum = 0;
       if (bidsData && !bidsError) {
@@ -57,23 +57,23 @@ export default function AdminDashboard() {
           const advancePct = bid.advance_percentage || 20;
           const advancePaid = (price * advancePct) / 100;
           
-          if (bid.status === 'accepted') {
-            // User requested: When only deposit is paid, platform takes its percentage from the WHOLE deposit.
+          if (bid.status === 'cancelled') {
+            // If cancelled, the deposit is kept and platform takes its fee from it
             const fee = advancePaid * (pFee / 100);
             profitsSum += fee;
-            // Supplier gets the rest of the deposit
-            supplierSum += (advancePaid - fee);
-          } else if (bid.status === 'delivered' || bid.status === 'completed') {
-            // User requested: When fully paid, recalculate and take percentage from profit margin only.
+          } else if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
+            // User requested: When fully paid (or delivered/completed), recalculate and take percentage from profit margin only.
             const profitMargin = price - cost;
             const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
             profitsSum += fee;
             // Supplier gets the full price minus platform fee
             supplierSum += (price - fee);
-          } else if (bid.status === 'cancelled') {
-            // If cancelled, the deposit is kept and platform takes its fee from it
+          } else if (bid.status === 'accepted') {
+            // User requested: When only deposit is paid, platform takes its percentage from the WHOLE deposit.
             const fee = advancePaid * (pFee / 100);
             profitsSum += fee;
+            // Supplier gets the rest of the deposit
+            supplierSum += (advancePaid - fee);
           }
         });
       }

@@ -13,6 +13,7 @@ interface SettingsState {
   adImageUrl: string | null;
   adLinkUrl: string | null;
   chargilyLiveKey: string | null;
+  heroImageUrl: string | null;
   referralCommissionPercentage: number;
   platformFeePercentage: number;
   loyaltyPointsPerOrder: number;
@@ -36,6 +37,7 @@ export const useSettingsStore = create<SettingsState>()(
       adImageUrl: null,
       adLinkUrl: null,
       chargilyLiveKey: null,
+      heroImageUrl: null,
       referralCommissionPercentage: 0,
       platformFeePercentage: 0,
       loyaltyPointsPerOrder: 50,
@@ -67,6 +69,7 @@ export const useSettingsStore = create<SettingsState>()(
               adImageUrl: data.ad_image_url,
               adLinkUrl: data.ad_link_url,
               chargilyLiveKey: data.chargily_live_key,
+              heroImageUrl: data.hero_image_url || null,
               referralCommissionPercentage: data.referral_commission_percentage || 0,
               platformFeePercentage: data.platform_fee_percentage || 0,
               exchangeRate: data.exchange_rate || 135,

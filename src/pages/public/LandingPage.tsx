@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 export default function LandingPage() {
   const { user } = useAuthStore();
+  const settingsStore = useSettingsStore();
   
   return (
     <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] flex flex-col">
@@ -96,7 +98,7 @@ export default function LandingPage() {
           <div className="relative hidden lg:block">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#065f46] to-green-400 rounded-[3rem] rotate-3 opacity-10 transform scale-105"></div>
             <img 
-              src="https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 
+              src={settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"}
               alt="E-commerce merchants managing stock" 
               className="rounded-[3rem] shadow-2xl relative z-10 border-8 border-white object-cover aspect-[4/3]"
             />

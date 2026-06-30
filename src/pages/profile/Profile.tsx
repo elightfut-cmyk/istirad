@@ -169,7 +169,9 @@ export default function Profile() {
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mb-3 max-w-lg leading-relaxed">
-                    للحصول على إشعارات سريعة ومهمة، يرجى الدخول إلى البوت <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold" dir="ltr">@userinfobot</a> في تلغرام، ونسخ رقم الـ <span className="font-mono text-gray-800 font-bold bg-gray-100 px-1 rounded">Id</span> ولصقه هنا.
+                    للحصول على إشعارات سريعة ومهمة عبر تلغرام، يرجى اتباع الخطوتين: <br />
+                    1- الدخول إلى البوت <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold" dir="ltr">@userinfobot</a> ونسخ رقم الـ <span className="font-mono text-gray-800 font-bold bg-gray-100 px-1 rounded">Id</span> ولصقه في الخانة أدناه. <br />
+                    2- الدخول إلى بوت التنبيهات الخاص بنا <a href="https://t.me/Istirad_new_bot" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold" dir="ltr">@Istirad_new_bot</a> والضغط على "Start" (أو البدء) لتفعيل استقبال الرسائل.
                   </p>
                   
                   <input 

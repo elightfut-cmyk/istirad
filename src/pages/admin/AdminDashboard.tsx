@@ -57,18 +57,22 @@ export default function AdminDashboard() {
           const advancePct = bid.advance_percentage || 20;
           const advancePaid = (price * advancePct) / 100;
           
-          if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
+          if (bid.status === 'accepted') {
+            // User requested: When only deposit is paid, platform takes its percentage from the WHOLE deposit.
+            const fee = advancePaid * (pFee / 100);
+            profitsSum += fee;
+            // Supplier gets the rest of the deposit
+            supplierSum += (advancePaid - fee);
+          } else if (bid.status === 'delivered' || bid.status === 'completed') {
+            // User requested: When fully paid, recalculate and take percentage from profit margin only.
             const profitMargin = price - cost;
             const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
             profitsSum += fee;
-            
-            if (bid.status === 'accepted') {
-              supplierSum += advancePaid;
-            } else {
-              supplierSum += (price - fee);
-            }
+            // Supplier gets the full price minus platform fee
+            supplierSum += (price - fee);
           } else if (bid.status === 'cancelled') {
-            const fee = advancePaid * pFee / 100;
+            // If cancelled, the deposit is kept and platform takes its fee from it
+            const fee = advancePaid * (pFee / 100);
             profitsSum += fee;
           }
         });

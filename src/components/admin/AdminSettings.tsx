@@ -16,6 +16,7 @@ export default function AdminSettings() {
     adLinkUrl: settingsStore.adLinkUrl || '',
     chargilyLiveKey: settingsStore.chargilyLiveKey || '',
     heroImageUrl: settingsStore.heroImageUrl || '',
+    heroImageUrl2: settingsStore.heroImageUrl2 || '',
     referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
     platformFeePercentage: settingsStore.platformFeePercentage || 0,
     loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
@@ -36,6 +37,7 @@ export default function AdminSettings() {
       adLinkUrl: settingsStore.adLinkUrl || '',
       chargilyLiveKey: settingsStore.chargilyLiveKey || '',
       heroImageUrl: settingsStore.heroImageUrl || '',
+      heroImageUrl2: settingsStore.heroImageUrl2 || '',
       referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
       platformFeePercentage: settingsStore.platformFeePercentage || 0,
       loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
@@ -43,7 +45,7 @@ export default function AdminSettings() {
       loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
       productCategories: settingsStore.productCategories || []
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.platformFeePercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,7 +81,7 @@ export default function AdminSettings() {
     }
   };
 
-  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isSecond = false) => {
     try {
       if (!e.target.files || e.target.files.length === 0) return;
       const file = e.target.files[0];
@@ -99,7 +101,11 @@ export default function AdminSettings() {
 
       const { data } = supabase.storage.from('platform_assets').getPublicUrl(filePath);
       
-      setLocalSettings(prev => ({ ...prev, heroImageUrl: data.publicUrl }));
+      if (isSecond) {
+        setLocalSettings(prev => ({ ...prev, heroImageUrl2: data.publicUrl }));
+      } else {
+        setLocalSettings(prev => ({ ...prev, heroImageUrl: data.publicUrl }));
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('حدث خطأ أثناء رفع الصورة.');
@@ -122,6 +128,7 @@ export default function AdminSettings() {
           ad_link_url: localSettings.adLinkUrl || null,
           chargily_live_key: localSettings.chargilyLiveKey || null,
           hero_image_url: localSettings.heroImageUrl || null,
+          hero_image_url_2: localSettings.heroImageUrl2 || null,
           referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
           platform_fee_percentage: parseFloat(localSettings.platformFeePercentage.toString()) || 0,
           loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
@@ -353,37 +360,67 @@ export default function AdminSettings() {
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-4 mt-8 border-b pb-2">صور واجهة الموقع (Landing Page)</h3>
         <p className="text-gray-500 text-sm mb-4">
-          قم بتغيير الصورة الرئيسية التي تظهر للزوار في صفحة الهبوط.
+          قم بتغيير الصورتين اللتين تظهران بشكل متحرك في صفحة الهبوط.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رفع صورة الواجهة (Hero Image)</label>
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleHeroImageUpload}
-                disabled={uploadingImage}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
-              />
-              {uploadingImage && <span className="text-sm text-gray-500 self-center">جاري الرفع...</span>}
-            </div>
-            {localSettings.heroImageUrl && (
-              <div className="mt-2 text-xs text-green-600 font-bold">
-                تمت إضافة الصورة. (لا تنسَ حفظ الإعدادات)
+        <div className="space-y-6">
+          {/* الصورة الأولى */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-100 pb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الصورة الأولى (رفع)</label>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleHeroImageUpload(e, false)}
+                  disabled={uploadingImage}
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
+                />
               </div>
-            )}
+              {localSettings.heroImageUrl && (
+                <div className="mt-2 text-xs text-green-600 font-bold">تم إضافة الصورة الأولى.</div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة الأولى مباشرة (URL)</label>
+              <input
+                type="text"
+                name="heroImageUrl"
+                placeholder="https://..."
+                value={localSettings.heroImageUrl || ''}
+                onChange={handleChange}
+                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة مباشرة (URL)</label>
-            <input
-              type="text"
-              name="heroImageUrl"
-              placeholder="https://..."
-              value={localSettings.heroImageUrl || ''}
-              onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
-            />
+
+          {/* الصورة الثانية */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الصورة الثانية (رفع)</label>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleHeroImageUpload(e, true)}
+                  disabled={uploadingImage}
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
+                />
+              </div>
+              {localSettings.heroImageUrl2 && (
+                <div className="mt-2 text-xs text-green-600 font-bold">تم إضافة الصورة الثانية.</div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة الثانية مباشرة (URL)</label>
+              <input
+                type="text"
+                name="heroImageUrl2"
+                placeholder="https://..."
+                value={localSettings.heroImageUrl2 || ''}
+                onChange={handleChange}
+                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              />
+            </div>
           </div>
         </div>
       </div>

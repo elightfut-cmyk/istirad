@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -7,6 +8,18 @@ export default function LandingPage() {
   const { user } = useAuthStore();
   const settingsStore = useSettingsStore();
   
+  const img1 = settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
+  const img2 = settingsStore.heroImageUrl2 || "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"; // Default second image
+  
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev === 0 ? 1 : 0));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] flex flex-col">
       {/* Header */}
@@ -95,16 +108,36 @@ export default function LandingPage() {
             </div>
           </div>
           
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block h-[500px]">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#065f46] to-green-400 rounded-[3rem] rotate-3 opacity-10 transform scale-105"></div>
-            <img 
-              src={settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"}
-              alt="E-commerce merchants managing stock" 
-              className="rounded-[3rem] shadow-2xl relative z-10 border-8 border-white object-cover aspect-[4/3]"
-            />
+            
+            {/* Image Slider Container */}
+            <div className="relative w-full h-full rounded-[3rem] shadow-2xl border-8 border-white overflow-hidden bg-gray-100 z-10">
+              {/* Image 1 */}
+              <img 
+                src={img1}
+                alt="Slide 1" 
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                  activeIndex === 0 
+                    ? 'opacity-100 translate-y-0 z-20' 
+                    : 'opacity-0 -translate-y-10 z-10'
+                }`}
+              />
+              
+              {/* Image 2 */}
+              <img 
+                src={img2}
+                alt="Slide 2" 
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                  activeIndex === 1 
+                    ? 'opacity-100 translate-y-0 z-20' 
+                    : 'opacity-0 translate-y-10 z-10'
+                }`}
+              />
+            </div>
             
             {/* Floating Card */}
-            <div className="absolute -bottom-10 -right-10 bg-white p-6 rounded-2xl shadow-xl z-20 flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
+            <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl z-30 flex items-center gap-4 animate-bounce" style={{ animationDuration: '3s' }}>
               <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center">
                 <Store size={28} className="text-orange-500" />
               </div>

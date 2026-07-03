@@ -398,6 +398,7 @@ export default function SupplierOrders() {
         )}
         </div>
       </div>
+      </div>
     </DashboardLayout>
   );
 }

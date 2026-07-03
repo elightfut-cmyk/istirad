@@ -323,7 +323,7 @@ export default function SupplierRequests() {
           </div>
         </div>
       )}
-
+      </div>
     </DashboardLayout>
   );
 }

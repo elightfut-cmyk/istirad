@@ -67,7 +67,7 @@ export default function AdminOrders() {
   };
 
   const handleApprovePayment = async (payment: any) => {
-    if (!window.confirm(`هل أنت متأكد من الموافقة على الدفعة بقيمة ${payment.amount} وإضافتها لرصيد التاجر؟`)) return;
+    if (!window.confirm(`هل أنت متأكد من الموافقة على الدفعة بقيمة ${formatCurrency(payment.amount)} وإضافتها لرصيد التاجر؟`)) return;
 
     try {
       // 1. Update manual_payment status
@@ -440,7 +440,7 @@ export default function AdminOrders() {
                         <p className="text-xs text-gray-500">{pmt.merchant?.company_name}</p>
                       </td>
                       <td className="p-4">
-                        <span className="font-bold text-gray-900">{pmt.amount}</span>
+                        <span className="font-bold text-gray-900">{formatCurrency(pmt.amount)}</span>
                         <p className="text-xs text-gray-500">{pmt.payment_method}</p>
                       </td>
                       <td className="p-4 font-mono text-sm text-gray-600">

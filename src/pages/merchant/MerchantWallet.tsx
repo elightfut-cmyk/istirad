@@ -59,7 +59,7 @@ export default function MerchantWallet() {
     try {
       const { error } = await supabase.from('manual_payments').insert({
         merchant_id: user.id,
-        amount: topupAmount,
+        amount: topupCurrency === 'USD' ? topupAmount * exchangeRate : topupAmount * EUR_TO_DZD,
         payment_method: paymentMethod + ' - ' + topupCurrency,
         transaction_id: transactionId.trim()
       });

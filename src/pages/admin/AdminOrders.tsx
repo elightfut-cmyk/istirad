@@ -91,7 +91,8 @@ export default function AdminOrders() {
       const { data: userData } = await supabase.from('users').select('id, wallet_balance').eq('id', payment.merchant_id || payment.merchant?.id).single();
       if (userData) {
         const newBalance = (userData.wallet_balance || 0) + payment.amount;
-        await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', userData.id);
+        const { error: userError } = await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', userData.id);
+        if (userError) throw userError;
       }
 
       alert('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');

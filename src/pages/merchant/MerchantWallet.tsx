@@ -40,6 +40,12 @@ export default function MerchantWallet() {
         return;
       }
       setTransactions(data || []);
+
+      // Also refresh the user profile to get the latest wallet balance
+      const { data: updatedUser } = await supabase.from('users').select('*').eq('id', user.id).single();
+      if (updatedUser) {
+        useAuthStore.getState().setUser(updatedUser);
+      }
     } catch (error) {
       console.error(error);
     } finally {

@@ -18,6 +18,7 @@ export interface User {
   loyalty_points?: number;
   has_successful_referral?: boolean;
   wallet_balance?: number;
+  status?: string;
 }
 
 interface AuthState {

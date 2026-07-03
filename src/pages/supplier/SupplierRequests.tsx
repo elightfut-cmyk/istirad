@@ -123,14 +123,28 @@ export default function SupplierRequests() {
           <h2 className="text-xl font-bold text-gray-800">سوق الطلبات والمناقصات</h2>
           <p className="text-gray-500 text-sm mt-1">تصفح طلبات التجار الخاصة وقدم أفضل عروضك للفوز بالصفقة.</p>
         </div>
-        <div className="flex bg-gray-100 rounded-lg p-1 w-max">
+        <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-max">
           <button onClick={() => setFilterStatus('all')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>الكل</button>
           <button onClick={() => setFilterStatus('open')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'open' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>مفتوحة</button>
           <button onClick={() => setFilterStatus('closed')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'closed' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>مغلقة</button>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="relative">
+        {user?.status === 'pending' && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200">
+            <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md mx-4">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Gavel size={32} className="text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">حسابك قيد المراجعة</h3>
+              <p className="text-gray-500">
+                لا يمكنك الاطلاع على طلبات ومناقصات التجار أو تقديم عروض حتى يتم مراجعة حسابك وقبوله من قِبل الإدارة.
+              </p>
+            </div>
+          </div>
+        )}
+        <div className={`space-y-6 ${user?.status === 'pending' ? 'pointer-events-none select-none opacity-50 blur-sm' : ''}`}>
         {loading ? (
           <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
         ) : requests.length === 0 ? (

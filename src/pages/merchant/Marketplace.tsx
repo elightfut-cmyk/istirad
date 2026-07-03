@@ -282,7 +282,7 @@ export default function Marketplace() {
                         {product.description}
                       </p>
 
-                      <div className="flex items-center gap-1 mb-4 bg-orange-50 w-max px-2 py-1 rounded-md">
+                      <div className="flex items-center gap-1 mb-4 bg-orange-50 w-full sm:w-max px-2 py-1 rounded-md">
                         <Store size={14} className="text-orange-500" />
                         <span className="text-xs text-orange-700">{product.supplier?.company_name || 'مورد غير معروف'}</span>
                       </div>

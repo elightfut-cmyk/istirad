@@ -470,7 +470,7 @@ export default function MerchantOrders() {
                       </div>
                       <p className="text-gray-600 text-sm mb-4">{req.description}</p>
                       
-                      <div className="flex flex-wrap items-center gap-4 text-sm bg-white p-3 rounded-xl border border-gray-100 w-max">
+                      <div className="flex flex-wrap items-center gap-4 text-sm bg-white p-3 rounded-xl border border-gray-100 w-full sm:w-max">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500">السعر الإجمالي:</span>
                           <span className="font-bold text-lg text-[#065f46]">{formatCurrency(bid?.price || 0)}</span>
@@ -700,7 +700,7 @@ export default function MerchantOrders() {
                               </div>
                               <span className="text-sm text-gray-500 block mb-1">حالة الشحن والتوصيل:</span>
                               <div className="flex flex-col gap-3">
-                                <span className={`inline-block px-3 py-1 rounded-md text-sm font-bold w-max ${
+                                <span className={`inline-block px-3 py-1 rounded-md text-sm font-bold w-full sm:w-max ${
                                   bid.shipping_status === 'shipped' ? 'bg-blue-50 text-blue-700' :
                                   bid.shipping_status === 'delivered' ? 'bg-green-50 text-green-700' :
                                   'bg-gray-100 text-gray-800'
@@ -714,7 +714,7 @@ export default function MerchantOrders() {
                                   href={`https://wa.me/${bid.supplier?.phone || '+213000000000'}?text=${encodeURIComponent(`مرحباً، أتواصل معك بخصوص عرضك على مناقصة رقم: ${req.id}`)}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-green-700 transition w-max justify-center"
+                                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-green-700 transition w-full sm:w-max justify-center"
                                 >
                                   <MessageCircle size={18} />
                                   تواصل عبر الواتساب

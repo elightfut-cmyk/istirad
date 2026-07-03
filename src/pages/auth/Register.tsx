@@ -49,9 +49,12 @@ export default function Register() {
       if (error) throw error;
 
       if (data.user) {
-        if (referredBy) {
-          // Explicitly update the users table in case the trigger doesn't map referred_by
-          await supabase.from('users').update({ referred_by: referredBy }).eq('id', data.user.id);
+        let updateData: any = {};
+        if (referredBy) updateData.referred_by = referredBy;
+        if (formData.role === 'supplier') updateData.status = 'pending';
+        
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from('users').update(updateData).eq('id', data.user.id);
         }
 
         setSuccess(true);

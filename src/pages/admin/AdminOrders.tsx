@@ -7,16 +7,19 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 export default function AdminOrders() {
   const { formatCurrency } = useSettingsStore();
   const [requests, setRequests] = useState<any[]>([]);
+  const [manualPayments, setManualPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'custom' | 'direct'>('custom');
+  const [activeTab, setActiveTab] = useState<'custom' | 'direct' | 'manual'>('custom');
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequests();
+    fetchManualPayments();
 
     const handleRefresh = () => {
       fetchRequests();
+      fetchManualPayments();
     };
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
@@ -43,6 +46,75 @@ export default function AdminOrders() {
       console.error('Error fetching admin orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchManualPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('manual_payments')
+        .select(`
+          id, amount, payment_method, transaction_id, status, created_at,
+          merchant:users!merchant_id(name, company_name)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setManualPayments(data || []);
+    } catch (error) {
+      console.error('Error fetching manual payments:', error);
+    }
+  };
+
+  const handleApprovePayment = async (payment: any) => {
+    if (!window.confirm(`هل أنت متأكد من الموافقة على الدفعة بقيمة ${payment.amount} وإضافتها لرصيد التاجر؟`)) return;
+
+    try {
+      // 1. Update manual_payment status
+      const { error: updateError } = await supabase
+        .from('manual_payments')
+        .update({ status: 'approved' })
+        .eq('id', payment.id);
+      if (updateError) throw updateError;
+
+      // 2. Add to wallet_transactions
+      const { error: txError } = await supabase.from('wallet_transactions').insert({
+        merchant_id: payment.merchant.id || payment.merchant_id, // we might need merchant_id from original if nested
+        amount: payment.amount,
+        type: 'deposit',
+        status: 'completed',
+        description: `شحن يدوي موافق عليه: ${payment.payment_method}`
+      });
+      if (txError) throw txError;
+
+      // 3. Update user wallet balance (We have to fetch it first or use an RPC)
+      // For simplicity, fetch the user, add, update.
+      const { data: userData } = await supabase.from('users').select('id, wallet_balance').eq('id', payment.merchant_id || payment.merchant?.id).single();
+      if (userData) {
+        const newBalance = (userData.wallet_balance || 0) + payment.amount;
+        await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', userData.id);
+      }
+
+      alert('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
+      fetchManualPayments();
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء معالجة الموافقة.');
+    }
+  };
+
+  const handleRejectPayment = async (paymentId: string) => {
+    if (!window.confirm('هل أنت متأكد من رفض هذه الدفعة؟')) return;
+    try {
+      const { error } = await supabase
+        .from('manual_payments')
+        .update({ status: 'rejected' })
+        .eq('id', paymentId);
+      if (error) throw error;
+      fetchManualPayments();
+    } catch (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء رفض الدفعة.');
     }
   };
 
@@ -92,6 +164,14 @@ export default function AdminOrders() {
             }`}
           >
             الطلبات المباشرة
+          </button>
+          <button
+            onClick={() => { setActiveTab('manual'); setExpandedRequestId(null); }}
+            className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
+              activeTab === 'manual' ? 'border-[#065f46] text-[#065f46]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            طلبات الشحن اليدوي
           </button>
         </div>
 
@@ -253,7 +333,7 @@ export default function AdminOrders() {
                 )}
               </tbody>
             </table>
-          ) : (
+          ) : activeTab === 'direct' ? (
             <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-100">
@@ -330,6 +410,74 @@ export default function AdminOrders() {
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          ) : (
+            <table className="w-full text-right border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="bg-gray-50 border-y border-gray-100">
+                  <th className="p-4 font-bold text-gray-700">التاجر</th>
+                  <th className="p-4 font-bold text-gray-700">المبلغ / العملة</th>
+                  <th className="p-4 font-bold text-gray-700">رقم المعاملة (TxID)</th>
+                  <th className="p-4 font-bold text-gray-700">الحالة</th>
+                  <th className="p-4 font-bold text-gray-700 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                  </tr>
+                ) : manualPayments.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-gray-500">لا توجد طلبات شحن يدوية.</td>
+                  </tr>
+                ) : (
+                  manualPayments.map((pmt) => (
+                    <tr key={pmt.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-4">
+                        <p className="font-bold text-gray-800">{pmt.merchant?.name}</p>
+                        <p className="text-xs text-gray-500">{pmt.merchant?.company_name}</p>
+                      </td>
+                      <td className="p-4">
+                        <span className="font-bold text-gray-900">{pmt.amount}</span>
+                        <p className="text-xs text-gray-500">{pmt.payment_method}</p>
+                      </td>
+                      <td className="p-4 font-mono text-sm text-gray-600">
+                        {pmt.transaction_id}
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          pmt.status === 'approved' ? 'bg-green-50 text-green-700' :
+                          pmt.status === 'rejected' ? 'bg-red-50 text-red-700' :
+                          'bg-orange-50 text-orange-700'
+                        }`}>
+                          {pmt.status === 'approved' ? 'مقبول' : pmt.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {pmt.status === 'pending' ? (
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={() => handleApprovePayment(pmt)}
+                              className="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 transition"
+                            >
+                              موافقة
+                            </button>
+                            <button
+                              onClick={() => handleRejectPayment(pmt.id)}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold hover:bg-red-200 transition"
+                            >
+                              رفض
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>

@@ -51,6 +51,7 @@ export default function SupplierOrders() {
         `)
         .eq('supplier_id', user!.id)
         .in('status', ['pending', 'accepted'])
+        .eq('supplier_hidden', false)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -60,6 +61,21 @@ export default function SupplierOrders() {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleHideOrder = async (bidId: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذا الطلب من السجل؟ (لن يظهر لك بعد الآن)')) return;
+    try {
+      const { error } = await supabase
+        .from('supplier_bids')
+        .update({ supplier_hidden: true })
+        .eq('id', bidId);
+      if (error) throw error;
+      setOrders(orders.filter(o => o.id !== bidId));
+    } catch (error) {
+      console.error('Error hiding order:', error);
+      alert('حدث خطأ أثناء إخفاء الطلب');
     }
   };
 
@@ -303,6 +319,17 @@ export default function SupplierOrders() {
                 </div>
               </div>
             )}
+            
+            {order.shipping_status === 'delivered' && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <button
+                  onClick={() => handleHideOrder(order.id)}
+                  className="w-full bg-red-50 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition border border-red-200"
+                >
+                  حذف من السجل
+                </button>
+              </div>
+            )}
 
           </div>
         </div>
@@ -325,6 +352,22 @@ export default function SupplierOrders() {
         <h2 className="text-2xl font-bold text-gray-800">الطلبات الواردة</h2>
         <p className="text-gray-500 mt-1">تتبع وإدارة طلبات الشراء المؤكدة من التجار (الصفقات الناجحة)</p>
       </div>
+
+      <div className="relative">
+        {user?.status === 'pending' && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200">
+            <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md mx-4">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingBag size={32} className="text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">حسابك قيد المراجعة</h3>
+              <p className="text-gray-500">
+                لا يمكنك الاطلاع على الطلبات أو إدارتها حتى يتم مراجعة حسابك وقبوله من قِبل الإدارة.
+              </p>
+            </div>
+          </div>
+        )}
+        <div className={`${user?.status === 'pending' ? 'pointer-events-none select-none opacity-50 blur-sm' : ''}`}>
 
       <div className="flex border-b border-gray-200 mb-6">
         <button
@@ -353,6 +396,7 @@ export default function SupplierOrders() {
         ) : (
           renderOrderList(customOrders)
         )}
+        </div>
       </div>
     </DashboardLayout>
   );

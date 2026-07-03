@@ -15,6 +15,8 @@ export default function MerchantWallet() {
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [topupAmount, setTopupAmount] = useState<number>(0);
   const [topupCurrency, setTopupCurrency] = useState<'USD' | 'EUR'>('USD');
+  const [paymentMethod, setPaymentMethod] = useState<'redotpay' | 'binance'>('redotpay');
+  const [transactionId, setTransactionId] = useState('');
   const [processing, setProcessing] = useState(false);
 
   // Hardcoded exchange rates for topup simulation
@@ -47,38 +49,30 @@ export default function MerchantWallet() {
 
   const handleTopup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || topupAmount <= 0) return;
+    if (!user || topupAmount <= 0 || !transactionId.trim()) {
+      alert('يرجى تعبئة جميع الحقول بشكل صحيح');
+      return;
+    }
     
     setProcessing(true);
     
-    // Calculate equivalent in DZD (Wallet is tracked in USD or DZD? The platform base is USD, let's keep wallet base in USD)
-    // Wait, the platform `price` is stored in USD. 
-    // If they pay in USD, we add USD. If they pay in EUR, we convert EUR to USD to store in the wallet.
-    // Let's assume EUR to USD is 1.1.
-    const amountInUSD = topupCurrency === 'USD' ? topupAmount : topupAmount * 1.1;
-
     try {
-      const { error } = await supabase.from('wallet_transactions').insert({
+      const { error } = await supabase.from('manual_payments').insert({
         merchant_id: user.id,
-        amount: amountInUSD,
-        type: 'deposit',
-        status: 'completed',
-        description: `شحن الرصيد (${topupAmount} ${topupCurrency})`
+        amount: topupAmount,
+        payment_method: paymentMethod + ' - ' + topupCurrency,
+        transaction_id: transactionId.trim()
       });
 
       if (error) throw error;
       
-      const newBalance = (user.wallet_balance || 0) + amountInUSD;
-      await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', user.id);
-      useAuthStore.getState().setUser({ ...user, wallet_balance: newBalance });
-      
-      alert('تم شحن الرصيد بنجاح (لأغراض الاختبار)');
+      alert('تم إرسال طلب الشحن للمراجعة من الإدارة. سيتم إضافة الرصيد فور التأكد من التحويل.');
       setShowTopupModal(false);
       setTopupAmount(0);
-      fetchTransactions();
+      setTransactionId('');
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء شحن الرصيد');
+      alert('حدث خطأ أثناء إرسال طلب الشحن');
     } finally {
       setProcessing(false);
     }
@@ -268,16 +262,17 @@ export default function MerchantWallet() {
               
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">المبلغ</label>
-                  <input 
-                    type="number" min="1" step="0.01" required
-                    value={topupAmount || ''}
-                    onChange={(e) => setTopupAmount(parseFloat(e.target.value) || 0)}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as any)}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
-                    placeholder="1000"
-                  />
+                  >
+                    <option value="redotpay">RedotPay</option>
+                    <option value="binance">Binance Pay</option>
+                  </select>
                 </div>
-                <div className="w-1/3">
+                <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-2">العملة</label>
                   <select
                     value={topupCurrency}
@@ -290,11 +285,39 @@ export default function MerchantWallet() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">المبلغ المرسل</label>
+                <input 
+                  type="number" min="1" step="0.01" required
+                  value={topupAmount || ''}
+                  onChange={(e) => setTopupAmount(parseFloat(e.target.value) || 0)}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                  placeholder="مثال: 1000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">رقم المعاملة (TxID) أو الـ ID</label>
+                <input 
+                  type="text" required
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                  placeholder="أدخل رقم المعاملة للتحقق"
+                />
+              </div>
+
+              <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl text-sm text-orange-800 my-4">
+                <strong>تعليمات الدفع:</strong><br />
+                - أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID: 123456789' : 'Binance Pay ID: 987654321'}<br />
+                - قم بنسخ رقم المعاملة (TxID) والصقه في الحقل أعلاه<br />
+                - سيتم مراجعة الدفعة وإضافة الرصيد في أقرب وقت.
+              </div>
+
               {topupAmount > 0 && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                  <span className="text-gray-600 font-medium">الرصيد الذي ستحصل عليه:</span>
+                  <span className="text-gray-600 font-medium">الرصيد التقديري بالدينار:</span>
                   <span className="font-black text-xl text-[#065f46]">
-                    {/* Display equivalent in DZD */}
                     {topupCurrency === 'USD' 
                       ? `${(topupAmount * exchangeRate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج` 
                       : `${(topupAmount * EUR_TO_DZD).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج`}

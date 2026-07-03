@@ -37,8 +37,8 @@ export default function AdminUsers() {
   };
 
   const handleToggleStatus = async (userId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'banned' ? 'active' : 'banned';
-    if (!window.confirm(`هل أنت متأكد من ${newStatus === 'banned' ? 'حظر' : 'تفعيل'} هذا الحساب؟`)) return;
+    const newStatus = (currentStatus === 'banned' || currentStatus === 'pending') ? 'active' : 'banned';
+    if (!window.confirm(`هل أنت متأكد من ${newStatus === 'active' ? 'تفعيل' : 'حظر'} هذا الحساب؟`)) return;
 
     try {
       // Optimistic update
@@ -181,9 +181,10 @@ export default function AdminUsers() {
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        u.status === 'banned' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                        u.status === 'banned' ? 'bg-red-50 text-red-700' : 
+                        u.status === 'pending' ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
                       }`}>
-                        {u.status === 'banned' ? 'محظور' : 'نشط'}
+                        {u.status === 'banned' ? 'محظور' : u.status === 'pending' ? 'قيد المراجعة' : 'نشط'}
                       </span>
                     </td>
                     <td className="p-4 text-center">
@@ -193,13 +194,13 @@ export default function AdminUsers() {
                             <button 
                               onClick={() => handleToggleStatus(u.id, u.status)}
                               className={`p-2 rounded-xl transition-colors ${
-                                u.status === 'banned' 
+                                (u.status === 'banned' || u.status === 'pending')
                                   ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                                   : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                               }`}
-                              title={u.status === 'banned' ? 'تفعيل الحساب' : 'حظر الحساب'}
+                              title={(u.status === 'banned' || u.status === 'pending') ? 'تفعيل الحساب' : 'حظر الحساب'}
                             >
-                              {u.status === 'banned' ? <CheckCircle size={18} /> : <Ban size={18} />}
+                              {(u.status === 'banned' || u.status === 'pending') ? <CheckCircle size={18} /> : <Ban size={18} />}
                             </button>
                             <button 
                               onClick={() => handlePromoteToAdmin(u.id, u.name)}

@@ -70,36 +70,15 @@ export default function AdminOrders() {
     if (!window.confirm(`هل أنت متأكد من الموافقة على الدفعة بقيمة ${formatCurrency(payment.amount)} وإضافتها لرصيد التاجر؟`)) return;
 
     try {
-      // 1. Update manual_payment status
-      const { error: updateError } = await supabase
-        .from('manual_payments')
-        .update({ status: 'approved' })
-        .eq('id', payment.id);
-      if (updateError) throw updateError;
-
-      // 2. Add to wallet_transactions
-      const { error: txError } = await supabase.from('wallet_transactions').insert({
-        merchant_id: payment.merchant_id,
-        amount: payment.amount,
-        type: 'deposit',
-        description: `شحن يدوي موافق عليه: ${payment.payment_method}`
-      });
-      if (txError) throw txError;
-
-      // 3. Update user wallet balance (We have to fetch it first or use an RPC)
-      // For simplicity, fetch the user, add, update.
-      const { data: userData } = await supabase.from('users').select('id, wallet_balance').eq('id', payment.merchant_id || payment.merchant?.id).single();
-      if (userData) {
-        const newBalance = (userData.wallet_balance || 0) + payment.amount;
-        const { error: userError } = await supabase.from('users').update({ wallet_balance: newBalance }).eq('id', userData.id);
-        if (userError) throw userError;
-      }
+      const { data, error } = await supabase.rpc('admin_approve_manual_payment', { p_payment_id: payment.id });
+      if (error) throw error;
+      if (data && !data.success) throw new Error(data.message);
 
       alert('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
       fetchManualPayments();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('حدث خطأ أثناء معالجة الموافقة.');
+      alert('حدث خطأ أثناء معالجة الموافقة: ' + (error.message || ''));
     }
   };
 

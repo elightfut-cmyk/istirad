@@ -250,7 +250,7 @@ export default function MerchantWallet() {
       {/* Topup Modal */}
       {showTopupModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
             <button onClick={() => setShowTopupModal(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
               <X size={24} />
             </button>

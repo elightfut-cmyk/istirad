@@ -54,7 +54,7 @@ export default function AdminOrders() {
       const { data, error } = await supabase
         .from('manual_payments')
         .select(`
-          id, amount, payment_method, transaction_id, status, created_at,
+          id, amount, payment_method, transaction_id, status, created_at, merchant_id,
           merchant:users!merchant_id(name, company_name)
         `)
         .order('created_at', { ascending: false });
@@ -79,10 +79,9 @@ export default function AdminOrders() {
 
       // 2. Add to wallet_transactions
       const { error: txError } = await supabase.from('wallet_transactions').insert({
-        merchant_id: payment.merchant.id || payment.merchant_id, // we might need merchant_id from original if nested
+        merchant_id: payment.merchant_id,
         amount: payment.amount,
         type: 'deposit',
-        status: 'completed',
         description: `شحن يدوي موافق عليه: ${payment.payment_method}`
       });
       if (txError) throw txError;

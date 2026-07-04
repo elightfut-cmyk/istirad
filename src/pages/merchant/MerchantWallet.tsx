@@ -315,7 +315,7 @@ export default function MerchantWallet() {
 
               <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl text-sm text-orange-800 my-4">
                 <strong>تعليمات الدفع:</strong><br />
-                - أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID: 123456789' : 'Binance Pay ID: 987654321'}<br />
+                - أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID: 1320881144' : 'Binance Pay ID: 1054805981'}<br />
                 - قم بنسخ رقم المعاملة (TxID) والصقه في الحقل أعلاه<br />
                 - سيتم مراجعة الدفعة وإضافة الرصيد في أقرب وقت.
               </div>

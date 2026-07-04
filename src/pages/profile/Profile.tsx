@@ -67,7 +67,7 @@ export default function Profile() {
       <div className="max-w-3xl mx-auto mt-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {/* Cover Header */}
-          <div className="h-32 bg-gradient-to-r from-[#065f46] to-[#047857]"></div>
+          <div className="h-32 bg-gradient-to-r from-[#4f46e5] to-[#4338ca]"></div>
           
           <div className="px-8 pb-8 relative">
             {/* Avatar */}
@@ -83,12 +83,12 @@ export default function Profile() {
                   type="text" 
                   value={formData.name} 
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
                 />
               </div>
               
               <div className="flex items-center text-sm font-medium mt-1">
-                <span className="bg-[#065f46]/10 text-[#065f46] px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="bg-[#4f46e5]/10 text-[#4f46e5] px-3 py-1 rounded-full flex items-center gap-1">
                   <ShieldCheck size={16} />
                   {user?.role === 'admin' ? 'مدير النظام' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}
                 </span>
@@ -107,7 +107,7 @@ export default function Profile() {
                     type="tel" 
                     value={formData.phone} 
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:border-transparent text-right"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent text-right"
                     dir="ltr"
                   />
                 </div>
@@ -124,7 +124,7 @@ export default function Profile() {
                     type="text" 
                     value={formData.address} 
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function Profile() {
                     type="text" 
                     value={formData.company_name} 
                     onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function Profile() {
             <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end gap-3">
               <button 
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-[#065f46] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#047857] transition-colors"
+                className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-2 rounded-xl font-bold hover:bg-[#4338ca] transition-colors"
                 disabled={isSaving}
               >
                 <Check size={20} />

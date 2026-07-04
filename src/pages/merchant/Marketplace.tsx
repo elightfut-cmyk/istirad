@@ -191,7 +191,7 @@ export default function Marketplace() {
         {/* Filters Sidebar */}
         <div className="w-full md:w-64 flex-shrink-0">
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 sticky top-4">
-            <div className="flex items-center gap-2 mb-6 text-[#065f46]">
+            <div className="flex items-center gap-2 mb-6 text-[#4f46e5]">
               <Filter size={20} />
               <h3 className="font-bold text-lg">الفلاتر</h3>
             </div>
@@ -201,7 +201,7 @@ export default function Marketplace() {
               <div className="space-y-2">
                 {categories.map((cat) => (
                   <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategory === cat ? 'bg-[#065f46] border-[#065f46]' : 'border-gray-300 group-hover:border-[#065f46]'}`}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategory === cat ? 'bg-[#4f46e5] border-[#4f46e5]' : 'border-gray-300 group-hover:border-[#4f46e5]'}`}>
                       {selectedCategory === cat && <div className="w-2.5 h-2.5 bg-white rounded-sm"></div>}
                     </div>
                     <input
@@ -211,7 +211,7 @@ export default function Marketplace() {
                       checked={selectedCategory === cat}
                       onChange={() => setSelectedCategory(cat)}
                     />
-                    <span className={`text-sm ${selectedCategory === cat ? 'font-bold text-[#065f46]' : 'text-gray-600 group-hover:text-gray-900'}`}>{cat}</span>
+                    <span className={`text-sm ${selectedCategory === cat ? 'font-bold text-[#4f46e5]' : 'text-gray-600 group-hover:text-gray-900'}`}>{cat}</span>
                   </label>
                 ))}
               </div>
@@ -220,7 +220,7 @@ export default function Marketplace() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
                 <h4 className="font-bold text-gray-700 text-sm">أقصى سعر</h4>
-                <span className="text-xs font-bold text-[#065f46] bg-green-50 px-2 py-1 rounded">{formatCurrency(maxPrice)}</span>
+                <span className="text-xs font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">{formatCurrency(maxPrice)}</span>
               </div>
               <input
                 type="range"
@@ -229,7 +229,7 @@ export default function Marketplace() {
                 step="100"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-[#065f46]"
+                className="w-full accent-[#4f46e5]"
               />
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function Marketplace() {
                 placeholder="ابحث عن المنتجات، الموردين..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pr-12 pl-4 py-3 border border-transparent bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#065f46] focus:border-transparent transition-all sm:text-sm"
+                className="block w-full pr-12 pl-4 py-3 border border-transparent bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-all sm:text-sm"
               />
             </div>
           </div>
@@ -294,12 +294,12 @@ export default function Marketplace() {
                             <div className="flex flex-col">
                               <span className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</span>
                               <div className="flex items-center gap-2">
-                                <p className="font-black text-[#065f46] text-xl">{formatCurrency(product.discount_price)}</p>
+                                <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.discount_price)}</p>
                                 <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</span>
                               </div>
                             </div>
                           ) : (
-                            <p className="font-black text-[#065f46] text-xl">{formatCurrency(product.price)}</p>
+                            <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.price)}</p>
                           )}
                         </div>
                         <div className="text-left">
@@ -310,7 +310,7 @@ export default function Marketplace() {
 
                       <button 
                         onClick={() => handleOpenOrderModal(product)}
-                        className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 border-2 border-[#065f46] text-[#065f46] font-bold rounded-xl hover:bg-[#065f46] hover:text-white transition-colors"
+                        className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 border-2 border-[#4f46e5] text-[#4f46e5] font-bold rounded-xl hover:bg-[#4f46e5] hover:text-white transition-colors"
                       >
                         <ShoppingCart size={18} />
                         <span>إضافة للطلب</span>
@@ -360,7 +360,7 @@ export default function Marketplace() {
                 {orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price ? (
                   <>
                     <span className="text-sm text-gray-400 line-through">{formatCurrency(orderingProduct.price)}</span>
-                    <span className="font-bold text-[#065f46]">{formatCurrency(orderingProduct.discount_price)}</span>
+                    <span className="font-bold text-[#4f46e5]">{formatCurrency(orderingProduct.discount_price)}</span>
                   </>
                 ) : (
                   <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price)}</span>
@@ -379,7 +379,7 @@ export default function Marketplace() {
                 max={999999}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                className={`w-full p-3 border rounded-xl focus:ring-[#065f46] focus:border-[#065f46] ${quantity < orderingProduct.moq ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < orderingProduct.moq ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
               />
               {quantity < orderingProduct.moq && (
                 <p className="text-red-500 text-xs mt-2">لا يمكنك طلب أقل من {orderingProduct.moq} وحدة (شرط المورد).</p>
@@ -388,7 +388,7 @@ export default function Marketplace() {
 
             <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
               <span className="font-bold text-gray-700">الإجمالي:</span>
-              <span className="font-black text-[#065f46] text-2xl">
+              <span className="font-black text-[#4f46e5] text-2xl">
                 {formatCurrency(quantity * (orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price
                   ? orderingProduct.discount_price 
                   : orderingProduct.price))}
@@ -398,7 +398,7 @@ export default function Marketplace() {
             <button 
               onClick={submitOrder}
               disabled={submittingOrder || quantity < orderingProduct.moq}
-              className="w-full bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50"
+              className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
             >
               {submittingOrder ? 'جاري المعالجة...' : 'تأكيد الطلب والانتقال للدفع'}
             </button>

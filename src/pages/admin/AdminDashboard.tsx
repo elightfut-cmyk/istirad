@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [obligations, setObligations] = useState({ supplierDues: 0, walletDues: 0, pointsDues: 0 });
   const [platformProfits, setPlatformProfits] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [payingDues, setPayingDues] = useState(false);
   
   const [users, setUsers] = useState<any[]>([]);
   const [allBids, setAllBids] = useState<any[]>([]);
@@ -56,7 +57,7 @@ export default function AdminDashboard() {
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
       // Fetch supplier dues and platform profits
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid');
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid, is_paid_to_supplier');
       const { data: reqData } = await supabase.from('custom_requests').select('id, merchant_id, status');
       
       let supplierSum = 0;
@@ -81,13 +82,13 @@ export default function AdminDashboard() {
             const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
             profitsSum += fee;
             // Supplier gets the full price minus platform fee
-            supplierSum += (price - fee);
+            if (!bid.is_paid_to_supplier) supplierSum += (price - fee);
           } else if (bid.status === 'accepted') {
             // User requested: When only deposit is paid, platform takes its percentage from the WHOLE deposit.
             const fee = advancePaid * (pFee / 100);
             profitsSum += fee;
             // Supplier gets the rest of the deposit
-            supplierSum += (advancePaid - fee);
+            if (!bid.is_paid_to_supplier) supplierSum += (advancePaid - fee);
           }
         });
       }
@@ -100,6 +101,32 @@ export default function AdminDashboard() {
       console.error('Error fetching admin stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaySupplierDues = async (supplierId: string) => {
+    if (!window.confirm('هل أنت متأكد من تأكيد دفع جميع المستحقات لهذا المورد؟ لن يمكن التراجع عن هذه العملية.')) return;
+    setPayingDues(true);
+    try {
+      // Find all unpaid bids for this supplier that have dues
+      const unpaidBids = allBids.filter(b => b.supplier_id === supplierId && !b.is_paid_to_supplier && (b.status === 'accepted' || b.status === 'delivered' || b.status === 'completed' || b.is_fully_paid));
+      
+      const updates = unpaidBids.map(b => ({
+        id: b.id,
+        is_paid_to_supplier: true
+      }));
+      
+      if (updates.length > 0) {
+        const { error } = await supabase.from('supplier_bids').upsert(updates);
+        if (error) throw error;
+        alert('تم تأكيد الدفع بنجاح');
+        fetchStats(); // Refresh data
+      }
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء الدفع');
+    } finally {
+      setPayingDues(false);
     }
   };
 
@@ -128,10 +155,10 @@ export default function AdminDashboard() {
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             const profitMargin = price - cost;
             const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
-            totalDues += (price - fee);
+            if (!bid.is_paid_to_supplier) totalDues += (price - fee);
           } else if (bid.status === 'accepted') {
             const fee = advancePaid * (pFee / 100);
-            totalDues += (advancePaid - fee);
+            if (!bid.is_paid_to_supplier) totalDues += (advancePaid - fee);
           }
         }
       });
@@ -190,13 +217,13 @@ export default function AdminDashboard() {
           <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-max">
             <button 
               onClick={() => { setSelectedRole('supplier'); setSelectedUserId(''); }}
-              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white text-[#065f46] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
               الموردين
             </button>
             <button 
               onClick={() => { setSelectedRole('merchant'); setSelectedUserId(''); }}
-              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white text-[#065f46] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
               التجار
             </button>
@@ -205,7 +232,7 @@ export default function AdminDashboard() {
           <select 
             value={selectedUserId} 
             onChange={e => setSelectedUserId(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 text-sm"
+            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 text-sm"
           >
             <option value="">-- اختر {selectedRole === 'supplier' ? 'المورد' : 'التاجر'} --</option>
             {users.filter(u => u.role === selectedRole).map(u => (
@@ -230,6 +257,15 @@ export default function AdminDashboard() {
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
                     <p className="text-xl font-bold text-orange-600">{formatCurrency(detailedStats.totalDues || 0)}</p>
+                    {detailedStats.totalDues > 0 && (
+                      <button 
+                        onClick={() => handlePaySupplierDues(selectedUserId)}
+                        disabled={payingDues}
+                        className="mt-3 w-full bg-[#4f46e5] text-white py-2 rounded-lg text-sm font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
+                      >
+                        {payingDues ? 'جاري الدفع...' : 'تأكيد دفع المستحقات'}
+                      </button>
+                    )}
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
@@ -292,7 +328,7 @@ export default function AdminDashboard() {
       
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
-          <Settings size={24} className="text-[#065f46]" />
+          <Settings size={24} className="text-[#4f46e5]" />
           إعدادات المنصة
         </h2>
         <AdminSettings />

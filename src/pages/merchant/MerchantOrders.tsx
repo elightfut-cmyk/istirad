@@ -373,7 +373,7 @@ export default function MerchantOrders() {
         window.location.origin + `/merchant/orders?payment=failure&supplier_id=${selectedBidForPayment.supplier_id}&type=${paymentType}`,
         { bid_id: selectedBidForPayment.id, request_id: selectedBidForPayment.reqId, payment_type: paymentType },
         { 
-          name: (user && (user.name || user.company_name)) ? (user.name || user.company_name || '') : 'زبون منصة استيراد', 
+          name: (user && (user.name || user.company_name)) ? (user.name || user.company_name || '') : 'زبون منصة جيبها-jiibha', 
           email: (user && user.email) ? user.email : 'customer@isttirad.com', 
           phone: (user && user.phone) ? user.phone : undefined 
         }
@@ -419,7 +419,7 @@ export default function MerchantOrders() {
         <h2 className="text-xl font-bold text-gray-800">إدارة الطلبات</h2>
         <button 
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-[#065f46] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#044c38] transition"
+          className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition"
         >
           <Plus size={20} />
           إنشاء مناقصة جديدة
@@ -430,7 +430,7 @@ export default function MerchantOrders() {
         <button
           onClick={() => setActiveTab('direct')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'direct' ? 'border-[#065f46] text-[#065f46]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
           الطلبات المباشرة
@@ -438,7 +438,7 @@ export default function MerchantOrders() {
         <button
           onClick={() => setActiveTab('custom')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'custom' ? 'border-[#065f46] text-[#065f46]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
           المناقصات المفتوحة
@@ -473,7 +473,7 @@ export default function MerchantOrders() {
                       <div className="flex flex-wrap items-center gap-4 text-sm bg-white p-3 rounded-xl border border-gray-100 w-full sm:w-max">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500">السعر الإجمالي:</span>
-                          <span className="font-bold text-lg text-[#065f46]">{formatCurrency(bid?.price || 0)}</span>
+                          <span className="font-bold text-lg text-[#4f46e5]">{formatCurrency(bid?.price || 0)}</span>
                         </div>
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
@@ -513,7 +513,7 @@ export default function MerchantOrders() {
                       </div>
                       <button 
                         onClick={() => openPaymentModal(bid, req.id)}
-                        className="bg-[#065f46] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#044c38] transition shadow-sm"
+                        className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
                       >
                         دفع العربون
                       </button>
@@ -537,7 +537,7 @@ export default function MerchantOrders() {
                             {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
                               <button 
                                 onClick={() => openPaymentModal(bid, req.id, 'remaining')}
-                                className="mt-1 bg-[#065f46] text-white py-1.5 px-3 rounded-md font-bold text-xs hover:bg-[#044c38] w-full text-center"
+                                className="mt-1 bg-[#4f46e5] text-white py-1.5 px-3 rounded-md font-bold text-xs hover:bg-[#4338ca] w-full text-center"
                               >
                                 دفع المتبقي من المحفظة
                               </button>
@@ -601,7 +601,7 @@ export default function MerchantOrders() {
                       <p className="text-gray-500 text-xs mb-3 italic">ملاحظات: {req.notes}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
-                      <span className="font-bold text-[#065f46] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
+                      <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
                       {req.product_link && (
                         <a href={req.product_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
                           <LinkIcon size={14} /> رابط المنتج
@@ -656,7 +656,7 @@ export default function MerchantOrders() {
                           
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-600">السعر الإجمالي:</span>
-                            <span className="font-black text-[#065f46]">{formatCurrency(bid.price)}</span>
+                            <span className="font-black text-[#4f46e5]">{formatCurrency(bid.price)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-600">الدفعة المقدمة (العربون):</span>
@@ -674,7 +674,7 @@ export default function MerchantOrders() {
                           {req.status === 'open' && bid.status === 'pending' && (
                             <button 
                               onClick={() => openPaymentModal(bid, req.id)}
-                              className="w-full py-2 bg-[#065f46] text-white rounded-lg font-bold text-sm hover:bg-[#044c38] transition"
+                              className="w-full py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
                             >
                               قبول ودفع العربون
                             </button>
@@ -692,7 +692,7 @@ export default function MerchantOrders() {
                                 {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
                                   <button 
                                     onClick={() => openPaymentModal(bid, req.id, 'remaining')}
-                                    className="mt-1 bg-[#065f46] text-white py-2 px-3 rounded-md font-bold text-sm hover:bg-[#044c38] w-full text-center"
+                                    className="mt-1 bg-[#4f46e5] text-white py-2 px-3 rounded-md font-bold text-sm hover:bg-[#4338ca] w-full text-center"
                                   >
                                     دفع المتبقي
                                   </button>
@@ -749,7 +749,7 @@ export default function MerchantOrders() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">اسم السلعة المطلوبة</label>
                 <input 
                   type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
                 />
               </div>
 
@@ -757,7 +757,7 @@ export default function MerchantOrders() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">التفاصيل والمواصفات</label>
                 <textarea 
                   required rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
                 />
               </div>
 
@@ -769,7 +769,7 @@ export default function MerchantOrders() {
                     <input 
                       type="url" required value={formData.product_link} onChange={e => setFormData({...formData, product_link: e.target.value})}
                       placeholder="رابط المنتج (مثال من علي بابا وغيرها)..."
-                      className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                      className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                     />
                   </div>
                   <div className="relative">
@@ -804,7 +804,7 @@ export default function MerchantOrders() {
                             setImageFile(null);
                           }}
                           placeholder="الصق رابط صورة..."
-                          className="w-full pr-10 pl-3 py-4 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                          className="w-full pr-10 pl-3 py-4 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                         />
                       </div>
                     </div>
@@ -817,7 +817,7 @@ export default function MerchantOrders() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">الكمية المطلوبة</label>
                   <input 
                     type="number" required min={minQuantity} value={formData.quantity} onChange={e => setFormData({...formData, quantity: parseInt(e.target.value)})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 focus:bg-white"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
                   />
                   <p className="text-xs text-gray-500 mt-1">الحد الأدنى الذي حددته الإدارة هو {minQuantity}</p>
                 </div>
@@ -827,13 +827,13 @@ export default function MerchantOrders() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات إضافية (اختياري)</label>
                 <textarea 
                   rows={2} value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
                   placeholder="شروط خاصة، ألوان معينة، الخ..."
                 />
               </div>
 
               <div className="pt-4 flex gap-4">
-                <button type="submit" disabled={creating} className="flex-1 bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50">
+                <button type="submit" disabled={creating} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
                   {creating ? 'جاري الحفظ...' : (editingRequestId ? 'حفظ التعديلات' : 'نشر الطلب للموردين')}
                 </button>
                 <button type="button" onClick={closeModal} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
@@ -868,10 +868,10 @@ export default function MerchantOrders() {
             <div className="space-y-4">
               <button 
                 onClick={handleWalletPayment}
-                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-[#065f46] hover:bg-green-50 transition group"
+                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-[#4f46e5] hover:bg-green-50 transition group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg text-green-700 group-hover:bg-[#065f46] group-hover:text-white transition">
+                  <div className="bg-green-100 p-2 rounded-lg text-green-700 group-hover:bg-[#4f46e5] group-hover:text-white transition">
                     <Wallet size={24} />
                   </div>
                   <div className="text-right">

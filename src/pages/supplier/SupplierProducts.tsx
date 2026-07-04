@@ -186,7 +186,7 @@ export default function SupplierProducts() {
         <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
         <button 
           onClick={handleOpenAddModal}
-          className="bg-[#065f46] text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-[#044c38] transition-colors"
+          className="bg-[#4f46e5] text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-[#4338ca] transition-colors"
         >
           <Plus size={20} />
           <span>إضافة منتج جديد</span>
@@ -243,12 +243,12 @@ export default function SupplierProducts() {
                       <>
                         <span className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#065f46]">{formatCurrency(product.discount_price)}</span>
+                          <span className="font-bold text-[#4f46e5]">{formatCurrency(product.discount_price)}</span>
                           <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</span>
                         </div>
                       </>
                     ) : (
-                      <span className="font-bold text-[#065f46]">{formatCurrency(product.price)}</span>
+                      <span className="font-bold text-[#4f46e5]">{formatCurrency(product.price)}</span>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -288,7 +288,7 @@ export default function SupplierProducts() {
                   type="text" required 
                   value={form.title} 
                   onChange={e => setForm({...form, title: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="مثال: حقيبة سفر جلدية"
                 />
               </div>
@@ -299,7 +299,7 @@ export default function SupplierProducts() {
                   required 
                   value={form.category} 
                   onChange={e => setForm({...form, category: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                 >
                   <option value="" disabled>اختر التصنيف</option>
                   {productCategories.map((cat, index) => (
@@ -314,7 +314,7 @@ export default function SupplierProducts() {
                   required rows={3}
                   value={form.description} 
                   onChange={e => setForm({...form, description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                 />
               </div>
 
@@ -325,7 +325,7 @@ export default function SupplierProducts() {
                     type="number" step="0.01" required min="0"
                     value={form.price_usd || ''} 
                     onChange={e => setForm({...form, price_usd: parseFloat(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
                   <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((form.price_usd || 0) * exchangeRate))}</p>
                 </div>
@@ -335,7 +335,7 @@ export default function SupplierProducts() {
                     type="number" required min="0" max="100"
                     value={form.advance_percentage || ''} 
                     onChange={e => setForm({...form, advance_percentage: parseInt(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
                 </div>
               </div>
@@ -366,7 +366,7 @@ export default function SupplierProducts() {
                     type="number" step="0.01" min="0"
                     value={form.discount_price_usd || ''} 
                     onChange={e => setForm({...form, discount_price_usd: parseFloat(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                     placeholder="اختياري"
                   />
                   {form.discount_price_usd > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((form.discount_price_usd || 0) * exchangeRate))}</p>}
@@ -377,7 +377,7 @@ export default function SupplierProducts() {
                     type="number" required min="1"
                     value={form.moq || ''} 
                     onChange={e => setForm({...form, moq: parseInt(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
                 </div>
               </div>
@@ -386,7 +386,7 @@ export default function SupplierProducts() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">صورة المنتج (رابط أو رفع ملف)</label>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#065f46] transition-colors rounded-xl p-3 text-center bg-gray-50">
+                    <label className="flex-1 cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#4f46e5] transition-colors rounded-xl p-3 text-center bg-gray-50">
                       <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                         <Upload size={18} />
                         <span>{imageFile ? imageFile.name : 'اختر صورة من جهازك'}</span>
@@ -412,7 +412,7 @@ export default function SupplierProducts() {
                     value={form.image_url} 
                     onChange={e => setForm({...form, image_url: e.target.value})}
                     disabled={!!imageFile}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 disabled:opacity-50"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 disabled:opacity-50"
                     placeholder="https://example.com/image.jpg"
                   />
                 </div>
@@ -422,7 +422,7 @@ export default function SupplierProducts() {
                 <button 
                   type="submit" 
                   disabled={submitting} 
-                  className="w-full bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50"
+                  className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
                 >
                   {submitting ? 'جاري الحفظ...' : 'حفظ المنتج'}
                 </button>

@@ -79,7 +79,7 @@ export default function MerchantReferrals() {
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-[#065f46] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+        <div className="bg-[#4f46e5] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">إجمالي الأرباح من الإحالات</h3>
           <p className="text-4xl font-black mt-2">{formatCurrency(stats.totalCommissions)}</p>
@@ -114,7 +114,7 @@ export default function MerchantReferrals() {
             <button 
               onClick={handleCopy}
               className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${
-                copied ? 'bg-green-100 text-green-700' : 'bg-[#065f46] text-white hover:bg-[#044c38]'
+                copied ? 'bg-green-100 text-green-700' : 'bg-[#4f46e5] text-white hover:bg-[#4338ca]'
               }`}
             >
               {copied ? (

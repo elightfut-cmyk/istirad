@@ -48,7 +48,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md flex flex-col hidden md:flex">
         <div className="p-6 text-center border-b border-gray-100">
-          <Link to="/" className="text-2xl font-bold text-[#065f46] hover:opacity-80 transition-opacity inline-block">إستيراد</Link>
+          <Link to="/" className="text-2xl font-bold text-[#4f46e5] hover:opacity-80 transition-opacity inline-block">إستيراد</Link>
           <p className="text-sm text-gray-500 mt-1">{user?.role === 'admin' ? 'الإدارة' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
@@ -63,7 +63,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                   navigate(link.href);
                 }}
                 className={`flex items-center space-x-3 space-x-reverse px-4 py-3 rounded-xl transition-colors ${
-                  isActive ? 'bg-[#065f46] text-white' : 'text-gray-600 hover:bg-gray-50'
+                  isActive ? 'bg-[#4f46e5] text-white' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 {link.icon}
@@ -88,7 +88,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         {/* Topbar */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
           <div className="flex items-center md:hidden">
-            <Link to="/" className="text-[#065f46] mr-4 hover:opacity-80 transition-opacity">
+            <Link to="/" className="text-[#4f46e5] mr-4 hover:opacity-80 transition-opacity">
               <Package size={28} />
             </Link>
           </div>
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
 
             <button
               onClick={toggleCurrency}
-              className="bg-gray-100 hover:bg-gray-200 text-[#065f46] font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+              className="bg-gray-100 hover:bg-gray-200 text-[#4f46e5] font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
               title="تغيير العملة (دولار / دينار)"
             >
               <DollarSign size={16} />
@@ -106,7 +106,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             
             <Link to="/profile" className="hidden md:flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
               <span className="text-sm font-medium text-gray-700 hidden md:inline">{user?.name}</span>
-              <UserCircle size={28} className="text-gray-400 hover:text-[#065f46] transition-colors" />
+              <UserCircle size={28} className="text-gray-400 hover:text-[#4f46e5] transition-colors" />
             </Link>
 
 
@@ -208,11 +208,11 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 key={link.href}
                 to={link.href}
                 className={`flex-1 min-w-[70px] flex flex-col items-center justify-center py-3 px-1 transition-colors relative ${
-                  isActive ? 'text-[#065f46]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  isActive ? 'text-[#4f46e5]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 {isActive && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#065f46] rounded-b-full"></div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#4f46e5] rounded-b-full"></div>
                 )}
                 <div className={`mb-1 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                   {link.icon}

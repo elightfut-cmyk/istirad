@@ -110,7 +110,7 @@ export default function SupplierFinancials() {
           <p className="text-3xl font-bold text-red-600 mt-2">{loading ? '...' : formatCurrency(stats.platformFees)}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-[#065f46] to-[#044c38] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#4f46e5] to-[#4338ca] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="relative z-10">
             <h3 className="text-green-100 text-sm font-medium mb-1">صافي مستحقاتك (الربح الفعلي)</h3>
             <p className="text-4xl font-bold">{loading ? '...' : formatCurrency(stats.netEarned)}</p>

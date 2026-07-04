@@ -151,7 +151,7 @@ export default function MerchantWishlist() {
           <p className="text-gray-500 max-w-md mb-6">لم تقم بحفظ أي منتجات حتى الآن. تصفح السوق واضغط على أيقونة القلب لحفظ المنتجات التي تعجبك.</p>
           <button
             onClick={() => navigate('/merchant/marketplace')}
-            className="px-6 py-3 bg-[#065f46] text-white font-bold rounded-xl hover:bg-[#044c38] transition-colors"
+            className="px-6 py-3 bg-[#4f46e5] text-white font-bold rounded-xl hover:bg-[#4338ca] transition-colors"
           >
             الذهاب لسوق المنتجات
           </button>
@@ -197,12 +197,12 @@ export default function MerchantWishlist() {
                         <div className="flex flex-col">
                           <span className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</span>
                           <div className="flex items-center gap-2">
-                            <p className="font-black text-[#065f46] text-xl">{formatCurrency(product.discount_price)}</p>
+                            <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.discount_price)}</p>
                             <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</span>
                           </div>
                         </div>
                       ) : (
-                        <p className="font-black text-[#065f46] text-xl">{formatCurrency(product.price)}</p>
+                        <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.price)}</p>
                       )}
                     </div>
                     <div className="text-left">
@@ -213,7 +213,7 @@ export default function MerchantWishlist() {
 
                   <button 
                     onClick={() => handleOpenOrderModal(product)}
-                    className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 border-2 border-[#065f46] text-[#065f46] font-bold rounded-xl hover:bg-[#065f46] hover:text-white transition-colors"
+                    className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 border-2 border-[#4f46e5] text-[#4f46e5] font-bold rounded-xl hover:bg-[#4f46e5] hover:text-white transition-colors"
                   >
                     <ShoppingCart size={18} />
                     <span>إضافة للطلب</span>
@@ -245,7 +245,7 @@ export default function MerchantWishlist() {
                 {orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price ? (
                   <>
                     <span className="text-sm text-gray-400 line-through">{formatCurrency(orderingProduct.price)}</span>
-                    <span className="font-bold text-[#065f46]">{formatCurrency(orderingProduct.discount_price)}</span>
+                    <span className="font-bold text-[#4f46e5]">{formatCurrency(orderingProduct.discount_price)}</span>
                   </>
                 ) : (
                   <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price)}</span>
@@ -264,7 +264,7 @@ export default function MerchantWishlist() {
                 max={999999}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                className={`w-full p-3 border rounded-xl focus:ring-[#065f46] focus:border-[#065f46] ${quantity < orderingProduct.moq ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < orderingProduct.moq ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
               />
               {quantity < orderingProduct.moq && (
                 <p className="text-red-500 text-xs mt-2">لا يمكنك طلب أقل من {orderingProduct.moq} وحدة (شرط المورد).</p>
@@ -273,7 +273,7 @@ export default function MerchantWishlist() {
 
             <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
               <span className="font-bold text-gray-700">الإجمالي:</span>
-              <span className="font-black text-[#065f46] text-2xl">
+              <span className="font-black text-[#4f46e5] text-2xl">
                 {formatCurrency(quantity * (orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price
                   ? orderingProduct.discount_price 
                   : orderingProduct.price))}
@@ -283,7 +283,7 @@ export default function MerchantWishlist() {
             <button 
               onClick={submitOrder}
               disabled={submittingOrder || quantity < orderingProduct.moq}
-              className="w-full bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50"
+              className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
             >
               {submittingOrder ? 'جاري المعالجة...' : 'تأكيد الطلب والانتقال للدفع'}
             </button>

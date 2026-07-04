@@ -122,7 +122,7 @@ export default function AdminUsers() {
               placeholder="ابحث بالاسم، الإيميل، أو الشركة..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#065f46] text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
@@ -131,7 +131,7 @@ export default function AdminUsers() {
             <select 
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#065f46]"
+              className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
             >
               <option value="all">كل الأدوار</option>
               <option value="merchant">التجار</option>

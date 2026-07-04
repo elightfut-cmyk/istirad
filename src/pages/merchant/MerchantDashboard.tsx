@@ -86,7 +86,7 @@ export default function MerchantDashboard() {
       
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-gray-800">أحدث المنتجات في السوق</h3>
-        <button onClick={() => navigate('/merchant/marketplace')} className="text-[#065f46] text-sm font-bold hover:underline">
+        <button onClick={() => navigate('/merchant/marketplace')} className="text-[#4f46e5] text-sm font-bold hover:underline">
           عرض الكل
         </button>
       </div>
@@ -109,7 +109,7 @@ export default function MerchantDashboard() {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">لا صورة</div>
                 )}
-                <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-lg text-xs font-bold text-[#065f46]">
+                <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-lg text-xs font-bold text-[#4f46e5]">
                   جملة فقط
                 </div>
               </div>
@@ -119,7 +119,7 @@ export default function MerchantDashboard() {
                   <p className="text-sm text-gray-500 mt-1 line-clamp-1">{product.supplier?.company_name}</p>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="font-bold text-[#065f46]">{formatCurrency(product.price)}</span>
+                  <span className="font-bold text-[#4f46e5]">{formatCurrency(product.price)}</span>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">MOQ: {product.moq}</span>
                 </div>
               </div>

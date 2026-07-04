@@ -76,7 +76,7 @@ export default function SupplierDashboard() {
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[
-          { title: 'إجمالي المبيعات', value: formatCurrency(stats.sales), color: 'text-[#065f46]' },
+          { title: 'إجمالي المبيعات', value: formatCurrency(stats.sales), color: 'text-[#4f46e5]' },
           { title: 'العروض المعلقة', value: stats.pending.toString(), color: 'text-orange-500' },
           { title: 'المنتجات النشطة', value: stats.products.toString(), color: 'text-blue-600' },
         ].map((stat, i) => (
@@ -127,7 +127,7 @@ export default function SupplierDashboard() {
                     </td>
                     <td className="py-4 text-sm font-medium">{merchantName}</td>
                     <td className="py-4 text-sm text-gray-900 font-bold">{formatCurrency(order.price)}</td>
-                    <td className="py-4 text-sm text-[#065f46] font-bold">{formatCurrency(advancePaid)}</td>
+                    <td className="py-4 text-sm text-[#4f46e5] font-bold">{formatCurrency(advancePaid)}</td>
                     <td className="py-4 text-sm">
                       <span className={`font-bold ${order.is_fully_paid || order.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
                         {order.is_fully_paid || order.shipping_status === 'delivered' ? 'تم الدفع' : formatCurrency(remainingAmount)}

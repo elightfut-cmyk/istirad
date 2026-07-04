@@ -373,7 +373,7 @@ export default function SupplierOrders() {
         <button
           onClick={() => setActiveTab('direct')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'direct' ? 'border-[#065f46] text-[#065f46]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
           الطلبات المباشرة الواردة
@@ -381,7 +381,7 @@ export default function SupplierOrders() {
         <button
           onClick={() => setActiveTab('custom')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'custom' ? 'border-[#065f46] text-[#065f46]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
           مناقصاتي الرابحة

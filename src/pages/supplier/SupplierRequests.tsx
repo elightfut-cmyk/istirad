@@ -233,7 +233,7 @@ export default function SupplierRequests() {
                       <p className="text-sm text-gray-500 mb-4">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
                       <button 
                         onClick={() => setBiddingRequest(req)}
-                        className="w-full bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition shadow-sm"
+                        className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
                       >
                         تقديم عرض سعر
                       </button>
@@ -263,7 +263,7 @@ export default function SupplierRequests() {
                   type="number" step="0.01" required min="0.01"
                   value={bidForm.price_usd || ''} 
                   onChange={e => setBidForm({...bidForm, price_usd: parseFloat(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="أدخل سعر القطعة الواحدة"
                 />
                 <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((bidForm.price_usd || 0) * exchangeRate))} | الإجمالي للكمية المطلوبة ({biddingRequest.quantity}): {formatCurrency(Math.round((bidForm.price_usd || 0) * exchangeRate) * biddingRequest.quantity)}</p>
@@ -295,7 +295,7 @@ export default function SupplierRequests() {
                   type="number" required min="0" max="100"
                   value={bidForm.advance_percentage} 
                   onChange={e => setBidForm({...bidForm, advance_percentage: parseInt(e.target.value)})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                 />
                 <p className="text-xs text-gray-400 mt-1">يُدفع هذا العربون فور قبول عرضك عبر بوابة Chargily.</p>
               </div>
@@ -306,13 +306,13 @@ export default function SupplierRequests() {
                   rows={3} 
                   value={bidForm.notes} 
                   onChange={e => setBidForm({...bidForm, notes: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="مثال: متوفر بجميع الألوان، مدة الشحن 5 أيام..."
                 />
               </div>
 
               <div className="pt-4 flex gap-4">
-                <button type="submit" disabled={submitting} className="flex-1 bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
                   {submitting ? 'جاري الإرسال...' : 'تأكيد العرض'}
                 </button>
                 <button type="button" onClick={() => setBiddingRequest(null)} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">

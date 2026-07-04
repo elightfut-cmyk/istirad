@@ -165,7 +165,7 @@ export default function AdminSettings() {
             name="minQuantity"
             value={localSettings.minQuantity}
             onChange={handleChange}
-            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
         </div>
         <p className="text-gray-500 text-sm mt-2">
@@ -187,7 +187,7 @@ export default function AdminSettings() {
             name="exchangeRate"
             value={localSettings.exchangeRate}
             onChange={handleChange}
-            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
         </div>
         <p className="text-gray-500 text-sm mt-2">
@@ -211,7 +211,7 @@ export default function AdminSettings() {
               name="platformFeePercentage"
               value={localSettings.platformFeePercentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-500 mt-1">تستخدم لحساب ربح المنصة من المبيعات.</p>
           </div>
@@ -227,7 +227,7 @@ export default function AdminSettings() {
               name="referralCommissionPercentage"
               value={localSettings.referralCommissionPercentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-500 mt-1">تؤخذ من ربح المنصة.</p>
           </div>
@@ -245,7 +245,7 @@ export default function AdminSettings() {
               name="loyaltyPointsPerOrder"
               value={localSettings.loyaltyPointsPerOrder}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-500 mt-1">النقاط الممنوحة عند اكتمال الطلب.</p>
           </div>
@@ -260,7 +260,7 @@ export default function AdminSettings() {
               name="loyaltyPointsToDzdRatio"
               value={localSettings.loyaltyPointsToDzdRatio}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-500 mt-1">قيمة النقطة الواحدة بالدينار.</p>
           </div>
@@ -274,7 +274,7 @@ export default function AdminSettings() {
               name="loyaltyPointsMinConversion"
               value={localSettings.loyaltyPointsMinConversion}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-500 mt-1">أقل عدد نقاط يمكن تحويله.</p>
           </div>
@@ -302,7 +302,7 @@ export default function AdminSettings() {
                 }
               }
             }}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
           <button
             onClick={() => {
@@ -311,7 +311,7 @@ export default function AdminSettings() {
                 setNewCategory('');
               }
             }}
-            className="px-4 py-2 bg-[#065f46] text-white rounded-xl text-sm font-bold hover:bg-[#044c38] transition-colors"
+            className="px-4 py-2 bg-[#4f46e5] text-white rounded-xl text-sm font-bold hover:bg-[#4338ca] transition-colors"
           >
             إضافة
           </button>
@@ -348,7 +348,7 @@ export default function AdminSettings() {
             placeholder="live_sk_..."
             value={localSettings.chargilyLiveKey}
             onChange={handleChange}
-            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
         </div>
         <p className="text-gray-500 text-sm mt-2">
@@ -373,7 +373,7 @@ export default function AdminSettings() {
                   accept="image/*"
                   onChange={(e) => handleHeroImageUpload(e, false)}
                   disabled={uploadingImage}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
                 />
               </div>
               {localSettings.heroImageUrl && (
@@ -388,7 +388,7 @@ export default function AdminSettings() {
                 placeholder="https://..."
                 value={localSettings.heroImageUrl || ''}
                 onChange={handleChange}
-                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
               />
             </div>
           </div>
@@ -403,7 +403,7 @@ export default function AdminSettings() {
                   accept="image/*"
                   onChange={(e) => handleHeroImageUpload(e, true)}
                   disabled={uploadingImage}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
                 />
               </div>
               {localSettings.heroImageUrl2 && (
@@ -418,7 +418,7 @@ export default function AdminSettings() {
                 placeholder="https://..."
                 value={localSettings.heroImageUrl2 || ''}
                 onChange={handleChange}
-                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
               />
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function AdminSettings() {
               placeholder="مثال: خصم خاص 20% على رسوم المنصة!"
               value={localSettings.adTitle}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
           <div>
@@ -451,7 +451,7 @@ export default function AdminSettings() {
               placeholder="مثال: صالح لمدة 3 أيام فقط للتجار الجدد."
               value={localSettings.adSubtitle}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
           <div>
@@ -462,7 +462,7 @@ export default function AdminSettings() {
                 accept="image/*"
                 onChange={handleImageUpload}
                 disabled={uploadingImage}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#065f46] file:text-white hover:file:bg-[#044c38] transition-colors"
+                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
               />
               {uploadingImage && <span className="text-sm text-gray-500 self-center">جاري الرفع...</span>}
             </div>
@@ -480,7 +480,7 @@ export default function AdminSettings() {
               placeholder="https://..."
               value={localSettings.adLinkUrl}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
         </div>
@@ -490,7 +490,7 @@ export default function AdminSettings() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-8 py-3 bg-[#065f46] text-white rounded-xl font-bold hover:bg-[#044c38] transition-colors disabled:opacity-50"
+          className="px-8 py-3 bg-[#4f46e5] text-white rounded-xl font-bold hover:bg-[#4338ca] transition-colors disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
         </button>

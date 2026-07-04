@@ -82,13 +82,13 @@ export default function Register() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center p-4">
-        <div className="bg-white p-12 rounded-2xl shadow-xl w-full max-w-md text-center border-t-4 border-[#065f46]">
+        <div className="bg-white p-12 rounded-2xl shadow-xl w-full max-w-md text-center border-t-4 border-[#4f46e5]">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <PackageSearch size={40} className="text-[#065f46]" />
+            <PackageSearch size={40} className="text-[#4f46e5]" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">تم التسجيل بنجاح!</h2>
-          <p className="text-gray-500 mb-8">مرحباً بك في منصة استيراد. جاري توجيهك لصفحة الدخول...</p>
-          <Link to="/login" className="text-[#065f46] font-bold hover:underline">
+          <p className="text-gray-500 mb-8">مرحباً بك في منصة جيبها-jiibha. جاري توجيهك لصفحة الدخول...</p>
+          <Link to="/login" className="text-[#4f46e5] font-bold hover:underline">
             الذهاب لتسجيل الدخول يدوياً
           </Link>
         </div>
@@ -100,8 +100,8 @@ export default function Register() {
     <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center p-4 py-12">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#065f46] bg-opacity-10 mb-4 hover:bg-opacity-20 transition">
-            <PackageSearch size={32} className="text-[#065f46]" />
+          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#4f46e5] bg-opacity-10 mb-4 hover:bg-opacity-20 transition">
+            <PackageSearch size={32} className="text-[#4f46e5]" />
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">إنشاء حساب جديد</h1>
           <p className="text-gray-500 mt-2">انضم إلينا كتاجر إلكتروني أو مورد بالجملة</p>
@@ -116,15 +116,15 @@ export default function Register() {
         <form onSubmit={handleRegister} className="space-y-5">
           {/* Role Selection */}
           <div className="flex gap-4 mb-6">
-            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'merchant' ? 'border-[#065f46] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'merchant' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <input type="radio" name="role" value="merchant" checked={formData.role === 'merchant'} onChange={handleChange} className="hidden" />
-              <PackageSearch size={24} className={formData.role === 'merchant' ? 'text-[#065f46]' : 'text-gray-400'} />
-              <span className={`mt-2 font-bold ${formData.role === 'merchant' ? 'text-[#065f46]' : 'text-gray-500'}`}>تاجر إلكتروني</span>
+              <PackageSearch size={24} className={formData.role === 'merchant' ? 'text-[#4f46e5]' : 'text-gray-400'} />
+              <span className={`mt-2 font-bold ${formData.role === 'merchant' ? 'text-[#4f46e5]' : 'text-gray-500'}`}>تاجر إلكتروني</span>
             </label>
-            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'supplier' ? 'border-[#065f46] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'supplier' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <input type="radio" name="role" value="supplier" checked={formData.role === 'supplier'} onChange={handleChange} className="hidden" />
-              <Building2 size={24} className={formData.role === 'supplier' ? 'text-[#065f46]' : 'text-gray-400'} />
-              <span className={`mt-2 font-bold ${formData.role === 'supplier' ? 'text-[#065f46]' : 'text-gray-500'}`}>مورد بالجملة</span>
+              <Building2 size={24} className={formData.role === 'supplier' ? 'text-[#4f46e5]' : 'text-gray-400'} />
+              <span className={`mt-2 font-bold ${formData.role === 'supplier' ? 'text-[#4f46e5]' : 'text-gray-500'}`}>مورد بالجملة</span>
             </label>
           </div>
 
@@ -137,7 +137,7 @@ export default function Register() {
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="text" name="name" value={formData.name} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                   placeholder="الاسم الأول والأخير" />
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function Register() {
                   <Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                   placeholder="05XXXXXXXX" />
               </div>
             </div>
@@ -165,7 +165,7 @@ export default function Register() {
                   <Building2 className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                   placeholder="اسم نشاطك التجاري" />
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function Register() {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="email" name="email" value={formData.email} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                   placeholder="example@domain.com" />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function Register() {
                 <MapPin className="h-5 w-5 text-gray-400" />
               </div>
               <input type="text" name="address" value={formData.address} onChange={handleChange} required
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                 placeholder="المدينة، الحي، الشارع" />
             </div>
           </div>
@@ -205,13 +205,13 @@ export default function Register() {
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={6}
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                 placeholder="6 أحرف على الأقل" autoComplete="new-password" />
             </div>
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#065f46] hover:bg-[#044c38] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#065f46] transition-colors mt-6 disabled:opacity-70"
+            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#4f46e5] hover:bg-[#4338ca] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4f46e5] transition-colors mt-6 disabled:opacity-70"
           >
             {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب جديد'}
           </button>
@@ -219,7 +219,7 @@ export default function Register() {
 
         <div className="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
           لديك حساب بالفعل؟{' '}
-          <Link to="/login" className="font-bold text-[#065f46] hover:underline">
+          <Link to="/login" className="font-bold text-[#4f46e5] hover:underline">
             تسجيل الدخول
           </Link>
         </div>

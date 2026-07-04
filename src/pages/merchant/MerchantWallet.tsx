@@ -154,13 +154,13 @@ export default function MerchantWallet() {
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-[#065f46] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+        <div className="bg-[#4f46e5] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">الرصيد المتاح</h3>
           <p className="text-4xl font-black mt-2">{formatCurrency(availableBalance)}</p>
           <button 
             onClick={() => setShowTopupModal(true)}
-            className="mt-6 bg-white text-[#065f46] px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-50 transition-colors w-full"
+            className="mt-6 bg-white text-[#4f46e5] px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-50 transition-colors w-full"
           >
             شحن الرصيد
           </button>
@@ -279,7 +279,7 @@ export default function MerchantWallet() {
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as any)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   >
                     <option value="redotpay">RedotPay</option>
                     <option value="binance">Binance Pay</option>
@@ -290,7 +290,7 @@ export default function MerchantWallet() {
                   <select
                     value={topupCurrency}
                     onChange={(e) => setTopupCurrency(e.target.value as 'USD' | 'EUR')}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -304,7 +304,7 @@ export default function MerchantWallet() {
                   type="number" min="1" step="0.01" required
                   value={topupAmount || ''}
                   onChange={(e) => setTopupAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   placeholder="مثال: 1000"
                 />
               </div>
@@ -315,7 +315,7 @@ export default function MerchantWallet() {
                   type="text" required
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#065f46] focus:border-[#065f46]"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   placeholder="أدخل رقم المعاملة للتحقق"
                 />
               </div>
@@ -343,7 +343,7 @@ export default function MerchantWallet() {
               {topupAmount > 0 && (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center">
                   <span className="text-gray-600 font-medium">الرصيد التقديري بالدينار:</span>
-                  <span className="font-black text-xl text-[#065f46]">
+                  <span className="font-black text-xl text-[#4f46e5]">
                     {topupCurrency === 'USD' 
                       ? `${(topupAmount * exchangeRate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج` 
                       : `${(topupAmount * EUR_TO_DZD).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج`}
@@ -355,7 +355,7 @@ export default function MerchantWallet() {
                 <button 
                   type="submit" 
                   disabled={processing || topupAmount <= 0}
-                  className="w-full bg-[#065f46] text-white py-3 rounded-xl font-bold hover:bg-[#044c38] transition disabled:opacity-50"
+                  className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
                 >
                   {processing ? 'جاري المعالجة...' : 'تأكيد ودفع'}
                 </button>

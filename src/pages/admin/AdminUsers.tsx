@@ -24,7 +24,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -41,21 +41,30 @@ export default function AdminUsers() {
     if (!window.confirm(`هل أنت متأكد من ${newStatus === 'active' ? 'تفعيل' : 'حظر'} هذا الحساب؟`)) return;
 
     try {
-      // Optimistic update
       setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-
-      const { error } = await supabase
-        .from('users')
-        .update({ status: newStatus })
-        .eq('id', userId);
-
+      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', userId);
       if (error) throw error;
     } catch (error) {
       console.error('Error updating status:', error);
       alert('حدث خطأ أثناء تغيير حالة الحساب');
-      fetchUsers(); // Revert
+      fetchUsers();
     }
   };
+
+  const handleToggleBadge = async (userId: string, currentBadge: string) => {
+    const nextBadge = currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'none' : 'blue';
+    try {
+      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge } : u));
+      const { error } = await supabase.from('users').update({ verification_badge: nextBadge }).eq('id', userId);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating badge:', error);
+      alert('حدث خطأ أثناء تغيير التوثيق');
+      fetchUsers();
+    }
+  };
+
+
 
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الحساب نهائياً؟ قد يسبب هذا مشاكل إذا كان المستخدم لديه طلبات سابقة. (يُنصح بالحظر بدلاً من الحذف).')) return;
@@ -165,7 +174,15 @@ export default function AdminUsers() {
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4">
                       <div>
-                        <p className="font-bold text-gray-800">{u.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-800">{u.name}</p>
+                          {u.verification_badge === 'blue' && (
+                            <CheckCircle size={16} className="text-blue-500" fill="currentColor" />
+                          )}
+                          {u.verification_badge === 'gold' && (
+                            <CheckCircle size={16} className="text-yellow-500" fill="currentColor" />
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">{u.email}</p>
                         <p className="text-xs text-gray-400">{u.phone}</p>
                       </div>
@@ -202,6 +219,15 @@ export default function AdminUsers() {
                             >
                               {(u.status === 'banned' || u.status === 'pending') ? <CheckCircle size={18} /> : <Ban size={18} />}
                             </button>
+                            {u.role === 'supplier' && (
+                              <button 
+                                onClick={() => handleToggleBadge(u.id, u.verification_badge || 'none')}
+                                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                                title="تغيير توثيق المورد (أزرق / ذهبي / بلا)"
+                              >
+                                <CheckCircle size={18} />
+                              </button>
+                            )}
                             <button 
                               onClick={() => handlePromoteToAdmin(u.id, u.name)}
                               className="p-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"

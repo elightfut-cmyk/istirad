@@ -149,7 +149,7 @@ export default function MerchantOrders() {
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id,
           supplier_bids (
             id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, is_fully_paid,
-            supplier:users(name, company_name, phone)
+            supplier:users(name, company_name, phone, verification_badge)
           )
         `)
         .eq('merchant_id', user.id)
@@ -651,7 +651,15 @@ export default function MerchantOrders() {
                           {bid.status === 'accepted' && (
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
                           )}
-                          <h5 className="font-bold text-gray-900 mb-1">{bid.supplier?.company_name}</h5>
+                          <div className="flex items-center gap-1 mb-1">
+                            <h5 className="font-bold text-gray-900">{bid.supplier?.company_name}</h5>
+                            {bid.supplier?.verification_badge === 'blue' && (
+                              <span title="مورد موثق"><CheckCircle2 size={16} className="text-blue-500" fill="currentColor" /></span>
+                            )}
+                            {bid.supplier?.verification_badge === 'gold' && (
+                              <span title="مورد مميز (VIP)"><CheckCircle2 size={16} className="text-yellow-500" fill="currentColor" /></span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-500 mb-4">{bid.supplier?.name}</p>
                           
                           <div className="flex justify-between items-center mb-2">

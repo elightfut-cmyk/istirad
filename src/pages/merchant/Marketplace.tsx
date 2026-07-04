@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard } from 'lucide-react';
+import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -86,7 +86,7 @@ export default function Marketplace() {
         .from('products')
         .select(`
           id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, supplier_id, created_at, status, category,
-          supplier:users!supplier_id(company_name)
+          supplier:users!supplier_id(company_name, verification_badge)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -285,6 +285,12 @@ export default function Marketplace() {
                       <div className="flex items-center gap-1 mb-4 bg-orange-50 w-full sm:w-max px-2 py-1 rounded-md">
                         <Store size={14} className="text-orange-500" />
                         <span className="text-xs text-orange-700">{product.supplier?.company_name || 'مورد غير معروف'}</span>
+                        {product.supplier?.verification_badge === 'blue' && (
+                          <span title="مورد موثق"><CheckCircle2 size={14} className="text-blue-500" fill="currentColor" /></span>
+                        )}
+                        {product.supplier?.verification_badge === 'gold' && (
+                          <span title="مورد مميز (VIP)"><CheckCircle2 size={14} className="text-yellow-500" fill="currentColor" /></span>
+                        )}
                       </div>
 
                       <div className="flex items-end justify-between pt-4 border-t border-gray-50 mt-auto">

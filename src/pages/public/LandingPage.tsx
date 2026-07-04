@@ -59,7 +59,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10">
           
           {/* Title and Description */}
-          <div className="text-right lg:col-start-1 lg:row-start-1 lg:self-end">
+          <div className="text-center lg:text-right lg:col-start-1 lg:row-start-1 lg:self-end">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-[#4f46e5] font-bold text-sm mb-6">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4f46e5] opacity-75"></span>
@@ -118,7 +118,7 @@ export default function LandingPage() {
           </div>
 
           {/* Buttons and Features */}
-          <div className="text-right lg:col-start-1 lg:row-start-2 lg:self-start lg:mt-10">
+          <div className="text-center lg:text-right lg:col-start-1 lg:row-start-2 lg:self-start lg:mt-10">
             <div className="flex flex-col sm:flex-row gap-4">
               {user ? (
                 <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#4338ca] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
@@ -138,7 +138,7 @@ export default function LandingPage() {
               )}
             </div>
             
-            <div className="mt-12 flex items-center gap-6 text-gray-500 text-sm font-medium">
+            <div className="mt-12 flex flex-wrap justify-center lg:justify-start items-center gap-6 text-gray-500 text-sm font-medium">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={20} className="text-indigo-500" />
                 <span>موردين معتمدين</span>

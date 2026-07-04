@@ -296,13 +296,13 @@ export default function MerchantOrders() {
         await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', selectedBidForPayment.id);
         await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', selectedBidForPayment.reqId);
         await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });
-        sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلب: ${selectedBidForPayment.reqId}`, 'success');
-        sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع العربون وقبول عرض المورد من محفظتك لطلب: ${selectedBidForPayment.reqId}`, 'success');
+        sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلبك`, 'success');
+        sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع العربون وقبول عرض المورد من محفظتك لطلبك`, 'success');
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع العربون لطلب من المحفظة`, 'info');
       } else {
         await supabase.from('supplier_bids').update({ is_fully_paid: true }).eq('id', selectedBidForPayment.id);
-        sendNotification(selectedBidForPayment.supplier_id, 'دفع المبلغ المتبقي', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلب: ${selectedBidForPayment.reqId}`, 'success');
-        sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع المبلغ المتبقي للمورد من محفظتك لطلب: ${selectedBidForPayment.reqId}`, 'success');
+        sendNotification(selectedBidForPayment.supplier_id, 'دفع المبلغ المتبقي', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلبك`, 'success');
+        sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع المبلغ المتبقي للمورد من محفظتك لطلبك`, 'success');
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلب من المحفظة`, 'info');
       }
 

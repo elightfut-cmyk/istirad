@@ -11,6 +11,14 @@ export default function AdminDashboard() {
   const [obligations, setObligations] = useState({ supplierDues: 0, walletDues: 0, pointsDues: 0 });
   const [platformProfits, setPlatformProfits] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  const [users, setUsers] = useState<any[]>([]);
+  const [allBids, setAllBids] = useState<any[]>([]);
+  const [allRequests, setAllRequests] = useState<any[]>([]);
+  const [platformSettings, setPlatformSettings] = useState<any>(null);
+  
+  const [selectedRole, setSelectedRole] = useState<'supplier' | 'merchant'>('supplier');
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   useEffect(() => {
     fetchStats();
@@ -34,22 +42,28 @@ export default function AdminDashboard() {
       }
 
       // Fetch wallet dues and points
-      const { data: usersData, error: usersError } = await supabase.from('users').select('wallet_balance, loyalty_points');
+      const { data: usersData, error: usersError } = await supabase.from('users').select('id, name, company_name, role, wallet_balance, loyalty_points');
       let walletSum = 0;
       let pointsSum = 0;
       if (usersData && !usersError) {
+        setUsers(usersData);
         walletSum = usersData.reduce((acc, user) => acc + (user.wallet_balance || 0), 0);
         pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
       
       const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, platform_fee_percentage').single();
+      setPlatformSettings(settingsData);
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
       // Fetch supplier dues and platform profits
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('price, cost_price, status, advance_percentage, is_fully_paid');
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid');
+      const { data: reqData } = await supabase.from('custom_requests').select('id, merchant_id, status');
+      
       let supplierSum = 0;
       let profitsSum = 0;
       if (bidsData && !bidsError) {
+        setAllBids(bidsData);
+        if (reqData) setAllRequests(reqData);
         const pFee = settingsData?.platform_fee_percentage || 0;
         bidsData.forEach(bid => {
           const price = bid.price || 0;
@@ -89,6 +103,56 @@ export default function AdminDashboard() {
     }
   };
 
+  const getDetailedStats = () => {
+    if (!selectedUserId) return null;
+    
+    const user = users.find(u => u.id === selectedUserId);
+    if (!user) return null;
+
+    const pFee = platformSettings?.platform_fee_percentage || 0;
+
+    if (user.role === 'supplier') {
+      const userBids = allBids.filter(b => b.supplier_id === user.id);
+      let totalSales = 0;
+      let totalDues = 0;
+      
+      userBids.forEach(bid => {
+        if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed' || bid.is_fully_paid) {
+          totalSales += (bid.price || 0);
+          
+          const price = bid.price || 0;
+          const cost = bid.cost_price || 0;
+          const advancePct = bid.advance_percentage || 20;
+          const advancePaid = (price * advancePct) / 100;
+          
+          if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
+            const profitMargin = price - cost;
+            const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
+            totalDues += (price - fee);
+          } else if (bid.status === 'accepted') {
+            const fee = advancePaid * (pFee / 100);
+            totalDues += (advancePaid - fee);
+          }
+        }
+      });
+      return { totalSales, totalDues, walletBalance: user.wallet_balance || 0 };
+    } else {
+      // Merchant
+      const userRequests = allRequests.filter(r => r.merchant_id === user.id);
+      const requestIds = userRequests.map(r => r.id);
+      const userPurchases = allBids.filter(b => requestIds.includes(b.request_id) && (b.status === 'accepted' || b.status === 'delivered' || b.status === 'completed' || b.is_fully_paid));
+      
+      let totalPurchases = 0;
+      userPurchases.forEach(bid => {
+        totalPurchases += (bid.price || 0);
+      });
+      
+      return { totalPurchases, walletBalance: user.wallet_balance || 0, loyaltyPoints: user.loyalty_points || 0 };
+    }
+  };
+
+  const detailedStats = getDetailedStats();
+
   return (
     <DashboardLayout
       title="الرئيسية - الإدارة"
@@ -116,6 +180,81 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Detailed User Statistics */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <h2 className="text-xl font-bold mb-6 text-gray-800">إحصاءات المستخدمين التفصيلية</h2>
+        
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-max">
+            <button 
+              onClick={() => { setSelectedRole('supplier'); setSelectedUserId(''); }}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white text-[#065f46] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              الموردين
+            </button>
+            <button 
+              onClick={() => { setSelectedRole('merchant'); setSelectedUserId(''); }}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white text-[#065f46] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              التجار
+            </button>
+          </div>
+          
+          <select 
+            value={selectedUserId} 
+            onChange={e => setSelectedUserId(e.target.value)}
+            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-[#065f46] focus:border-[#065f46] bg-gray-50 text-sm"
+          >
+            <option value="">-- اختر {selectedRole === 'supplier' ? 'المورد' : 'التاجر'} --</option>
+            {users.filter(u => u.role === selectedRole).map(u => (
+              <option key={u.id} value={u.id}>{u.name} {u.company_name ? `(${u.company_name})` : ''}</option>
+            ))}
+          </select>
+        </div>
+
+        {selectedUserId && detailedStats && (
+          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+            <h3 className="font-bold text-lg mb-4 text-gray-800">
+              سجل {selectedRole === 'supplier' ? 'المورد' : 'التاجر'}: {users.find(u => u.id === selectedUserId)?.name}
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {selectedRole === 'supplier' ? (
+                <>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">إجمالي المبيعات (الطلبات المقبولة)</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalSales)}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
+                    <p className="text-xl font-bold text-orange-600">{formatCurrency(detailedStats.totalDues)}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
+                    <p className="text-xl font-bold text-teal-600">{formatCurrency(detailedStats.walletBalance)}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">إجمالي المشتريات (الطلبات المقبولة)</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalPurchases)}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
+                    <p className="text-xl font-bold text-teal-600">{formatCurrency(detailedStats.walletBalance)}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">نقاط الولاء</p>
+                    <p className="text-xl font-bold text-purple-600">{detailedStats.loyaltyPoints} نقطة</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">

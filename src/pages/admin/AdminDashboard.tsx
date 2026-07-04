@@ -264,10 +264,6 @@ export default function AdminDashboard() {
                       </button>
                     )}
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
-                    <p className="text-xl font-bold text-teal-600">{formatCurrency(detailedStats.walletBalance)}</p>
-                  </div>
                 </>
               ) : (
                 <>

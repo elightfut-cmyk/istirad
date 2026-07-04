@@ -30,6 +30,7 @@ export default function SupplierFinancials() {
           status,
           shipping_status,
           is_fully_paid,
+          is_paid_to_supplier,
           created_at,
           custom_requests (title, request_type, users (name, company_name))
         `)
@@ -57,8 +58,16 @@ export default function SupplierFinancials() {
           
           totalSales += bid.price;
           platformFees += fee;
-          netEarned += (bid.price - fee);
           advanceTotal += advancePaid;
+          
+          if (!bid.is_paid_to_supplier) {
+            if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
+              netEarned += (bid.price - fee);
+            } else if (bid.status === 'accepted') {
+              const advFee = advancePaid * (pFee / 100);
+              netEarned += (advancePaid - advFee);
+            }
+          }
           
           successfulTransactions.push({...bid, platform_fee: fee});
         } else if (bid.status === 'pending') {

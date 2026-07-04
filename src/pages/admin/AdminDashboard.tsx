@@ -111,13 +111,10 @@ export default function AdminDashboard() {
       // Find all unpaid bids for this supplier that have dues
       const unpaidBids = allBids.filter(b => b.supplier_id === supplierId && !b.is_paid_to_supplier && (b.status === 'accepted' || b.status === 'delivered' || b.status === 'completed' || b.is_fully_paid));
       
-      const updates = unpaidBids.map(b => ({
-        id: b.id,
-        is_paid_to_supplier: true
-      }));
+      const ids = unpaidBids.map(b => b.id);
       
-      if (updates.length > 0) {
-        const { error } = await supabase.from('supplier_bids').upsert(updates);
+      if (ids.length > 0) {
+        const { error } = await supabase.from('supplier_bids').update({ is_paid_to_supplier: true }).in('id', ids);
         if (error) throw error;
         alert('تم تأكيد الدفع بنجاح');
         fetchStats(); // Refresh data

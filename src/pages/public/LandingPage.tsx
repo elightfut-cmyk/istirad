@@ -29,12 +29,12 @@ export default function LandingPage() {
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
               <PackageSearch size={24} />
             </div>
-            <span className="text-2xl font-black text-[#4f46e5]">جيبها-jiibha</span>
+            <span className="text-2xl font-black text-[#4f46e5]"><span className="hidden sm:inline">جيبها-</span>jiibha</span>
           </div>
           <div className="flex items-center gap-4">
             {user ? (
               <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm">
-                العودة للوحة التحكم
+                لوحة التحكم
               </Link>
             ) : (
               <>
@@ -122,7 +122,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               {user ? (
                 <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#4338ca] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
-                  الذهاب للوحة التحكم الخاصة بك
+                  الذهاب للوحة التحكم
                   <ArrowLeft size={20} />
                 </Link>
               ) : (

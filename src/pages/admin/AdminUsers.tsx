@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 
@@ -177,10 +177,10 @@ export default function AdminUsers() {
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-gray-800">{u.name}</p>
                           {u.verification_badge === 'blue' && (
-                            <CheckCircle size={16} className="text-blue-500" fill="currentColor" />
+                            <BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" />
                           )}
                           {u.verification_badge === 'gold' && (
-                            <CheckCircle size={16} className="text-yellow-500" fill="currentColor" />
+                            <BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" />
                           )}
                         </div>
                         <p className="text-sm text-gray-500">{u.email}</p>
@@ -225,7 +225,7 @@ export default function AdminUsers() {
                                 className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
                                 title="تغيير توثيق المورد (أزرق / ذهبي / بلا)"
                               >
-                                <CheckCircle size={18} />
+                                <BadgeCheck size={18} />
                               </button>
                             )}
                             <button 

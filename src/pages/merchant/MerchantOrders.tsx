@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -654,10 +654,10 @@ export default function MerchantOrders() {
                           <div className="flex items-center gap-1 mb-1">
                             <h5 className="font-bold text-gray-900">{bid.supplier?.company_name}</h5>
                             {bid.supplier?.verification_badge === 'blue' && (
-                              <span title="مورد موثق"><CheckCircle2 size={16} className="text-blue-500" fill="currentColor" /></span>
+                              <span title="مورد موثق"><BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" /></span>
                             )}
                             {bid.supplier?.verification_badge === 'gold' && (
-                              <span title="مورد مميز (VIP)"><CheckCircle2 size={16} className="text-yellow-500" fill="currentColor" /></span>
+                              <span title="مورد مميز (VIP)"><BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" /></span>
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mb-4">{bid.supplier?.name}</p>

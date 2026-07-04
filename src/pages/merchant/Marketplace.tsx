@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, BadgeCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -286,10 +286,10 @@ export default function Marketplace() {
                         <Store size={14} className="text-orange-500" />
                         <span className="text-xs text-orange-700">{product.supplier?.company_name || 'مورد غير معروف'}</span>
                         {product.supplier?.verification_badge === 'blue' && (
-                          <span title="مورد موثق"><CheckCircle2 size={14} className="text-blue-500" fill="currentColor" /></span>
+                          <span title="مورد موثق"><BadgeCheck size={16} className="text-blue-500" fill="currentColor" color="white" /></span>
                         )}
                         {product.supplier?.verification_badge === 'gold' && (
-                          <span title="مورد مميز (VIP)"><CheckCircle2 size={14} className="text-yellow-500" fill="currentColor" /></span>
+                          <span title="مورد مميز (VIP)"><BadgeCheck size={16} className="text-yellow-500" fill="currentColor" color="white" /></span>
                         )}
                       </div>
 

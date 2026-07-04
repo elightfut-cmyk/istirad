@@ -256,8 +256,8 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
-                    <p className="text-xl font-bold text-orange-600">{formatCurrency(detailedStats.totalDues || 0)}</p>
-                    {detailedStats.totalDues > 0 && (
+                    <p className="text-xl font-bold text-orange-600">{formatCurrency((detailedStats as any).totalDues || 0)}</p>
+                    {(detailedStats as any).totalDues > 0 && (
                       <button 
                         onClick={() => handlePaySupplierDues(selectedUserId)}
                         disabled={payingDues}

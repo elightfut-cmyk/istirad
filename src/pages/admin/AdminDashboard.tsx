@@ -225,11 +225,11 @@ export default function AdminDashboard() {
                 <>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">إجمالي المبيعات (الطلبات المقبولة)</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalSales)}</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalSales || 0)}</p>
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
-                    <p className="text-xl font-bold text-orange-600">{formatCurrency(detailedStats.totalDues)}</p>
+                    <p className="text-xl font-bold text-orange-600">{formatCurrency(detailedStats.totalDues || 0)}</p>
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                 <>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">إجمالي المشتريات (الطلبات المقبولة)</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalPurchases)}</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalPurchases || 0)}</p>
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                     <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>

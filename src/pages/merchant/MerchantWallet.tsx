@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Store, Package, CreditCard, ArrowUpRight, ArrowDownLeft, X, Clock, Heart, Users } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, ArrowUpRight, ArrowDownLeft, X, Clock, Heart, Users, Copy, CheckCircle2 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { supabase } from '../../lib/supabase';
@@ -18,6 +18,13 @@ export default function MerchantWallet() {
   const [paymentMethod, setPaymentMethod] = useState<'redotpay' | 'binance'>('redotpay');
   const [transactionId, setTransactionId] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Hardcoded exchange rates for topup simulation
   const EUR_TO_DZD = 150; // Just an example rate for EUR
@@ -315,7 +322,20 @@ export default function MerchantWallet() {
 
               <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl text-sm text-orange-800 my-4">
                 <strong>تعليمات الدفع:</strong><br />
-                - أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID: 1320881144' : 'Binance Pay ID: 1054805981'}<br />
+                <div className="flex items-center gap-2 mt-2 mb-2">
+                  <span>- أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID' : 'Binance Pay ID'}:</span>
+                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-orange-200">
+                    <span className="font-bold font-mono">{paymentMethod === 'redotpay' ? '1320881144' : '1054805981'}</span>
+                    <button 
+                      type="button"
+                      onClick={() => handleCopy(paymentMethod === 'redotpay' ? '1320881144' : '1054805981')}
+                      className="text-gray-500 hover:text-orange-600 transition"
+                      title="نسخ المعرف"
+                    >
+                      {copied ? <CheckCircle2 size={16} className="text-green-600" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
                 - قم بنسخ رقم المعاملة (TxID) والصقه في الحقل أعلاه<br />
                 - سيتم مراجعة الدفعة وإضافة الرصيد في أقرب وقت.
               </div>

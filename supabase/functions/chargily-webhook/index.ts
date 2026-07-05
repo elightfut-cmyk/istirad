@@ -57,7 +57,14 @@ serve(async (req) => {
         // 1. Mark bid as accepted (if it was an advance payment)
         if (metadata.payment_type === 'advance') {
           await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', metadata.bid_id)
-          const { data: reqData } = await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', metadata.request_id).select('merchant_id').single()
+          
+          const requestUpdate: any = { status: 'closed' }
+          if (metadata.coupon_id) {
+            requestUpdate.coupon_id = metadata.coupon_id
+            await supabase.rpc('increment_coupon_usage', { p_coupon_id: metadata.coupon_id })
+          }
+
+          const { data: reqData } = await supabase.from('custom_requests').update(requestUpdate).eq('id', metadata.request_id).select('merchant_id').single()
           
           if (reqData && reqData.merchant_id) {
             await supabase.rpc('grant_loyalty_points', { p_user_id: reqData.merchant_id })

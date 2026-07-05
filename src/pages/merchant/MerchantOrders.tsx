@@ -420,7 +420,7 @@ export default function MerchantOrders() {
         amountInDzd > 0 ? amountInDzd : 100, 
         window.location.origin + `/merchant/orders?payment=success&supplier_id=${selectedBidForPayment.supplier_id}&type=${paymentType}&bid_price=${selectedBidForPayment.price}&bid_cost=${selectedBidForPayment.cost_price || 0}`,
         window.location.origin + `/merchant/orders?payment=failure&supplier_id=${selectedBidForPayment.supplier_id}&type=${paymentType}`,
-        { bid_id: selectedBidForPayment.id, request_id: selectedBidForPayment.reqId, payment_type: paymentType },
+        { bid_id: selectedBidForPayment.id, request_id: selectedBidForPayment.reqId, payment_type: paymentType, coupon_id: appliedCoupon ? appliedCoupon.id : null },
         { 
           name: (user && (user.name || user.company_name)) ? (user.name || user.company_name || '') : 'زبون منصة جيبها-jiibha', 
           email: (user && user.email) ? user.email : 'customer@isttirad.com', 

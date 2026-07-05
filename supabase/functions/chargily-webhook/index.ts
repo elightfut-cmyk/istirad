@@ -29,6 +29,21 @@ async function verifySignature(signature: string, payload: string, secret: strin
   return isValid
 }
 
+async function notify(userId: string, title: string, message: string, type: string) {
+  try {
+    if (userId === 'all_admins') {
+      const { data: admins } = await supabase.from('users').select('id').eq('role', 'admin');
+      if (admins && admins.length > 0) {
+        await supabase.from('notifications').insert(admins.map(a => ({ user_id: a.id, title, message, type })));
+      }
+    } else if (userId) {
+      await supabase.from('notifications').insert({ user_id: userId, title, message, type });
+    }
+  } catch (err) {
+    console.error('Notify error:', err);
+  }
+}
+
 serve(async (req) => {
   try {
     const signature = req.headers.get('signature')
@@ -54,6 +69,23 @@ serve(async (req) => {
 
       if (metadata && metadata.bid_id && metadata.request_id) {
         
+        // Fetch bid and merchant info for notifications and commissions
+        const { data: bidData } = await supabase.from('supplier_bids').select('supplier_id, price, cost_price').eq('id', metadata.bid_id).single();
+        const { data: reqData } = await supabase.from('custom_requests').select('merchant_id').eq('id', metadata.request_id).single();
+        
+        let merchantName = 'التاجر';
+        let merchantData = null;
+        if (reqData && reqData.merchant_id) {
+          const { data: user } = await supabase.from('users').select('*').eq('id', reqData.merchant_id).single();
+          if (user) {
+            merchantName = user.name || user.company_name || 'التاجر';
+            merchantData = user;
+          }
+        }
+        
+        const supplierId = bidData?.supplier_id;
+        const merchantId = reqData?.merchant_id;
+
         // 1. Mark bid as accepted (if it was an advance payment)
         if (metadata.payment_type === 'advance') {
           await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', metadata.bid_id)
@@ -64,15 +96,50 @@ serve(async (req) => {
             await supabase.rpc('increment_coupon_usage', { p_coupon_id: metadata.coupon_id })
           }
 
-          const { data: reqData } = await supabase.from('custom_requests').update(requestUpdate).eq('id', metadata.request_id).select('merchant_id').single()
+          await supabase.from('custom_requests').update(requestUpdate).eq('id', metadata.request_id)
           
-          if (reqData && reqData.merchant_id) {
-            await supabase.rpc('grant_loyalty_points', { p_user_id: reqData.merchant_id })
+          if (merchantId) {
+            await supabase.rpc('grant_loyalty_points', { p_user_id: merchantId })
           }
+          
+          await notify(supplierId, 'نجاح الدفع', `قام ${merchantName} بدفع العربون لطلبك عبر بوابة الدفع.`, 'success');
+          await notify(merchantId, 'نجاح الدفع', `تمت عملية دفع العربون للمورد بنجاح عبر بوابة الدفع.`, 'success');
+          await notify('all_admins', 'عملية دفع جديدة', `قام التاجر ${merchantName} بدفع العربون لطلب عبر بوابة الدفع`, 'info');
         } 
         // 2. Or mark bid as fully paid (if it was a remaining payment)
         else if (metadata.payment_type === 'remaining') {
           await supabase.from('supplier_bids').update({ is_fully_paid: true }).eq('id', metadata.bid_id)
+          
+          await notify(supplierId, 'نجاح الدفع', `قام ${merchantName} بدفع المبلغ المتبقي لطلبك عبر بوابة الدفع.`, 'success');
+          await notify(merchantId, 'نجاح الدفع', `تمت عملية دفع المبلغ المتبقي للمورد بنجاح عبر بوابة الدفع.`, 'success');
+          await notify('all_admins', 'عملية دفع جديدة', `قام التاجر ${merchantName} بدفع المبلغ المتبقي لطلب عبر بوابة الدفع`, 'info');
+        }
+        
+        // Referral Commission Logic
+        if (merchantData && merchantData.referred_by && !merchantData.has_made_first_order && bidData) {
+           const price = bidData.price;
+           const cost = bidData.cost_price || (price * 0.8);
+           const profit = price - cost;
+           
+           const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single();
+           const pFee = settings?.platform_fee_percentage || 0;
+           const rComm = settings?.referral_commission_percentage || 0;
+           
+           const platformProfit = profit * (pFee / 100);
+           const commission = platformProfit * (rComm / 100);
+           
+           if (commission > 0) {
+             const { error: commError } = await supabase.rpc('grant_referral_commission', {
+               p_referrer_id: merchantData.referred_by,
+               p_referred_id: merchantId,
+               p_commission_amount: commission,
+               p_description: `عمولة إحالة لطلب جديد بقيمة ${commission}`
+             });
+             if (!commError) {
+                await notify(merchantData.referred_by, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${commission} لإتمام التاجر المدعو أول طلب له.`, 'success');
+                await supabase.from('users').update({ has_made_first_order: true }).eq('id', merchantId);
+             }
+           }
         }
         
         console.log('Successfully processed payment for bid:', metadata.bid_id)
@@ -83,7 +150,7 @@ serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Webhook error:', error.message)
     return new Response('Webhook error', { status: 500 })
   }

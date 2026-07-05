@@ -54,42 +54,8 @@ export default function MerchantOrders() {
     if (pStatus && user) {
       if (pStatus === 'success') {
         setPaymentNotification({ type: 'success', message: '✅ تمت عملية الدفع بنجاح! سيتم تأكيد طلبك قريباً.' });
-        if (pSupplierId && user) {
-          const paymentDesc = pType === 'remaining' ? 'المبلغ المتبقي' : 'العربون';
-          sendNotification(pSupplierId, 'نجاح الدفع', `قام التاجر بدفع ${paymentDesc} لطلبك.`, 'success');
-          sendNotification(user.id, 'نجاح الدفع', `تمت عملية دفع ${paymentDesc} للمورد بنجاح.`, 'success');
-          sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع ${paymentDesc} لطلب`, 'info');
-        }
-
-        // Commission Logic (Easiest Option: on successful payment callback)
-        if (user && user.referred_by && !user.has_made_first_order && pBidPrice) {
-          const price = parseFloat(pBidPrice);
-          const cost = pBidCost ? parseFloat(pBidCost) : (price * 0.8);
-          const profit = price - cost;
-          
-          supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single().then(({ data: settings }) => {
-            const pFee = settings?.platform_fee_percentage || 0;
-            const rComm = settings?.referral_commission_percentage || 0;
-            const platformProfit = profit * (pFee / 100);
-            const commission = platformProfit * (rComm / 100);
-            
-            if (commission > 0) {
-              supabase.rpc('grant_referral_commission', {
-                p_referrer_id: user.referred_by,
-                p_referred_id: user.id,
-                p_commission_amount: commission,
-                p_description: `عمولة إحالة لطلب جديد بقيمة ${formatCurrency(commission)}`
-              }).then(({ error }) => {
-                if (!error) {
-                  sendNotification(user.referred_by as string, 'عمولة إحالة جديدة', `تهانينا! حصلت على عمولة إحالة بقيمة ${formatCurrency(commission)} لإتمام التاجر المدعو أول طلب له.`, 'success');
-                  useAuthStore.getState().setUser({ ...user, has_made_first_order: true });
-                } else {
-                  console.error("Failed to grant commission:", error);
-                }
-              });
-            }
-          });
-        }
+        // Notifications and referral commissions have been moved to the Chargily webhook
+        // to ensure they trigger even if the user closes the window.
 
       } else if (pStatus === 'failure') {
         setPaymentNotification({ type: 'failure', message: '❌ لم تكتمل عملية الدفع، أو قمت بإلغائها.' });

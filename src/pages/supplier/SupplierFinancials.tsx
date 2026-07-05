@@ -63,10 +63,10 @@ export default function SupplierFinancials() {
           }
           
           totalSales += bid.price;
-          platformFees += fee;
           advanceTotal += advancePaid;
           
           if (!bid.is_paid_to_supplier) {
+            platformFees += fee;
             if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
               netEarned += (bid.price - fee);
             } else if (bid.status === 'accepted') {

@@ -253,13 +253,13 @@ export default function SupplierRequests() {
           <div className="bg-white rounded-2xl w-full max-w-md p-6 pb-12 max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative">
             <h2 className="text-xl font-bold text-gray-900 mb-2">تقديم عرض سعر</h2>
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
-                <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدولار ($). سيتم تحويله تلقائياً لعملتك المحلية.
+                <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار (DZD). سيتم تحويله تلقائياً للدولار عند الحاجة.
               </div>
             <p className="text-sm text-gray-500 mb-6 border-b pb-4">{biddingRequest.title}</p>
             
             <form onSubmit={handleSubmitBid} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر القطعة الواحدة بالدولار ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">سعر القطعة الواحدة بالدينار (DZD)</label>
                 <input 
                   type="number" step="0.01" required min="0.01"
                   value={bidForm.price || ''} 
@@ -267,11 +267,11 @@ export default function SupplierRequests() {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="أدخل سعر القطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي: ${((bidForm.price || 0) / exchangeRate).toFixed(2)} | الإجمالي بالدولار: ${(((bidForm.price || 0) / exchangeRate) * biddingRequest.quantity).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${((bidForm.price || 0) / exchangeRate).toFixed(2)} | الإجمالي: {formatCurrency((bidForm.price || 0) * biddingRequest.quantity)}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للقطعة الواحدة بالدولار ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للقطعة الواحدة بالدينار (DZD)</label>
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
@@ -280,7 +280,7 @@ export default function SupplierRequests() {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
                   placeholder="أدخل سعر التكلفة للقطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي: ${((bidForm.cost_price || 0) / exchangeRate).toFixed(2)} | الإجمالي بالدولار: ${(((bidForm.cost_price || 0) / exchangeRate) * biddingRequest.quantity).toFixed(2)}</p>
+                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${((bidForm.cost_price || 0) / exchangeRate).toFixed(2)} | الإجمالي: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
               </div>
 
               {bidForm.price > 0 && bidForm.price > bidForm.cost_price && (

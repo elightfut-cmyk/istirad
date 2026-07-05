@@ -53,8 +53,14 @@ export default function SupplierFinancials() {
       (data || []).forEach(bid => {
         if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
-          const profit = bid.price - (bid.cost_price || 0);
-          const fee = profit > 0 ? (profit * pFee / 100) : 0;
+          let fee = 0;
+          
+          if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
+            const profit = bid.price - (bid.cost_price || 0);
+            fee = profit > 0 ? (profit * pFee / 100) : 0;
+          } else if (bid.status === 'accepted') {
+            fee = advancePaid * (pFee / 100);
+          }
           
           totalSales += bid.price;
           platformFees += fee;
@@ -64,8 +70,7 @@ export default function SupplierFinancials() {
             if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
               netEarned += (bid.price - fee);
             } else if (bid.status === 'accepted') {
-              const advFee = advancePaid * (pFee / 100);
-              netEarned += (advancePaid - advFee);
+              netEarned += (advancePaid - fee);
             }
           }
           

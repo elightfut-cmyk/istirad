@@ -561,7 +561,7 @@ export default function MerchantOrders() {
                                 onClick={() => openPaymentModal(bid, req.id, 'remaining', req.coupon_id)}
                                 className="mt-1 bg-[#4f46e5] text-white py-1.5 px-3 rounded-md font-bold text-xs hover:bg-[#4338ca] w-full text-center"
                               >
-                                دفع المتبقي من المحفظة
+                                دفع المتبقي
                               </button>
                             )}
                           </div>

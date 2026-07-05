@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
-  const { formatCurrency, minQuantity } = useSettingsStore();
+  const { formatCurrency, minQuantity, exchangeRate } = useSettingsStore();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -278,7 +278,9 @@ export default function MerchantOrders() {
       amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     }
 
-    if (walletBalance < amountToPay) {
+    const amountToPayUSD = amountToPay / exchangeRate;
+
+    if (walletBalance < amountToPayUSD) {
       toast.error('رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً من صفحة المحفظة.');
       setIsProcessingWalletPayment(false);
       return;
@@ -287,7 +289,7 @@ export default function MerchantOrders() {
     try {
       const { error: walletError } = await supabase.from('wallet_transactions').insert({
         merchant_id: user.id,
-        amount: amountToPay,
+        amount: amountToPayUSD,
         type: 'payment',
         reference_id: selectedBidForPayment.id,
         description: paymentType === 'advance' ? 'دفع عربون طلب' : 'دفع المبلغ المتبقي لطلب'

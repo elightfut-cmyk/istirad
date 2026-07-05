@@ -13,7 +13,7 @@ export default function SupplierRequests() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [biddingRequest, setBiddingRequest] = useState<any>(null);
-  const [bidForm, setBidForm] = useState({ price_usd: 0, cost_price_usd: 0, advance_percentage: 20, notes: '' });
+  const [bidForm, setBidForm] = useState({ price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
   const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [submitting, setSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
@@ -54,7 +54,7 @@ export default function SupplierRequests() {
     if (!user || !biddingRequest) return;
     setSubmitting(true);
     
-    if (bidForm.price_usd <= bidForm.cost_price_usd) {
+    if (bidForm.price <= bidForm.cost_price) {
       toast.error('الرجاء التأكد من أن السعر الإجمالي أكبر من سعر التكلفة لتحقيق ربح.');
       setSubmitting(false);
       return;
@@ -64,10 +64,10 @@ export default function SupplierRequests() {
       const { error } = await supabase.from('supplier_bids').insert({
         request_id: biddingRequest.id,
         supplier_id: user.id,
-        price: Math.round(bidForm.price_usd * exchangeRate) * biddingRequest.quantity,
-        cost_price: Math.round(bidForm.cost_price_usd * exchangeRate) * biddingRequest.quantity,
-        price_usd: bidForm.price_usd * biddingRequest.quantity,
-        cost_price_usd: bidForm.cost_price_usd * biddingRequest.quantity,
+        price: bidForm.price * biddingRequest.quantity,
+        cost_price: bidForm.cost_price * biddingRequest.quantity,
+        price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
+        cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
         advance_percentage: bidForm.advance_percentage,
         notes: bidForm.notes,
       });
@@ -85,8 +85,8 @@ export default function SupplierRequests() {
               {
                 id: Math.random().toString(), // temporary ID
                 supplier_id: user.id,
-                price: Math.round(bidForm.price_usd * exchangeRate) * biddingRequest.quantity,
-                price_usd: bidForm.price_usd * biddingRequest.quantity,
+                price: bidForm.price * biddingRequest.quantity,
+                price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
                 advance_percentage: bidForm.advance_percentage,
                 notes: bidForm.notes,
                 status: 'pending',
@@ -99,7 +99,7 @@ export default function SupplierRequests() {
       }));
       
       setBiddingRequest(null);
-      setBidForm({ price_usd: 0, cost_price_usd: 0, advance_percentage: 20, notes: '' });
+      setBidForm({ price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
     } catch (error) {
       console.error(error);
       toast.error('حدث خطأ أثناء تقديم العرض');
@@ -262,12 +262,12 @@ export default function SupplierRequests() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">سعر القطعة الواحدة بالدولار ($)</label>
                 <input 
                   type="number" step="0.01" required min="0.01"
-                  value={bidForm.price_usd || ''} 
-                  onChange={e => setBidForm({...bidForm, price_usd: parseFloat(e.target.value) || 0})}
+                  value={bidForm.price || ''} 
+                  onChange={e => setBidForm({...bidForm, price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="أدخل سعر القطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((bidForm.price_usd || 0) * exchangeRate))} | الإجمالي للكمية المطلوبة ({biddingRequest.quantity}): {formatCurrency(Math.round((bidForm.price_usd || 0) * exchangeRate) * biddingRequest.quantity)}</p>
+                <p className="text-xs text-gray-500 mt-1">يساوي: ${((bidForm.price || 0) / exchangeRate).toFixed(2)} | الإجمالي بالدولار: ${(((bidForm.price || 0) / exchangeRate) * biddingRequest.quantity).toFixed(2)}</p>
               </div>
               
               <div>
@@ -275,18 +275,18 @@ export default function SupplierRequests() {
                 <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
                 <input 
                   type="number" required min="0" step="0.01"
-                  value={bidForm.cost_price_usd || ''} 
-                  onChange={e => setBidForm({...bidForm, cost_price_usd: parseFloat(e.target.value) || 0})}
+                  value={bidForm.cost_price || ''} 
+                  onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
                   placeholder="أدخل سعر التكلفة للقطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي: {formatCurrency(Math.round((bidForm.cost_price_usd || 0) * exchangeRate))} | إجمالي التكلفة: {formatCurrency(Math.round((bidForm.cost_price_usd || 0) * exchangeRate) * biddingRequest.quantity)}</p>
+                <p className="text-xs text-gray-500 mt-1">يساوي: ${((bidForm.cost_price || 0) / exchangeRate).toFixed(2)} | الإجمالي بالدولار: ${(((bidForm.cost_price || 0) / exchangeRate) * biddingRequest.quantity).toFixed(2)}</p>
               </div>
 
-              {bidForm.price_usd > 0 && bidForm.price_usd > bidForm.cost_price_usd && (
+              {bidForm.price > 0 && bidForm.price > bidForm.cost_price && (
                 <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex justify-between items-center text-sm">
                   <span className="text-green-700 font-bold">ربحك الصافي المتوقع الإجمالي:</span>
-                  <span className="font-bold text-green-800">{formatCurrency(Math.round((bidForm.price_usd - bidForm.cost_price_usd) * exchangeRate) * biddingRequest.quantity)}</span>
+                  <span className="font-bold text-green-800">{formatCurrency((bidForm.price - bidForm.cost_price) * biddingRequest.quantity)}</span>
                 </div>
               )}
               

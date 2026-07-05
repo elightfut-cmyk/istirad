@@ -73,7 +73,7 @@ export default function MerchantWallet() {
     try {
       const { error } = await supabase.from('manual_payments').insert({
         merchant_id: user.id,
-        amount: topupCurrency === 'USD' ? topupAmount * exchangeRate : topupAmount * EUR_TO_DZD,
+        amount: topupCurrency === 'USD' ? topupAmount : topupAmount * (EUR_TO_DZD / exchangeRate),
         payment_method: paymentMethod + ' - ' + topupCurrency,
         transaction_id: transactionId.trim()
       });
@@ -158,7 +158,7 @@ export default function MerchantWallet() {
         <div className="bg-[#4f46e5] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">الرصيد المتاح</h3>
-          <p className="text-4xl font-black mt-2">{formatCurrency(availableBalance)}</p>
+          <p className="text-4xl font-black mt-2">{formatCurrency(availableBalance * exchangeRate)}</p>
           <button 
             onClick={() => setShowTopupModal(true)}
             className="mt-6 bg-white text-[#4f46e5] px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-50 transition-colors w-full"

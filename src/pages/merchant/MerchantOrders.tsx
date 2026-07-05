@@ -48,8 +48,6 @@ export default function MerchantOrders() {
     const pStatus = searchParams.get('payment');
     const pSupplierId = searchParams.get('supplier_id');
     const pType = searchParams.get('type');
-    const pBidPrice = searchParams.get('bid_price');
-    const pBidCost = searchParams.get('bid_cost');
     
     if (pStatus && user) {
       if (pStatus === 'success') {

@@ -51,7 +51,7 @@ export default function MerchantOrders() {
     const pBidPrice = searchParams.get('bid_price');
     const pBidCost = searchParams.get('bid_cost');
     
-    if (pStatus) {
+    if (pStatus && user) {
       if (pStatus === 'success') {
         setPaymentNotification({ type: 'success', message: '✅ تمت عملية الدفع بنجاح! سيتم تأكيد طلبك قريباً.' });
         if (pSupplierId && user) {
@@ -105,7 +105,7 @@ export default function MerchantOrders() {
       // Auto dismiss after 10 seconds
       setTimeout(() => setPaymentNotification(null), 10000);
     }
-  }, []);
+  }, [user, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (user) {

@@ -5,6 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import toast from 'react-hot-toast';
 
 export default function MerchantWishlist() {
   const { user } = useAuthStore();
@@ -111,12 +112,12 @@ export default function MerchantWishlist() {
 
       if (bidError) throw bidError;
 
-      alert('تم إنشاء الطلب بنجاح! سيتم تحويلك إلى صفحة طلباتك لإتمام دفع العربون.');
+      toast.success('تم إنشاء الطلب بنجاح! سيتم تحويلك إلى صفحة طلباتك لإتمام دفع العربون.');
       navigate('/merchant/orders');
 
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('حدث خطأ أثناء تقديم الطلب.');
+      toast.error('حدث خطأ أثناء تقديم الطلب.');
     } finally {
       setSubmittingOrder(false);
       setOrderingProduct(null);

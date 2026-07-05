@@ -23,7 +23,7 @@ import SupplierOrders from './pages/supplier/SupplierOrders';
 import SupplierFinancials from './pages/supplier/SupplierFinancials';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
-
+import { Toaster } from 'react-hot-toast';
 function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
@@ -43,6 +43,7 @@ function App() {
 
   return (
     <Router>
+      <Toaster position="top-center" toastOptions={{ duration: 4000, style: { fontFamily: 'Tajawal', padding: '16px', borderRadius: '12px' } }} />
       <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal']">
         <Routes>
           <Route path="/" element={<LandingPage />} />

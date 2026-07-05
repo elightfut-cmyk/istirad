@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import { createChargilyCheckout } from '../../lib/chargily';
+import toast from 'react-hot-toast';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -130,12 +131,12 @@ export default function MerchantOrders() {
     if (!user) return;
 
     if (!formData.product_link) {
-      alert('يجب إدخال رابط المنتج.');
+      toast.error('يجب إدخال رابط المنتج.');
       return;
     }
 
     if (formData.quantity < minQuantity) {
-      alert(`الحد الأدنى للكمية المسموح بها هو ${minQuantity} وحدة.`);
+      toast(`الحد الأدنى للكمية المسموح بها هو ${minQuantity} وحدة.`, { icon: 'ℹ️' });
       return;
     }
 
@@ -187,7 +188,7 @@ export default function MerchantOrders() {
       fetchRequests();
     } catch (error) {
       console.error(error);
-      alert(editingRequestId ? 'حدث خطأ أثناء تعديل الطلب' : 'حدث خطأ أثناء إنشاء الطلب');
+      toast.error(editingRequestId ? 'حدث خطأ أثناء تعديل الطلب' : 'حدث خطأ أثناء إنشاء الطلب');
     } finally {
       setCreating(false);
     }
@@ -215,7 +216,7 @@ export default function MerchantOrders() {
       setRequests(requests.filter(r => r.id !== reqId));
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء محاولة حذف الطلب. يرجى التأكد من الصلاحيات.');
+      toast.error('حدث خطأ أثناء محاولة حذف الطلب. يرجى التأكد من الصلاحيات.');
     }
   };
 
@@ -278,7 +279,7 @@ export default function MerchantOrders() {
     }
 
     if (walletBalance < amountToPay) {
-      alert('رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً من صفحة المحفظة.');
+      toast.error('رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً من صفحة المحفظة.');
       setIsProcessingWalletPayment(false);
       return;
     }
@@ -347,7 +348,7 @@ export default function MerchantOrders() {
       await supabase.from('users').update({ wallet_balance: walletBalance - amountToPay }).eq('id', user.id);
       useAuthStore.getState().setUser({ ...user, wallet_balance: walletBalance - amountToPay });
 
-      alert(paymentType === 'advance' ? 'تم الدفع من المحفظة بنجاح!' : 'تم دفع المبلغ المتبقي من المحفظة بنجاح!');
+      toast.success(paymentType === 'advance' ? 'تم الدفع من المحفظة بنجاح!' : 'تم دفع المبلغ المتبقي من المحفظة بنجاح!');
       setShowPaymentModal(false);
       
       // Optimistic updates
@@ -368,7 +369,7 @@ export default function MerchantOrders() {
       }));
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء الدفع من المحفظة.');
+      toast.error('حدث خطأ أثناء الدفع من المحفظة.');
     } finally {
       setIsProcessingWalletPayment(false);
     }
@@ -402,7 +403,7 @@ export default function MerchantOrders() {
       
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء معالجة القبول والدفع');
+      toast.error('حدث خطأ أثناء معالجة القبول والدفع');
     }
   };
 

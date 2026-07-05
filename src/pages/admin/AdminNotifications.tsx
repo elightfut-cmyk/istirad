@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LayoutDashboard, ShoppingBag, Users, Send, MessageSquare, Ticket } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 export default function AdminNotifications() {
   const [message, setMessage] = useState('');
@@ -11,7 +12,7 @@ export default function AdminNotifications() {
 
   const handleSend = async () => {
     if (!message.trim()) {
-      alert('الرجاء كتابة رسالة أولاً.');
+      toast.error('الرجاء كتابة رسالة أولاً.');
       return;
     }
 
@@ -37,7 +38,7 @@ export default function AdminNotifications() {
       if (error) throw error;
 
       if (!users || users.length === 0) {
-        alert('لا يوجد مستخدمين لديهم معرف تلغرام (Chat ID) في هذه الفئة.');
+        toast('لا يوجد مستخدمين لديهم معرف تلغرام (Chat ID) في هذه الفئة.', { icon: 'ℹ️' });
         setSending(false);
         return;
       }
@@ -47,7 +48,7 @@ export default function AdminNotifications() {
 
       const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       if (!botToken) {
-        alert('مفتاح بوت التلغرام غير موجود في ملف .env');
+        toast.error('مفتاح بوت التلغرام غير موجود في ملف .env');
         setSending(false);
         return;
       }
@@ -81,7 +82,7 @@ export default function AdminNotifications() {
 
     } catch (error) {
       console.error('Error in broadcasting:', error);
-      alert('حدث خطأ أثناء جلب المستخدمين.');
+      toast.error('حدث خطأ أثناء جلب المستخدمين.');
     } finally {
       setSending(false);
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import toast from 'react-hot-toast';
 
 export default function AdminSettings() {
   const settingsStore = useSettingsStore();
@@ -75,7 +76,7 @@ export default function AdminSettings() {
       setLocalSettings(prev => ({ ...prev, adImageUrl: data.publicUrl }));
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('حدث خطأ أثناء رفع الصورة. تأكد من إنشاء الـ Bucket في قاعدة البيانات.');
+      toast.error('حدث خطأ أثناء رفع الصورة. تأكد من إنشاء الـ Bucket في قاعدة البيانات.');
     } finally {
       setUploadingImage(false);
     }
@@ -108,7 +109,7 @@ export default function AdminSettings() {
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('حدث خطأ أثناء رفع الصورة.');
+      toast.error('حدث خطأ أثناء رفع الصورة.');
     } finally {
       setUploadingImage(false);
     }
@@ -141,10 +142,10 @@ export default function AdminSettings() {
       if (error) throw error;
       
       await settingsStore.fetchSettings(); // Refresh local Zustand store
-      alert('تم تحديث الإعدادات بنجاح!');
+      toast.success('تم تحديث الإعدادات بنجاح!');
     } catch (error) {
       console.error('Error saving settings', error);
-      alert('حدث خطأ أثناء حفظ الإعدادات');
+      toast.error('حدث خطأ أثناء حفظ الإعدادات');
     } finally {
       setSaving(false);
     }

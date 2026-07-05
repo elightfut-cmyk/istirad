@@ -5,6 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import toast from 'react-hot-toast';
 
 // We fetch categories dynamically if available, otherwise just use 'الكل'
 
@@ -163,12 +164,12 @@ export default function Marketplace() {
          sendNotification('all_admins', 'مناقصة جديدة', `قام التاجر ${user.name} بإنشاء طلب شراء مباشر للمنتج ${orderingProduct.title}`, 'info');
       });
 
-      alert('تم إنشاء الطلب بنجاح! سيتم تحويلك إلى صفحة طلباتك لإتمام دفع العربون.');
+      toast.success('تم إنشاء الطلب بنجاح! سيتم تحويلك إلى صفحة طلباتك لإتمام دفع العربون.');
       navigate('/merchant/orders');
 
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('حدث خطأ أثناء تقديم الطلب.');
+      toast.error('حدث خطأ أثناء تقديم الطلب.');
     } finally {
       setSubmittingOrder(false);
       setOrderingProduct(null);

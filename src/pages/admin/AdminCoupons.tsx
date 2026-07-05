@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, Search, Plus, Edit, Trash2, CheckCircle, Ban } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export default function AdminCoupons() {
   const handleSaveCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.code || formData.discount_percentage <= 0) {
-      alert('الرجاء إدخال الكود ونسبة الخصم بشكل صحيح');
+      toast.error('الرجاء إدخال الكود ونسبة الخصم بشكل صحيح');
       return;
     }
 
@@ -72,7 +73,7 @@ export default function AdminCoupons() {
       fetchCoupons();
     } catch (error: any) {
       console.error('Error saving coupon:', error);
-      alert(error.message.includes('unique') ? 'هذا الكود موجود مسبقاً' : 'حدث خطأ أثناء حفظ الكوبون');
+      toast(error.message.includes('unique', { icon: 'ℹ️' }) ? 'هذا الكود موجود مسبقاً' : 'حدث خطأ أثناء حفظ الكوبون');
     }
   };
 
@@ -87,7 +88,7 @@ export default function AdminCoupons() {
       fetchCoupons();
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('حدث خطأ أثناء تغيير الحالة');
+      toast.error('حدث خطأ أثناء تغيير الحالة');
     }
   };
 
@@ -99,7 +100,7 @@ export default function AdminCoupons() {
       fetchCoupons();
     } catch (error) {
       console.error('Error deleting coupon:', error);
-      alert('لا يمكن حذف كوبون تم استخدامه من قبل');
+      toast.error('لا يمكن حذف كوبون تم استخدامه من قبل');
     }
   };
 

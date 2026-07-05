@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { LayoutDashboard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 export default function Profile() {
   const { user, setUser } = useAuthStore();
@@ -51,7 +52,7 @@ export default function Profile() {
       
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('حدث خطأ أثناء تحديث البيانات');
+      toast.error('حدث خطأ أثناء تحديث البيانات');
     } finally {
       setIsSaving(false);
     }

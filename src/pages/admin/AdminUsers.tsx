@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet, Ticket, Award } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
+import toast from 'react-hot-toast';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -46,7 +47,7 @@ export default function AdminUsers() {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('حدث خطأ أثناء تغيير حالة الحساب');
+      toast.error('حدث خطأ أثناء تغيير حالة الحساب');
       fetchUsers();
     }
   };
@@ -59,7 +60,7 @@ export default function AdminUsers() {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating badge:', error);
-      alert('حدث خطأ أثناء تغيير التوثيق');
+      toast.error('حدث خطأ أثناء تغيير التوثيق');
       fetchUsers();
     }
   };
@@ -80,7 +81,7 @@ export default function AdminUsers() {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('حدث خطأ أثناء الحذف. لا يمكن حذف مستخدم مرتبط ببيانات أخرى في النظام.');
+      toast.error('حدث خطأ أثناء الحذف. لا يمكن حذف مستخدم مرتبط ببيانات أخرى في النظام.');
       fetchUsers();
     }
   };
@@ -97,10 +98,10 @@ export default function AdminUsers() {
         .eq('id', userId);
 
       if (error) throw error;
-      alert(`تمت ترقية ${userName} إلى مسؤول بنجاح.`);
+      toast.success(`تمت ترقية ${userName} إلى مسؤول بنجاح.`);
     } catch (error) {
       console.error('Error promoting user:', error);
-      alert('حدث خطأ أثناء ترقية المستخدم.');
+      toast.error('حدث خطأ أثناء ترقية المستخدم.');
       fetchUsers();
     }
   };
@@ -111,10 +112,10 @@ export default function AdminUsers() {
       setUsers(users.map(u => u.id === userId ? { ...u, wallet_balance: 0 } : u));
       const { error } = await supabase.from('users').update({ wallet_balance: 0 }).eq('id', userId);
       if (error) throw error;
-      alert(`تم تصفير محفظة ${userName} بنجاح.`);
+      toast.success(`تم تصفير محفظة ${userName} بنجاح.`);
     } catch (error) {
       console.error('Error clearing wallet:', error);
-      alert('حدث خطأ أثناء تصفير المحفظة.');
+      toast.error('حدث خطأ أثناء تصفير المحفظة.');
       fetchUsers();
     }
   };
@@ -125,10 +126,10 @@ export default function AdminUsers() {
       setUsers(users.map(u => u.id === userId ? { ...u, loyalty_points: 0 } : u));
       const { error } = await supabase.from('users').update({ loyalty_points: 0 }).eq('id', userId);
       if (error) throw error;
-      alert(`تم تصفير نقاط ولاء ${userName} بنجاح.`);
+      toast.success(`تم تصفير نقاط ولاء ${userName} بنجاح.`);
     } catch (error) {
       console.error('Error clearing points:', error);
-      alert('حدث خطأ أثناء تصفير النقاط.');
+      toast.error('حدث خطأ أثناء تصفير النقاط.');
       fetchUsers();
     }
   };

@@ -4,6 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
+import toast from 'react-hot-toast';
 
 export default function MerchantWallet() {
   const { formatCurrency, exchangeRate } = useSettingsStore();
@@ -63,7 +64,7 @@ export default function MerchantWallet() {
   const handleTopup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || topupAmount <= 0 || !transactionId.trim()) {
-      alert('يرجى تعبئة جميع الحقول بشكل صحيح');
+      toast('يرجى تعبئة جميع الحقول بشكل صحيح', { icon: 'ℹ️' });
       return;
     }
     
@@ -79,13 +80,13 @@ export default function MerchantWallet() {
 
       if (error) throw error;
       
-      alert('تم إرسال طلب الشحن للمراجعة من الإدارة. سيتم إضافة الرصيد فور التأكد من التحويل.');
+      toast('تم إرسال طلب الشحن للمراجعة من الإدارة. سيتم إضافة الرصيد فور التأكد من التحويل.', { icon: 'ℹ️' });
       setShowTopupModal(false);
       setTopupAmount(0);
       setTransactionId('');
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء إرسال طلب الشحن');
+      toast.error('حدث خطأ أثناء إرسال طلب الشحن');
     } finally {
       setProcessing(false);
     }
@@ -95,7 +96,7 @@ export default function MerchantWallet() {
     if (!user || !user.loyalty_points) return;
     const minConversion = useSettingsStore.getState().loyaltyPointsMinConversion;
     if (user.loyalty_points < minConversion) {
-      alert(`الحد الأدنى للتحويل هو ${minConversion} نقطة`);
+      toast(`الحد الأدنى للتحويل هو ${minConversion} نقطة`, { icon: 'ℹ️' });
       return;
     }
 
@@ -110,7 +111,7 @@ export default function MerchantWallet() {
         if (error) throw error;
 
         if (data && data.success) {
-          alert('تم تحويل النقاط بنجاح!');
+          toast.success('تم تحويل النقاط بنجاح!');
           // reload user
           const { data: updatedUser } = await supabase.from('users').select('*').eq('id', user.id).single();
           if (updatedUser) {
@@ -118,11 +119,11 @@ export default function MerchantWallet() {
           }
           fetchTransactions();
         } else {
-          alert(data?.message || 'حدث خطأ أثناء تحويل النقاط');
+          toast.error(data?.message || 'حدث خطأ أثناء تحويل النقاط');
         }
       } catch (error) {
         console.error(error);
-        alert('حدث خطأ أثناء تحويل النقاط');
+        toast.error('حدث خطأ أثناء تحويل النقاط');
       } finally {
         setProcessing(false);
       }

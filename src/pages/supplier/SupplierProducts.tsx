@@ -4,6 +4,7 @@ import { Package, Plus, X, DollarSign, Upload, Edit, Trash2 } from 'lucide-react
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import toast from 'react-hot-toast';
 
 export default function SupplierProducts() {
   const { user } = useAuthStore();
@@ -49,7 +50,7 @@ export default function SupplierProducts() {
       setProducts(products.filter(p => p.id !== productId)); // Optimistic UI
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('حدث خطأ أثناء حذف المنتج.');
+      toast.error('حدث خطأ أثناء حذف المنتج.');
     }
   };
 
@@ -91,7 +92,7 @@ export default function SupplierProducts() {
     
     const sellingPrice = form.discount_price_usd > 0 ? form.discount_price_usd : form.price_usd;
     if (sellingPrice <= form.cost_price_usd) {
-      alert('الرجاء التأكد من أن السعر (أو السعر بعد التخفيض) أكبر من سعر التكلفة لتحقيق ربح.');
+      toast.error('الرجاء التأكد من أن السعر (أو السعر بعد التخفيض) أكبر من سعر التكلفة لتحقيق ربح.');
       return;
     }
 
@@ -110,7 +111,7 @@ export default function SupplierProducts() {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          alert('حدث خطأ أثناء رفع الصورة. يرجى التأكد من إنشاء Storage Bucket باسم products.');
+          toast.error('حدث خطأ أثناء رفع الصورة. يرجى التأكد من إنشاء Storage Bucket باسم products.');
           setSubmitting(false);
           return;
         }
@@ -165,7 +166,7 @@ export default function SupplierProducts() {
       fetchProducts();
     } catch (error) {
       console.error('Error adding product:', error);
-      alert('حدث خطأ أثناء إضافة المنتج. يرجى التأكد من إنشاء جدول products وصلاحيات قاعدة البيانات (RLS).');
+      toast.error('حدث خطأ أثناء إضافة المنتج. يرجى التأكد من إنشاء جدول products وصلاحيات قاعدة البيانات (RLS).');
     } finally {
       setSubmitting(false);
     }

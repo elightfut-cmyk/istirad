@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
+import toast from 'react-hot-toast';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
@@ -54,7 +55,7 @@ export default function SupplierRequests() {
     setSubmitting(true);
     
     if (bidForm.price_usd <= bidForm.cost_price_usd) {
-      alert('الرجاء التأكد من أن السعر الإجمالي أكبر من سعر التكلفة لتحقيق ربح.');
+      toast.error('الرجاء التأكد من أن السعر الإجمالي أكبر من سعر التكلفة لتحقيق ربح.');
       setSubmitting(false);
       return;
     }
@@ -101,7 +102,7 @@ export default function SupplierRequests() {
       setBidForm({ price_usd: 0, cost_price_usd: 0, advance_percentage: 20, notes: '' });
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء تقديم العرض');
+      toast.error('حدث خطأ أثناء تقديم العرض');
     } finally {
       setSubmitting(false);
     }

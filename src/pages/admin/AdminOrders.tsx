@@ -3,6 +3,7 @@ import { LayoutDashboard, ShoppingBag, Users, Search, Package, CheckCircle2, Clo
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import toast from 'react-hot-toast';
 
 export default function AdminOrders() {
   const { formatCurrency } = useSettingsStore();
@@ -74,11 +75,11 @@ export default function AdminOrders() {
       if (error) throw error;
       if (data && !data.success) throw new Error(data.message);
 
-      alert('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
+      toast.success('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
       fetchManualPayments();
     } catch (error: any) {
       console.error(error);
-      alert('حدث خطأ أثناء معالجة الموافقة: ' + (error.message || ''));
+      toast.success('حدث خطأ أثناء معالجة الموافقة: ' + (error.message || ''));
     }
   };
 
@@ -93,7 +94,7 @@ export default function AdminOrders() {
       fetchManualPayments();
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء رفض الدفعة.');
+      toast.error('حدث خطأ أثناء رفض الدفعة.');
     }
   };
 

@@ -4,6 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import AdminSettings from '../../components/admin/AdminSettings';
+import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const { formatCurrency } = useSettingsStore();
@@ -116,12 +117,12 @@ export default function AdminDashboard() {
       if (ids.length > 0) {
         const { error } = await supabase.from('supplier_bids').update({ is_paid_to_supplier: true }).in('id', ids);
         if (error) throw error;
-        alert('تم تأكيد الدفع بنجاح');
+        toast.success('تم تأكيد الدفع بنجاح');
         fetchStats(); // Refresh data
       }
     } catch (err) {
       console.error(err);
-      alert('حدث خطأ أثناء الدفع');
+      toast.error('حدث خطأ أثناء الدفع');
     } finally {
       setPayingDues(false);
     }

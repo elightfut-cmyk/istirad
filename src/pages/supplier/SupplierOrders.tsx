@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
+import toast from 'react-hot-toast';
 
 export default function SupplierOrders() {
   const { user } = useAuthStore();
@@ -75,7 +76,7 @@ export default function SupplierOrders() {
       setOrders(orders.filter(o => o.id !== bidId));
     } catch (error) {
       console.error('Error hiding order:', error);
-      alert('حدث خطأ أثناء إخفاء الطلب');
+      toast.error('حدث خطأ أثناء إخفاء الطلب');
     }
   };
 
@@ -95,7 +96,7 @@ export default function SupplierOrders() {
       }
     } catch (error) {
       console.error('Error updating shipping status:', error);
-      alert('حدث خطأ أثناء تحديث حالة الشحن');
+      toast.error('حدث خطأ أثناء تحديث حالة الشحن');
     }
   };
 
@@ -110,10 +111,10 @@ export default function SupplierOrders() {
         const typeDesc = bid.status === 'pending' ? 'دفع العربون' : 'دفع المبلغ المتبقي';
         sendNotification(req.merchant_id, 'تنبيه بالدفع', `يرجى ${typeDesc} للطلب: ${req.title}`, 'warning');
       }
-      alert('تم إرسال التنبيه بنجاح');
+      toast.success('تم إرسال التنبيه بنجاح');
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء إرسال التنبيه');
+      toast.error('حدث خطأ أثناء إرسال التنبيه');
     }
   };
 
@@ -147,14 +148,14 @@ export default function SupplierOrders() {
       await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', bid.custom_requests?.id || ''); // Wait, custom_requests might not have id here if not selected
       
       setOrders(orders.filter(o => o.id !== bid.id));
-      alert('تم إلغاء المعاملة بنجاح');
+      toast.success('تم إلغاء المعاملة بنجاح');
       
       if (bid.custom_requests?.merchant_id) {
         sendNotification(bid.custom_requests.merchant_id, 'إلغاء الطلب', `تم إلغاء الطلب بسبب التأخر في الدفع.`, 'error');
       }
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء إلغاء المعاملة');
+      toast.error('حدث خطأ أثناء إلغاء المعاملة');
     }
   };
 

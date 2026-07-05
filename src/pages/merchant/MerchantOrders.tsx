@@ -334,12 +334,14 @@ export default function MerchantOrders() {
         const requestUpdate: any = { status: 'closed' };
         if (appliedCoupon) {
           requestUpdate.coupon_id = appliedCoupon.id;
-          await supabase.rpc('increment_coupon_usage', { p_coupon_id: appliedCoupon.id }).catch(() => {
+          const { error: rpcError } = await supabase.rpc('increment_coupon_usage', { p_coupon_id: appliedCoupon.id });
+          if (rpcError) {
             // fallback if RPC doesn't exist
-            supabase.from('coupons').select('usage_count').eq('id', appliedCoupon.id).single().then(({data}) => {
-              if (data) supabase.from('coupons').update({ usage_count: data.usage_count + 1 }).eq('id', appliedCoupon.id);
-            });
-          });
+            const { data } = await supabase.from('coupons').select('usage_count').eq('id', appliedCoupon.id).single();
+            if (data) {
+              await supabase.from('coupons').update({ usage_count: data.usage_count + 1 }).eq('id', appliedCoupon.id);
+            }
+          }
         }
         await supabase.from('custom_requests').update(requestUpdate).eq('id', selectedBidForPayment.reqId);
         await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });

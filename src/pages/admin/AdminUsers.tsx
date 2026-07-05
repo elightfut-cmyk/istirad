@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet, Ticket, Award } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 
@@ -105,16 +105,30 @@ export default function AdminUsers() {
     }
   };
 
-  const handleClearBalance = async (userId: string, userName: string) => {
-    if (!window.confirm(`هل أنت متأكد من تصفير محفظة ونقاط الولاء للتاجر (${userName})؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+  const handleClearWallet = async (userId: string, userName: string) => {
+    if (!window.confirm(`هل أنت متأكد من تصفير رصيد المحفظة للتاجر (${userName})؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
     try {
-      setUsers(users.map(u => u.id === userId ? { ...u, wallet_balance: 0, loyalty_points: 0 } : u));
-      const { error } = await supabase.from('users').update({ wallet_balance: 0, loyalty_points: 0 }).eq('id', userId);
+      setUsers(users.map(u => u.id === userId ? { ...u, wallet_balance: 0 } : u));
+      const { error } = await supabase.from('users').update({ wallet_balance: 0 }).eq('id', userId);
       if (error) throw error;
-      alert(`تم تصفير محفظة ونقاط ${userName} بنجاح.`);
+      alert(`تم تصفير محفظة ${userName} بنجاح.`);
     } catch (error) {
-      console.error('Error clearing balance:', error);
+      console.error('Error clearing wallet:', error);
       alert('حدث خطأ أثناء تصفير المحفظة.');
+      fetchUsers();
+    }
+  };
+
+  const handleClearPoints = async (userId: string, userName: string) => {
+    if (!window.confirm(`هل أنت متأكد من تصفير نقاط الولاء للتاجر (${userName})؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    try {
+      setUsers(users.map(u => u.id === userId ? { ...u, loyalty_points: 0 } : u));
+      const { error } = await supabase.from('users').update({ loyalty_points: 0 }).eq('id', userId);
+      if (error) throw error;
+      alert(`تم تصفير نقاط ولاء ${userName} بنجاح.`);
+    } catch (error) {
+      console.error('Error clearing points:', error);
+      alert('حدث خطأ أثناء تصفير النقاط.');
       fetchUsers();
     }
   };
@@ -134,6 +148,7 @@ export default function AdminUsers() {
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
         { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
+        { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
@@ -254,13 +269,22 @@ export default function AdminUsers() {
                               </button>
                             )}
                             {u.role === 'merchant' && (
-                              <button 
-                                onClick={() => handleClearBalance(u.id, u.name)}
-                                className="p-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors"
-                                title="تصفير محفظة ونقاط الولاء"
-                              >
-                                <Wallet size={18} />
-                              </button>
+                              <>
+                                <button 
+                                  onClick={() => handleClearWallet(u.id, u.name)}
+                                  className="p-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors"
+                                  title="تصفير المحفظة"
+                                >
+                                  <Wallet size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => handleClearPoints(u.id, u.name)}
+                                  className="p-2 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 transition-colors"
+                                  title="تصفير نقاط الولاء"
+                                >
+                                  <Award size={18} />
+                                </button>
+                              </>
                             )}
                             <button 
                               onClick={() => handlePromoteToAdmin(u.id, u.name)}

@@ -57,7 +57,7 @@ export default function Login() {
             <PackageSearch size={32} className="text-[#4f46e5]" />
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">تسجيل الدخول</h1>
-          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى منصة إستيراد</p>
+          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى منصة جيبها-jiibha</p>
         </div>
 
         {errorMsg && (

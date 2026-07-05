@@ -7,6 +7,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
@@ -66,6 +67,12 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/admin/coupons" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminCoupons />
+            </ProtectedRoute>
+          } />
+
           <Route path="/admin/orders" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminOrders />

@@ -48,7 +48,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md flex flex-col hidden md:flex">
         <div className="p-6 text-center border-b border-gray-100">
-          <Link to="/" className="text-2xl font-bold text-[#4f46e5] hover:opacity-80 transition-opacity inline-block">إستيراد</Link>
+          <Link to="/" className="text-2xl font-bold text-[#4f46e5] hover:opacity-80 transition-opacity inline-block">جيبها-jiibha</Link>
           <p className="text-sm text-gray-500 mt-1">{user?.role === 'admin' ? 'الإدارة' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">

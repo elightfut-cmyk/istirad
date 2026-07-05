@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 
@@ -24,7 +24,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -105,6 +105,20 @@ export default function AdminUsers() {
     }
   };
 
+  const handleClearBalance = async (userId: string, userName: string) => {
+    if (!window.confirm(`هل أنت متأكد من تصفير محفظة ونقاط الولاء للتاجر (${userName})؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    try {
+      setUsers(users.map(u => u.id === userId ? { ...u, wallet_balance: 0, loyalty_points: 0 } : u));
+      const { error } = await supabase.from('users').update({ wallet_balance: 0, loyalty_points: 0 }).eq('id', userId);
+      if (error) throw error;
+      alert(`تم تصفير محفظة ونقاط ${userName} بنجاح.`);
+    } catch (error) {
+      console.error('Error clearing balance:', error);
+      alert('حدث خطأ أثناء تصفير المحفظة.');
+      fetchUsers();
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     const matchesSearch = (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,6 +170,7 @@ export default function AdminUsers() {
                 <th className="p-4 font-bold text-gray-700">المستخدم</th>
                 <th className="p-4 font-bold text-gray-700">الشركة</th>
                 <th className="p-4 font-bold text-gray-700">الدور</th>
+                <th className="p-4 font-bold text-gray-700">الرصيد / النقاط</th>
                 <th className="p-4 font-bold text-gray-700">الحالة</th>
                 <th className="p-4 font-bold text-gray-700 text-center">الإجراءات</th>
               </tr>
@@ -197,6 +212,16 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td className="p-4">
+                      {u.role === 'merchant' ? (
+                        <div className="flex flex-col gap-1 text-sm">
+                          <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md inline-block text-center">{u.wallet_balance || 0} دج</span>
+                          <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md inline-block text-center">{u.loyalty_points || 0} نقطة</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                         u.status === 'banned' ? 'bg-red-50 text-red-700' : 
                         u.status === 'pending' ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
@@ -226,6 +251,15 @@ export default function AdminUsers() {
                                 title="تغيير توثيق المورد (أزرق / ذهبي / بلا)"
                               >
                                 <BadgeCheck size={18} />
+                              </button>
+                            )}
+                            {u.role === 'merchant' && (
+                              <button 
+                                onClick={() => handleClearBalance(u.id, u.name)}
+                                className="p-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors"
+                                title="تصفير محفظة ونقاط الولاء"
+                              >
+                                <Wallet size={18} />
                               </button>
                             )}
                             <button 

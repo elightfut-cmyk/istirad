@@ -260,11 +260,48 @@ export default function MerchantOrders() {
   };
 
   const [paymentType, setPaymentType] = useState<'advance' | 'remaining'>('advance');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
 
   const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance') => {
     setSelectedBidForPayment({ ...bid, reqId });
     setPaymentType(type);
+    setCouponCode('');
+    setCouponError(null);
+    setAppliedCoupon(null);
+    setCouponDiscountAmount(0);
     setShowPaymentModal(true);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    try {
+      const { data, error } = await supabase.from('coupons').select('*').eq('code', couponCode.toUpperCase()).eq('is_active', true).single();
+      if (error || !data) {
+        setCouponError('كود الكوبون غير صحيح أو غير مفعل');
+        setAppliedCoupon(null);
+        setCouponDiscountAmount(0);
+        return;
+      }
+      
+      const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
+      const pFee = settings?.platform_fee_percentage || 0;
+      
+      const price = selectedBidForPayment.price;
+      const cost = selectedBidForPayment.cost_price ? selectedBidForPayment.cost_price : (price * 0.8);
+      const profit = price - cost;
+      const platformProfit = profit * (pFee / 100);
+      
+      const discount = platformProfit * (data.discount_percentage / 100);
+      
+      setAppliedCoupon(data);
+      setCouponDiscountAmount(discount);
+      setCouponError(null);
+    } catch (error) {
+      setCouponError('حدث خطأ أثناء التحقق من الكوبون');
+    }
   };
 
   const handleWalletPayment = async () => {
@@ -272,7 +309,7 @@ export default function MerchantOrders() {
     
     let amountToPay = 0;
     if (paymentType === 'advance') {
-      amountToPay = selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100);
+      amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     } else {
       amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100));
     }
@@ -294,7 +331,17 @@ export default function MerchantOrders() {
 
       if (paymentType === 'advance') {
         await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', selectedBidForPayment.id);
-        await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', selectedBidForPayment.reqId);
+        const requestUpdate: any = { status: 'closed' };
+        if (appliedCoupon) {
+          requestUpdate.coupon_id = appliedCoupon.id;
+          await supabase.rpc('increment_coupon_usage', { p_coupon_id: appliedCoupon.id }).catch(() => {
+            // fallback if RPC doesn't exist
+            supabase.from('coupons').select('usage_count').eq('id', appliedCoupon.id).single().then(({data}) => {
+              if (data) supabase.from('coupons').update({ usage_count: data.usage_count + 1 }).eq('id', appliedCoupon.id);
+            });
+          });
+        }
+        await supabase.from('custom_requests').update(requestUpdate).eq('id', selectedBidForPayment.reqId);
         await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });
         sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلبك`, 'success');
         sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع العربون وقبول عرض المورد من محفظتك لطلبك`, 'success');
@@ -360,7 +407,7 @@ export default function MerchantOrders() {
     try {
       let amountToPay = 0;
       if (paymentType === 'advance') {
-        amountToPay = selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100);
+        amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       } else {
         amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100));
       }
@@ -868,10 +915,37 @@ export default function MerchantOrders() {
               <p className="text-gray-500 mb-1">المبلغ المطلوب {paymentType === 'remaining' ? '(باقي الدفعة)' : ''}</p>
               <p className="text-3xl font-black text-gray-900">
                 {paymentType === 'advance' 
-                  ? formatCurrency(selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100))
+                  ? formatCurrency((selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)
                   : formatCurrency(selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)))}
               </p>
+              {couponDiscountAmount > 0 && paymentType === 'advance' && (
+                <p className="text-green-600 text-sm font-bold mt-2">
+                  تم خصم {formatCurrency(couponDiscountAmount)} من عمولة المنصة بفضل الكوبون!
+                </p>
+              )}
             </div>
+
+            {paymentType === 'advance' && !appliedCoupon && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">هل لديك كود ترويجي (كوبون)؟</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="أدخل الكوبون هنا..."
+                    className="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:outline-none uppercase"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="bg-gray-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-gray-800 transition"
+                  >
+                    تطبيق
+                  </button>
+                </div>
+                {couponError && <p className="text-red-500 text-sm mt-2">{couponError}</p>}
+              </div>
+            )}
 
             <div className="space-y-4">
               <button 

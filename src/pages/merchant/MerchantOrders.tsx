@@ -146,7 +146,7 @@ export default function MerchantOrders() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id,
+          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
           supplier_bids (
             id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, is_fully_paid,
             supplier:users(name, company_name, phone, verification_badge)
@@ -264,10 +264,12 @@ export default function MerchantOrders() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
+  const [existingCouponId, setExistingCouponId] = useState<string | null>(null);
 
-  const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance') => {
+  const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance', existingCoupon: string | null = null) => {
     setSelectedBidForPayment({ ...bid, reqId });
     setPaymentType(type);
+    setExistingCouponId(existingCoupon);
     setCouponCode('');
     setCouponError(null);
     setAppliedCoupon(null);
@@ -311,7 +313,7 @@ export default function MerchantOrders() {
     if (paymentType === 'advance') {
       amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     } else {
-      amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100));
+      amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     }
 
     if (walletBalance < amountToPay) {
@@ -332,17 +334,6 @@ export default function MerchantOrders() {
       if (paymentType === 'advance') {
         await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', selectedBidForPayment.id);
         const requestUpdate: any = { status: 'closed' };
-        if (appliedCoupon) {
-          requestUpdate.coupon_id = appliedCoupon.id;
-          const { error: rpcError } = await supabase.rpc('increment_coupon_usage', { p_coupon_id: appliedCoupon.id });
-          if (rpcError) {
-            // fallback if RPC doesn't exist
-            const { data } = await supabase.from('coupons').select('usage_count').eq('id', appliedCoupon.id).single();
-            if (data) {
-              await supabase.from('coupons').update({ usage_count: data.usage_count + 1 }).eq('id', appliedCoupon.id);
-            }
-          }
-        }
         await supabase.from('custom_requests').update(requestUpdate).eq('id', selectedBidForPayment.reqId);
         await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });
         sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلبك`, 'success');
@@ -353,6 +344,17 @@ export default function MerchantOrders() {
         sendNotification(selectedBidForPayment.supplier_id, 'دفع المبلغ المتبقي', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلبك`, 'success');
         sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع المبلغ المتبقي للمورد من محفظتك لطلبك`, 'success');
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلب من المحفظة`, 'info');
+      }
+
+      if (appliedCoupon) {
+        await supabase.from('custom_requests').update({ coupon_id: appliedCoupon.id }).eq('id', selectedBidForPayment.reqId);
+        const { error: rpcError } = await supabase.rpc('increment_coupon_usage', { p_coupon_id: appliedCoupon.id });
+        if (rpcError) {
+          const { data } = await supabase.from('coupons').select('usage_count').eq('id', appliedCoupon.id).single();
+          if (data) {
+            await supabase.from('coupons').update({ usage_count: data.usage_count + 1 }).eq('id', appliedCoupon.id);
+          }
+        }
       }
 
       // Commission Logic (Easiest Option: on successful wallet payment)
@@ -411,7 +413,7 @@ export default function MerchantOrders() {
       if (paymentType === 'advance') {
         amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       } else {
-        amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100));
+        amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       }
       
       const amountInDzd = Math.round(amountToPay);
@@ -561,7 +563,7 @@ export default function MerchantOrders() {
                         </p>
                       </div>
                       <button 
-                        onClick={() => openPaymentModal(bid, req.id)}
+                        onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
                         className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
                       >
                         دفع العربون
@@ -585,7 +587,7 @@ export default function MerchantOrders() {
                             </div>
                             {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
                               <button 
-                                onClick={() => openPaymentModal(bid, req.id, 'remaining')}
+                                onClick={() => openPaymentModal(bid, req.id, 'remaining', req.coupon_id)}
                                 className="mt-1 bg-[#4f46e5] text-white py-1.5 px-3 rounded-md font-bold text-xs hover:bg-[#4338ca] w-full text-center"
                               >
                                 دفع المتبقي من المحفظة
@@ -730,7 +732,7 @@ export default function MerchantOrders() {
 
                           {req.status === 'open' && bid.status === 'pending' && (
                             <button 
-                              onClick={() => openPaymentModal(bid, req.id)}
+                              onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
                               className="w-full py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
                             >
                               قبول ودفع العربون
@@ -748,7 +750,7 @@ export default function MerchantOrders() {
                                 </div>
                                 {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
                                   <button 
-                                    onClick={() => openPaymentModal(bid, req.id, 'remaining')}
+                                    onClick={() => openPaymentModal(bid, req.id, 'remaining', req.coupon_id)}
                                     className="mt-1 bg-[#4f46e5] text-white py-2 px-3 rounded-md font-bold text-sm hover:bg-[#4338ca] w-full text-center"
                                   >
                                     دفع المتبقي
@@ -918,16 +920,16 @@ export default function MerchantOrders() {
               <p className="text-3xl font-black text-gray-900">
                 {paymentType === 'advance' 
                   ? formatCurrency((selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)
-                  : formatCurrency(selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)))}
+                  : formatCurrency(selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)}
               </p>
-              {couponDiscountAmount > 0 && paymentType === 'advance' && (
+              {couponDiscountAmount > 0 && (
                 <p className="text-green-600 text-sm font-bold mt-2">
                   تم خصم {formatCurrency(couponDiscountAmount)} من عمولة المنصة بفضل الكوبون!
                 </p>
               )}
             </div>
 
-            {paymentType === 'advance' && !appliedCoupon && (
+            {!existingCouponId && !appliedCoupon && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">هل لديك كود ترويجي (كوبون)؟</label>
                 <div className="flex gap-2">

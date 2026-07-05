@@ -28,6 +28,7 @@ export default function MerchantOrders() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedBidForPayment, setSelectedBidForPayment] = useState<any>(null);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [isProcessingWalletPayment, setIsProcessingWalletPayment] = useState(false);
 
 
   const [formData, setFormData] = useState({ 
@@ -125,14 +126,9 @@ export default function MerchantOrders() {
   const fetchWalletBalance = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from('wallet_transactions').select('amount, type').eq('merchant_id', user.id);
+      const { data, error } = await supabase.from('users').select('wallet_balance').eq('id', user.id).single();
       if (data && !error) {
-        const balance = data.reduce((acc, curr) => {
-          if (curr.type === 'deposit' || curr.type === 'refund') return acc + curr.amount;
-          if (curr.type === 'payment') return acc - curr.amount;
-          return acc;
-        }, 0);
-        setWalletBalance(balance);
+        setWalletBalance(data.wallet_balance || 0);
       }
     } catch (error) {
       console.error('Wallet fetch error', error);
@@ -307,7 +303,8 @@ export default function MerchantOrders() {
   };
 
   const handleWalletPayment = async () => {
-    if (!selectedBidForPayment || !user) return;
+    if (!selectedBidForPayment || !user || isProcessingWalletPayment) return;
+    setIsProcessingWalletPayment(true);
     
     let amountToPay = 0;
     if (paymentType === 'advance') {
@@ -318,6 +315,7 @@ export default function MerchantOrders() {
 
     if (walletBalance < amountToPay) {
       alert('رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً من صفحة المحفظة.');
+      setIsProcessingWalletPayment(false);
       return;
     }
 
@@ -381,6 +379,10 @@ export default function MerchantOrders() {
         }
       }
 
+      // Sync balance with the users table directly so the rest of the app sees the correct balance
+      await supabase.from('users').update({ wallet_balance: walletBalance - amountToPay }).eq('id', user.id);
+      useAuthStore.getState().setUser({ ...user, wallet_balance: walletBalance - amountToPay });
+
       alert(paymentType === 'advance' ? 'تم الدفع من المحفظة بنجاح!' : 'تم دفع المبلغ المتبقي من المحفظة بنجاح!');
       setShowPaymentModal(false);
       
@@ -403,6 +405,8 @@ export default function MerchantOrders() {
     } catch (error) {
       console.error(error);
       alert('حدث خطأ أثناء الدفع من المحفظة.');
+    } finally {
+      setIsProcessingWalletPayment(false);
     }
   };
 
@@ -954,7 +958,8 @@ export default function MerchantOrders() {
             <div className="space-y-4">
               <button 
                 onClick={handleWalletPayment}
-                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-[#4f46e5] hover:bg-green-50 transition group"
+                disabled={isProcessingWalletPayment}
+                className={`w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl transition group ${isProcessingWalletPayment ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#4f46e5] hover:bg-green-50'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-2 rounded-lg text-green-700 group-hover:bg-[#4f46e5] group-hover:text-white transition">

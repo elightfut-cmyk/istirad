@@ -109,7 +109,7 @@ export default function MerchantOrders() {
         .select(`
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
           supplier_bids (
-            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, is_fully_paid,
+            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by,
             supplier:users(name, company_name, phone, verification_badge)
           )
         `)
@@ -409,6 +409,37 @@ export default function MerchantOrders() {
     }
   };
 
+  const handleProposePriceMerchant = async (bid: any, newPrice: number) => {
+    try {
+      const { error } = await supabase.from('supplier_bids').update({
+        negotiated_price: newPrice,
+        negotiated_by: 'merchant'
+      }).eq('id', bid.id);
+      if (error) throw error;
+      sendNotification(bid.supplier_id, 'اقتراح سعر جديد', `اقترح التاجر ${user?.name || ''} سعراً جديداً لعرضك: ${formatCurrency(newPrice)}`, 'info');
+      toast.success('تم إرسال اقتراح السعر للمورد');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء إرسال الاقتراح');
+    }
+  };
+
+  const handleAcceptNegotiationMerchant = async (bid: any) => {
+    try {
+      const { error } = await supabase.from('supplier_bids').update({
+        price: bid.negotiated_price,
+        price_usd: bid.negotiated_price / exchangeRate,
+        negotiated_by: 'merchant_accepted'
+      }).eq('id', bid.id);
+      if (error) throw error;
+      sendNotification(bid.supplier_id, 'تم قبول السعر', `وافق التاجر على السعر المقترح (${formatCurrency(bid.negotiated_price)}).`, 'success');
+      toast.success('تم قبول السعر، يمكنك الآن دفع العربون');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء قبول السعر');
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<'custom' | 'direct'>('direct');
 
   const customRequests = requests.filter(req => req.request_type !== 'direct');
@@ -702,12 +733,58 @@ export default function MerchantOrders() {
                           )}
 
                           {req.status === 'open' && bid.status === 'pending' && (
-                            <button 
-                              onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
-                              className="w-full py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
-                            >
-                              قبول ودفع العربون
-                            </button>
+                            <div className="space-y-2 mt-4">
+                              {bid.allow_negotiation && bid.negotiated_by !== 'merchant_accepted' && (
+                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm mb-3">
+                                  <p className="font-bold text-blue-800 mb-2">المفاوضة على السعر</p>
+                                  {bid.negotiated_by === 'supplier' ? (
+                                    <div>
+                                      <p className="text-gray-700 mb-2">المورد يقترح سعراً جديداً: <span className="font-bold text-lg text-blue-700">{formatCurrency(bid.negotiated_price)}</span></p>
+                                      <div className="flex gap-2">
+                                        <button 
+                                          onClick={() => handleAcceptNegotiationMerchant(bid)}
+                                          className="flex-1 bg-green-600 text-white py-1.5 rounded-lg font-bold hover:bg-green-700 transition"
+                                        >
+                                          قبول السعر
+                                        </button>
+                                        <button 
+                                          onClick={() => {
+                                            const newPrice = prompt('أدخل السعر الإجمالي الجديد الذي تقترحه (بالدينار):', bid.negotiated_price);
+                                            if (newPrice && !isNaN(parseFloat(newPrice))) {
+                                              handleProposePriceMerchant(bid, parseFloat(newPrice));
+                                            }
+                                          }}
+                                          className="flex-1 bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
+                                        >
+                                          رد بسعر آخر
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : bid.negotiated_by === 'merchant' ? (
+                                    <p className="text-gray-600 font-bold">لقد قمت باقتراح السعر {formatCurrency(bid.negotiated_price)}. في انتظار رد المورد...</p>
+                                  ) : (
+                                    <button 
+                                      onClick={() => {
+                                        const newPrice = prompt('هذا العرض يقبل التفاوض. أدخل السعر الإجمالي الذي تقترحه (بالدينار):', bid.price);
+                                        if (newPrice && !isNaN(parseFloat(newPrice))) {
+                                          handleProposePriceMerchant(bid, parseFloat(newPrice));
+                                        }
+                                      }}
+                                      className="w-full bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
+                                    >
+                                      التفاوض واقتراح سعر آخر
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                              
+                              <button 
+                                onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
+                                className="w-full py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
+                              >
+                                قبول ودفع العربون
+                              </button>
+                            </div>
                           )}
                           
                           {bid.status === 'accepted' && bid.shipping_status && (

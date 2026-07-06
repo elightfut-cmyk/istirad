@@ -13,7 +13,7 @@ export default function SupplierRequests() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [biddingRequest, setBiddingRequest] = useState<any>(null);
-  const [bidForm, setBidForm] = useState({ price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
+  const [bidForm, setBidForm] = useState({ id: null as string | null, price: 0, cost_price: 0, advance_percentage: 20, notes: '', allow_negotiation: false });
   const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [submitting, setSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
@@ -34,7 +34,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
           merchant:users!merchant_id(name, company_name),
-          supplier_bids (id, supplier_id, price, advance_percentage, notes, status, created_at)
+          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by)
         `)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -61,50 +61,80 @@ export default function SupplierRequests() {
     }
 
     try {
-      const { error } = await supabase.from('supplier_bids').insert({
-        request_id: biddingRequest.id,
-        supplier_id: user.id,
-        price: bidForm.price * biddingRequest.quantity,
-        cost_price: bidForm.cost_price * biddingRequest.quantity,
-        price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
-        cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
-        advance_percentage: bidForm.advance_percentage,
-        notes: bidForm.notes,
-      });
+      if (bidForm.id) {
+        const { error } = await supabase.from('supplier_bids').update({
+          price: bidForm.price * biddingRequest.quantity,
+          cost_price: bidForm.cost_price * biddingRequest.quantity,
+          price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
+          cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
+          advance_percentage: bidForm.advance_percentage,
+          notes: bidForm.notes,
+          allow_negotiation: bidForm.allow_negotiation,
+        }).eq('id', bidForm.id);
 
-      if (error) throw error;
-      sendNotification(biddingRequest.merchant_id, 'عرض سعر جديد', `تلقيت عرضاً جديداً من ${user.name} على مناقصتك: ${biddingRequest.title}`, 'info');
+        if (error) throw error;
+        sendNotification(biddingRequest.merchant_id, 'تعديل عرض سعر', `قام ${user.name} بتعديل عرضه على مناقصتك: ${biddingRequest.title}`, 'info');
+      } else {
+        const { error } = await supabase.from('supplier_bids').insert({
+          request_id: biddingRequest.id,
+          supplier_id: user.id,
+          price: bidForm.price * biddingRequest.quantity,
+          cost_price: bidForm.cost_price * biddingRequest.quantity,
+          price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
+          cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
+          advance_percentage: bidForm.advance_percentage,
+          notes: bidForm.notes,
+          allow_negotiation: bidForm.allow_negotiation,
+        });
+
+        if (error) throw error;
+        sendNotification(biddingRequest.merchant_id, 'عرض سعر جديد', `تلقيت عرضاً جديداً من ${user.name} على مناقصتك: ${biddingRequest.title}`, 'info');
+      }
       
-      // Optimistic UI update
-      setRequests(requests.map(req => {
-        if (req.id === biddingRequest.id) {
-          return {
-            ...req,
-            supplier_bids: [
-              ...(req.supplier_bids || []),
-              {
-                id: Math.random().toString(), // temporary ID
-                supplier_id: user.id,
-                price: bidForm.price * biddingRequest.quantity,
-                price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
-                advance_percentage: bidForm.advance_percentage,
-                notes: bidForm.notes,
-                status: 'pending',
-                created_at: new Date().toISOString()
-              }
-            ]
-          };
-        }
-        return req;
-      }));
-      
+      await fetchRequests();
       setBiddingRequest(null);
-      setBidForm({ price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
+      setBidForm({ id: null, price: 0, cost_price: 0, advance_percentage: 20, notes: '', allow_negotiation: false });
     } catch (error) {
       console.error(error);
       toast.error('حدث خطأ أثناء تقديم العرض');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAcceptNegotiation = async (bid: any, req: any) => {
+    try {
+      const { error } = await supabase.from('supplier_bids').update({
+        price: bid.negotiated_price,
+        price_usd: bid.negotiated_price / exchangeRate,
+        status: 'accepted',
+        negotiated_by: 'supplier'
+      }).eq('id', bid.id);
+      if (error) throw error;
+      
+      await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', req.id);
+      
+      sendNotification(req.merchant_id, 'تمت الموافقة على السعر', `وافق ${user?.name} على السعر المقترح في المناقصة: ${req.title}`, 'success');
+      toast.success('تم قبول السعر بنجاح واعتماد العرض!');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء قبول السعر');
+    }
+  };
+
+  const handleCounterOffer = async (bid: any, newPrice: number, req: any) => {
+    try {
+      const { error } = await supabase.from('supplier_bids').update({
+        negotiated_price: newPrice,
+        negotiated_by: 'supplier'
+      }).eq('id', bid.id);
+      if (error) throw error;
+      
+      sendNotification(req.merchant_id, 'رد على عرض السعر', `قدم ${user?.name} سعراً جديداً في المفاوضة على المناقصة: ${req.title}`, 'info');
+      toast.success('تم إرسال مقترح السعر الجديد');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء إرسال المقترح');
     }
   };
 
@@ -222,8 +252,59 @@ export default function SupplierRequests() {
                           تم إغلاق الطلب وقبول عرض مورد آخر
                         </div>
                       ) : (
-                        <div className="bg-yellow-100 text-yellow-800 p-3 rounded-xl font-bold text-sm">
+                        <div className="bg-yellow-100 text-yellow-800 p-3 rounded-xl font-bold text-sm mb-4">
                           قيد المراجعة من قبل التاجر
+                        </div>
+                      )}
+
+                      {!isClosed && myBid.status !== 'accepted' && (
+                        <button 
+                          onClick={() => {
+                            setBiddingRequest(req);
+                            setBidForm({ 
+                              id: myBid.id, 
+                              price: myBid.price / req.quantity, 
+                              cost_price: myBid.cost_price ? myBid.cost_price / req.quantity : 0, 
+                              advance_percentage: myBid.advance_percentage, 
+                              notes: myBid.notes,
+                              allow_negotiation: myBid.allow_negotiation || false
+                            });
+                          }}
+                          className="w-full bg-white text-blue-600 border border-blue-200 py-2 rounded-xl font-bold hover:bg-blue-50 transition shadow-sm"
+                        >
+                          تعديل العرض
+                        </button>
+                      )}
+
+                      {myBid.allow_negotiation && myBid.negotiated_price && myBid.status !== 'accepted' && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mt-3 text-sm">
+                          <p className="font-bold text-blue-800 mb-2">المفاوضات</p>
+                          {myBid.negotiated_by === 'merchant' ? (
+                            <div>
+                              <p className="text-gray-700 mb-2">التاجر يقترح سعراً إجمالياً: <span className="font-bold">{formatCurrency(myBid.negotiated_price)}</span></p>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => handleAcceptNegotiation(myBid, req)}
+                                  className="flex-1 bg-green-600 text-white py-1.5 rounded-lg font-bold hover:bg-green-700 transition"
+                                >
+                                  قبول السعر
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    const newPrice = prompt('أدخل السعر الإجمالي الجديد الذي تقترحه (بالدينار):', myBid.negotiated_price);
+                                    if (newPrice && !isNaN(parseFloat(newPrice))) {
+                                      handleCounterOffer(myBid, parseFloat(newPrice), req);
+                                    }
+                                  }}
+                                  className="flex-1 bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition text-xs"
+                                >
+                                  سعر آخر
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-gray-600 text-xs font-bold">لقد قمت باقتراح السعر {formatCurrency(myBid.negotiated_price)}. في انتظار رد التاجر...</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -251,7 +332,7 @@ export default function SupplierRequests() {
       {biddingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 pb-12 max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">تقديم عرض سعر</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{bidForm.id ? 'تعديل عرض السعر' : 'تقديم عرض سعر'}</h2>
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
                 <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار (DZD). سيتم تحويله تلقائياً للدولار عند الحاجة.
               </div>
@@ -310,6 +391,19 @@ export default function SupplierRequests() {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="مثال: متوفر بجميع الألوان، مدة الشحن 5 أيام..."
                 />
+              </div>
+
+              <div className="flex items-center gap-2 mb-4">
+                <input 
+                  type="checkbox" 
+                  id="allow_negotiation" 
+                  checked={bidForm.allow_negotiation}
+                  onChange={e => setBidForm({...bidForm, allow_negotiation: e.target.checked})}
+                  className="w-5 h-5 text-[#4f46e5] rounded border-gray-300 focus:ring-[#4f46e5]"
+                />
+                <label htmlFor="allow_negotiation" className="text-sm font-bold text-gray-800">
+                  أقبل التفاوض على السعر مع التاجر
+                </label>
               </div>
 
               <div className="pt-4 flex gap-4">

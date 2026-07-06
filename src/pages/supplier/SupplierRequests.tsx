@@ -96,6 +96,40 @@ export default function SupplierRequests() {
     }
   };
 
+  const handleAcceptProposedPrice = async (bid: any, reqQuantity: number, merchantId: string) => {
+    try {
+      const newPriceTotal = bid.negotiated_price * reqQuantity;
+      const { error } = await supabase.from('supplier_bids').update({
+        price: newPriceTotal,
+        price_usd: newPriceTotal / exchangeRate,
+        negotiated_price: null,
+        negotiated_by: 'supplier_accepted'
+      }).eq('id', bid.id);
+      
+      if (error) throw error;
+      sendNotification(merchantId, 'تم قبول السعر المقترح', `وافق المورد ${user?.company_name || ''} على السعر المقترح، يرجى دفع العربون.`, 'success');
+      toast.success('تم قبول السعر وتحديث العرض بنجاح');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء قبول السعر');
+    }
+  };
+
+  const handleRejectProposedPrice = async (bidId: string, merchantId: string) => {
+    if (!window.confirm('هل أنت متأكد من رفض العرض؟ سيتم إغلاق المناقصة بالنسبة لك ولن تتمكن من تقديم عرض مرة أخرى.')) return;
+    try {
+      const { error } = await supabase.from('supplier_bids').update({
+        status: 'rejected'
+      }).eq('id', bidId);
+      
+      if (error) throw error;
+      sendNotification(merchantId, 'رفض المورد للسعر', `رفض المورد السعر المقترح وتم إلغاء عرضه.`, 'error');
+      toast.success('تم رفض العرض وإلغاؤه');
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء رفض العرض');
+    }
+  };
 
   return (
     <DashboardLayout
@@ -214,13 +248,39 @@ export default function SupplierRequests() {
                         <div className="bg-gray-200 text-gray-600 p-3 rounded-xl font-bold text-sm">
                           تم إغلاق الطلب وقبول عرض مورد آخر
                         </div>
+                      ) : myBid.status === 'rejected' ? (
+                        <div className="bg-red-100 text-red-800 p-3 rounded-xl font-bold text-sm mb-4">
+                          مرفوض: تم رفض العرض أو الصفقة مع التاجر.
+                        </div>
+                      ) : myBid.negotiated_by === 'merchant' ? (
+                        <div className="bg-orange-100 text-orange-800 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200">
+                          <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price)}</strong> للقطعة الواحدة.</p>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleAcceptProposedPrice(myBid, req.quantity || 1, req.merchant_id)}
+                              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                            >
+                              قبول السعر المقترح
+                            </button>
+                            <button 
+                              onClick={() => handleRejectProposedPrice(myBid.id, req.merchant_id)}
+                              className="flex-1 bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-100 transition"
+                            >
+                              رفض العرض
+                            </button>
+                          </div>
+                        </div>
+                      ) : myBid.negotiated_by === 'supplier_accepted' ? (
+                        <div className="bg-green-100 text-green-800 p-3 rounded-xl font-bold text-sm mb-4">
+                          تم قبول السعر المقترح، في انتظار التاجر لدفع العربون.
+                        </div>
                       ) : (
                         <div className="bg-yellow-100 text-yellow-800 p-3 rounded-xl font-bold text-sm mb-4">
                           قيد المراجعة من قبل التاجر
                         </div>
                       )}
 
-                      {!isClosed && myBid.status !== 'accepted' && (
+                      {!isClosed && myBid.status === 'pending' && myBid.negotiated_by !== 'merchant' && myBid.negotiated_by !== 'supplier_accepted' && (
                         <button 
                           onClick={() => {
                             setBiddingRequest(req);

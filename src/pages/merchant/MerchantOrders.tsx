@@ -19,6 +19,11 @@ export default function MerchantOrders() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
 
+  const [showNegotiationModal, setShowNegotiationModal] = useState(false);
+  const [negotiationBid, setNegotiationBid] = useState<any>(null);
+  const [negotiatedPrice, setNegotiatedPrice] = useState<number>(0);
+  const [negotiating, setNegotiating] = useState(false);
+
   const closeModal = () => {
     setShowModal(false);
     setEditingRequestId(null);
@@ -423,6 +428,32 @@ export default function MerchantOrders() {
     }
   };
 
+  const handleProposePriceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!negotiationBid || negotiatedPrice <= 0) return;
+    setNegotiating(true);
+    try {
+      // Negotiated price is per unit
+      const { error } = await supabase.from('supplier_bids').update({
+        negotiated_price: negotiatedPrice,
+        negotiated_by: 'merchant'
+      }).eq('id', negotiationBid.id);
+
+      if (error) throw error;
+      sendNotification(negotiationBid.supplier_id, 'اقتراح سعر جديد', `قام التاجر ${user?.name || ''} باقتراح سعر جديد لعرضك: ${formatCurrency(negotiatedPrice)} للقطعة الواحدة.`, 'info');
+      toast.success('تم إرسال السعر المقترح بنجاح');
+      setShowNegotiationModal(false);
+      setNegotiationBid(null);
+      setNegotiatedPrice(0);
+      fetchRequests();
+    } catch (error) {
+      console.error(error);
+      toast.error('حدث خطأ أثناء إرسال السعر المقترح');
+    } finally {
+      setNegotiating(false);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<'custom' | 'direct'>('direct');
 
   const customRequests = requests.filter(req => req.request_type !== 'direct');
@@ -729,13 +760,22 @@ export default function MerchantOrders() {
                             </div>
                           )}
 
-                          {req.status === 'open' && bid.status === 'pending' && (
-                            <div className="flex gap-2 mt-4">
+                          {req.status === 'open' && bid.status === 'pending' && bid.negotiated_by !== 'merchant' && (
+                            <div className="flex flex-col sm:flex-row gap-2 mt-4">
                               <button 
                                 onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
                                 className="flex-1 py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
                               >
-                                قبول ودفع العربون
+                                قبول العرض
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setNegotiationBid(bid);
+                                  setShowNegotiationModal(true);
+                                }}
+                                className="flex-1 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-100 transition"
+                              >
+                                اقتراح سعر
                               </button>
                               <button 
                                 onClick={() => {
@@ -745,7 +785,30 @@ export default function MerchantOrders() {
                                 }}
                                 className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-sm hover:bg-red-100 transition"
                               >
-                                رفض العرض
+                                رفض
+                              </button>
+                            </div>
+                          )}
+                          
+                          {bid.status === 'rejected' && (
+                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-100 flex items-center justify-center gap-2">
+                              <XCircle size={18} />
+                              تم رفض هذا العرض
+                            </div>
+                          )}
+                          {bid.negotiated_by === 'merchant' && bid.status === 'pending' && (
+                            <div className="mt-4 p-3 bg-orange-50 text-orange-700 rounded-lg text-sm font-bold border border-orange-100 text-center">
+                              لقد قمت باقتراح سعر جديد ({formatCurrency(bid.negotiated_price)} للقطعة) وفي انتظار رد المورد.
+                            </div>
+                          )}
+                          {bid.negotiated_by === 'supplier_accepted' && bid.status === 'pending' && (
+                            <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-100 text-center">
+                              وافق المورد على السعر المقترح. يمكنك الآن الدفع والتأكيد.
+                              <button 
+                                onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
+                                className="mt-2 block w-full py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700 transition"
+                              >
+                                دفع العربون
                               </button>
                             </div>
                           )}
@@ -1009,6 +1072,43 @@ export default function MerchantOrders() {
         </div>
       )}
 
+      {/* Negotiation Modal */}
+      {showNegotiationModal && negotiationBid && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] p-4 flex items-center justify-center">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
+            <button onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); }} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700">
+              <XCircle size={24} />
+            </button>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">اقتراح سعر جديد</h2>
+            
+            <div className="bg-orange-50 p-4 rounded-xl mb-6 text-sm text-orange-800 border border-orange-100">
+              <p>سعر المورد الحالي: <strong>{formatCurrency(negotiationBid.price / (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1))}</strong> للقطعة الواحدة.</p>
+            </div>
+
+            <form onSubmit={handleProposePriceSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">السعر المقترح للقطعة الواحدة (DZD)</label>
+                <input 
+                  type="number" step="0.01" required min="0.01"
+                  value={negotiatedPrice || ''} 
+                  onChange={e => setNegotiatedPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  placeholder="أدخل سعرك المقترح هنا..."
+                />
+              </div>
+
+              <div className="pt-4 flex gap-4">
+                <button type="submit" disabled={negotiating || !negotiatedPrice} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition disabled:opacity-50">
+                  {negotiating ? 'جاري الإرسال...' : 'إرسال الاقتراح'}
+                </button>
+                <button type="button" onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); }} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

@@ -55,7 +55,7 @@ export default function SupplierFinancials() {
         if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
           let fee = 0;
-          const quantity = bid.custom_requests?.quantity || 1;
+          const quantity = (bid.custom_requests as any)?.quantity || 1;
           const totalFee = (quantity * fixedAmount) + (bid.price * (percentage / 100));
           
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {

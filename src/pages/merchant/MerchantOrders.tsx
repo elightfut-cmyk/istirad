@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, HelpCircle } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -612,7 +612,12 @@ export default function MerchantOrders() {
                           </a>
                           
                           <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
-                            <span className="text-gray-500 font-medium">حالة الشحن:</span>
+                            <span className="text-gray-500 font-medium flex items-center gap-1">
+                              حالة الشحن:
+                              <span title="قيد التجهيز: تجهيز المصنع الصيني للسلعة للشحن&#10;يتم الشحن: من الصين إلى الجزائر&#10;تم التوصيل: من المورد إلى التاجر">
+                                <HelpCircle size={14} className="text-gray-400 cursor-help" />
+                              </span>
+                            </span>
                             <span className={`font-bold ${
                               bid.shipping_status === 'shipped' ? 'text-blue-600' :
                               bid.shipping_status === 'delivered' ? 'text-green-600' :
@@ -805,7 +810,12 @@ export default function MerchantOrders() {
                                   </button>
                                 )}
                               </div>
-                              <span className="text-sm text-gray-500 block mb-1">حالة الشحن والتوصيل:</span>
+                              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
+                                حالة الشحن والتوصيل:
+                                <span title="قيد التجهيز: تجهيز المصنع الصيني للسلعة للشحن&#10;يتم الشحن: من الصين إلى الجزائر&#10;تم التوصيل: من المورد إلى التاجر">
+                                  <HelpCircle size={14} className="text-gray-400 cursor-help" />
+                                </span>
+                              </span>
                               <div className="flex flex-col gap-3">
                                 <span className={`inline-block px-3 py-1 rounded-md text-sm font-bold w-full sm:w-max ${
                                   bid.shipping_status === 'shipped' ? 'bg-blue-50 text-blue-700' :

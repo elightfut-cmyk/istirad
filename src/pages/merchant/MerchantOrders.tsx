@@ -249,13 +249,14 @@ export default function MerchantOrders() {
         return;
       }
       
-      const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
-      const pFee = settings?.platform_fee_percentage || 0;
+      const req = requests.find(r => r.id === selectedBidForPayment.reqId);
+      const quantity = req?.quantity || 1;
+      const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage').single();
+      const fixedAmount = settings?.profit_fixed_amount ?? 100;
+      const percentage = settings?.profit_percentage ?? 5;
       
       const price = selectedBidForPayment.price;
-      const cost = selectedBidForPayment.cost_price ? selectedBidForPayment.cost_price : (price * 0.8);
-      const profit = price - cost;
-      const platformProfit = profit * (pFee / 100);
+      const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
       
       const discount = platformProfit * (data.discount_percentage / 100);
       
@@ -324,14 +325,15 @@ export default function MerchantOrders() {
 
       // Commission Logic (Easiest Option: on successful wallet payment)
       if (user && user.referred_by && !user.has_made_first_order) {
-        const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single();
-        const pFee = settings?.platform_fee_percentage || 0;
+        const req = requests.find(r => r.id === selectedBidForPayment.reqId);
+        const quantity = req?.quantity || 1;
+        const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage, referral_commission_percentage').single();
+        const fixedAmount = settings?.profit_fixed_amount ?? 100;
+        const percentage = settings?.profit_percentage ?? 5;
         const rComm = settings?.referral_commission_percentage || 0;
         
         const price = selectedBidForPayment.price;
-        const cost = selectedBidForPayment.cost_price ? selectedBidForPayment.cost_price : (price * 0.8);
-        const profit = price - cost;
-        const platformProfit = profit * (pFee / 100);
+        const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
         const commission = platformProfit * (rComm / 100);
         
         if (commission > 0) {
@@ -409,34 +411,15 @@ export default function MerchantOrders() {
     }
   };
 
-  const handleProposePriceMerchant = async (bid: any, newPrice: number) => {
+  const handleRejectBid = async (bidId: string, supplierId: string) => {
     try {
-      const { error } = await supabase.from('supplier_bids').update({
-        negotiated_price: newPrice,
-        negotiated_by: 'merchant'
-      }).eq('id', bid.id);
+      const { error } = await supabase.from('supplier_bids').update({ status: 'rejected' }).eq('id', bidId);
       if (error) throw error;
-      sendNotification(bid.supplier_id, 'اقتراح سعر جديد', `اقترح التاجر ${user?.name || ''} سعراً جديداً لعرضك: ${formatCurrency(newPrice)}`, 'info');
-      toast.success('تم إرسال اقتراح السعر للمورد');
+      sendNotification(supplierId, 'تم رفض العرض', `تم رفض عرضك من قبل التاجر.`, 'info');
+      toast.success('تم رفض العرض بنجاح');
       fetchRequests();
     } catch (error) {
-      toast.error('حدث خطأ أثناء إرسال الاقتراح');
-    }
-  };
-
-  const handleAcceptNegotiationMerchant = async (bid: any) => {
-    try {
-      const { error } = await supabase.from('supplier_bids').update({
-        price: bid.negotiated_price,
-        price_usd: bid.negotiated_price / exchangeRate,
-        negotiated_by: 'merchant_accepted'
-      }).eq('id', bid.id);
-      if (error) throw error;
-      sendNotification(bid.supplier_id, 'تم قبول السعر', `وافق التاجر على السعر المقترح (${formatCurrency(bid.negotiated_price)}).`, 'success');
-      toast.success('تم قبول السعر، يمكنك الآن دفع العربون');
-      fetchRequests();
-    } catch (error) {
-      toast.error('حدث خطأ أثناء قبول السعر');
+      toast.error('حدث خطأ أثناء رفض العرض');
     }
   };
 
@@ -747,67 +730,22 @@ export default function MerchantOrders() {
                           )}
 
                           {req.status === 'open' && bid.status === 'pending' && (
-                            <div className="space-y-2 mt-4">
-                              {bid.negotiated_by === 'supplier_accepted' && (
-                                <div className="bg-green-50 text-green-700 p-2 rounded-lg text-sm mb-3 font-bold text-center border border-green-100">
-                                  وافق المورد على السعر الذي اقترحته. يرجى دفع العربون لتأكيد الطلب.
-                                </div>
-                              )}
-                              {bid.negotiated_by === 'merchant_accepted' && (
-                                <div className="bg-green-50 text-green-700 p-2 rounded-lg text-sm mb-3 font-bold text-center border border-green-100">
-                                  تم قبول سعر المورد. يرجى دفع العربون لتأكيد الطلب.
-                                </div>
-                              )}
-                              {bid.allow_negotiation && bid.negotiated_by !== 'merchant_accepted' && bid.negotiated_by !== 'supplier_accepted' && (
-                                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm mb-3">
-                                  <p className="font-bold text-blue-800 mb-2">المفاوضة على السعر</p>
-                                  {bid.negotiated_by === 'supplier' ? (
-                                    <div>
-                                      <p className="text-gray-700 mb-2">المورد يقترح سعراً للقطعة: <span className="font-bold text-lg text-blue-700">{formatCurrency(bid.negotiated_price / (req.quantity || 1))}</span> <span className="text-xs text-gray-500">(الإجمالي: {formatCurrency(bid.negotiated_price)})</span></p>
-                                      <div className="flex gap-2">
-                                        <button 
-                                          onClick={() => handleAcceptNegotiationMerchant(bid)}
-                                          className="flex-1 bg-green-600 text-white py-1.5 rounded-lg font-bold hover:bg-green-700 transition"
-                                        >
-                                          قبول السعر
-                                        </button>
-                                        <button 
-                                          onClick={() => {
-                                            const currentPiecePrice = bid.negotiated_price / (req.quantity || 1);
-                                            const newPiecePrice = prompt('أدخل سعر القطعة الواحدة الجديد الذي تقترحه (بالدينار):', currentPiecePrice.toString());
-                                            if (newPiecePrice && !isNaN(parseFloat(newPiecePrice))) {
-                                              handleProposePriceMerchant(bid, parseFloat(newPiecePrice) * (req.quantity || 1));
-                                            }
-                                          }}
-                                          className="flex-1 bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
-                                        >
-                                          رد بسعر آخر
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : bid.negotiated_by === 'merchant' ? (
-                                    <p className="text-gray-600 font-bold">لقد قمت باقتراح السعر {formatCurrency(bid.negotiated_price / (req.quantity || 1))} للقطعة. في انتظار رد المورد...</p>
-                                  ) : (
-                                    <button 
-                                      onClick={() => {
-                                        const newPiecePrice = prompt('هذا العرض يقبل التفاوض. أدخل سعر القطعة الواحدة الذي تقترحه (بالدينار):', (bid.price / (req.quantity || 1)).toString());
-                                        if (newPiecePrice && !isNaN(parseFloat(newPiecePrice))) {
-                                          handleProposePriceMerchant(bid, parseFloat(newPiecePrice) * (req.quantity || 1));
-                                        }
-                                      }}
-                                      className="w-full bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
-                                    >
-                                      التفاوض واقتراح سعر آخر
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                              
+                            <div className="flex gap-2 mt-4">
                               <button 
                                 onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
-                                className="w-full py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
+                                className="flex-1 py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
                               >
                                 قبول ودفع العربون
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  if(confirm('هل أنت متأكد من رفض هذا العرض؟')) {
+                                    handleRejectBid(bid.id, bid.supplier_id);
+                                  }
+                                }}
+                                className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-sm hover:bg-red-100 transition"
+                              >
+                                رفض العرض
                               </button>
                             </div>
                           )}

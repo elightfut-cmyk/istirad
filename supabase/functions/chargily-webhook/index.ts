@@ -71,7 +71,7 @@ serve(async (req) => {
         
         // Fetch bid and merchant info for notifications and commissions
         const { data: bidData } = await supabase.from('supplier_bids').select('supplier_id, price, cost_price').eq('id', metadata.bid_id).single();
-        const { data: reqData } = await supabase.from('custom_requests').select('merchant_id').eq('id', metadata.request_id).single();
+        const { data: reqData } = await supabase.from('custom_requests').select('merchant_id, quantity').eq('id', metadata.request_id).single();
         
         let merchantName = 'التاجر';
         let merchantData = null;
@@ -121,11 +121,13 @@ serve(async (req) => {
            const cost = bidData.cost_price || (price * 0.8);
            const profit = price - cost;
            
-           const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage').single();
-           const pFee = settings?.platform_fee_percentage || 0;
+           const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage, profit_fixed_amount, profit_percentage').single();
            const rComm = settings?.referral_commission_percentage || 0;
+           const fixedAmount = settings?.profit_fixed_amount ?? 100;
+           const percentage = settings?.profit_percentage ?? 5;
+           const quantity = reqData?.quantity || 1;
            
-           const platformProfit = profit * (pFee / 100);
+           const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
            const commission = platformProfit * (rComm / 100);
            
            if (commission > 0) {

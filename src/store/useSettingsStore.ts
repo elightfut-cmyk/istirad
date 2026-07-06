@@ -17,6 +17,8 @@ interface SettingsState {
   heroImageUrl2: string | null;
   referralCommissionPercentage: number;
   platformFeePercentage: number;
+  profitFixedAmount: number;
+  profitPercentage: number;
   loyaltyPointsPerOrder: number;
   loyaltyPointsToDzdRatio: number;
   loyaltyPointsMinConversion: number;
@@ -42,6 +44,8 @@ export const useSettingsStore = create<SettingsState>()(
       heroImageUrl2: null,
       referralCommissionPercentage: 0,
       platformFeePercentage: 0,
+      profitFixedAmount: 100,
+      profitPercentage: 5,
       loyaltyPointsPerOrder: 50,
       loyaltyPointsToDzdRatio: 10,
       loyaltyPointsMinConversion: 500,
@@ -76,6 +80,8 @@ export const useSettingsStore = create<SettingsState>()(
               heroImageUrl2: data.hero_image_url_2 || null,
               referralCommissionPercentage: data.referral_commission_percentage || 0,
               platformFeePercentage: data.platform_fee_percentage || 0,
+              profitFixedAmount: data.profit_fixed_amount ?? 100,
+              profitPercentage: data.profit_percentage ?? 5,
               exchangeRate: data.exchange_rate || 135,
               loyaltyPointsPerOrder: data.loyalty_points_per_order || 50,
               loyaltyPointsToDzdRatio: data.loyalty_points_to_dzd_ratio || 10,

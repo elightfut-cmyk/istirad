@@ -126,9 +126,11 @@ export default function SupplierOrders() {
         // They paid the deposit, but didn't pay remaining.
         // We take platform fee from deposit, give rest to supplier.
         const deposit = (bid.price * bid.advance_percentage) / 100;
-        const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
-        const pFee = settings?.platform_fee_percentage || 0;
-        const platformCut = deposit * (pFee / 100);
+        const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage').single();
+        const fixedAmount = settings?.profit_fixed_amount ?? 100;
+        const percentage = settings?.profit_percentage ?? 5;
+        const quantity = bid.custom_requests?.quantity || 1;
+        const platformCut = deposit * (percentage / 100);
         const supplierCut = deposit - platformCut;
 
         if (supplierCut > 0) {

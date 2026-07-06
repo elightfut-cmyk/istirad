@@ -53,12 +53,12 @@ export default function AdminDashboard() {
         pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
       
-      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, platform_fee_percentage').single();
+      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, profit_fixed_amount, profit_percentage').single();
       setPlatformSettings(settingsData);
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
       // Fetch supplier dues and platform profits
-      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid, is_paid_to_supplier');
+      const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid, is_paid_to_supplier, custom_requests(quantity)');
       const { data: reqData } = await supabase.from('custom_requests').select('id, merchant_id, status');
       
       let supplierSum = 0;
@@ -66,29 +66,25 @@ export default function AdminDashboard() {
       if (bidsData && !bidsError) {
         setAllBids(bidsData);
         if (reqData) setAllRequests(reqData);
-        const pFee = settingsData?.platform_fee_percentage || 0;
+        const fixedAmount = settingsData?.profit_fixed_amount ?? 100;
+        const percentage = settingsData?.profit_percentage ?? 5;
         bidsData.forEach(bid => {
           const price = bid.price || 0;
-          const cost = bid.cost_price || 0;
           const advancePct = bid.advance_percentage || 20;
           const advancePaid = (price * advancePct) / 100;
+          const quantity = (bid.custom_requests as any)?.quantity || 1;
+          const totalFee = (quantity * fixedAmount) + (price * (percentage / 100));
           
           if (bid.status === 'cancelled') {
-            // If cancelled, the deposit is kept and platform takes its fee from it
-            const fee = advancePaid * (pFee / 100);
+            const fee = advancePaid * (percentage / 100);
             profitsSum += fee;
           } else if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
-            // User requested: When fully paid (or delivered/completed), recalculate and take percentage from profit margin only.
-            const profitMargin = price - cost;
-            const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
+            const fee = totalFee;
             profitsSum += fee;
-            // Supplier gets the full price minus platform fee
             if (!bid.is_paid_to_supplier) supplierSum += (price - fee);
           } else if (bid.status === 'accepted') {
-            // User requested: When only deposit is paid, platform takes its percentage from the WHOLE deposit.
-            const fee = advancePaid * (pFee / 100);
+            const fee = advancePaid * (percentage / 100);
             profitsSum += fee;
-            // Supplier gets the rest of the deposit
             if (!bid.is_paid_to_supplier) supplierSum += (advancePaid - fee);
           }
         });
@@ -134,7 +130,8 @@ export default function AdminDashboard() {
     const user = users.find(u => u.id === selectedUserId);
     if (!user) return null;
 
-    const pFee = platformSettings?.platform_fee_percentage || 0;
+    const fixedAmount = platformSettings?.profit_fixed_amount ?? 100;
+    const percentage = platformSettings?.profit_percentage ?? 5;
 
     if (user.role === 'supplier') {
       const userBids = allBids.filter(b => b.supplier_id === user.id);
@@ -146,16 +143,16 @@ export default function AdminDashboard() {
           totalSales += (bid.price || 0);
           
           const price = bid.price || 0;
-          const cost = bid.cost_price || 0;
           const advancePct = bid.advance_percentage || 20;
           const advancePaid = (price * advancePct) / 100;
+          const quantity = (bid.custom_requests as any)?.quantity || 1;
+          const totalFee = (quantity * fixedAmount) + (price * (percentage / 100));
           
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
-            const profitMargin = price - cost;
-            const fee = profitMargin > 0 ? (profitMargin * pFee / 100) : 0;
+            const fee = totalFee;
             if (!bid.is_paid_to_supplier) totalDues += (price - fee);
           } else if (bid.status === 'accepted') {
-            const fee = advancePaid * (pFee / 100);
+            const fee = advancePaid * (percentage / 100);
             if (!bid.is_paid_to_supplier) totalDues += (advancePaid - fee);
           }
         }

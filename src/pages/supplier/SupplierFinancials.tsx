@@ -32,7 +32,7 @@ export default function SupplierFinancials() {
           is_fully_paid,
           is_paid_to_supplier,
           created_at,
-          custom_requests (title, request_type, users (name, company_name))
+          custom_requests (title, request_type, quantity, users (name, company_name))
         `)
         .eq('supplier_id', user!.id)
         .order('created_at', { ascending: false });
@@ -45,8 +45,9 @@ export default function SupplierFinancials() {
       let advanceTotal = 0;
       let pending = 0;
       
-      const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage').single();
-      const pFee = settings?.platform_fee_percentage || 0;
+      const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage').single();
+      const fixedAmount = settings?.profit_fixed_amount ?? 100;
+      const percentage = settings?.profit_percentage ?? 5;
 
       const successfulTransactions: any[] = [];
 
@@ -54,12 +55,13 @@ export default function SupplierFinancials() {
         if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed') {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
           let fee = 0;
+          const quantity = bid.custom_requests?.quantity || 1;
+          const totalFee = (quantity * fixedAmount) + (bid.price * (percentage / 100));
           
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
-            const profit = bid.price - (bid.cost_price || 0);
-            fee = profit > 0 ? (profit * pFee / 100) : 0;
+            fee = totalFee;
           } else if (bid.status === 'accepted') {
-            fee = advancePaid * (pFee / 100);
+            fee = advancePaid * (percentage / 100);
           }
           
           totalSales += bid.price;

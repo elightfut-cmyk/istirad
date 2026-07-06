@@ -107,15 +107,12 @@ export default function SupplierRequests() {
       const { error } = await supabase.from('supplier_bids').update({
         price: bid.negotiated_price,
         price_usd: bid.negotiated_price / exchangeRate,
-        status: 'accepted',
-        negotiated_by: 'supplier'
+        negotiated_by: 'supplier_accepted'
       }).eq('id', bid.id);
       if (error) throw error;
       
-      await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', req.id);
-      
-      sendNotification(req.merchant_id, 'تمت الموافقة على السعر', `وافق ${user?.name} على السعر المقترح في المناقصة: ${req.title}`, 'success');
-      toast.success('تم قبول السعر بنجاح واعتماد العرض!');
+      sendNotification(req.merchant_id, 'موافقة المورد على السعر', `وافق ${user?.name} على السعر المقترح في المناقصة: ${req.title}. يرجى دفع العربون الآن لتأكيد الطلب.`, 'success');
+      toast.success('تم قبول السعر بنجاح واعتماد العرض! في انتظار دفع التاجر للعربون.');
       fetchRequests();
     } catch (error) {
       toast.error('حدث خطأ أثناء قبول السعر');

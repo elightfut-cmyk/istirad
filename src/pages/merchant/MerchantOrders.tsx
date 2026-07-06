@@ -748,7 +748,17 @@ export default function MerchantOrders() {
 
                           {req.status === 'open' && bid.status === 'pending' && (
                             <div className="space-y-2 mt-4">
-                              {bid.allow_negotiation && bid.negotiated_by !== 'merchant_accepted' && (
+                              {bid.negotiated_by === 'supplier_accepted' && (
+                                <div className="bg-green-50 text-green-700 p-2 rounded-lg text-sm mb-3 font-bold text-center border border-green-100">
+                                  وافق المورد على السعر الذي اقترحته. يرجى دفع العربون لتأكيد الطلب.
+                                </div>
+                              )}
+                              {bid.negotiated_by === 'merchant_accepted' && (
+                                <div className="bg-green-50 text-green-700 p-2 rounded-lg text-sm mb-3 font-bold text-center border border-green-100">
+                                  تم قبول سعر المورد. يرجى دفع العربون لتأكيد الطلب.
+                                </div>
+                              )}
+                              {bid.allow_negotiation && bid.negotiated_by !== 'merchant_accepted' && bid.negotiated_by !== 'supplier_accepted' && (
                                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm mb-3">
                                   <p className="font-bold text-blue-800 mb-2">المفاوضة على السعر</p>
                                   {bid.negotiated_by === 'supplier' ? (

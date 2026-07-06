@@ -54,11 +54,7 @@ export default function SupplierRequests() {
     if (!user || !biddingRequest) return;
     setSubmitting(true);
     
-    if (bidForm.price <= bidForm.cost_price) {
-      toast.error('الرجاء التأكد من أن السعر الإجمالي أكبر من سعر التكلفة لتحقيق ربح.');
-      setSubmitting(false);
-      return;
-    }
+
 
     try {
       if (bidForm.id) {
@@ -287,25 +283,7 @@ export default function SupplierRequests() {
                 <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${((bidForm.price || 0) / exchangeRate).toFixed(2)} | الإجمالي: {formatCurrency((bidForm.price || 0) * biddingRequest.quantity)}</p>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للقطعة الواحدة بالدينار (DZD)</label>
-                <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
-                <input 
-                  type="number" required min="0" step="0.01"
-                  value={bidForm.cost_price || ''} 
-                  onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                  placeholder="أدخل سعر التكلفة للقطعة الواحدة"
-                />
-                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${((bidForm.cost_price || 0) / exchangeRate).toFixed(2)} | الإجمالي: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
-              </div>
 
-              {bidForm.price > 0 && bidForm.price > bidForm.cost_price && (
-                <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex justify-between items-center text-sm">
-                  <span className="text-green-700 font-bold">ربحك الصافي المتوقع الإجمالي:</span>
-                  <span className="font-bold text-green-800">{formatCurrency((bidForm.price - bidForm.cost_price) * biddingRequest.quantity)}</span>
-                </div>
-              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">نسبة الدفعة المقدمة (عربون) %</label>

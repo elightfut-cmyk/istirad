@@ -91,10 +91,6 @@ export default function SupplierProducts() {
     if (!user) return;
     
     const sellingPrice = form.discount_price > 0 ? form.discount_price : form.price;
-    if (sellingPrice <= form.cost_price) {
-      toast.error('الرجاء التأكد من أن السعر (أو السعر بعد التخفيض) أكبر من سعر التكلفة لتحقيق ربح.');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -341,24 +337,7 @@ export default function SupplierProducts() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر التكلفة الحقيقي للوحدة بالدينار (دج)</label>
-                <p className="text-xs text-gray-500 mb-2">سعر التكلفة مخفي عن التاجر، ويُستخدم فقط لحساب رسوم المنصة من ربحك الصافي.</p>
-                <input 
-                  type="number" required min="0" step="0.01"
-                  value={form.cost_price || ''} 
-                  onChange={e => setForm({...form, cost_price: parseFloat(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                />
-                <p className="text-xs text-gray-500 mt-1">يساوي: ${((form.cost_price || 0) / exchangeRate).toFixed(2)}</p>
-              </div>
 
-              {((form.discount_price > 0 ? form.discount_price : form.price) > form.cost_price && form.cost_price > 0) && (
-                <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex justify-between items-center text-sm">
-                  <span className="text-green-700 font-bold">ربحك الصافي للوحدة:</span>
-                  <span className="font-bold text-green-800">{formatCurrency((form.discount_price > 0 ? form.discount_price : form.price) - form.cost_price)}</span>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

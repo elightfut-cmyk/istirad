@@ -871,10 +871,10 @@ export default function MerchantOrders() {
 
       {/* Modal for Creating Request */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center">
-            <div className="bg-white rounded-2xl w-full max-w-xl p-6 relative">
-              <button onClick={closeModal} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col relative overflow-hidden">
+            <div className="p-6 overflow-y-auto w-full">
+              <button onClick={closeModal} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 bg-white rounded-full p-1 z-10">
                 <XCircle size={24} />
               </button>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingRequestId ? 'تعديل المناقصة' : 'إنشاء مناقصة / طلب جديد'}</h2>

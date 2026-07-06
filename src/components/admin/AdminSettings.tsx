@@ -7,11 +7,232 @@ export default function AdminSettings() {
   const settingsStore = useSettingsStore();
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
   
-    const [localSettings, setLocalSettings] = useState({
+  const [localSettings, setLocalSettings] = useState({
     minQuantity: settingsStore.minQuantity,
     exchangeRate: settingsStore.exchangeRate || 135,
     adTitle: settingsStore.adTitle || '',
+    adSubtitle: settingsStore.adSubtitle || '',
+    adImageUrl: settingsStore.adImageUrl || '',
+    adLinkUrl: settingsStore.adLinkUrl || '',
+    chargilyLiveKey: settingsStore.chargilyLiveKey || '',
+    heroImageUrl: settingsStore.heroImageUrl || '',
+    heroImageUrl2: settingsStore.heroImageUrl2 || '',
+    referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
+    profitFixedAmount: settingsStore.profitFixedAmount || 100,
+    profitPercentage: settingsStore.profitPercentage || 5,
+    loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
+    loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
+    loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
+    productCategories: settingsStore.productCategories || []
+  });
+
+  useEffect(() => {
+    setLocalSettings({
+      minQuantity: settingsStore.minQuantity,
+      exchangeRate: settingsStore.exchangeRate || 135,
+      adTitle: settingsStore.adTitle || '',
+      adSubtitle: settingsStore.adSubtitle || '',
+      adImageUrl: settingsStore.adImageUrl || '',
+      adLinkUrl: settingsStore.adLinkUrl || '',
+      chargilyLiveKey: settingsStore.chargilyLiveKey || '',
+      heroImageUrl: settingsStore.heroImageUrl || '',
+      heroImageUrl2: settingsStore.heroImageUrl2 || '',
+      referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
+      profitFixedAmount: settingsStore.profitFixedAmount || 100,
+      profitPercentage: settingsStore.profitPercentage || 5,
+      loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
+      loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
+      loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
+      productCategories: settingsStore.productCategories || []
+    });
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLocalSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!e.target.files || e.target.files.length === 0) return;
+      const file = e.target.files[0];
+      setUploadingImage(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `ad_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('platform_assets')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('platform_assets').getPublicUrl(filePath);
+      
+      setLocalSettings(prev => ({ ...prev, adImageUrl: data.publicUrl }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('حدث خطأ أثناء رفع الصورة. تأكد من إنشاء الـ Bucket في قاعدة البيانات.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isSecond = false) => {
+    try {
+      if (!e.target.files || e.target.files.length === 0) return;
+      const file = e.target.files[0];
+      setUploadingImage(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `hero_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('platform_assets')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('platform_assets').getPublicUrl(filePath);
+      
+      if (isSecond) {
+        setLocalSettings(prev => ({ ...prev, heroImageUrl2: data.publicUrl }));
+      } else {
+        setLocalSettings(prev => ({ ...prev, heroImageUrl: data.publicUrl }));
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('حدث خطأ أثناء رفع الصورة.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('platform_settings')
+        .update({ 
+          min_request_quantity: parseInt(localSettings.minQuantity.toString()) || 1,
+          exchange_rate: parseFloat(localSettings.exchangeRate.toString()) || 135,
+          ad_title: localSettings.adTitle || null,
+          ad_subtitle: localSettings.adSubtitle || null,
+          ad_image_url: localSettings.adImageUrl || null,
+          ad_link_url: localSettings.adLinkUrl || null,
+          chargily_live_key: localSettings.chargilyLiveKey || null,
+          hero_image_url: localSettings.heroImageUrl || null,
+          hero_image_url_2: localSettings.heroImageUrl2 || null,
+          referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
+          profit_fixed_amount: parseFloat(localSettings.profitFixedAmount.toString()) || 0,
+          profit_percentage: parseFloat(localSettings.profitPercentage.toString()) || 0,
+          loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
+          loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
+          loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
+          product_categories: localSettings.productCategories
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+      
+      await settingsStore.fetchSettings(); // Refresh local Zustand store
+      toast.success('تم تحديث الإعدادات بنجاح!');
+    } catch (error) {
+      console.error('Error saving settings', error);
+      toast.error('حدث خطأ أثناء حفظ الإعدادات');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Min Quantity */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات الطلبات المخصصة</h3>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          الحد الأدنى لكمية الطلب المخصصة (Min Request Quantity)
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            min="1"
+            name="minQuantity"
+            value={localSettings.minQuantity}
+            onChange={handleChange}
+            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+        </div>
+        <p className="text-gray-500 text-sm mt-2">
+          هذا الرقم سيظهر كتوجيه أولي للتجار عند فتحهم لطلب استيراد مخصص جديد.
+        </p>
+      </div>
+
+      {/* Exchange Rate */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات التحويل (العملة)</h3>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          سعر الصرف (1 دولار كم يساوي بالدينار)
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            name="exchangeRate"
+            value={localSettings.exchangeRate}
+            onChange={handleChange}
+            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+        </div>
+        <p className="text-gray-500 text-sm mt-2">
+          ملاحظة مهمة: يجب عليك إضافة عمود `exchange_rate` في قاعدة البيانات (جدول `platform_settings`) لكي يتم حفظ هذا التعديل.
+        </p>
+      </div>
+
+      {/* Platform Fees and Referrals */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">رسوم المنصة ونظام الإحالة</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              الربح الثابت للقطعة (دج)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="profitFixedAmount"
+              value={localSettings.profitFixedAmount}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              نسبة ربح المنصة من المبيعات (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              name="profitPercentage"
+              value={localSettings.profitPercentage}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               نسبة عمولة التاجر المُحيل (%)
             </label>
             <input
@@ -141,7 +362,7 @@ export default function AdminSettings() {
             type="text"
             name="chargilyLiveKey"
             placeholder="live_sk_..."
-            value={localSettings.chargilyLiveKey}
+            value={localSettings.chargilyLiveKey || ''}
             onChange={handleChange}
             className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
@@ -250,25 +471,7 @@ export default function AdminSettings() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رفع صورة للإشهار</label>
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploadingImage}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
-              />
-              {uploadingImage && <span className="text-sm text-gray-500 self-center">جاري الرفع...</span>}
-            </div>
-            {localSettings.adImageUrl && (
-              <div className="mt-2 text-xs text-green-600 font-bold">
-                تمت إضافة صورة للإشهار. (يمكنك حفظ الإعدادات الآن)
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رابط التوجيه عند الضغط (Link URL)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">رابط الإشهار (عند الضغط عليه)</label>
             <input
               type="text"
               name="adLinkUrl"
@@ -278,14 +481,37 @@ export default function AdminSettings() {
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">صورة الإشهار (رفع)</label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploadingImage}
+                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة مباشرة (URL)</label>
+            <input
+              type="text"
+              name="adImageUrl"
+              placeholder="https://..."
+              value={localSettings.adImageUrl}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-6">
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-8 py-3 bg-[#4f46e5] text-white rounded-xl font-bold hover:bg-[#4338ca] transition-colors disabled:opacity-50"
+          className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
         </button>

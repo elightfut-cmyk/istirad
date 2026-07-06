@@ -116,19 +116,8 @@ serve(async (req) => {
         }
         
         // Referral Commission Logic
-        if (merchantData && merchantData.referred_by && !merchantData.has_made_first_order && bidData) {
-           const price = bidData.price;
-           const cost = bidData.cost_price || (price * 0.8);
-           const profit = price - cost;
-           
-           const { data: settings } = await supabase.from('platform_settings').select('platform_fee_percentage, referral_commission_percentage, profit_fixed_amount, profit_percentage').single();
-           const rComm = settings?.referral_commission_percentage || 0;
-           const fixedAmount = settings?.profit_fixed_amount ?? 100;
-           const percentage = settings?.profit_percentage ?? 5;
-           const quantity = reqData?.quantity || 1;
-           
-           const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
-           const commission = platformProfit * (rComm / 100);
+        if (merchantData && merchantData.referred_by && !merchantData.has_made_first_order) {
+           const commission = 2000;
            
            if (commission > 0) {
              const { error: commError } = await supabase.rpc('grant_referral_commission', {

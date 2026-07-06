@@ -330,16 +330,7 @@ export default function MerchantOrders() {
 
       // Commission Logic (Easiest Option: on successful wallet payment)
       if (user && user.referred_by && !user.has_made_first_order) {
-        const req = requests.find(r => r.id === selectedBidForPayment.reqId);
-        const quantity = req?.quantity || 1;
-        const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage, referral_commission_percentage').single();
-        const fixedAmount = settings?.profit_fixed_amount ?? 100;
-        const percentage = settings?.profit_percentage ?? 5;
-        const rComm = settings?.referral_commission_percentage || 0;
-        
-        const price = selectedBidForPayment.price;
-        const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
-        const commission = platformProfit * (rComm / 100);
+        const commission = 2000;
         
         if (commission > 0) {
           await supabase.rpc('grant_referral_commission', {

@@ -760,7 +760,7 @@ export default function MerchantOrders() {
                             </div>
                           )}
 
-                          {req.status === 'open' && bid.status === 'pending' && bid.negotiated_by !== 'merchant' && (
+                          {req.status === 'open' && bid.status === 'pending' && !bid.negotiated_by && (
                             <div className="flex flex-col sm:flex-row gap-2 mt-4">
                               <button 
                                 onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}

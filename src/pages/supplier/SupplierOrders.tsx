@@ -161,7 +161,7 @@ export default function SupplierOrders() {
 
   const [activeTab, setActiveTab] = useState<'custom' | 'direct'>('direct');
 
-  const customOrders = orders.filter(order => order.custom_requests?.request_type !== 'direct');
+  const customOrders = orders.filter(order => order.custom_requests?.request_type !== 'direct' && order.status === 'accepted');
   const directOrders = orders.filter(order => order.custom_requests?.request_type === 'direct');
 
   const renderOrderList = (list: any[]) => {

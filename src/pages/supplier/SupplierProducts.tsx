@@ -90,7 +90,7 @@ export default function SupplierProducts() {
     e.preventDefault();
     if (!user) return;
     
-    const sellingPrice = form.discount_price > 0 ? form.discount_price : form.price;
+
 
     setSubmitting(true);
     try {

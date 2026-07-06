@@ -307,7 +307,7 @@ export default function SupplierOrders() {
                       order.shipping_status === 'shipped' ? 'bg-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    <Truck size={14} /> مشحون
+                    <Truck size={14} /> يتم الشحن
                   </button>
                   <button
                     onClick={() => updateShippingStatus(order.id, 'delivered')}

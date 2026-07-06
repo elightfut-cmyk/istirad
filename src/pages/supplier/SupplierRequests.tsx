@@ -233,10 +233,14 @@ export default function SupplierRequests() {
                   {myBid ? (
                     <div className="w-full">
                       <h4 className="font-bold text-gray-700 mb-4 border-b pb-2">عرضك المقدم</h4>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-500">سعر الإجمالي:</span>
-                        <span className="font-bold">{formatCurrency(myBid.price)}</span>
-                      </div>
+                        <div className="flex justify-between items-center mb-1 text-sm">
+                          <span className="text-gray-600">سعر القطعة الواحدة:</span>
+                          <span className="font-bold">{formatCurrency(myBid.price / (req.quantity || 1))}</span>
+                        </div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-gray-600">السعر الإجمالي:</span>
+                          <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.price)}</span>
+                        </div>
                       <div className="flex justify-between text-sm mb-4">
                         <span className="text-gray-500">الدفعة المقدمة:</span>
                         <span className="font-bold bg-orange-100 text-orange-800 px-2 rounded">{myBid.advance_percentage}%</span>
@@ -281,7 +285,7 @@ export default function SupplierRequests() {
                           <p className="font-bold text-blue-800 mb-2">المفاوضات</p>
                           {myBid.negotiated_by === 'merchant' ? (
                             <div>
-                              <p className="text-gray-700 mb-2">التاجر يقترح سعراً إجمالياً: <span className="font-bold">{formatCurrency(myBid.negotiated_price)}</span></p>
+                              <p className="text-gray-700 mb-2">التاجر يقترح سعراً للقطعة: <span className="font-bold">{formatCurrency(myBid.negotiated_price / (req.quantity || 1))}</span> <span className="text-xs text-gray-500">(الإجمالي: {formatCurrency(myBid.negotiated_price)})</span></p>
                               <div className="flex gap-2">
                                 <button 
                                   onClick={() => handleAcceptNegotiation(myBid, req)}
@@ -291,9 +295,9 @@ export default function SupplierRequests() {
                                 </button>
                                 <button 
                                   onClick={() => {
-                                    const newPrice = prompt('أدخل السعر الإجمالي الجديد الذي تقترحه (بالدينار):', myBid.negotiated_price);
-                                    if (newPrice && !isNaN(parseFloat(newPrice))) {
-                                      handleCounterOffer(myBid, parseFloat(newPrice), req);
+                                    const newPiecePrice = prompt('أدخل سعر القطعة الواحدة الجديد الذي تقترحه (بالدينار):', (myBid.negotiated_price / (req.quantity || 1)).toString());
+                                    if (newPiecePrice && !isNaN(parseFloat(newPiecePrice))) {
+                                      handleCounterOffer(myBid, parseFloat(newPiecePrice) * (req.quantity || 1), req);
                                     }
                                   }}
                                   className="flex-1 bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition text-xs"
@@ -303,7 +307,7 @@ export default function SupplierRequests() {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-gray-600 text-xs font-bold">لقد قمت باقتراح السعر {formatCurrency(myBid.negotiated_price)}. في انتظار رد التاجر...</p>
+                            <p className="text-gray-600 text-xs font-bold">لقد قمت باقتراح السعر {formatCurrency(myBid.negotiated_price / (req.quantity || 1))} للقطعة. في انتظار رد التاجر...</p>
                           )}
                         </div>
                       )}

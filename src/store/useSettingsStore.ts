@@ -56,8 +56,9 @@ export const useSettingsStore = create<SettingsState>()(
           parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           return `$${parts.join(',')}`;
         } else {
-          const dzd = Math.round(amount);
-          return `${dzd.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج`;
+          const parts = amount.toFixed(2).split('.');
+          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+          return `${parts.join(',')} د.ج`;
         }
       },
       fetchSettings: async () => {

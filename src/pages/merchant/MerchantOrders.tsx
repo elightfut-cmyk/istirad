@@ -612,11 +612,16 @@ export default function MerchantOrders() {
                           </a>
                           
                           <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
-                            <span className="text-gray-500 font-medium flex items-center gap-1">
+                            <span className="text-gray-500 font-medium flex items-center gap-1 relative group">
                               حالة الشحن:
-                              <span title="قيد التجهيز: تجهيز المصنع الصيني للسلعة للشحن&#10;يتم الشحن: من الصين إلى الجزائر&#10;تم التوصيل: من المورد إلى التاجر">
-                                <HelpCircle size={14} className="text-gray-400 cursor-help" />
-                              </span>
+                              <button type="button" tabIndex={0} className="focus:outline-none cursor-help">
+                                <HelpCircle size={14} className="text-gray-400" />
+                              </button>
+                              <div className="absolute bottom-full mb-1 right-0 hidden group-hover:block group-focus-within:block bg-gray-800 text-white text-xs p-2 rounded shadow-lg w-56 z-10 font-normal leading-relaxed text-right pointer-events-none">
+                                <strong>قيد التجهيز:</strong> تجهيز المصنع الصيني للسلعة للشحن<br/>
+                                <strong>يتم الشحن:</strong> من الصين إلى الجزائر<br/>
+                                <strong>تم التوصيل:</strong> من المورد إلى التاجر
+                              </div>
                             </span>
                             <span className={`font-bold ${
                               bid.shipping_status === 'shipped' ? 'text-blue-600' :
@@ -720,6 +725,10 @@ export default function MerchantOrders() {
                           </div>
                           <p className="text-xs text-gray-500 mb-4">{bid.supplier?.name}</p>
                           
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm text-gray-600">سعر القطعة الواحدة:</span>
+                            <span className="font-bold text-gray-800">{formatCurrency(bid.price / (req.quantity || 1))}</span>
+                          </div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-600">السعر الإجمالي:</span>
                             <span className="font-black text-[#4f46e5]">{formatCurrency(bid.price)}</span>
@@ -744,7 +753,7 @@ export default function MerchantOrders() {
                                   <p className="font-bold text-blue-800 mb-2">المفاوضة على السعر</p>
                                   {bid.negotiated_by === 'supplier' ? (
                                     <div>
-                                      <p className="text-gray-700 mb-2">المورد يقترح سعراً جديداً: <span className="font-bold text-lg text-blue-700">{formatCurrency(bid.negotiated_price)}</span></p>
+                                      <p className="text-gray-700 mb-2">المورد يقترح سعراً للقطعة: <span className="font-bold text-lg text-blue-700">{formatCurrency(bid.negotiated_price / (req.quantity || 1))}</span> <span className="text-xs text-gray-500">(الإجمالي: {formatCurrency(bid.negotiated_price)})</span></p>
                                       <div className="flex gap-2">
                                         <button 
                                           onClick={() => handleAcceptNegotiationMerchant(bid)}
@@ -754,9 +763,10 @@ export default function MerchantOrders() {
                                         </button>
                                         <button 
                                           onClick={() => {
-                                            const newPrice = prompt('أدخل السعر الإجمالي الجديد الذي تقترحه (بالدينار):', bid.negotiated_price);
-                                            if (newPrice && !isNaN(parseFloat(newPrice))) {
-                                              handleProposePriceMerchant(bid, parseFloat(newPrice));
+                                            const currentPiecePrice = bid.negotiated_price / (req.quantity || 1);
+                                            const newPiecePrice = prompt('أدخل سعر القطعة الواحدة الجديد الذي تقترحه (بالدينار):', currentPiecePrice.toString());
+                                            if (newPiecePrice && !isNaN(parseFloat(newPiecePrice))) {
+                                              handleProposePriceMerchant(bid, parseFloat(newPiecePrice) * (req.quantity || 1));
                                             }
                                           }}
                                           className="flex-1 bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
@@ -766,13 +776,13 @@ export default function MerchantOrders() {
                                       </div>
                                     </div>
                                   ) : bid.negotiated_by === 'merchant' ? (
-                                    <p className="text-gray-600 font-bold">لقد قمت باقتراح السعر {formatCurrency(bid.negotiated_price)}. في انتظار رد المورد...</p>
+                                    <p className="text-gray-600 font-bold">لقد قمت باقتراح السعر {formatCurrency(bid.negotiated_price / (req.quantity || 1))} للقطعة. في انتظار رد المورد...</p>
                                   ) : (
                                     <button 
                                       onClick={() => {
-                                        const newPrice = prompt('هذا العرض يقبل التفاوض. أدخل السعر الإجمالي الذي تقترحه (بالدينار):', bid.price);
-                                        if (newPrice && !isNaN(parseFloat(newPrice))) {
-                                          handleProposePriceMerchant(bid, parseFloat(newPrice));
+                                        const newPiecePrice = prompt('هذا العرض يقبل التفاوض. أدخل سعر القطعة الواحدة الذي تقترحه (بالدينار):', (bid.price / (req.quantity || 1)).toString());
+                                        if (newPiecePrice && !isNaN(parseFloat(newPiecePrice))) {
+                                          handleProposePriceMerchant(bid, parseFloat(newPiecePrice) * (req.quantity || 1));
                                         }
                                       }}
                                       className="w-full bg-white text-blue-600 border border-blue-200 py-1.5 rounded-lg font-bold hover:bg-blue-50 transition"
@@ -810,11 +820,16 @@ export default function MerchantOrders() {
                                   </button>
                                 )}
                               </div>
-                              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
+                              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1 relative group">
                                 حالة الشحن والتوصيل:
-                                <span title="قيد التجهيز: تجهيز المصنع الصيني للسلعة للشحن&#10;يتم الشحن: من الصين إلى الجزائر&#10;تم التوصيل: من المورد إلى التاجر">
-                                  <HelpCircle size={14} className="text-gray-400 cursor-help" />
-                                </span>
+                                <button type="button" tabIndex={0} className="focus:outline-none cursor-help">
+                                  <HelpCircle size={14} className="text-gray-400" />
+                                </button>
+                                <div className="absolute bottom-full mb-1 right-0 hidden group-hover:block group-focus-within:block bg-gray-800 text-white text-xs p-2 rounded shadow-lg w-56 z-10 font-normal leading-relaxed text-right pointer-events-none">
+                                  <strong>قيد التجهيز:</strong> تجهيز المصنع الصيني للسلعة للشحن<br/>
+                                  <strong>يتم الشحن:</strong> من الصين إلى الجزائر<br/>
+                                  <strong>تم التوصيل:</strong> من المورد إلى التاجر
+                                </div>
                               </span>
                               <div className="flex flex-col gap-3">
                                 <span className={`inline-block px-3 py-1 rounded-md text-sm font-bold w-full sm:w-max ${

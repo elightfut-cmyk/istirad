@@ -116,18 +116,18 @@ export default function SupplierRequests() {
   };
 
   const handleRejectProposedPrice = async (bidId: string, merchantId: string) => {
-    if (!window.confirm('هل أنت متأكد من رفض العرض؟ سيتم إغلاق المناقصة بالنسبة لك ولن تتمكن من تقديم عرض مرة أخرى.')) return;
+    if (!window.confirm('هل أنت متأكد من رفض السعر المقترح؟ سيتم إبلاغ التاجر برفضك وسيكون أمامه خيار قبول عرضك الأول أو رفضه نهائياً.')) return;
     try {
       const { error } = await supabase.from('supplier_bids').update({
-        status: 'rejected'
+        negotiated_by: 'supplier_rejected'
       }).eq('id', bidId);
       
       if (error) throw error;
-      sendNotification(merchantId, 'رفض المورد للسعر', `رفض المورد السعر المقترح وتم إلغاء عرضه.`, 'error');
-      toast.success('تم رفض العرض وإلغاؤه');
+      sendNotification(merchantId, 'رفض المورد للسعر المقترح', `رفض المورد السعر المقترح وتم إعادة العرض لخياره الأول.`, 'info');
+      toast.success('تم رفض السعر المقترح');
       fetchRequests();
     } catch (error) {
-      toast.error('حدث خطأ أثناء رفض العرض');
+      toast.error('حدث خطأ أثناء رفض السعر المقترح');
     }
   };
 
@@ -274,13 +274,17 @@ export default function SupplierRequests() {
                         <div className="bg-green-100 text-green-800 p-3 rounded-xl font-bold text-sm mb-4">
                           تم قبول السعر المقترح، في انتظار التاجر لدفع العربون.
                         </div>
+                      ) : myBid.negotiated_by === 'supplier_rejected' ? (
+                        <div className="bg-red-100 text-red-800 p-3 rounded-xl font-bold text-sm mb-4">
+                          قمت برفض السعر المقترح، في انتظار التاجر لقبول عرضك الأول أو إلغاء الصفقة.
+                        </div>
                       ) : (
                         <div className="bg-yellow-100 text-yellow-800 p-3 rounded-xl font-bold text-sm mb-4">
                           قيد المراجعة من قبل التاجر
                         </div>
                       )}
 
-                      {!isClosed && myBid.status === 'pending' && myBid.negotiated_by !== 'merchant' && myBid.negotiated_by !== 'supplier_accepted' && (
+                      {!isClosed && myBid.status === 'pending' && myBid.negotiated_by !== 'merchant' && myBid.negotiated_by !== 'supplier_accepted' && myBid.negotiated_by !== 'supplier_rejected' && (
                         <button 
                           onClick={() => {
                             setBiddingRequest(req);

@@ -751,7 +751,7 @@ export default function MerchantOrders() {
                             </div>
                           )}
 
-                          {req.status === 'open' && bid.status === 'pending' && !bid.negotiated_by && (
+                          {req.status === 'open' && bid.status === 'pending' && (!bid.negotiated_by || bid.negotiated_by === 'supplier_rejected') && (
                             <div className="flex flex-col sm:flex-row gap-2 mt-4">
                               <button 
                                 onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
@@ -759,15 +759,17 @@ export default function MerchantOrders() {
                               >
                                 قبول العرض
                               </button>
-                              <button 
-                                onClick={() => {
-                                  setNegotiationBid(bid);
-                                  setShowNegotiationModal(true);
-                                }}
-                                className="flex-1 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-100 transition"
-                              >
-                                اقتراح سعر
-                              </button>
+                              {bid.negotiated_by !== 'supplier_rejected' && (
+                                <button 
+                                  onClick={() => {
+                                    setNegotiationBid(bid);
+                                    setShowNegotiationModal(true);
+                                  }}
+                                  className="flex-1 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-100 transition"
+                                >
+                                  اقتراح سعر
+                                </button>
+                              )}
                               <button 
                                 onClick={() => {
                                   if(confirm('هل أنت متأكد من رفض هذا العرض؟')) {
@@ -790,6 +792,11 @@ export default function MerchantOrders() {
                           {bid.negotiated_by === 'merchant' && bid.status === 'pending' && (
                             <div className="mt-4 p-3 bg-orange-50 text-orange-700 rounded-lg text-sm font-bold border border-orange-100 text-center">
                               لقد قمت باقتراح سعر جديد ({formatCurrency(bid.negotiated_price)} للقطعة) وفي انتظار رد المورد.
+                            </div>
+                          )}
+                          {bid.negotiated_by === 'supplier_rejected' && bid.status === 'pending' && (
+                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-100 text-center">
+                              رفض المورد سعرك المقترح. يمكنك الآن قبول السعر الأول أو رفض العرض نهائياً.
                             </div>
                           )}
                           {bid.negotiated_by === 'supplier_accepted' && bid.status === 'pending' && (

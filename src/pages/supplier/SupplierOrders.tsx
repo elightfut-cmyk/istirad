@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { ShoppingBag, Package, CheckCircle2, DollarSign, Truck, Clock, MapPin, Home } from 'lucide-react';
+import { ShoppingBag, Package, CheckCircle2, DollarSign, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';

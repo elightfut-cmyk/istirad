@@ -80,13 +80,15 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
 
   return (
     <div className="w-full py-6 font-['Tajawal'] rtl overflow-x-auto pb-8">
-      <div className="relative flex justify-between items-center w-full min-w-[500px] px-4">
-        {/* Connecting Lines */}
-        <div className="absolute top-1/2 left-4 right-4 h-1 bg-gray-200 -z-10 -translate-y-1/2 rounded-full" />
-        <div 
-          className="absolute top-1/2 right-4 h-1 bg-green-500 -z-10 -translate-y-1/2 transition-all duration-1000 ease-out rounded-full"
-          style={{ width: `calc(${(actualIndex / (STAGES.length - 1)) * 100}% - 2rem)` }}
-        />
+      <div className="relative flex justify-between items-center w-full min-w-[500px] px-6">
+        {/* Connecting Lines Container (spans exactly from center of first to center of last icon) */}
+        <div className="absolute top-1/2 left-6 right-6 h-1.5 bg-gray-200 -z-10 -translate-y-1/2 rounded-full overflow-hidden">
+          {/* Active Line Progress */}
+          <div 
+            className="absolute top-0 right-0 bottom-0 bg-green-500 transition-all duration-1000 ease-out rounded-full"
+            style={{ width: `${(actualIndex / (STAGES.length - 1)) * 100}%` }}
+          />
+        </div>
 
         {STAGES.map((stage, index) => {
           const isCompleted = index <= actualIndex;

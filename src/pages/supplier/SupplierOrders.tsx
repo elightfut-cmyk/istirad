@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { ShoppingBag, Package, CheckCircle2, DollarSign, Truck, Box, Clock } from 'lucide-react';
+import { ShoppingBag, Package, CheckCircle2, DollarSign, Truck, Box, Clock, MapPin, Home } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -292,31 +292,30 @@ export default function SupplierOrders() {
             {order.status === 'accepted' && (
               <div className="mt-4 border-t border-gray-100 pt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">حالة الشحن والتوصيل</label>
-                <div className="flex bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => updateShippingStatus(order.id, 'processing')}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                      (order.shipping_status || 'processing') === 'processing' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <Box size={14} /> تجهيز
-                  </button>
-                  <button
-                    onClick={() => updateShippingStatus(order.id, 'shipped')}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                      order.shipping_status === 'shipped' ? 'bg-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <Truck size={14} /> يتم الشحن
-                  </button>
-                  <button
-                    onClick={() => updateShippingStatus(order.id, 'delivered')}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-md flex items-center justify-center gap-1 transition-all ${
-                      order.shipping_status === 'delivered' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <CheckCircle2 size={14} /> موصل
-                  </button>
+                <div className="flex flex-wrap gap-1 bg-gray-100 rounded-lg p-1">
+                  {[
+                    { id: 'pending_in_china', label: 'في الصين', icon: Clock },
+                    { id: 'international_transit', label: 'شحن دولي', icon: Truck },
+                    { id: 'customs_clearance', label: 'تخليص جمركي', icon: MapPin },
+                    { id: 'in_local_warehouse', label: 'في المستودع', icon: Home },
+                    { id: 'out_for_delivery', label: 'جاري التوصيل', icon: CheckCircle2 }
+                  ].map(stage => {
+                    const isActive = (order.shipping_status || 'pending_in_china') === stage.id;
+                    const Icon = stage.icon;
+                    return (
+                      <button
+                        key={stage.id}
+                        onClick={() => updateShippingStatus(order.id, stage.id)}
+                        className={`flex-1 min-w-[80px] py-1.5 text-[10px] md:text-xs font-bold rounded-md flex flex-col md:flex-row items-center justify-center gap-1 transition-all ${
+                          isActive 
+                            ? 'bg-white text-[#4f46e5] shadow-sm ring-1 ring-gray-200' 
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <Icon size={14} /> {stage.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

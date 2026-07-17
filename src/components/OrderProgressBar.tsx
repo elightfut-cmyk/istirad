@@ -80,9 +80,9 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
 
   return (
     <div className="w-full py-6 font-['Tajawal'] rtl overflow-x-auto pb-8">
-      <div className="relative flex justify-between items-center w-full min-w-[500px] px-6">
+      <div className="relative flex justify-between items-center w-full min-w-[500px] px-6 z-0">
         {/* Connecting Lines Container (spans exactly from center of first to center of last icon) */}
-        <div className="absolute top-1/2 left-6 right-6 h-1.5 bg-gray-200 -z-10 -translate-y-1/2 rounded-full overflow-hidden">
+        <div className="absolute top-1/2 left-6 right-6 h-1.5 bg-gray-200 z-0 -translate-y-1/2 rounded-full overflow-hidden">
           {/* Active Line Progress */}
           <div 
             className="absolute top-0 right-0 bottom-0 bg-green-500 transition-all duration-1000 ease-out rounded-full"
@@ -98,10 +98,10 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
           const Icon = stage.icon;
 
           return (
-            <div key={stage.id} className="relative flex flex-col items-center">
+            <div key={stage.id} className="relative flex flex-col items-center z-10">
               {/* Notification Badge */}
               {unreadCount > 0 && (
-                <div className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg animate-bounce z-10 cursor-pointer" onClick={() => handleStageClick(stage.id)}>
+                <div className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg animate-bounce z-20 cursor-pointer" onClick={() => handleStageClick(stage.id)}>
                   {unreadCount}
                 </div>
               )}
@@ -109,7 +109,7 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
               {/* Stage Icon */}
               <button 
                 onClick={() => handleStageClick(stage.id)}
-                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 z-0 relative ${
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 z-10 relative ${
                   isCompleted && !isCurrent
                     ? 'bg-white text-green-500 border-2 border-green-500' 
                     : isCurrent

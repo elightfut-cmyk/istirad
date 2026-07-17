@@ -237,7 +237,8 @@ export default function MerchantOrders() {
   const [existingCouponId, setExistingCouponId] = useState<string | null>(null);
 
   const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance', existingCoupon: string | null = null) => {
-    if (!user?.has_accepted_tos) {
+    const currentUser = useAuthStore.getState().user;
+    if (!currentUser?.has_accepted_tos) {
       setPendingPaymentData({ bid, reqId, type, existingCoupon });
       setShowTosModal(true);
       return;

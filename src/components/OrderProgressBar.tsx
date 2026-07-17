@@ -80,7 +80,7 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
 
   return (
     <div className="w-full py-6 font-['Tajawal'] rtl overflow-x-auto pb-8">
-      <div className="relative flex justify-between items-center w-full min-w-[500px] px-6 z-0">
+      <div className="relative flex justify-between items-start w-full min-w-[500px] px-6 z-0">
         {/* Connecting Lines Container (spans exactly from center of first to center of last icon) */}
         <div className="absolute top-5 md:top-6 left-6 right-6 h-1.5 bg-gray-200 z-0 -translate-y-1/2 rounded-full overflow-hidden">
           {/* Active Line Progress */}

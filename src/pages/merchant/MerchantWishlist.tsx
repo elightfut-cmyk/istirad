@@ -107,7 +107,8 @@ export default function MerchantWishlist() {
         supplier_id: orderingProduct.supplier_id,
         price: totalPrice,
         advance_percentage: orderingProduct.advance_percentage || 20,
-        status: 'pending'
+        status: 'pending',
+        shipping_status: 'pending_in_china'
       });
 
       if (bidError) throw bidError;

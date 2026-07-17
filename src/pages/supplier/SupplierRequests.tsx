@@ -79,6 +79,7 @@ export default function SupplierRequests() {
           cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
           advance_percentage: bidForm.advance_percentage,
           notes: bidForm.notes,
+          shipping_status: 'pending_in_china'
         });
 
         if (error) throw error;

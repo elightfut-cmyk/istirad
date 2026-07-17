@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, Clock, Truck, Home, MapPin, MessageCircle, X } from 'lucide-react';
+import { Check, CheckCircle2, Clock, Truck, Home, MapPin, MessageCircle, X } from 'lucide-react';
 // useAuthStore import removed
 
 interface OrderProgressBarProps {
   bidId: string;
   currentStatus: string; // e.g., 'pending_in_china', etc.
+  onUpdateStatus?: (status: string) => void;
+  isSupplier?: boolean;
 }
 
 const STAGES = [
@@ -16,7 +18,7 @@ const STAGES = [
   { id: 'out_for_delivery', label: 'جاري التوصيل', icon: CheckCircle2 }
 ];
 
-export default function OrderProgressBar({ bidId, currentStatus }: OrderProgressBarProps) {
+export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus, isSupplier }: OrderProgressBarProps) {
   const [comments, setComments] = useState<any[]>([]);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   // removed user as it is not used in this component
@@ -59,6 +61,11 @@ export default function OrderProgressBar({ bidId, currentStatus }: OrderProgress
   const actualIndex = currentStageIndex === -1 ? 0 : currentStageIndex;
 
   const handleStageClick = (stageId: string) => {
+    if (isSupplier && onUpdateStatus) {
+      onUpdateStatus(stageId);
+      return;
+    }
+    
     const stageComments = comments.filter(c => c.status_stage === stageId);
     if (stageComments.length > 0) {
       setSelectedStage(selectedStage === stageId ? null : stageId);
@@ -77,7 +84,7 @@ export default function OrderProgressBar({ bidId, currentStatus }: OrderProgress
         {/* Connecting Lines */}
         <div className="absolute top-1/2 left-4 right-4 h-1 bg-gray-200 -z-10 -translate-y-1/2 rounded-full" />
         <div 
-          className="absolute top-1/2 right-4 h-1 bg-green-500 -z-10 -translate-y-1/2 transition-all duration-500 rounded-full"
+          className="absolute top-1/2 right-4 h-1 bg-green-500 -z-10 -translate-y-1/2 transition-all duration-1000 ease-out rounded-full"
           style={{ width: `calc(${(actualIndex / (STAGES.length - 1)) * 100}% - 2rem)` }}
         />
 
@@ -100,18 +107,24 @@ export default function OrderProgressBar({ bidId, currentStatus }: OrderProgress
               {/* Stage Icon */}
               <button 
                 onClick={() => handleStageClick(stage.id)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-md z-0 ${
-                  isCompleted 
-                    ? 'bg-green-500 text-white shadow-green-500/40' 
-                    : 'bg-white text-gray-400 border-2 border-gray-200'
-                } ${isCurrent ? 'ring-4 ring-green-100 scale-110' : ''} ${stageComments.length > 0 ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 z-0 relative ${
+                  isCompleted && !isCurrent
+                    ? 'bg-white text-green-500 border-2 border-green-500' 
+                    : isCurrent
+                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/40 ring-4 ring-green-100 scale-110'
+                    : 'bg-white text-gray-300 border-2 border-gray-200'
+                } ${(isSupplier || stageComments.length > 0) ? 'hover:scale-110 cursor-pointer hover:shadow-md' : 'cursor-default'}`}
               >
-                <Icon className={`w-6 h-6 ${isCurrent ? 'animate-pulse' : ''}`} />
+                {isCompleted && !isCurrent ? (
+                  <Check className="w-5 h-5 md:w-6 md:h-6 animate-in zoom-in duration-300" strokeWidth={3} />
+                ) : (
+                  <Icon className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-500 ${isCurrent ? 'animate-pulse' : ''}`} />
+                )}
               </button>
               
               {/* Stage Label */}
-              <span className={`mt-3 text-sm font-bold text-center max-w-[80px] leading-tight ${
-                isCompleted ? 'text-green-600' : 'text-gray-400'
+              <span className={`mt-3 text-xs md:text-sm font-bold text-center max-w-[80px] leading-tight transition-colors duration-500 ${
+                isCurrent ? 'text-green-600 font-extrabold' : isCompleted ? 'text-gray-700' : 'text-gray-400'
               }`}>
                 {stage.label}
               </span>

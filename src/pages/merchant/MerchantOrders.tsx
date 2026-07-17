@@ -8,6 +8,8 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import { createChargilyCheckout } from '../../lib/chargily';
 import toast from 'react-hot-toast';
+import OrderProgressBar from '../../components/OrderProgressBar';
+import TermsOfUseModal from '../../components/TermsOfUseModal';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -32,6 +34,8 @@ export default function MerchantOrders() {
   };
   
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showTosModal, setShowTosModal] = useState(false);
+  const [pendingPaymentData, setPendingPaymentData] = useState<any>(null);
   const [selectedBidForPayment, setSelectedBidForPayment] = useState<any>(null);
   const [walletBalance, setWalletBalance] = useState(0);
   const [isProcessingWalletPayment, setIsProcessingWalletPayment] = useState(false);
@@ -233,6 +237,12 @@ export default function MerchantOrders() {
   const [existingCouponId, setExistingCouponId] = useState<string | null>(null);
 
   const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance', existingCoupon: string | null = null) => {
+    if (!user?.has_accepted_tos) {
+      setPendingPaymentData({ bid, reqId, type, existingCoupon });
+      setShowTosModal(true);
+      return;
+    }
+    
     setSelectedBidForPayment({ ...bid, reqId });
     setPaymentType(type);
     setExistingCouponId(existingCoupon);
@@ -241,6 +251,19 @@ export default function MerchantOrders() {
     setAppliedCoupon(null);
     setCouponDiscountAmount(0);
     setShowPaymentModal(true);
+  };
+
+  const handleTosAccepted = () => {
+    setShowTosModal(false);
+    if (pendingPaymentData) {
+      openPaymentModal(
+        pendingPaymentData.bid, 
+        pendingPaymentData.reqId, 
+        pendingPaymentData.type, 
+        pendingPaymentData.existingCoupon
+      );
+      setPendingPaymentData(null);
+    }
   };
 
   const handleApplyCoupon = async () => {
@@ -617,27 +640,9 @@ export default function MerchantOrders() {
                           </a>
                           
                           <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
-                            <span className="text-gray-500 font-medium flex items-center gap-1 relative group">
-                              حالة الشحن:
-                              <button type="button" tabIndex={0} className="focus:outline-none cursor-help">
-                                <HelpCircle size={14} className="text-gray-400" />
-                              </button>
-                              <div className="absolute bottom-full mb-1 right-0 hidden group-hover:block group-focus-within:block bg-gray-800 text-white text-xs p-2 rounded shadow-lg w-56 z-10 font-normal leading-relaxed text-right pointer-events-none">
-                                <strong>قيد التجهيز:</strong> تجهيز المصنع الصيني للسلعة للشحن<br/>
-                                <strong>يتم الشحن:</strong> من الصين إلى الجزائر<br/>
-                                <strong>تم التوصيل:</strong> من المورد إلى التاجر
-                              </div>
-                            </span>
-                            <span className={`font-bold ${
-                              bid.shipping_status === 'shipped' ? 'text-blue-600' :
-                              bid.shipping_status === 'delivered' ? 'text-green-600' :
-                              'text-gray-800'
-                            }`}>
-                              {bid.shipping_status === 'shipped' ? '🚚 يتم الشحن' :
-                               bid.shipping_status === 'delivered' ? '✅ تم التوصيل' :
-                               '📦 قيد التجهيز'}
-                            </span>
-                          </div>
+                            <div className="w-full">
+                              <OrderProgressBar bidId={bid.id} currentStatus={bid.shipping_status || 'pending_in_china'} />
+                            </div>
                         </div>
                       )}
                     </div>
@@ -829,28 +834,10 @@ export default function MerchantOrders() {
                                   </button>
                                 )}
                               </div>
-                              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1 relative group">
-                                حالة الشحن والتوصيل:
-                                <button type="button" tabIndex={0} className="focus:outline-none cursor-help">
-                                  <HelpCircle size={14} className="text-gray-400" />
-                                </button>
-                                <div className="absolute bottom-full mb-1 right-0 hidden group-hover:block group-focus-within:block bg-gray-800 text-white text-xs p-2 rounded shadow-lg w-56 z-10 font-normal leading-relaxed text-right pointer-events-none">
-                                  <strong>قيد التجهيز:</strong> تجهيز المصنع الصيني للسلعة للشحن<br/>
-                                  <strong>يتم الشحن:</strong> من الصين إلى الجزائر<br/>
-                                  <strong>تم التوصيل:</strong> من المورد إلى التاجر
-                                </div>
-                              </span>
+                              <div className="w-full mb-4">
+                                <OrderProgressBar bidId={bid.id} currentStatus={bid.shipping_status || 'pending_in_china'} />
+                              </div>
                               <div className="flex flex-col gap-3">
-                                <span className={`inline-block px-3 py-1 rounded-md text-sm font-bold w-full sm:w-max ${
-                                  bid.shipping_status === 'shipped' ? 'bg-blue-50 text-blue-700' :
-                                  bid.shipping_status === 'delivered' ? 'bg-green-50 text-green-700' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {bid.shipping_status === 'shipped' ? '🚚 يتم الشحن' :
-                                   bid.shipping_status === 'delivered' ? '✅ تم التوصيل' :
-                                   '📦 قيد التجهيز'}
-                                </span>
-                                
                                 <a 
                                   href={`https://wa.me/${bid.supplier?.phone || '+213000000000'}?text=${encodeURIComponent(`مرحباً، أتواصل معك بخصوص عرضك على مناقصة رقم: ${req.id}`)}`}
                                   target="_blank"
@@ -985,6 +972,13 @@ export default function MerchantOrders() {
             </div>
           </div>
         </div>
+      )}
+
+      {showTosModal && (
+        <TermsOfUseModal 
+          onAccept={handleTosAccepted} 
+          onClose={() => setShowTosModal(false)} 
+        />
       )}
 
       {/* Payment Method Modal */}

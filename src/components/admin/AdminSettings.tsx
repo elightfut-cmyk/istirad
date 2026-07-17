@@ -8,6 +8,7 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [tosContent, setTosContent] = useState('');
   
   const [localSettings, setLocalSettings] = useState({
     minQuantity: settingsStore.minQuantity,
@@ -27,6 +28,22 @@ export default function AdminSettings() {
     loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
     productCategories: settingsStore.productCategories || []
   });
+
+  useEffect(() => {
+    const fetchTOS = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('platform_policies')
+          .select('content')
+          .eq('policy_type', 'TOS')
+          .single();
+        if (data && !error) setTosContent(data.content);
+      } catch (err) {
+        console.error('Error fetching TOS:', err);
+      }
+    };
+    fetchTOS();
+  }, []);
 
   useEffect(() => {
     setLocalSettings({
@@ -142,6 +159,10 @@ export default function AdminSettings() {
         .eq('id', 1);
 
       if (error) throw error;
+
+      await supabase
+        .from('platform_policies')
+        .upsert({ policy_type: 'TOS', content: tosContent }, { onConflict: 'policy_type' });
       
       await settingsStore.fetchSettings(); // Refresh local Zustand store
       toast.success('تم تحديث الإعدادات بنجاح!');
@@ -504,6 +525,25 @@ export default function AdminSettings() {
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+        <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+          <h2 className="text-lg font-bold text-gray-800">شروط الاستخدام (TOS)</h2>
+        </div>
+        <div className="p-6">
+          <p className="text-sm text-gray-500 mb-4">
+            النص المدخل هنا سيتم عرضه للتاجر قبل إتمام الدفع إذا لم يوافق عليه مسبقاً. يمكنك استخدام HTML لتنسيق النص.
+          </p>
+          <textarea
+            value={tosContent}
+            onChange={(e) => setTosContent(e.target.value)}
+            className="w-full h-64 p-4 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white font-mono text-sm leading-relaxed"
+            placeholder="أدخل نص شروط الاستخدام هنا..."
+            dir="rtl"
+          />
         </div>
       </div>
 

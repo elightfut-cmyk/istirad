@@ -19,6 +19,7 @@ export interface User {
   has_successful_referral?: boolean;
   wallet_balance?: number;
   status?: string;
+  has_accepted_tos?: boolean;
 }
 
 interface AuthState {

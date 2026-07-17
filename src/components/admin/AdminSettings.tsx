@@ -525,7 +525,6 @@ export default function AdminSettings() {
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
-          </div>
         </div>
       </div>
 

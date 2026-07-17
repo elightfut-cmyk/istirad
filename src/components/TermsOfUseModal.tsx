@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Check } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';

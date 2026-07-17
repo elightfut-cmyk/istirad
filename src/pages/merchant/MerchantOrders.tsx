@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -638,11 +638,11 @@ export default function MerchantOrders() {
                             <MessageCircle size={18} />
                             تواصل مع المورد (واتساب)
                           </a>
-                          
                           <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
                             <div className="w-full">
                               <OrderProgressBar bidId={bid.id} currentStatus={bid.shipping_status || 'pending_in_china'} />
                             </div>
+                          </div>
                         </div>
                       )}
                     </div>

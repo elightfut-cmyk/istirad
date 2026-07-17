@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, Clock, Truck, Home, MapPin, MessageCircle, X } from 'lucide-react';
-import { useAuthStore } from '../store/useAuthStore';
+// useAuthStore import removed
 
 interface OrderProgressBarProps {
   bidId: string;
@@ -19,7 +19,7 @@ const STAGES = [
 export default function OrderProgressBar({ bidId, currentStatus }: OrderProgressBarProps) {
   const [comments, setComments] = useState<any[]>([]);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
-  const { user } = useAuthStore();
+  // removed user as it is not used in this component
 
   useEffect(() => {
     fetchComments();

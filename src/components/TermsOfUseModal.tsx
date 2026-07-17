@@ -47,7 +47,9 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
         
       if (error) throw error;
       
-      // Update local state if needed (or simply trigger onAccept)
+      // Update local state so that subsequent checks pass without refreshing
+      useAuthStore.getState().setUser({ ...user, has_accepted_tos: true });
+      
       onAccept();
     } catch (err) {
       console.error('Error accepting TOS:', err);

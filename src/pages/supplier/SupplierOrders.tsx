@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
+import OrderProgressBar from '../../components/OrderProgressBar';
 
 export default function SupplierOrders() {
   const { user } = useAuthStore();
@@ -291,31 +292,14 @@ export default function SupplierOrders() {
 
             {order.status === 'accepted' && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">حالة الشحن والتوصيل</label>
-                <div className="flex flex-wrap gap-1 bg-gray-100 rounded-lg p-1">
-                  {[
-                    { id: 'pending_in_china', label: 'في الصين', icon: Clock },
-                    { id: 'international_transit', label: 'شحن دولي', icon: Truck },
-                    { id: 'customs_clearance', label: 'تخليص جمركي', icon: MapPin },
-                    { id: 'in_local_warehouse', label: 'في المستودع', icon: Home },
-                    { id: 'out_for_delivery', label: 'جاري التوصيل', icon: CheckCircle2 }
-                  ].map(stage => {
-                    const isActive = (order.shipping_status || 'pending_in_china') === stage.id;
-                    const Icon = stage.icon;
-                    return (
-                      <button
-                        key={stage.id}
-                        onClick={() => updateShippingStatus(order.id, stage.id)}
-                        className={`flex-1 min-w-[80px] py-1.5 text-[10px] md:text-xs font-bold rounded-md flex flex-col md:flex-row items-center justify-center gap-1 transition-all ${
-                          isActive 
-                            ? 'bg-white text-[#4f46e5] shadow-sm ring-1 ring-gray-200' 
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        <Icon size={14} /> {stage.label}
-                      </button>
-                    );
-                  })}
+                <label className="block text-sm font-bold text-gray-700 mb-2">تحديث حالة الشحن والتوصيل (انقر لتحديث الحالة)</label>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <OrderProgressBar 
+                    bidId={order.id} 
+                    currentStatus={order.shipping_status || 'pending_in_china'} 
+                    onUpdateStatus={(status) => updateShippingStatus(order.id, status)}
+                    isSupplier={true}
+                  />
                 </div>
               </div>
             )}

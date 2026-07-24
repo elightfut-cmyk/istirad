@@ -157,7 +157,6 @@ export default function LandingPage() {
 
         </div>
       </section>
-      <Footer />
       <WhatsAppButton />
     </div>
   );

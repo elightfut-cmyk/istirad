@@ -609,8 +609,8 @@ export default function MerchantOrders() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-bold text-lg text-gray-900">{req.title.replace('طلب مباشر: ', '')}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'open' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
-                          {req.status === 'open' ? 'في انتظار الدفع' : (bid?.shipping_status === 'delivered' ? 'تمت الإجراءات وانتهت المعاملة' : (bid?.is_fully_paid ? 'تم دفع المبلغ كاملا' : 'تم دفع العربون'))}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'cancelled' ? 'bg-red-100 text-red-700' : req.status === 'open' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                          {req.status === 'cancelled' ? 'ملغاة' : req.status === 'open' ? 'في انتظار الدفع' : (bid?.shipping_status === 'delivered' ? 'تمت الإجراءات وانتهت المعاملة' : (bid?.is_fully_paid ? 'تم دفع المبلغ كاملا' : 'تم دفع العربون'))}
                         </span>
                       </div>
                       <p className="text-gray-600 text-sm mb-4">{req.description}</p>

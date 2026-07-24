@@ -657,7 +657,28 @@ export default function MerchantOrders() {
                           {bid?.shipping_status === 'delivered' ? 'تمت الإجراءات وانتهت المعاملة' : (bid?.is_fully_paid ? 'تم دفع المبلغ كاملا في انتظار إتمام الإجراءات' : 'تم تأكيد الطلب ودفع العربون بنجاح. تواصل مع المورد لاستكمال الإجراءات.')}
                         </div>
                         {bid && (
-                          <div className={`flex flex-col gap-2 text-sm bg-white p-3 rounded-lg shadow-sm border w-full sm:w-max ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
+                          <>
+                            {bid.deposit_paid_at ? (
+                              <CountdownCircle 
+                                depositPaidAt={bid.deposit_paid_at} 
+                                onCancel={() => handleCancelDeal(bid.id)}
+                                cancelling={cancellingDealId === bid.id}
+                              />
+                            ) : (
+                              <div className="bg-red-50 p-4 rounded-xl mt-2 border border-red-200">
+                                <p className="text-red-700 text-sm mb-2 font-bold">لم يتم تسجيل وقت دفع العربون في النظام (ربما بسبب دفعه قبل التحديث).</p>
+                                <button 
+                                  onClick={async () => {
+                                    await supabase.from('supplier_bids').update({ deposit_paid_at: new Date().toISOString() }).eq('id', bid.id);
+                                    window.location.reload();
+                                  }}
+                                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700"
+                                >
+                                  إصلاح وتفعيل العداد الآن
+                                </button>
+                              </div>
+                            )}
+                            <div className={`flex flex-col gap-2 text-sm bg-white p-3 rounded-lg shadow-sm border w-full sm:w-max mt-2 ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
                             <div className="flex justify-between items-center gap-4">
                               <span className="text-gray-600 font-medium">المبلغ المتبقي:</span>
                               <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>

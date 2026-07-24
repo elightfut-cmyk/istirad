@@ -443,15 +443,30 @@ export default function MerchantOrders() {
     setCancellingDealId(bidId);
     try {
       // 1. Get bid info
-      const { data: bidData, error: bidError } = await supabase.from('supplier_bids').select('*, custom_requests(merchant_id)').eq('id', bidId).single();
+      const { data: bidData, error: bidError } = await supabase.from('supplier_bids').select('*, custom_requests(merchant_id, request_type)').eq('id', bidId).single();
       if (bidError || !bidData) throw new Error('Bid not found');
+
+      if (bidData.status === 'cancelled') {
+        if (bidData.request_id) {
+          const isDirect = bidData.custom_requests?.request_type === 'direct';
+          await supabase.from('custom_requests').update({ status: isDirect ? 'cancelled' : 'open' }).eq('id', bidData.request_id);
+        }
+        toast.error('هذه الصفقة ملغاة بالفعل');
+        setCancellingDealId(null);
+        fetchRequests();
+        return;
+      }
 
       const depositAmount = (bidData.price * bidData.advance_percentage) / 100;
 
       // 2. Update bid and request status
-      await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bidId);
-      if (bidData.custom_requests) {
-        await supabase.from('custom_requests').update({ status: 'open' }).eq('id', bidData.custom_requests.id);
+      const { error: bidUpdateError } = await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bidId);
+      if (bidUpdateError) throw bidUpdateError;
+      
+      if (bidData.request_id) {
+        const isDirect = bidData.custom_requests?.request_type === 'direct';
+        const { error: reqUpdateError } = await supabase.from('custom_requests').update({ status: isDirect ? 'cancelled' : 'open' }).eq('id', bidData.request_id);
+        if (reqUpdateError) throw reqUpdateError;
       }
 
       // 3. Refund the merchant's wallet

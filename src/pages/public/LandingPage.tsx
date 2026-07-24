@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import WhatsAppButton from '../../components/WhatsAppButton';
 
 export default function LandingPage() {
   const { user } = useAuthStore();
@@ -156,6 +157,8 @@ export default function LandingPage() {
 
         </div>
       </section>
+      <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

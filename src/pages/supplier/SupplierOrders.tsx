@@ -7,12 +7,14 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
 import OrderProgressBar from '../../components/OrderProgressBar';
+import CountdownCircle from '../../components/CountdownCircle';
 
 export default function SupplierOrders() {
   const { user } = useAuthStore();
   const { formatCurrency } = useSettingsStore();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingDealId, setCancellingDealId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -39,6 +41,7 @@ export default function SupplierOrders() {
           shipping_status,
           is_fully_paid,
           created_at,
+          deposit_paid_at,
           last_reminder_at,
           custom_requests (
             title, 
@@ -146,7 +149,7 @@ export default function SupplierOrders() {
       }
       
       await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bid.id);
-      await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', bid.custom_requests?.id || ''); // Wait, custom_requests might not have id here if not selected
+      await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', bid.custom_requests?.id || '');
       
       setOrders(orders.filter(o => o.id !== bid.id));
       toast.success('تم إلغاء المعاملة بنجاح');
@@ -157,6 +160,46 @@ export default function SupplierOrders() {
     } catch (error) {
       console.error(error);
       toast.error('حدث خطأ أثناء إلغاء المعاملة');
+    }
+  };
+
+  const handleCancelDealWithRefund = async (bidId: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء هذه الصفقة؟ سيتم استرجاع العربون إلى التاجر.')) return;
+    setCancellingDealId(bidId);
+    try {
+      const { data: bidData, error: bidError } = await supabase.from('supplier_bids').select('*, custom_requests(merchant_id)').eq('id', bidId).single();
+      if (bidError || !bidData) throw new Error('Bid not found');
+
+      const depositAmount = (bidData.price * bidData.advance_percentage) / 100;
+
+      await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bidId);
+      if (bidData.custom_requests) {
+        await supabase.from('custom_requests').update({ status: 'open' }).eq('id', bidData.custom_requests.id);
+      }
+
+      await supabase.from('wallet_transactions').insert({
+        merchant_id: bidData.custom_requests.merchant_id,
+        amount: depositAmount,
+        type: 'refund',
+        description: 'استرجاع العربون لإلغاء الصفقة خلال 24 ساعة من قبل المورد'
+      });
+      
+      const { data: merchantData } = await supabase.from('users').select('wallet_balance').eq('id', bidData.custom_requests.merchant_id).single();
+      if (merchantData) {
+        await supabase.from('users').update({
+          wallet_balance: (merchantData.wallet_balance || 0) + depositAmount
+        }).eq('id', bidData.custom_requests.merchant_id);
+      }
+
+      sendNotification(bidData.custom_requests.merchant_id, 'إلغاء صفقة', `قام المورد ${user?.company_name} بإلغاء الصفقة وتم استرجاع العربون لمحفظتك.`, 'warning');
+
+      toast.success('تم إلغاء الصفقة بنجاح');
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      toast.error('حدث خطأ أثناء إلغاء الصفقة');
+    } finally {
+      setCancellingDealId(null);
     }
   };
 
@@ -289,6 +332,16 @@ export default function SupplierOrders() {
                 return null;
               })()}
             </div>
+
+            {order.status === 'accepted' && order.deposit_paid_at && (
+              <div className="mt-4 border-t border-gray-100 pt-4">
+                <CountdownCircle 
+                  depositPaidAt={order.deposit_paid_at} 
+                  onCancel={() => handleCancelDealWithRefund(order.id)}
+                  cancelling={cancellingDealId === order.id}
+                />
+              </div>
+            )}
 
             {order.status === 'accepted' && (
               <div className="mt-4 border-t border-gray-100 pt-4">

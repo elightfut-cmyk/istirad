@@ -4,6 +4,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package } from 'lucide-react';
+import WhatsAppButton from '../components/WhatsAppButton';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -232,6 +233,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           </button>
         </div>
       </nav>
+      <WhatsAppButton />
     </div>
   );
 }

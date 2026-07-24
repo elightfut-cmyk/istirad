@@ -10,6 +10,7 @@ import { createChargilyCheckout } from '../../lib/chargily';
 import toast from 'react-hot-toast';
 import OrderProgressBar from '../../components/OrderProgressBar';
 import TermsOfUseModal from '../../components/TermsOfUseModal';
+import CountdownCircle from '../../components/CountdownCircle';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -25,6 +26,7 @@ export default function MerchantOrders() {
   const [negotiationBid, setNegotiationBid] = useState<any>(null);
   const [negotiatedPrice, setNegotiatedPrice] = useState<number>(0);
   const [negotiating, setNegotiating] = useState(false);
+  const [cancellingDealId, setCancellingDealId] = useState<string | null>(null);
 
   const closeModal = () => {
     setShowModal(false);
@@ -118,7 +120,7 @@ export default function MerchantOrders() {
         .select(`
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
           supplier_bids (
-            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by,
+            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by,
             supplier:users(name, company_name, phone, verification_badge)
           )
         `)
@@ -428,6 +430,47 @@ export default function MerchantOrders() {
     } catch (error) {
       console.error(error);
       toast.error('حدث خطأ أثناء معالجة القبول والدفع');
+    }
+  };
+
+  const handleCancelDeal = async (bidId: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في إلغاء هذه الصفقة؟ سيتم استرجاع العربون إلى محفظتك.')) return;
+    setCancellingDealId(bidId);
+    try {
+      // 1. Get bid info
+      const { data: bidData, error: bidError } = await supabase.from('supplier_bids').select('*, custom_requests(merchant_id)').eq('id', bidId).single();
+      if (bidError || !bidData) throw new Error('Bid not found');
+
+      const depositAmount = (bidData.price * bidData.advance_percentage) / 100;
+
+      // 2. Update bid and request status
+      await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bidId);
+      if (bidData.custom_requests) {
+        await supabase.from('custom_requests').update({ status: 'open' }).eq('id', bidData.custom_requests.id);
+      }
+
+      // 3. Refund the merchant's wallet
+      await supabase.from('wallet_transactions').insert({
+        merchant_id: user?.id,
+        amount: depositAmount,
+        type: 'refund',
+        description: 'استرجاع العربون لإلغاء الصفقة خلال 24 ساعة'
+      });
+      await supabase.from('users').update({
+        wallet_balance: walletBalance + depositAmount
+      }).eq('id', user?.id);
+
+      // Notify
+      sendNotification(bidData.supplier_id, 'إلغاء صفقة', `قام التاجر ${user?.name} بإلغاء الصفقة.`, 'error');
+
+      toast.success('تم إلغاء الصفقة واسترجاع العربون بنجاح');
+      fetchRequests();
+      fetchWalletBalance();
+    } catch (err) {
+      console.error(err);
+      toast.error('حدث خطأ أثناء إلغاء الصفقة');
+    } finally {
+      setCancellingDealId(null);
     }
   };
 
@@ -819,6 +862,13 @@ export default function MerchantOrders() {
                           
                           {bid.status === 'accepted' && bid.shipping_status && (
                             <div className="mt-4 pt-4 border-t border-gray-100">
+                              {bid.status === 'accepted' && bid.deposit_paid_at && (
+                                <CountdownCircle 
+                                  depositPaidAt={bid.deposit_paid_at} 
+                                  onCancel={() => handleCancelDeal(bid.id)}
+                                  cancelling={cancellingDealId === bid.id}
+                                />
+                              )}
                               <div className={`flex flex-col gap-2 mb-3 bg-white p-3 rounded-lg border ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">المبلغ المتبقي:</span>

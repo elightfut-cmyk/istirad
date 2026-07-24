@@ -23,6 +23,7 @@ interface SettingsState {
   loyaltyPointsToDzdRatio: number;
   loyaltyPointsMinConversion: number;
   productCategories: string[];
+  whatsappNumber: string | null;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -50,6 +51,7 @@ export const useSettingsStore = create<SettingsState>()(
       loyaltyPointsToDzdRatio: 10,
       loyaltyPointsMinConversion: 500,
       productCategories: ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء'],
+      whatsappNumber: null,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
@@ -86,7 +88,8 @@ export const useSettingsStore = create<SettingsState>()(
               loyaltyPointsPerOrder: data.loyalty_points_per_order || 50,
               loyaltyPointsToDzdRatio: data.loyalty_points_to_dzd_ratio || 10,
               loyaltyPointsMinConversion: data.loyalty_points_min_conversion || 500,
-              productCategories: data.product_categories || ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء']
+              productCategories: data.product_categories || ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء'],
+              whatsappNumber: data.whatsapp_number || null
             });
           }
         } catch (error) {

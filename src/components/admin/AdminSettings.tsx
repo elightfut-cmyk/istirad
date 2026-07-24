@@ -8,7 +8,8 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [newCategory, setNewCategory] = useState('');
-  const [tosContent, setTosContent] = useState('');
+  const [tosTerms, setTosTerms] = useState<string[]>([]);
+  const [newTerm, setNewTerm] = useState('');
   
   const [localSettings, setLocalSettings] = useState({
     minQuantity: settingsStore.minQuantity,
@@ -26,7 +27,8 @@ export default function AdminSettings() {
     loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
     loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
     loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
-    productCategories: settingsStore.productCategories || []
+    productCategories: settingsStore.productCategories || [],
+    whatsappNumber: settingsStore.whatsappNumber || ''
   });
 
   useEffect(() => {
@@ -37,7 +39,18 @@ export default function AdminSettings() {
           .select('content')
           .eq('policy_type', 'TOS')
           .single();
-        if (data && !error) setTosContent(data.content);
+        if (data && !error) {
+          try {
+            const parsed = JSON.parse(data.content);
+            if (Array.isArray(parsed)) {
+              setTosTerms(parsed);
+            } else {
+              setTosTerms([data.content]);
+            }
+          } catch (e) {
+            setTosTerms([data.content]);
+          }
+        }
       } catch (err) {
         console.error('Error fetching TOS:', err);
       }
@@ -62,9 +75,10 @@ export default function AdminSettings() {
       loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
       loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
       loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
-      productCategories: settingsStore.productCategories || []
+      productCategories: settingsStore.productCategories || [],
+      whatsappNumber: settingsStore.whatsappNumber || ''
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -154,15 +168,18 @@ export default function AdminSettings() {
           loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
           loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
           loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
-          product_categories: localSettings.productCategories
+          product_categories: localSettings.productCategories,
+          whatsapp_number: localSettings.whatsappNumber || null
         })
         .eq('id', 1);
 
       if (error) throw error;
 
+      const tosContentString = JSON.stringify(tosTerms);
+
       await supabase
         .from('platform_policies')
-        .upsert({ policy_type: 'TOS', content: tosContent }, { onConflict: 'policy_type' });
+        .upsert({ policy_type: 'TOS', content: tosContentString }, { onConflict: 'policy_type' });
       
       await settingsStore.fetchSettings(); // Refresh local Zustand store
       toast.success('تم تحديث الإعدادات بنجاح!');
@@ -534,16 +551,88 @@ export default function AdminSettings() {
         </div>
         <div className="p-6">
           <p className="text-sm text-gray-500 mb-4">
-            النص المدخل هنا سيتم عرضه للتاجر قبل إتمام الدفع إذا لم يوافق عليه مسبقاً. يمكنك استخدام HTML لتنسيق النص.
+            أدخل الشروط شرطاً شرطاً. ستظهر هذه الشروط للتجار كمستطيلات يجب الموافقة عليها كل على حدة.
           </p>
-          <textarea
-            value={tosContent}
-            onChange={(e) => setTosContent(e.target.value)}
-            className="w-full h-64 p-4 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white font-mono text-sm leading-relaxed"
-            placeholder="أدخل نص شروط الاستخدام هنا..."
-            dir="rtl"
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              placeholder="أدخل شرطاً جديداً..."
+              value={newTerm}
+              onChange={(e) => setNewTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (newTerm.trim()) {
+                    setTosTerms(prev => [...prev, newTerm.trim()]);
+                    setNewTerm('');
+                  }
+                }
+              }}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+            <button
+              onClick={() => {
+                if (newTerm.trim()) {
+                  setTosTerms(prev => [...prev, newTerm.trim()]);
+                  setNewTerm('');
+                }
+              }}
+              className="px-4 py-2 bg-[#4f46e5] text-white rounded-xl text-sm font-bold hover:bg-[#4338ca] transition-colors"
+            >
+              تم
+            </button>
+          </div>
+          <div className="space-y-3">
+            {tosTerms.map((term, index) => (
+              <div key={index} className="flex items-start gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <span className="bg-[#4f46e5] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  {index + 1}
+                </span>
+                <div className="flex-1">
+                  <textarea
+                    value={term}
+                    onChange={(e) => {
+                      const newTerms = [...tosTerms];
+                      newTerms[index] = e.target.value;
+                      setTosTerms(newTerms);
+                    }}
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 resize-none h-16 sm:text-sm"
+                  />
+                </div>
+                <button
+                  onClick={() => setTosTerms(prev => prev.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700 p-2"
+                  title="حذف الشرط"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+            {tosTerms.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-4">لا توجد شروط حالياً، يرجى إضافة شروط ليوافق عليها المستخدمون.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">رقم خدمة العملاء (واتساب)</h3>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          رقم الواتساب للتواصل
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="text"
+            name="whatsappNumber"
+            placeholder="مثال: +213XXXXXXXXX"
+            value={localSettings.whatsappNumber || ''}
+            onChange={handleChange}
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
         </div>
+        <p className="text-gray-500 text-sm mt-2">
+          سيظهر هذا الرقم في زر الواتساب العائم في صفحات الموقع.
+        </p>
       </div>
 
       <div className="pt-6">

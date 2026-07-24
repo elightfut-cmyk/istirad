@@ -694,6 +694,7 @@ export default function MerchantOrders() {
                               </button>
                             )}
                           </div>
+                          </>
                         )}
                       </div>
                       

@@ -386,7 +386,12 @@ export default function MerchantOrders() {
             status: paymentType === 'advance' ? 'closed' : req.status,
             supplier_bids: req.supplier_bids?.map((bid: any) => 
               bid.id === selectedBidForPayment.id 
-                ? { ...bid, status: paymentType === 'advance' ? 'accepted' : bid.status, is_fully_paid: paymentType === 'remaining' ? true : bid.is_fully_paid } 
+                ? { 
+                    ...bid, 
+                    status: paymentType === 'advance' ? 'accepted' : bid.status, 
+                    is_fully_paid: paymentType === 'remaining' ? true : bid.is_fully_paid,
+                    deposit_paid_at: paymentType === 'advance' ? new Date().toISOString() : bid.deposit_paid_at
+                  } 
                 : bid
             )
           };

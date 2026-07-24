@@ -865,9 +865,9 @@ export default function MerchantOrders() {
                             </div>
                           )}
                           
-                          {bid.status === 'accepted' && bid.shipping_status && (
+                          {bid.status === 'accepted' && (
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                              {bid.status === 'accepted' && bid.deposit_paid_at && (
+                              {bid.deposit_paid_at && (
                                 <CountdownCircle 
                                   depositPaidAt={bid.deposit_paid_at} 
                                   onCancel={() => handleCancelDeal(bid.id)}

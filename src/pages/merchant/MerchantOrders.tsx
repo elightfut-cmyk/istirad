@@ -867,12 +867,25 @@ export default function MerchantOrders() {
                           
                           {bid.status === 'accepted' && (
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                              {bid.deposit_paid_at && (
+                              {bid.deposit_paid_at ? (
                                 <CountdownCircle 
                                   depositPaidAt={bid.deposit_paid_at} 
                                   onCancel={() => handleCancelDeal(bid.id)}
                                   cancelling={cancellingDealId === bid.id}
                                 />
+                              ) : (
+                                <div className="bg-red-50 p-4 rounded-xl mb-4 border border-red-200">
+                                  <p className="text-red-700 text-sm mb-2 font-bold">لم يتم تسجيل وقت دفع العربون في النظام (ربما بسبب دفعه قبل التحديث).</p>
+                                  <button 
+                                    onClick={async () => {
+                                      await supabase.from('supplier_bids').update({ deposit_paid_at: new Date().toISOString() }).eq('id', bid.id);
+                                      window.location.reload();
+                                    }}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700"
+                                  >
+                                    إصلاح وتفعيل العداد الآن
+                                  </button>
+                                </div>
                               )}
                               <div className={`flex flex-col gap-2 mb-3 bg-white p-3 rounded-lg border ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
                                 <div className="flex justify-between items-center">

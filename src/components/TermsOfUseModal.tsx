@@ -174,10 +174,11 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
                       <Check className={`w-4 h-4 text-white transition-transform ${isAck ? 'scale-100' : 'scale-0'}`} strokeWidth={3} />
                     </div>
                     
-                    <div className="flex-1">
-                      <p className={`text-sm leading-relaxed transition-colors ${isAck ? 'text-green-900 font-medium' : 'text-gray-700'}`}>
-                        {term}
-                      </p>
+                    <div className="flex-1 overflow-hidden">
+                      <div 
+                        className={`text-sm leading-relaxed transition-colors [&_b]:font-bold [&_u]:underline ${isAck ? 'text-green-900 font-medium' : 'text-gray-700'}`}
+                        dangerouslySetInnerHTML={{ __html: term }}
+                      />
                     </div>
                   </div>
                 );

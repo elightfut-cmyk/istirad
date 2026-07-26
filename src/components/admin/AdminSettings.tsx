@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
+import RichTextEditor from './RichTextEditor';
 
 export default function AdminSettings() {
   const settingsStore = useSettingsStore();
@@ -588,15 +589,15 @@ export default function AdminSettings() {
                 <span className="bg-[#4f46e5] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   {index + 1}
                 </span>
-                <div className="flex-1">
-                  <textarea
+                <div className="flex-1 w-full max-w-full">
+                  <RichTextEditor
                     value={term}
-                    onChange={(e) => {
+                    onChange={(val) => {
                       const newTerms = [...tosTerms];
-                      newTerms[index] = e.target.value;
+                      newTerms[index] = val;
                       setTosTerms(newTerms);
                     }}
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 resize-none h-16 sm:text-sm"
+                    placeholder="اكتب الشرط هنا..."
                   />
                 </div>
                 <button

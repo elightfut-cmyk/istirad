@@ -68,9 +68,9 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         contentEditable
         onInput={handleInput}
         onBlur={handleInput}
-        className="w-full min-h-[80px] max-h-[300px] overflow-y-auto p-3 outline-none text-sm leading-relaxed prose-sm"
+        className="w-full min-h-[80px] max-h-[300px] overflow-y-auto p-3 outline-none text-sm leading-relaxed prose-sm empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
         dir="auto"
-        placeholder={placeholder}
+        data-placeholder={placeholder}
         style={{ emptyCells: 'show' }}
       />
     </div>

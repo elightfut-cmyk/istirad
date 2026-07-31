@@ -38,9 +38,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
       style={{ 
         color: '#000', 
         direction: 'rtl', 
-        position: 'absolute', 
-        top: '-10000px', 
-        left: '-10000px', 
+        display: 'none',
       }}
     >
       {/* Header */}

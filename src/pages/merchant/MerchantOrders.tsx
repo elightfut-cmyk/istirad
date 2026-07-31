@@ -556,12 +556,26 @@ export default function MerchantOrders() {
       
       try {
         const pdfWorker = typeof html2pdf === 'function' ? html2pdf : (html2pdf as any).default;
-        pdfWorker().set(opt).from(element).save().then(() => {
+        
+        // Clone the element and append to body to ensure it renders correctly
+        const clone = element.cloneNode(true) as HTMLElement;
+        clone.style.display = 'block';
+        clone.style.position = 'absolute';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.zIndex = '-9999';
+        document.body.appendChild(clone);
+
+        pdfWorker().set(opt).from(clone).save().then(() => {
           setGeneratingInvoice(null);
+          document.body.removeChild(clone);
         }).catch((err: any) => {
           console.error(err);
           toast.error('حدث خطأ أثناء حفظ الفاتورة');
           setGeneratingInvoice(null);
+          if (document.body.contains(clone)) {
+            document.body.removeChild(clone);
+          }
         });
       } catch (err) {
         console.error('html2pdf call failed:', err);

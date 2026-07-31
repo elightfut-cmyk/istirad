@@ -554,9 +554,20 @@ export default function MerchantOrders() {
         jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
       };
       
-      html2pdf().set(opt).from(element).save().then(() => {
+      try {
+        const pdfWorker = typeof html2pdf === 'function' ? html2pdf : (html2pdf as any).default;
+        pdfWorker().set(opt).from(element).save().then(() => {
+          setGeneratingInvoice(null);
+        }).catch((err: any) => {
+          console.error(err);
+          toast.error('حدث خطأ أثناء حفظ الفاتورة');
+          setGeneratingInvoice(null);
+        });
+      } catch (err) {
+        console.error('html2pdf call failed:', err);
+        toast.error('لم نتمكن من تشغيل أداة التحميل');
         setGeneratingInvoice(null);
-      });
+      }
     }, 100);
   };
 

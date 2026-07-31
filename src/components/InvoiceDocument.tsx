@@ -31,7 +31,21 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   const remainingAmount = totalPrice - depositAmount;
 
   return (
-    <div id={`invoice-${orderId}`} className="bg-white p-8 w-[800px] text-right font-sans mx-auto absolute -top-[10000px] left-[-10000px]" dir="rtl" style={{ color: '#000', direction: 'rtl' }}>
+    <div 
+      id={`invoice-${orderId}`} 
+      className="bg-white p-8 w-[800px] text-right font-sans mx-auto" 
+      dir="rtl" 
+      style={{ 
+        color: '#000', 
+        direction: 'rtl', 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        zIndex: -9999, 
+        opacity: 0, 
+        pointerEvents: 'none' 
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-gray-200 pb-6 mb-6">
         <div>

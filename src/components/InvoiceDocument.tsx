@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { QRCodeSVG } from 'qrcode.react';
 interface InvoiceDocumentProps {
   orderId: string;
   merchantName: string;
@@ -128,9 +128,33 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
         </div>
       </div>
 
+      {/* Authentication Footer (QR & Stamp) */}
+      <div className="mt-8 pt-6 flex justify-between items-center" style={{ borderTop: '2px solid #e5e7eb' }}>
+        {/* QR Code */}
+        <div className="flex flex-col items-center">
+          <QRCodeSVG 
+            value={`رقم الطلب: ${orderId}\nالمورد: ${supplierName}\nالتاجر: ${merchantName}\nالإجمالي: ${totalPrice}\nالتاريخ: ${date}`} 
+            size={100}
+            level="M"
+            includeMargin={true}
+          />
+          <span className="text-[10px] mt-2 font-bold" style={{ color: '#6b7280' }}>امسح الرمز للتحقق</span>
+        </div>
+
+        {/* Official Stamp */}
+        <div className="flex justify-center items-center relative" style={{ width: '130px', height: '130px', border: '3px solid #1e3a8a', borderRadius: '50%', padding: '10px' }}>
+          <div className="absolute w-full h-full rounded-full top-0 left-0 m-1" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)', border: '1px dashed #1e3a8a' }} />
+          <div className="text-center" style={{ color: '#1e3a8a', transform: 'rotate(-10deg)' }}>
+            <p className="font-bold text-sm m-0">مُعتمد</p>
+            <p className="font-black text-lg m-0 border-y-2 border-[#1e3a8a] py-1 my-1">APPROVED</p>
+            <p className="font-bold text-xs m-0">منصة جيبها</p>
+          </div>
+        </div>
+      </div>
+
       {/* Footer Note */}
-      <div className="mt-8 text-center text-xs pt-3" style={{ color: '#9ca3af', borderTop: '1px solid #e5e7eb' }}>
-        هذه الفاتورة تم إصدارها إلكترونياً من منصة جيبها ولا تحتاج لتوقيع.
+      <div className="mt-6 text-center text-xs" style={{ color: '#9ca3af' }}>
+        هذه الفاتورة تم إصدارها إلكترونياً وموثقة من منصة جيبها ولا تحتاج لتوقيع يدوي.
       </div>
       </div>
     </div>

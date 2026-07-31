@@ -129,7 +129,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
       </div>
 
       {/* Authentication Footer (QR & Stamp) */}
-      <div className="mt-8 pt-6 flex justify-between items-center" style={{ borderTop: '2px solid #e5e7eb' }}>
+      <div className="mt-8 pt-6 flex justify-start items-center" style={{ borderTop: '2px solid #e5e7eb' }}>
         {/* QR Code */}
         <div className="flex flex-col items-center">
           <QRCodeSVG 
@@ -139,42 +139,6 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             includeMargin={true}
           />
           <span className="text-[10px] mt-2 font-bold" style={{ color: '#6b7280' }}>امسح الرمز للتحقق</span>
-        </div>
-
-        {/* Official Stamp */}
-        <div className="flex justify-center items-center" style={{ width: '130px', height: '130px' }}>
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-15deg)', opacity: 0.85, width: '100%', height: '100%' }}>
-            <defs>
-              <path id="top-curve" d="M 24,100 A 76,76 0 0,1 176,100" fill="transparent" />
-              <path id="bottom-curve" d="M 28,100 A 72,72 0 0,0 172,100" fill="transparent" />
-            </defs>
-
-            {/* Outer rings */}
-            <circle cx="100" cy="100" r="96" fill="none" stroke="#1e3a8a" strokeWidth="3" />
-            <circle cx="100" cy="100" r="91" fill="none" stroke="#1e3a8a" strokeWidth="1" />
-            
-            {/* Inner rings */}
-            <circle cx="100" cy="100" r="58" fill="none" stroke="#1e3a8a" strokeWidth="1" />
-            <circle cx="100" cy="100" r="55" fill="none" stroke="#1e3a8a" strokeWidth="2" />
-
-            {/* Circular Text */}
-            <text fill="#1e3a8a" fontSize="16" fontWeight="bold" fontFamily="sans-serif">
-              <textPath href="#top-curve" startOffset="50%" textAnchor="middle">شركة منصة جيبها للربط التجاري</textPath>
-            </text>
-            <text fill="#1e3a8a" fontSize="14" fontWeight="bold" fontFamily="sans-serif">
-              <textPath href="#bottom-curve" startOffset="50%" textAnchor="middle">Jiibha B2B Platform</textPath>
-            </text>
-
-            {/* Center Content */}
-            <text x="100" y="85" fill="#1e3a8a" fontSize="11" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">س.ت ١٠١٠١٢٣٤٥٦</text>
-            
-            {/* Logo Text in middle */}
-            <text x="100" y="118" fill="#1e3a8a" fontSize="34" fontWeight="900" textAnchor="middle" fontFamily="sans-serif" style={{ letterSpacing: '-1px' }}>جيبها</text>
-            
-            {/* Stars */}
-            <text x="16" y="106" fill="#1e3a8a" fontSize="20" textAnchor="middle">★</text>
-            <text x="184" y="106" fill="#1e3a8a" fontSize="20" textAnchor="middle">★</text>
-          </svg>
         </div>
       </div>
 

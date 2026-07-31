@@ -12,6 +12,7 @@ import OrderProgressBar from '../../components/OrderProgressBar';
 import TermsOfUseModal from '../../components/TermsOfUseModal';
 import CountdownCircle from '../../components/CountdownCircle';
 import InvoiceDocument from '../../components/InvoiceDocument';
+// @ts-ignore
 import html2pdf from 'html2pdf.js';
 
 export default function MerchantOrders() {
@@ -534,7 +535,7 @@ export default function MerchantOrders() {
     }
   };
 
-  const handleDownloadInvoice = (req: any, bid: any, paymentStatus: 'deposit_paid' | 'fully_paid') => {
+  const handleDownloadInvoice = (req: any) => {
     setGeneratingInvoice(req.id);
     
     setTimeout(() => {
@@ -548,9 +549,9 @@ export default function MerchantOrders() {
       const opt = {
         margin: 10,
         filename: `invoice-${req.id.slice(0,8)}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
       };
       
       html2pdf().set(opt).from(element).save().then(() => {
@@ -762,7 +763,7 @@ export default function MerchantOrders() {
                       
                       {/* Invoice Button for Direct Orders */}
                       <button 
-                        onClick={() => handleDownloadInvoice(req, bid, bid.is_fully_paid ? 'fully_paid' : 'deposit_paid')}
+                        onClick={() => handleDownloadInvoice(req)}
                         disabled={generatingInvoice === req.id}
                         className="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full disabled:opacity-50"
                       >
@@ -1007,7 +1008,7 @@ export default function MerchantOrders() {
                                 </a>
                               </div>
                               <button 
-                                onClick={() => handleDownloadInvoice(req, bid, bid.is_fully_paid ? 'fully_paid' : 'deposit_paid')}
+                                onClick={() => handleDownloadInvoice(req)}
                                 disabled={generatingInvoice === req.id}
                                 className="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full disabled:opacity-50"
                               >

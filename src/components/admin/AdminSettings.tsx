@@ -187,14 +187,14 @@ export default function AdminSettings() {
           loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
           product_categories: localSettings.productCategories,
           whatsapp_number: localSettings.whatsappNumber || null,
-          footer_description: localSettings.footerDescription || null,
-          footer_facebook: localSettings.footerFacebook || null,
-          footer_twitter: localSettings.footerTwitter || null,
-          footer_instagram: localSettings.footerInstagram || null,
-          footer_linkedin: localSettings.footerLinkedin || null,
-          footer_address: localSettings.footerAddress || null,
-          footer_phone: localSettings.footerPhone || null,
-          footer_email: localSettings.footerEmail || null
+          footer_description: localSettings.footerDescription,
+          footer_facebook: localSettings.footerFacebook,
+          footer_twitter: localSettings.footerTwitter,
+          footer_instagram: localSettings.footerInstagram,
+          footer_linkedin: localSettings.footerLinkedin,
+          footer_address: localSettings.footerAddress,
+          footer_phone: localSettings.footerPhone,
+          footer_email: localSettings.footerEmail
         })
         .eq('id', 1);
 

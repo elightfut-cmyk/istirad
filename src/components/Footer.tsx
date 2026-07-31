@@ -45,9 +45,11 @@ export default function Footer() {
               </div>
               <span className="text-2xl font-black text-[#4f46e5]">جيبها-jiibha</span>
             </Link>
-            <p className="text-gray-600 mb-6">
-              {settings.footerDescription || 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.'}
-            </p>
+            {settings.footerDescription && (
+              <p className="text-gray-600 mb-6">
+                {settings.footerDescription}
+              </p>
+            )}
             <div className="flex items-center gap-4">
               {settings.footerFacebook && (
                 <a href={settings.footerFacebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
@@ -125,18 +127,24 @@ export default function Footer() {
               <span className="absolute -bottom-2 right-0 w-1/2 h-1 bg-[#4f46e5] rounded-full"></span>
             </h3>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-gray-600">
-                <MapPin size={20} className="text-[#4f46e5] shrink-0 mt-0.5" />
-                <span>{settings.footerAddress || 'الجزائر العاصمة، الجزائر'}</span>
-              </li>
-              <li className="flex items-center gap-3 text-gray-600">
-                <Phone size={20} className="text-[#4f46e5] shrink-0" />
-                <span dir="ltr">{settings.footerPhone || '+213 (0) 555 55 55 55'}</span>
-              </li>
-              <li className="flex items-center gap-3 text-gray-600">
-                <Mail size={20} className="text-[#4f46e5] shrink-0" />
-                <span>{settings.footerEmail || 'contact@jiibha.com'}</span>
-              </li>
+              {settings.footerAddress && (
+                <li className="flex items-start gap-3 text-gray-600">
+                  <MapPin size={20} className="text-[#4f46e5] shrink-0 mt-0.5" />
+                  <span>{settings.footerAddress}</span>
+                </li>
+              )}
+              {settings.footerPhone && (
+                <li className="flex items-center gap-3 text-gray-600">
+                  <Phone size={20} className="text-[#4f46e5] shrink-0" />
+                  <span dir="ltr">{settings.footerPhone}</span>
+                </li>
+              )}
+              {settings.footerEmail && (
+                <li className="flex items-center gap-3 text-gray-600">
+                  <Mail size={20} className="text-[#4f46e5] shrink-0" />
+                  <span>{settings.footerEmail}</span>
+                </li>
+              )}
             </ul>
           </div>
         </div>

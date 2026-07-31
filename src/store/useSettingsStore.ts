@@ -106,14 +106,14 @@ export const useSettingsStore = create<SettingsState>()(
               loyaltyPointsMinConversion: data.loyalty_points_min_conversion || 500,
               productCategories: data.product_categories || ['إلكترونيات', 'أزياء وإكسسوارات', 'أجهزة منزلية', 'مواد بناء'],
               whatsappNumber: data.whatsapp_number || null,
-              footerDescription: data.footer_description || 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.',
-              footerFacebook: data.footer_facebook || null,
-              footerTwitter: data.footer_twitter || null,
-              footerInstagram: data.footer_instagram || null,
-              footerLinkedin: data.footer_linkedin || null,
-              footerAddress: data.footer_address || 'الجزائر العاصمة، الجزائر',
-              footerPhone: data.footer_phone || '+213 (0) 555 55 55 55',
-              footerEmail: data.footer_email || 'contact@jiibha.com'
+              footerDescription: data.footer_description ?? 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.',
+              footerFacebook: data.footer_facebook ?? null,
+              footerTwitter: data.footer_twitter ?? null,
+              footerInstagram: data.footer_instagram ?? null,
+              footerLinkedin: data.footer_linkedin ?? null,
+              footerAddress: data.footer_address ?? 'الجزائر العاصمة، الجزائر',
+              footerPhone: data.footer_phone ?? '+213 (0) 555 55 55 55',
+              footerEmail: data.footer_email ?? 'contact@jiibha.com'
             });
           }
         } catch (error) {

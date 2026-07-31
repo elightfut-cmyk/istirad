@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import DashboardLayout from '../../../layouts/DashboardLayout';
-import { supabase } from '../../../lib/supabase';
-import { LayoutDashboard, Users, ShoppingBag, Settings, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { supabase } from '../../lib/supabase';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Complaint {

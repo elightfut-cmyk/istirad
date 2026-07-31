@@ -550,7 +550,7 @@ export default function MerchantOrders() {
         margin: 10,
         filename: `invoice-${req.id.slice(0,8)}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 750, width: 700 },
         jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
       };
       

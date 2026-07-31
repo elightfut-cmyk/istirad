@@ -34,7 +34,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
     <div style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', overflow: 'hidden', zIndex: -9999 }}>
       <div 
         id={`invoice-${orderId}`} 
-        className="bg-white p-8 w-[800px] text-right font-sans mx-auto" 
+        className="bg-white p-6 w-[700px] text-right font-sans mx-auto" 
         dir="rtl" 
         style={{ 
           color: '#000', 
@@ -42,33 +42,33 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
         }}
       >
       {/* Header */}
-      <div className="flex justify-between items-start pb-6 mb-6" style={{ borderBottom: '2px solid #e5e7eb' }}>
+      <div className="flex justify-between items-start pb-4 mb-6" style={{ borderBottom: '2px solid #e5e7eb' }}>
         <div>
-          <h1 className="text-4xl font-black mb-2" style={{ color: '#4f46e5' }}>جيبها-jiibha</h1>
+          <h1 className="text-3xl font-black mb-2" style={{ color: '#4f46e5' }}>جيبها-jiibha</h1>
           <p className="text-sm" style={{ color: '#6b7280' }}>المنصة الأولى للربط التجاري B2B</p>
         </div>
         <div className="text-left">
-          <h2 className="text-3xl font-bold mb-2" style={{ color: '#1f2937' }}>فاتورة شراء</h2>
-          <p className="font-bold" style={{ color: '#4b5563' }}>رقم الطلب: #{orderId.slice(0, 8)}</p>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: '#1f2937' }}>فاتورة شراء</h2>
+          <p className="font-bold text-sm" style={{ color: '#4b5563' }}>رقم الطلب: #{orderId.slice(0, 8)}</p>
           <p className="text-sm" style={{ color: '#6b7280' }}>التاريخ: {date}</p>
         </div>
       </div>
 
       {/* Info Section */}
-      <div className="grid grid-cols-2 gap-8 mb-8">
-        <div className="p-4 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
-          <h3 className="text-lg font-bold mb-3 pb-2" style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb' }}>معلومات التاجر (المشتري)</h3>
-          <p className="font-bold" style={{ color: '#374151' }}>{merchantName}</p>
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="p-3 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
+          <h3 className="text-base font-bold mb-2 pb-2" style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb' }}>معلومات التاجر (المشتري)</h3>
+          <p className="font-bold text-sm" style={{ color: '#374151' }}>{merchantName}</p>
         </div>
-        <div className="p-4 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
-          <h3 className="text-lg font-bold mb-3 pb-2" style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb' }}>معلومات المورد (البائع)</h3>
-          <p className="font-bold" style={{ color: '#374151' }}>{supplierName}</p>
+        <div className="p-3 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
+          <h3 className="text-base font-bold mb-2 pb-2" style={{ color: '#1f2937', borderBottom: '1px solid #e5e7eb' }}>معلومات المورد (البائع)</h3>
+          <p className="font-bold text-sm" style={{ color: '#374151' }}>{supplierName}</p>
         </div>
       </div>
 
       {/* Invoice Status Banner */}
       <div 
-        className="p-4 rounded-lg mb-8 text-center font-bold text-lg"
+        className="p-3 rounded-lg mb-6 text-center font-bold text-base"
         style={{
           backgroundColor: paymentStatus === 'fully_paid' ? '#f0fdf4' : '#fff7ed',
           color: paymentStatus === 'fully_paid' ? '#15803d' : '#c2410c',
@@ -79,38 +79,38 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
       </div>
 
       {/* Items Table */}
-      <table className="w-full mb-8 border-collapse">
+      <table className="w-full mb-6 border-collapse text-sm">
         <thead>
           <tr style={{ backgroundColor: '#f3f4f6' }}>
-            <th className="p-3 text-right font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>المنتج</th>
-            <th className="p-3 text-center font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>الكمية</th>
-            <th className="p-3 text-center font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>سعر الوحدة</th>
-            <th className="p-3 text-left font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>المجموع</th>
+            <th className="p-2 text-right font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>المنتج</th>
+            <th className="p-2 text-center font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>الكمية</th>
+            <th className="p-2 text-center font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>سعر الوحدة</th>
+            <th className="p-2 text-left font-bold" style={{ color: '#374151', border: '1px solid #e5e7eb' }}>المجموع</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td className="p-3" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{itemName}</td>
-            <td className="p-3 text-center" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{quantity}</td>
-            <td className="p-3 text-center" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{formatCurrency(unitPrice)}</td>
-            <td className="p-3 text-left font-bold" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{formatCurrency(totalPrice)}</td>
+            <td className="p-2" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{itemName}</td>
+            <td className="p-2 text-center" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{quantity}</td>
+            <td className="p-2 text-center" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{formatCurrency(unitPrice)}</td>
+            <td className="p-2 text-left font-bold" style={{ border: '1px solid #e5e7eb', color: '#1f2937' }}>{formatCurrency(totalPrice)}</td>
           </tr>
         </tbody>
       </table>
 
       {/* Summary */}
-      <div className="flex justify-end">
+      <div className="flex justify-end text-sm">
         <div className="w-1/2 p-4 rounded-lg" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
-          <div className="flex justify-between mb-4 pb-4" style={{ borderBottom: '1px solid #e5e7eb' }}>
+          <div className="flex justify-between mb-3 pb-3" style={{ borderBottom: '1px solid #e5e7eb' }}>
             <span className="font-bold" style={{ color: '#1f2937' }}>المجموع الإجمالي:</span>
-            <span className="font-bold text-lg" style={{ color: '#4f46e5' }}>{formatCurrency(totalPrice)}</span>
+            <span className="font-bold text-base" style={{ color: '#4f46e5' }}>{formatCurrency(totalPrice)}</span>
           </div>
           
           <div className="flex justify-between mb-2">
-            <span style={{ color: '#4b5563' }}>العربون المدفوع ({advancePercentage}%):</span>
+            <span style={{ color: '#4b5563' }}>العربون ({advancePercentage}%):</span>
             <span className="font-bold" style={{ color: '#16a34a' }}>{formatCurrency(depositAmount)}</span>
           </div>
-          <div className="flex justify-between font-bold text-lg">
+          <div className="flex justify-between font-bold text-base">
             <span style={{ color: '#1f2937' }}>المبلغ المتبقي:</span>
             <span 
               className={paymentStatus === 'fully_paid' ? 'line-through' : ''} 
@@ -120,7 +120,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
             </span>
           </div>
           {paymentStatus === 'fully_paid' && (
-            <div className="flex justify-between font-bold text-lg mt-2" style={{ color: '#16a34a' }}>
+            <div className="flex justify-between font-bold text-base mt-2" style={{ color: '#16a34a' }}>
               <span>تم دفع المتبقي:</span>
               <span>{formatCurrency(remainingAmount)}</span>
             </div>
@@ -129,7 +129,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
       </div>
 
       {/* Footer Note */}
-      <div className="mt-12 text-center text-sm pt-4" style={{ color: '#9ca3af', borderTop: '1px solid #e5e7eb' }}>
+      <div className="mt-8 text-center text-xs pt-3" style={{ color: '#9ca3af', borderTop: '1px solid #e5e7eb' }}>
         هذه الفاتورة تم إصدارها إلكترونياً من منصة جيبها ولا تحتاج لتوقيع.
       </div>
       </div>

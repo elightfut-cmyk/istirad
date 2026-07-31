@@ -31,16 +31,16 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
   const remainingAmount = totalPrice - depositAmount;
 
   return (
-    <div 
-      id={`invoice-${orderId}`} 
-      className="bg-white p-8 w-[800px] text-right font-sans mx-auto" 
-      dir="rtl" 
-      style={{ 
-        color: '#000', 
-        direction: 'rtl', 
-        display: 'none',
-      }}
-    >
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', overflow: 'hidden', zIndex: -9999 }}>
+      <div 
+        id={`invoice-${orderId}`} 
+        className="bg-white p-8 w-[800px] text-right font-sans mx-auto" 
+        dir="rtl" 
+        style={{ 
+          color: '#000', 
+          direction: 'rtl',
+        }}
+      >
       {/* Header */}
       <div className="flex justify-between items-start pb-6 mb-6" style={{ borderBottom: '2px solid #e5e7eb' }}>
         <div>
@@ -131,6 +131,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
       {/* Footer Note */}
       <div className="mt-12 text-center text-sm pt-4" style={{ color: '#9ca3af', borderTop: '1px solid #e5e7eb' }}>
         هذه الفاتورة تم إصدارها إلكترونياً من منصة جيبها ولا تحتاج لتوقيع.
+      </div>
       </div>
     </div>
   );

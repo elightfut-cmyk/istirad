@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Store, Search, ShoppingCart, Heart, Trash2, X, Users, CreditCard } from 'lucide-react';
+import { Store, Search, ShoppingCart, Heart, Trash2, X, Users, CreditCard, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';

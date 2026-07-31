@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Store, Package, CreditCard, Heart, Users } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Heart, Users, AlertTriangle } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';

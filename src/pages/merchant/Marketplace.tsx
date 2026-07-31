@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, BadgeCheck } from 'lucide-react';
+import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, BadgeCheck, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';

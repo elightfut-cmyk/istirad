@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Link as LinkIcon, Copy, CheckCircle2, LayoutDashboard, Store, Package, CreditCard, Heart } from 'lucide-react';
+import { Users, Link as LinkIcon, Copy, CheckCircle2, LayoutDashboard, Store, Package, CreditCard, Heart, AlertTriangle } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';

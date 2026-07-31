@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import DashboardLayout from '../../../layouts/DashboardLayout';
-import { supabase } from '../../../lib/supabase';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { supabase } from '../../lib/supabase';
 import { LayoutDashboard, ShoppingBag, Wallet, Gift, Heart, AlertTriangle, Send } from 'lucide-react';
-import { useAuthStore } from '../../../store/useAuthStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 
 export default function MerchantComplaints() {

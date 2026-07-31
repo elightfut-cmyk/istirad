@@ -546,6 +546,7 @@ export default function MerchantOrders() {
         { label: 'طلباتي', href: '/merchant/orders', icon: <Package size={20} /> },
         { label: 'المحفظة', href: '/merchant/wallet', icon: <CreditCard size={20} /> },
         { label: 'المفضلة', href: '/merchant/wishlist', icon: <Heart size={20} /> },
+        { label: 'الشكاوى', href: '/merchant/complaints', icon: <AlertTriangle size={20} /> },
       ]}
     >
       {paymentNotification && (

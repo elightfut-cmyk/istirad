@@ -4,6 +4,8 @@ import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import WhatsAppButton from '../../components/WhatsAppButton';
+import FAQSection from '../../components/FAQSection';
+import Footer from '../../components/Footer';
 
 export default function LandingPage() {
   const { user } = useAuthStore();
@@ -157,7 +159,12 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      <FAQSection />
+
       <WhatsAppButton />
+
+      <Footer />
     </div>
   );
 }

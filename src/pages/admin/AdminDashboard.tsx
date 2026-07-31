@@ -184,6 +184,9 @@ export default function AdminDashboard() {
         { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+        { label: 'الصفحات', href: '/admin/pages', icon: <LayoutDashboard size={20} /> },
+        { label: 'الأسئلة الشائعة', href: '/admin/faqs', icon: <MessageSquare size={20} /> },
+        { label: 'الشكاوى', href: '/admin/complaints', icon: <Users size={20} /> },
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

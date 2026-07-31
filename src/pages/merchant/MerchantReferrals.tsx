@@ -76,6 +76,7 @@ export default function MerchantReferrals() {
         { label: 'المحفظة', href: '/merchant/wallet', icon: <CreditCard size={20} /> },
         { label: 'نظام الإحالة', href: '/merchant/referrals', icon: <Users size={20} /> },
         { label: 'المفضلة', href: '/merchant/wishlist', icon: <Heart size={20} /> },
+        { label: 'الشكاوى', href: '/merchant/complaints', icon: <AlertTriangle size={20} /> },
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

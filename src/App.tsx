@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import LandingPage from './pages/public/LandingPage';
+import PageViewer from './pages/public/PageViewer';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -10,12 +11,16 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminPages from './pages/admin/AdminPages';
+import AdminFaqs from './pages/admin/AdminFaqs';
+import AdminComplaints from './pages/admin/AdminComplaints';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import Marketplace from './pages/merchant/Marketplace';
 import MerchantOrders from './pages/merchant/MerchantOrders';
 import MerchantWallet from './pages/merchant/MerchantWallet';
 import MerchantReferrals from './pages/merchant/MerchantReferrals';
 import MerchantWishlist from './pages/merchant/MerchantWishlist';
+import MerchantComplaints from './pages/merchant/MerchantComplaints';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierRequests from './pages/supplier/SupplierRequests';
 import SupplierProducts from './pages/supplier/SupplierProducts';
@@ -47,6 +52,7 @@ function App() {
       <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal']">
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/page/:slug" element={<PageViewer />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
@@ -85,6 +91,24 @@ function App() {
               <AdminNotifications />
             </ProtectedRoute>
           } />
+
+          <Route path="/admin/pages" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminPages />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/faqs" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminFaqs />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/complaints" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminComplaints />
+            </ProtectedRoute>
+          } />
           
           <Route path="/merchant" element={
             <ProtectedRoute allowedRoles={['merchant']}>
@@ -120,6 +144,12 @@ function App() {
           <Route path="/merchant/wishlist" element={
             <ProtectedRoute allowedRoles={['merchant']}>
               <MerchantWishlist />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/merchant/complaints" element={
+            <ProtectedRoute allowedRoles={['merchant']}>
+              <MerchantComplaints />
             </ProtectedRoute>
           } />
           

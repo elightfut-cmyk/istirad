@@ -11,6 +11,8 @@ import toast from 'react-hot-toast';
 import OrderProgressBar from '../../components/OrderProgressBar';
 import TermsOfUseModal from '../../components/TermsOfUseModal';
 import CountdownCircle from '../../components/CountdownCircle';
+import InvoiceDocument from '../../components/InvoiceDocument';
+import html2pdf from 'html2pdf.js';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -21,6 +23,7 @@ export default function MerchantOrders() {
   const [creating, setCreating] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
+  const [generatingInvoice, setGeneratingInvoice] = useState<string | null>(null);
 
   const [showNegotiationModal, setShowNegotiationModal] = useState(false);
   const [negotiationBid, setNegotiationBid] = useState<any>(null);
@@ -511,7 +514,6 @@ export default function MerchantOrders() {
     if (!negotiationBid || negotiatedPrice <= 0) return;
     setNegotiating(true);
     try {
-      // Negotiated price is per unit
       const { error } = await supabase.from('supplier_bids').update({
         negotiated_price: negotiatedPrice,
         negotiated_by: 'merchant'
@@ -530,6 +532,31 @@ export default function MerchantOrders() {
     } finally {
       setNegotiating(false);
     }
+  };
+
+  const handleDownloadInvoice = (req: any, bid: any, paymentStatus: 'deposit_paid' | 'fully_paid') => {
+    setGeneratingInvoice(req.id);
+    
+    setTimeout(() => {
+      const element = document.getElementById(`invoice-${req.id}`);
+      if (!element) {
+        toast.error('حدث خطأ أثناء تحضير الفاتورة');
+        setGeneratingInvoice(null);
+        return;
+      }
+      
+      const opt = {
+        margin: 10,
+        filename: `invoice-${req.id.slice(0,8)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(element).save().then(() => {
+        setGeneratingInvoice(null);
+      });
+    }, 100);
   };
 
   const [activeTab, setActiveTab] = useState<'custom' | 'direct'>('direct');
@@ -732,7 +759,31 @@ export default function MerchantOrders() {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Invoice Button for Direct Orders */}
+                      <button 
+                        onClick={() => handleDownloadInvoice(req, bid, bid.is_fully_paid ? 'fully_paid' : 'deposit_paid')}
+                        disabled={generatingInvoice === req.id}
+                        className="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full disabled:opacity-50"
+                      >
+                        {generatingInvoice === req.id ? 'جاري التحضير...' : 'تحميل الفاتورة (PDF)'}
+                      </button>
                     </div>
+                  )}
+                  
+                  {bid && bid.status === 'accepted' && (
+                    <InvoiceDocument
+                      orderId={req.id}
+                      merchantName={user?.name || user?.company_name || 'تاجر'}
+                      supplierName={bid.supplier?.company_name || 'مورد'}
+                      paymentStatus={bid.is_fully_paid ? 'fully_paid' : 'deposit_paid'}
+                      formatCurrency={formatCurrency}
+                      itemName={req.title.replace('طلب مباشر: ', '')}
+                      quantity={req.quantity || 1}
+                      unitPrice={bid.price / (req.quantity || 1)}
+                      totalPrice={bid.price}
+                      advancePercentage={bid.advance_percentage || 20}
+                    />
                   )}
                 </div>
               );
@@ -955,7 +1006,29 @@ export default function MerchantOrders() {
                                   تواصل عبر الواتساب
                                 </a>
                               </div>
+                              <button 
+                                onClick={() => handleDownloadInvoice(req, bid, bid.is_fully_paid ? 'fully_paid' : 'deposit_paid')}
+                                disabled={generatingInvoice === req.id}
+                                className="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full disabled:opacity-50"
+                              >
+                                {generatingInvoice === req.id ? 'جاري التحضير...' : 'تحميل الفاتورة (PDF)'}
+                              </button>
                             </div>
+                          )}
+                          
+                          {bid.status === 'accepted' && (
+                            <InvoiceDocument
+                              orderId={req.id}
+                              merchantName={user?.name || user?.company_name || 'تاجر'}
+                              supplierName={bid.supplier?.company_name || 'مورد'}
+                              paymentStatus={bid.is_fully_paid ? 'fully_paid' : 'deposit_paid'}
+                              formatCurrency={formatCurrency}
+                              itemName={req.title}
+                              quantity={req.quantity || 1}
+                              unitPrice={bid.price / (req.quantity || 1)}
+                              totalPrice={bid.price}
+                              advancePercentage={bid.advance_percentage || 20}
+                            />
                           )}
                         </div>
                       ))}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { Store, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
 interface Page {
@@ -10,6 +11,7 @@ interface Page {
 }
 
 export default function Footer() {
+  const settings = useSettingsStore();
   const [pages, setPages] = useState<Page[]>([]);
 
   useEffect(() => {
@@ -44,21 +46,29 @@ export default function Footer() {
               <span className="text-2xl font-black text-[#4f46e5]">جيبها-jiibha</span>
             </Link>
             <p className="text-gray-600 mb-6">
-              المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.
+              {settings.footerDescription || 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.'}
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
-                <Linkedin size={20} />
-              </a>
+              {settings.footerFacebook && (
+                <a href={settings.footerFacebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                  <Facebook size={20} />
+                </a>
+              )}
+              {settings.footerTwitter && (
+                <a href={settings.footerTwitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                  <Twitter size={20} />
+                </a>
+              )}
+              {settings.footerInstagram && (
+                <a href={settings.footerInstagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                  <Instagram size={20} />
+                </a>
+              )}
+              {settings.footerLinkedin && (
+                <a href={settings.footerLinkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                  <Linkedin size={20} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -117,15 +127,15 @@ export default function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-gray-600">
                 <MapPin size={20} className="text-[#4f46e5] shrink-0 mt-0.5" />
-                <span>الجزائر العاصمة، الجزائر</span>
+                <span>{settings.footerAddress || 'الجزائر العاصمة، الجزائر'}</span>
               </li>
               <li className="flex items-center gap-3 text-gray-600">
                 <Phone size={20} className="text-[#4f46e5] shrink-0" />
-                <span dir="ltr">+213 (0) 555 55 55 55</span>
+                <span dir="ltr">{settings.footerPhone || '+213 (0) 555 55 55 55'}</span>
               </li>
               <li className="flex items-center gap-3 text-gray-600">
                 <Mail size={20} className="text-[#4f46e5] shrink-0" />
-                <span>contact@jiibha.com</span>
+                <span>{settings.footerEmail || 'contact@jiibha.com'}</span>
               </li>
             </ul>
           </div>

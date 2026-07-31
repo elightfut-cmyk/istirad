@@ -29,7 +29,15 @@ export default function AdminSettings() {
     loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
     loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
     productCategories: settingsStore.productCategories || [],
-    whatsappNumber: settingsStore.whatsappNumber || ''
+    whatsappNumber: settingsStore.whatsappNumber || '',
+    footerDescription: settingsStore.footerDescription || '',
+    footerFacebook: settingsStore.footerFacebook || '',
+    footerTwitter: settingsStore.footerTwitter || '',
+    footerInstagram: settingsStore.footerInstagram || '',
+    footerLinkedin: settingsStore.footerLinkedin || '',
+    footerAddress: settingsStore.footerAddress || '',
+    footerPhone: settingsStore.footerPhone || '',
+    footerEmail: settingsStore.footerEmail || ''
   });
 
   useEffect(() => {
@@ -77,9 +85,17 @@ export default function AdminSettings() {
       loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
       loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
       productCategories: settingsStore.productCategories || [],
-      whatsappNumber: settingsStore.whatsappNumber || ''
+      whatsappNumber: settingsStore.whatsappNumber || '',
+      footerDescription: settingsStore.footerDescription || '',
+      footerFacebook: settingsStore.footerFacebook || '',
+      footerTwitter: settingsStore.footerTwitter || '',
+      footerInstagram: settingsStore.footerInstagram || '',
+      footerLinkedin: settingsStore.footerLinkedin || '',
+      footerAddress: settingsStore.footerAddress || '',
+      footerPhone: settingsStore.footerPhone || '',
+      footerEmail: settingsStore.footerEmail || ''
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -170,7 +186,15 @@ export default function AdminSettings() {
           loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
           loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
           product_categories: localSettings.productCategories,
-          whatsapp_number: localSettings.whatsappNumber || null
+          whatsapp_number: localSettings.whatsappNumber || null,
+          footer_description: localSettings.footerDescription || null,
+          footer_facebook: localSettings.footerFacebook || null,
+          footer_twitter: localSettings.footerTwitter || null,
+          footer_instagram: localSettings.footerInstagram || null,
+          footer_linkedin: localSettings.footerLinkedin || null,
+          footer_address: localSettings.footerAddress || null,
+          footer_phone: localSettings.footerPhone || null,
+          footer_email: localSettings.footerEmail || null
         })
         .eq('id', 1);
 
@@ -634,6 +658,54 @@ export default function AdminSettings() {
         <p className="text-gray-500 text-sm mt-2">
           سيظهر هذا الرقم في زر الواتساب العائم في صفحات الموقع.
         </p>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات تذييل الصفحة (الفوتر)</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">وصف المنصة</label>
+            <textarea
+              name="footerDescription"
+              value={localSettings.footerDescription}
+              onChange={(e) => handleChange(e as any)}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رابط فيسبوك</label>
+              <input type="text" name="footerFacebook" value={localSettings.footerFacebook} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رابط تويتر</label>
+              <input type="text" name="footerTwitter" value={localSettings.footerTwitter} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رابط انستغرام</label>
+              <input type="text" name="footerInstagram" value={localSettings.footerInstagram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رابط لينكد إن</label>
+              <input type="text" name="footerLinkedin" value={localSettings.footerLinkedin} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+              <input type="text" name="footerAddress" value={localSettings.footerAddress} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
+              <input type="text" name="footerPhone" value={localSettings.footerPhone} onChange={handleChange} dir="ltr" className="block w-full text-right px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
+              <input type="email" name="footerEmail" value={localSettings.footerEmail} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="pt-6">

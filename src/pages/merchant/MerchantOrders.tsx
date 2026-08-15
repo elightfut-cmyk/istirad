@@ -766,7 +766,11 @@ export default function MerchantOrders() {
                           </a>
                           <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
                             <div className="w-full">
-                              <OrderProgressBar bidId={bid.id} currentStatus={bid.shipping_status || 'pending_in_china'} />
+                              <OrderProgressBar 
+                                bidId={bid.id} 
+                                currentStatus={bid.shipping_status || (req.request_type === 'direct' ? 'processing' : 'pending_in_china')} 
+                                isDirectOrder={req.request_type === 'direct'}
+                              />
                             </div>
                           </div>
                         </div>
@@ -1005,7 +1009,11 @@ export default function MerchantOrders() {
                                 )}
                               </div>
                               <div className="w-full mb-4">
-                                <OrderProgressBar bidId={bid.id} currentStatus={bid.shipping_status || 'pending_in_china'} />
+                                <OrderProgressBar 
+                                  bidId={bid.id} 
+                                  currentStatus={bid.shipping_status || (req.request_type === 'direct' ? 'processing' : 'pending_in_china')} 
+                                  isDirectOrder={req.request_type === 'direct'}
+                                />
                               </div>
                               <div className="flex flex-col gap-3">
                                 <a 

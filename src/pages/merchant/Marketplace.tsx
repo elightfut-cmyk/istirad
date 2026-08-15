@@ -155,7 +155,7 @@ export default function Marketplace() {
         cost_price: totalCostPrice,
         advance_percentage: orderingProduct.advance_percentage || 20,
         status: 'pending',
-        shipping_status: 'pending_in_china'
+        shipping_status: 'processing'
       });
 
       if (bidError) throw bidError;

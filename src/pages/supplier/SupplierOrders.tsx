@@ -349,9 +349,10 @@ export default function SupplierOrders() {
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <OrderProgressBar 
                     bidId={order.id} 
-                    currentStatus={order.shipping_status || 'pending_in_china'} 
+                    currentStatus={order.shipping_status || (order.custom_requests?.request_type === 'direct' ? 'processing' : 'pending_in_china')} 
                     onUpdateStatus={(status) => updateShippingStatus(order.id, status)}
                     isSupplier={true}
+                    isDirectOrder={order.custom_requests?.request_type === 'direct'}
                   />
                 </div>
               </div>

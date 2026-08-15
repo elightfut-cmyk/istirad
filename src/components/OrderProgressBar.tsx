@@ -8,17 +8,24 @@ interface OrderProgressBarProps {
   currentStatus: string; // e.g., 'pending_in_china', etc.
   onUpdateStatus?: (status: string) => void;
   isSupplier?: boolean;
+  isDirectOrder?: boolean;
 }
 
-const STAGES = [
+const REGULAR_STAGES = [
   { id: 'pending_in_china', label: 'في الصين', icon: Clock },
   { id: 'international_transit', label: 'شحن دولي', icon: Truck },
   { id: 'customs_clearance', label: 'تخليص جمركي', icon: MapPin },
   { id: 'in_local_warehouse', label: 'في المستودع', icon: Home },
-  { id: 'out_for_delivery', label: 'جاري التوصيل', icon: CheckCircle2 }
+  { id: 'delivered', label: 'تم التوصيل', icon: CheckCircle2 }
 ];
 
-export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus, isSupplier }: OrderProgressBarProps) {
+const DIRECT_STAGES = [
+  { id: 'processing', label: 'يتم التجهيز', icon: Clock },
+  { id: 'shipping', label: 'يتم الشحن', icon: Truck },
+  { id: 'delivered', label: 'تم التوصيل', icon: CheckCircle2 }
+];
+
+export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus, isSupplier, isDirectOrder }: OrderProgressBarProps) {
   const [comments, setComments] = useState<any[]>([]);
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
   // removed user as it is not used in this component
@@ -57,7 +64,8 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
     }
   };
 
-  const currentStageIndex = STAGES.findIndex(s => s.id === currentStatus);
+  const stages = isDirectOrder ? DIRECT_STAGES : REGULAR_STAGES;
+  const currentStageIndex = stages.findIndex(s => s.id === currentStatus);
   const actualIndex = currentStageIndex === -1 ? 0 : currentStageIndex;
 
   const handleStageClick = (stageId: string) => {
@@ -86,11 +94,11 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
           {/* Active Line Progress */}
           <div 
             className="absolute top-0 right-0 bottom-0 bg-green-500 transition-all duration-1000 ease-out rounded-full"
-            style={{ width: `${(actualIndex / (STAGES.length - 1)) * 100}%` }}
+            style={{ width: `${(actualIndex / (stages.length - 1)) * 100}%` }}
           />
         </div>
 
-        {STAGES.map((stage, index) => {
+        {stages.map((stage, index) => {
           const isCompleted = index <= actualIndex;
           const isCurrent = index === actualIndex;
           const stageComments = comments.filter(c => c.status_stage === stage.id);

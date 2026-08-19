@@ -20,11 +20,11 @@ export default function SupplierOrders() {
     if (user) {
       fetchOrders();
     }
-    
+
     const handleRefresh = () => {
       if (user) fetchOrders();
     };
-    
+
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
   }, [user]);
@@ -92,7 +92,7 @@ export default function SupplierOrders() {
         .eq('id', bidId);
       if (error) throw error;
       setOrders(orders.map(o => o.id === bidId ? { ...o, shipping_status: status } : o));
-      
+
       const order = orders.find(o => o.id === bidId);
       if (order && order.custom_requests?.merchant_id) {
         const statusText = status === 'shipped' ? 'قيد الشحن' : status === 'delivered' ? 'مُسلّمة' : 'قيد التجهيز';
@@ -109,7 +109,7 @@ export default function SupplierOrders() {
       const { error } = await supabase.from('supplier_bids').update({ last_reminder_at: new Date().toISOString() }).eq('id', bid.id);
       if (error) throw error;
       setOrders(orders.map(o => o.id === bid.id ? { ...o, last_reminder_at: new Date().toISOString() } : o));
-      
+
       const req = bid.custom_requests;
       if (req?.merchant_id) {
         const typeDesc = bid.status === 'pending' ? 'دفع العربون' : 'دفع المبلغ المتبقي';
@@ -124,7 +124,7 @@ export default function SupplierOrders() {
 
   const handleCancelOrder = async (bid: any) => {
     if (!window.confirm('هل أنت متأكد من إلغاء هذه المعاملة بسبب تأخر الدفع؟ سيتم اقتطاع رسوم المنصة من العربون (إن وُجد) وتحويل الباقي لمحفظتك.')) return;
-    
+
     try {
       if (bid.status === 'accepted') {
         // They paid the deposit, but didn't pay remaining.
@@ -147,13 +147,13 @@ export default function SupplierOrders() {
           });
         }
       }
-      
+
       await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bid.id);
       await supabase.from('custom_requests').update({ status: 'closed' }).eq('id', bid.custom_requests?.id || '');
-      
+
       setOrders(orders.filter(o => o.id !== bid.id));
       toast.success('تم إلغاء المعاملة بنجاح');
-      
+
       if (bid.custom_requests?.merchant_id) {
         sendNotification(bid.custom_requests.merchant_id, 'إلغاء الطلب', `تم إلغاء الطلب بسبب التأخر في الدفع.`, 'error');
       }
@@ -183,7 +183,7 @@ export default function SupplierOrders() {
         type: 'refund',
         description: 'استرجاع العربون لإلغاء الصفقة خلال 24 ساعة من قبل المورد'
       });
-      
+
       const { data: merchantData } = await supabase.from('users').select('wallet_balance').eq('id', bidData.custom_requests.merchant_id).single();
       if (merchantData) {
         await supabase.from('users').update({
@@ -252,7 +252,7 @@ export default function SupplierOrders() {
                 <span className="block text-gray-500 text-xs mb-1">تاريخ الطلب</span>
                 <span className="font-bold text-gray-900">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
               </div>
-              
+
               <div className="flex gap-2 ml-auto">
                 {req?.product_link && (
                   <a href={req.product_link} target="_blank" rel="noreferrer" className="text-xs bg-blue-50 text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-lg font-bold border border-blue-100 transition">
@@ -270,7 +270,7 @@ export default function SupplierOrders() {
 
           <div className="p-6 md:w-1/3 bg-gray-50 flex flex-col justify-center">
             <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">تفاصيل العميل والدفع</h4>
-            
+
             <div className="mb-4">
               <p className="text-sm font-bold text-gray-900">{merchant?.company_name}</p>
               <p className="text-xs text-gray-500 mt-1">الاسم: {merchant?.name}</p>
@@ -300,7 +300,7 @@ export default function SupplierOrders() {
                 const lastReminder = order.last_reminder_at ? new Date(order.last_reminder_at) : null;
                 const hoursSinceReminder = lastReminder ? (now.getTime() - lastReminder.getTime()) / (1000 * 60 * 60) : 24;
                 const canRemind = hoursSinceReminder >= 24;
-                
+
                 const created = new Date(order.created_at);
                 const daysSinceCreation = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
                 const canCancel = daysSinceCreation >= 3;
@@ -317,7 +317,7 @@ export default function SupplierOrders() {
                       >
                         {canRemind ? 'إرسال تنبيه بالدفع' : 'تم الإرسال (يمكن التكرار كل 24س)'}
                       </button>
-                      
+
                       {canCancel && (
                         <button
                           onClick={() => handleCancelOrder(order)}
@@ -335,8 +335,8 @@ export default function SupplierOrders() {
 
             {order.status === 'accepted' && order.deposit_paid_at && (
               <div className="mt-4 border-t border-gray-100 pt-4">
-                <CountdownCircle 
-                  depositPaidAt={order.deposit_paid_at} 
+                <CountdownCircle
+                  depositPaidAt={order.deposit_paid_at}
                   onCancel={() => handleCancelDealWithRefund(order.id)}
                   cancelling={cancellingDealId === order.id}
                 />
@@ -347,9 +347,9 @@ export default function SupplierOrders() {
               <div className="mt-4 border-t border-gray-100 pt-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">تحديث حالة الشحن والتوصيل (انقر لتحديث الحالة)</label>
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <OrderProgressBar 
-                    bidId={order.id} 
-                    currentStatus={order.shipping_status || (order.custom_requests?.request_type === 'direct' ? 'processing' : 'pending_in_china')} 
+                  <OrderProgressBar
+                    bidId={order.id}
+                    currentStatus={order.shipping_status || (order.custom_requests?.request_type === 'direct' ? 'processing' : 'pending_in_china')}
                     onUpdateStatus={(status) => updateShippingStatus(order.id, status)}
                     isSupplier={true}
                     isDirectOrder={order.custom_requests?.request_type === 'direct'}
@@ -357,7 +357,7 @@ export default function SupplierOrders() {
                 </div>
               </div>
             )}
-            
+
             {order.shipping_status === 'delivered' && (
               <div className="mt-4 border-t border-gray-100 pt-4">
                 <button
@@ -407,35 +407,33 @@ export default function SupplierOrders() {
         )}
         <div className={`${user?.status === 'pending' ? 'pointer-events-none select-none opacity-50 blur-sm' : ''}`}>
 
-      <div className="flex border-b border-gray-200 mb-6">
-        <button
-          onClick={() => setActiveTab('direct')}
-          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          الطلبات المباشرة الواردة
-        </button>
-        <button
-          onClick={() => setActiveTab('custom')}
-          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          مناقصاتي الرابحة
-        </button>
-      </div>
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('direct')}
+              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              الطلبات المباشرة الواردة
+            </button>
+            <button
+              onClick={() => setActiveTab('custom')}
+              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+            >
+              مناقصاتي الرابحة
+            </button>
+          </div>
 
-      <div className="space-y-6">
-        {loading ? (
-          <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
-        ) : activeTab === 'direct' ? (
-          renderOrderList(directOrders)
-        ) : (
-          renderOrderList(customOrders)
-        )}
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+            ) : activeTab === 'direct' ? (
+              renderOrderList(directOrders)
+            ) : (
+              renderOrderList(customOrders)
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </DashboardLayout>
   );

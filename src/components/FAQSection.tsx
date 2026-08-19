@@ -1,27 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
-const faqs = [
-  {
-    question: 'كيف يمكنني البدء في استخدام جيبها؟',
-    answer: 'يمكنك البدء بالتسجيل كتاجر جديد، وتأكيد حسابك، ثم البدء في استيراد المنتجات وعرضها في متجرك بكل سهولة.',
-  },
-  {
-    question: 'ما هي طرق الدفع المتاحة؟',
-    answer: 'نوفر طرق دفع متعددة وآمنة تناسب احتياجاتك، بما في ذلك البطاقات الائتمانية والتحويل البنكي.',
-  },
-  {
-    question: 'كيف يتم شحن الطلبات؟',
-    answer: 'نحن نتعاون مع أفضل شركات الشحن لضمان وصول طلباتك بأسرع وقت وأقل تكلفة.',
-  },
-  {
-    question: 'هل يمكنني إرجاع المنتجات؟',
-    answer: 'نعم، نوفر سياسة إرجاع مرنة تسمح لك بإرجاع المنتجات غير المطابقة للمواصفات خلال فترة محددة.',
-  }
-];
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 export default function FAQSection() {
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
+
+  const fetchFaqs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setFaqs(data);
+    } catch (error) {
+      console.error('Error fetching FAQs:', error);
+    }
+  };
+
+  if (faqs.length === 0) return null;
 
   return (
     <section className="py-16 bg-white" id="faq">
@@ -33,7 +44,7 @@ export default function FAQSection() {
         
         <div className="max-w-3xl mx-auto divide-y divide-gray-200">
           {faqs.map((faq, index) => (
-            <div key={index} className="py-6">
+            <div key={faq.id} className="py-6">
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="flex w-full items-center justify-between text-right focus:outline-none"
@@ -47,7 +58,10 @@ export default function FAQSection() {
               </button>
               {openIndex === index && (
                 <div className="mt-4 pr-7">
-                  <p className="text-base text-gray-600">{faq.answer}</p>
+                  <div 
+                    className="text-base text-gray-600" 
+                    dangerouslySetInnerHTML={{ __html: faq.answer }}
+                  />
                 </div>
               )}
             </div>

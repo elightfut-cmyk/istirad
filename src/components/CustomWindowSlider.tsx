@@ -1,5 +1,5 @@
 import { useSettingsStore } from '../store/useSettingsStore';
-import { FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, ChevronRight, ChevronLeft, Calendar } from 'lucide-react';
 import { useRef } from 'react';
 
 export default function CustomWindowSlider() {
@@ -88,10 +88,12 @@ export default function CustomWindowSlider() {
             const dynamicButtons = card.buttons || [];
             let mainButtonText = "شاهد هنا";
             let mainButtonUrl = "#";
+            let mainButtonColor = card.buttonColor || "#8b5cf6";
             
             if (dynamicButtons.length > 0) {
               mainButtonText = dynamicButtons[0].text;
               mainButtonUrl = dynamicButtons[0].url;
+              if (dynamicButtons[0].color) mainButtonColor = dynamicButtons[0].color;
             } else if (hasLegacyButtons) {
               mainButtonText = card.buttonText || card.button2Text || "شاهد هنا";
               mainButtonUrl = card.buttonUrl || card.button2Url || "#";
@@ -105,18 +107,20 @@ export default function CustomWindowSlider() {
                 {/* Inner content wrapper */}
                 <div className="relative h-full w-full bg-white rounded-[14px] p-3 flex flex-col z-10">
                   {/* Image */}
-                {hasImage && (
-                  <div className="w-full h-40 sm:h-48 rounded-xl overflow-hidden mb-3">
-                    <img 
-                      src={card.imageUrl} 
-                      alt={title || "Image"} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
+                  {hasImage && (
+                    <div className="w-full h-40 sm:h-48 mb-4 overflow-hidden rounded-xl border border-gray-100 flex-shrink-0 relative group-hover:shadow-inner transition-shadow">
+                      <img 
+                        src={card.imageUrl} 
+                        alt={title || "Image"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                  )}
                 
                 {/* Content */}
-                <div className="flex-1 flex flex-col p-2">
+                <div className="flex-1 flex flex-col p-1 sm:p-2">
                   {/* Inner Top Badge */}
                   {topBadge && (
                     <div className="flex justify-end mb-3">
@@ -161,13 +165,17 @@ export default function CustomWindowSlider() {
                   <div className={allTags.length === 0 ? "mt-auto" : ""}>
                     <a 
                       href={mainButtonUrl}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-50 text-[#4f46e5] hover:bg-indigo-100 transition-colors rounded-xl font-bold text-sm"
+                      className="w-full flex items-center justify-center gap-2 py-3 text-white transition-all duration-300 rounded-2xl font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                      style={{
+                        backgroundColor: mainButtonColor,
+                        backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.15) 100%)'
+                      }}
                     >
                       {mainButtonText}
-                      <span className="text-lg leading-none">‹</span> {/* Left chevron for RTL layout */}
+                      <Calendar size={16} />
                     </a>
                   </div>
-                  </div>
+                </div>
                 </div>
               </div>
             );

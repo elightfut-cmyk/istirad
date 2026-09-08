@@ -344,6 +344,10 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                       <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر</label>
                       <input type="text" value={card.buttonUrl || ''} onChange={(e) => handleUpdateCard(cardIndex, 'buttonUrl', e.target.value)} placeholder="رابط الزر" className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                     </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">لون الزر</label>
+                      <input type="color" value={card.buttonColor || '#8b5cf6'} onChange={(e) => handleUpdateCard(cardIndex, 'buttonColor', e.target.value)} className="w-10 h-10 border-none cursor-pointer p-0" title="اختر اللون" />
+                    </div>
                   </div>
                 </div>
 

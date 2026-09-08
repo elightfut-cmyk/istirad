@@ -127,9 +127,9 @@ export default function CustomWindowSlider() {
                 key={card.id} 
                 className={`snap-center shrink-0 w-full md:w-[calc(66.666%-1rem)] relative rounded-[2rem] shadow-2xl p-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500`}
               >
-                <div className="relative w-full h-full bg-[#0a0514] rounded-[calc(2rem-2px)] overflow-hidden flex flex-col md:flex-row">
+                <div className="relative w-full h-full bg-[#1a0b2e] rounded-[calc(2rem-2px)] overflow-hidden flex flex-col md:flex-row">
                   {/* Subtle Glow Effects specific to the card */}
-                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#0a0514] opacity-50 pointer-events-none z-0"></div>
+                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#1a0b2e] opacity-50 pointer-events-none z-0"></div>
                   <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#4f46e5] rounded-full blur-[150px] opacity-20 pointer-events-none"></div>
 
                   {/* Image Column - Moved above text in DOM so it renders on top on mobile */}

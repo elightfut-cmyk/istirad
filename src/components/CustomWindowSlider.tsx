@@ -11,26 +11,25 @@ export default function CustomWindowSlider() {
     switch (element) {
       case 'image':
         return card.imageUrl ? (
-          <img key="image" src={card.imageUrl} alt={card.title} className="w-full h-48 object-cover rounded-t-2xl" />
+          <img key="image" src={card.imageUrl} alt={card.title} className="w-full h-32 object-cover rounded-xl mb-4 shadow-inner" />
         ) : null;
       case 'title':
         return card.title ? (
-          <h3 key="title" className="text-xl font-bold text-gray-900 px-6 pt-6">{card.title}</h3>
+          <h3 key="title" className="text-xs font-bold text-[#f97316] mb-2 text-center">{card.title}</h3>
         ) : null;
       case 'subtitle':
         return card.subtitle ? (
-          <p key="subtitle" className="text-gray-500 px-6 mt-2 flex-grow">{card.subtitle}</p>
+          <p key="subtitle" className="text-3xl font-black text-white mb-2 text-center">{card.subtitle}</p>
         ) : null;
       case 'button':
         return card.buttonText && card.buttonUrl ? (
-          <div key="button" className="px-6 pb-6 mt-6">
-            <a 
-              href={card.buttonUrl} 
-              className="inline-block px-6 py-3 bg-[#4f46e5] text-white font-bold rounded-xl hover:bg-[#4338ca] transition-colors w-full text-center"
-            >
-              {card.buttonText}
-            </a>
-          </div>
+          <a 
+            key="button"
+            href={card.buttonUrl} 
+            className="inline-block mt-auto pt-4 text-xs text-gray-400 font-medium hover:text-white transition-colors text-center w-full"
+          >
+            {card.buttonText}
+          </a>
         ) : null;
       default:
         return null;
@@ -38,15 +37,51 @@ export default function CustomWindowSlider() {
   };
 
   return (
-    <div className="w-full py-12 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+    <div className="w-full py-12 px-4 sm:px-6 lg:px-8 bg-transparent font-['Tajawal']">
+      <div className="max-w-7xl mx-auto">
+        {/* Main Dark Purple Container */}
+        <div className="relative bg-[#130b2e] rounded-[2.5rem] shadow-2xl border border-[#4f46e5]/20 p-8 md:p-14 overflow-hidden">
           
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 custom-scrollbar">
+          {/* Subtle Glow Effects */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#4f46e5] rounded-full blur-[120px] opacity-30 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#f97316] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+
+          {/* Header Content */}
+          <div className="relative z-10 flex flex-col items-center text-center mb-12">
+            
+            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-gray-300 text-sm mb-4 backdrop-blur-sm shadow-sm">
+              متجر خدمات احترافي للتجارة الإلكترونية داخل الجزائر
+            </div>
+            
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-red-500/30 text-red-400 text-xs font-bold mb-8 bg-red-500/5">
+              لوحة المتجر
+            </div>
+
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
+              الخدمات المدفوعة لتسريع النتائج
+            </h2>
+
+            <p className="text-base md:text-lg text-gray-400 max-w-3xl mb-10 leading-relaxed">
+              استكشف خدمات منتقاة بعناية لتطوير المتجر، تحسين التحويلات، تسريع التنفيذ، والوصول إلى حلول احترافية جاهزة داخل السوق الجزائري.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
+              <button className="px-8 py-3.5 rounded-xl bg-[#f97316] text-white font-bold hover:bg-[#ea580c] transition-all shadow-lg shadow-orange-500/20 min-w-[160px]">
+                ابدأ التصفح
+              </button>
+              <button className="px-8 py-3.5 rounded-xl bg-[#1a103c] border border-white/10 text-white font-bold hover:bg-[#231552] transition-all backdrop-blur-sm min-w-[160px]">
+                الخدمات المميزة
+              </button>
+            </div>
+
+          </div>
+          
+          {/* Cards Grid */}
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {customWindowCards.map((card) => (
               <div 
                 key={card.id} 
-                className="snap-start shrink-0 w-80 flex flex-col bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                className="flex flex-col items-center justify-center bg-[#1a103c] border border-white/5 rounded-2xl p-6 hover:bg-[#231552] transition-all duration-300 group hover:-translate-y-1 hover:border-white/10 shadow-lg"
               >
                 {/* Dynamically render elements based on the admin layoutOrder */}
                 {card.layoutOrder.map((element: string) => renderCardElement(element, card))}
@@ -56,23 +91,6 @@ export default function CustomWindowSlider() {
 
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          height: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1; 
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #4f46e5; 
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #4338ca; 
-        }
-      `}} />
     </div>
   );
 }

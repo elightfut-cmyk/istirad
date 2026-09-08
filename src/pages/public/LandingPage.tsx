@@ -61,7 +61,7 @@ export default function LandingPage() {
       <CustomWindowSlider />
 
       {/* Hero Section */}
-      <section className="flex-1 flex items-center pt-20 pb-24 px-4 relative">
+      <section className="flex-1 flex items-center pt-8 pb-24 px-4 relative">
         {/* Background blobs */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[600px] h-[600px] bg-indigo-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>

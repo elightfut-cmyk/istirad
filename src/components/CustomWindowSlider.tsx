@@ -39,12 +39,17 @@ export default function CustomWindowSlider() {
             const hasImage = !!card.imageUrl;
             const topBadge = card.topBadge;
             const title = card.title;
-            const subtitle = card.subtitle;
-            const allTags = [];
-            if (card.infoBadge1) allTags.push(card.infoBadge1);
-            if (card.infoBadge2) allTags.push(card.infoBadge2);
+            const allTags: { text: string; color: string }[] = [];
+            if (card.infoBadge1) allTags.push({ text: card.infoBadge1, color: '#6b7280' });
+            if (card.infoBadge2) allTags.push({ text: card.infoBadge2, color: '#6b7280' });
             if (card.tags && card.tags.length > 0) {
-              allTags.push(...card.tags);
+              card.tags.forEach((t: any) => {
+                if (typeof t === 'string') {
+                  allTags.push({ text: t, color: '#4f46e5' });
+                } else {
+                  allTags.push(t);
+                }
+              });
             }
             
             // Buttons logic
@@ -107,10 +112,10 @@ export default function CustomWindowSlider() {
 
                   {/* Tags / Info Badges */}
                   {allTags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 mb-5 mt-auto">
+                    <div className="flex flex-wrap items-center justify-center w-full gap-2 mb-5 mt-auto">
                       {allTags.map((badge, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-gray-500 border border-gray-100 px-2 py-1 rounded-lg bg-gray-50/50">
-                          {badge}
+                        <div key={idx} className="flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1 rounded-md shadow-sm" style={{ backgroundColor: badge.color }}>
+                          {badge.text}
                         </div>
                       ))}
                     </div>

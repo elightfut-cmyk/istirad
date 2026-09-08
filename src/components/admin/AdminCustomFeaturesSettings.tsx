@@ -104,16 +104,21 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
     setLocalSettings((prev: any) => {
       const newCards = [...prev.customWindowCards];
       const tags = newCards[cardIndex].tags || [];
-      newCards[cardIndex] = { ...newCards[cardIndex], tags: [...tags, 'مستطيل جديد'] };
+      newCards[cardIndex] = { ...newCards[cardIndex], tags: [...tags, { text: 'مستطيل جديد', color: '#4f46e5' }] };
       return { ...prev, customWindowCards: newCards };
     });
   };
 
-  const handleUpdateTag = (cardIndex: number, tagIndex: number, value: string) => {
+  const handleUpdateTag = (cardIndex: number, tagIndex: number, field: string, value: string) => {
     setLocalSettings((prev: any) => {
       const newCards = [...prev.customWindowCards];
       const tags = [...(newCards[cardIndex].tags || [])];
-      tags[tagIndex] = value;
+      
+      if (typeof tags[tagIndex] === 'string') {
+        tags[tagIndex] = { text: tags[tagIndex], color: '#4f46e5' };
+      }
+      
+      tags[tagIndex] = { ...tags[tagIndex], [field]: value };
       newCards[cardIndex] = { ...newCards[cardIndex], tags };
       return { ...prev, customWindowCards: newCards };
     });
@@ -311,12 +316,18 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(card.tags || []).map((tag: string, tagIndex: number) => (
-                      <div key={tagIndex} className="flex items-center gap-1 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
-                        <input type="text" value={tag} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, e.target.value)} className="w-32 px-2 py-1 text-xs border-none focus:ring-0" placeholder="نص المستطيل" />
-                        <button onClick={() => handleRemoveTag(cardIndex, tagIndex)} className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
-                      </div>
-                    ))}
+                    {(card.tags || []).map((tag: any, tagIndex: number) => {
+                      const tagText = typeof tag === 'string' ? tag : tag.text;
+                      const tagColor = typeof tag === 'string' ? '#4f46e5' : (tag.color || '#4f46e5');
+                      
+                      return (
+                        <div key={tagIndex} className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1.5 shadow-sm">
+                          <input type="text" value={tagText} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, 'text', e.target.value)} className="w-28 px-2 py-1 text-xs border-none focus:ring-0" placeholder="نص المستطيل" />
+                          <input type="color" value={tagColor} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, 'color', e.target.value)} className="w-6 h-6 border-none cursor-pointer p-0" title="اختر اللون" />
+                          <button onClick={() => handleRemoveTag(cardIndex, tagIndex)} className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
+                        </div>
+                      );
+                    })}
                     {(!card.tags || card.tags.length === 0) && <p className="text-xs text-gray-500 italic">لا يوجد مستطيلات مضافة.</p>}
                   </div>
                 </div>

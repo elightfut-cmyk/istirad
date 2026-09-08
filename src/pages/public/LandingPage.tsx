@@ -57,6 +57,7 @@ export default function LandingPage() {
       </header>
 
       <NewsTicker />
+      <CustomWindowSlider />
 
       {/* Hero Section */}
       <section className="flex-1 flex items-center pt-20 pb-24 px-4 relative overflow-hidden">
@@ -165,7 +166,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <CustomWindowSlider />
       <YoutubePlayer />
 
       <FAQSection />

@@ -1,7 +1,18 @@
 import { useSettingsStore } from '../store/useSettingsStore';
 
 export default function CustomWindowSlider() {
-  const { customWindowCards, customWindowActive } = useSettingsStore();
+  const { 
+    customWindowCards, 
+    customWindowActive,
+    customWindowBadge1,
+    customWindowBadge2,
+    customWindowTitle,
+    customWindowSubtitle,
+    customWindowBtn1Text,
+    customWindowBtn1Url,
+    customWindowBtn2Text,
+    customWindowBtn2Url
+  } = useSettingsStore();
 
   if (!customWindowActive || !customWindowCards || customWindowCards.length === 0) {
     return null;
@@ -49,29 +60,41 @@ export default function CustomWindowSlider() {
           {/* Header Content */}
           <div className="relative z-10 flex flex-col items-center text-center mb-12">
             
-            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-gray-300 text-sm mb-4 backdrop-blur-sm shadow-sm">
-              متجر خدمات احترافي للتجارة الإلكترونية داخل الجزائر
-            </div>
+            {customWindowBadge1 && (
+              <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-gray-300 text-sm mb-4 backdrop-blur-sm shadow-sm">
+                {customWindowBadge1}
+              </div>
+            )}
             
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-red-500/30 text-red-400 text-xs font-bold mb-8 bg-red-500/5">
-              لوحة المتجر
-            </div>
+            {customWindowBadge2 && (
+              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-red-500/30 text-red-400 text-xs font-bold mb-8 bg-red-500/5">
+                {customWindowBadge2}
+              </div>
+            )}
 
-            <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
-              الخدمات المدفوعة لتسريع النتائج
-            </h2>
+            {customWindowTitle && (
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
+                {customWindowTitle}
+              </h2>
+            )}
 
-            <p className="text-base md:text-lg text-gray-400 max-w-3xl mb-10 leading-relaxed">
-              استكشف خدمات منتقاة بعناية لتطوير المتجر، تحسين التحويلات، تسريع التنفيذ، والوصول إلى حلول احترافية جاهزة داخل السوق الجزائري.
-            </p>
+            {customWindowSubtitle && (
+              <p className="text-base md:text-lg text-gray-400 max-w-3xl mb-10 leading-relaxed">
+                {customWindowSubtitle}
+              </p>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
-              <button className="px-8 py-3.5 rounded-xl bg-[#f97316] text-white font-bold hover:bg-[#ea580c] transition-all shadow-lg shadow-orange-500/20 min-w-[160px]">
-                ابدأ التصفح
-              </button>
-              <button className="px-8 py-3.5 rounded-xl bg-[#1a103c] border border-white/10 text-white font-bold hover:bg-[#231552] transition-all backdrop-blur-sm min-w-[160px]">
-                الخدمات المميزة
-              </button>
+              {customWindowBtn1Text && (
+                <a href={customWindowBtn1Url} className="px-8 py-3.5 rounded-xl bg-[#f97316] text-white font-bold hover:bg-[#ea580c] transition-all shadow-lg shadow-orange-500/20 min-w-[160px]">
+                  {customWindowBtn1Text}
+                </a>
+              )}
+              {customWindowBtn2Text && (
+                <a href={customWindowBtn2Url} className="px-8 py-3.5 rounded-xl bg-[#1a103c] border border-white/10 text-white font-bold hover:bg-[#231552] transition-all backdrop-blur-sm min-w-[160px]">
+                  {customWindowBtn2Text}
+                </a>
+              )}
             </div>
 
           </div>

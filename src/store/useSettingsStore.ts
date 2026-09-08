@@ -48,6 +48,14 @@ interface SettingsState {
   newsTickerActive: boolean;
   youtubePlaylistUrl: string;
   youtubePlaylistActive: boolean;
+  customWindowBadge1: string;
+  customWindowBadge2: string;
+  customWindowTitle: string;
+  customWindowSubtitle: string;
+  customWindowBtn1Text: string;
+  customWindowBtn1Url: string;
+  customWindowBtn2Text: string;
+  customWindowBtn2Url: string;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -90,6 +98,14 @@ export const useSettingsStore = create<SettingsState>()(
       newsTickerActive: true,
       youtubePlaylistUrl: '',
       youtubePlaylistActive: false,
+      customWindowBadge1: 'متجر خدمات احترافي للتجارة الإلكترونية داخل الجزائر',
+      customWindowBadge2: 'لوحة المتجر',
+      customWindowTitle: 'الخدمات المدفوعة لتسريع النتائج',
+      customWindowSubtitle: 'استكشف خدمات منتقاة بعناية لتطوير المتجر، تحسين التحويلات، تسريع التنفيذ، والوصول إلى حلول احترافية جاهزة داخل السوق الجزائري.',
+      customWindowBtn1Text: 'ابدأ التصفح',
+      customWindowBtn1Url: '#',
+      customWindowBtn2Text: 'الخدمات المميزة',
+      customWindowBtn2Url: '#',
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
@@ -142,6 +158,14 @@ export const useSettingsStore = create<SettingsState>()(
               newsTickerActive: data.news_ticker_active ?? true,
               youtubePlaylistUrl: data.youtube_playlist_url || '',
               youtubePlaylistActive: data.youtube_playlist_active ?? false,
+              customWindowBadge1: data.custom_window_badge1 || 'متجر خدمات احترافي للتجارة الإلكترونية داخل الجزائر',
+              customWindowBadge2: data.custom_window_badge2 || 'لوحة المتجر',
+              customWindowTitle: data.custom_window_title || 'الخدمات المدفوعة لتسريع النتائج',
+              customWindowSubtitle: data.custom_window_subtitle || 'استكشف خدمات منتقاة بعناية لتطوير المتجر، تحسين التحويلات، تسريع التنفيذ، والوصول إلى حلول احترافية جاهزة داخل السوق الجزائري.',
+              customWindowBtn1Text: data.custom_window_btn1_text || 'ابدأ التصفح',
+              customWindowBtn1Url: data.custom_window_btn1_url || '#',
+              customWindowBtn2Text: data.custom_window_btn2_text || 'الخدمات المميزة',
+              customWindowBtn2Url: data.custom_window_btn2_url || '#',
             });
           }
         } catch (error) {

@@ -76,6 +76,10 @@ export default function MerchantDashboard() {
         <NewsTicker />
       </div>
 
+      <div className="mb-8">
+        <CustomWindowSlider />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[
           { title: 'عروض قيد الانتظار', value: stats.activeOrders.toString(), color: 'text-blue-600' },
@@ -137,7 +141,6 @@ export default function MerchantDashboard() {
       </div>
 
       <div className="mt-12 -mx-8">
-        <CustomWindowSlider />
         <YoutubePlayer />
       </div>
     </DashboardLayout>

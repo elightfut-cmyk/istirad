@@ -45,6 +45,14 @@ export default function AdminSettings() {
     newsTickerActive: settingsStore.newsTickerActive ?? true,
     youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
     youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
+    customWindowBadge1: settingsStore.customWindowBadge1 || '',
+    customWindowBadge2: settingsStore.customWindowBadge2 || '',
+    customWindowTitle: settingsStore.customWindowTitle || '',
+    customWindowSubtitle: settingsStore.customWindowSubtitle || '',
+    customWindowBtn1Text: settingsStore.customWindowBtn1Text || '',
+    customWindowBtn1Url: settingsStore.customWindowBtn1Url || '',
+    customWindowBtn2Text: settingsStore.customWindowBtn2Text || '',
+    customWindowBtn2Url: settingsStore.customWindowBtn2Url || '',
   });
 
   useEffect(() => {
@@ -107,8 +115,16 @@ export default function AdminSettings() {
       newsTickerActive: settingsStore.newsTickerActive ?? true,
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
+      customWindowBadge1: settingsStore.customWindowBadge1 || '',
+      customWindowBadge2: settingsStore.customWindowBadge2 || '',
+      customWindowTitle: settingsStore.customWindowTitle || '',
+      customWindowSubtitle: settingsStore.customWindowSubtitle || '',
+      customWindowBtn1Text: settingsStore.customWindowBtn1Text || '',
+      customWindowBtn1Url: settingsStore.customWindowBtn1Url || '',
+      customWindowBtn2Text: settingsStore.customWindowBtn2Text || '',
+      customWindowBtn2Url: settingsStore.customWindowBtn2Url || '',
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.customWindowBadge1, settingsStore.customWindowBadge2, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.customWindowBtn1Text, settingsStore.customWindowBtn1Url, settingsStore.customWindowBtn2Text, settingsStore.customWindowBtn2Url]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -213,7 +229,15 @@ export default function AdminSettings() {
           news_ticker_items: localSettings.newsTickerItems,
           news_ticker_active: localSettings.newsTickerActive,
           youtube_playlist_url: localSettings.youtubePlaylistUrl,
-          youtube_playlist_active: localSettings.youtubePlaylistActive
+          youtube_playlist_active: localSettings.youtubePlaylistActive,
+          custom_window_badge1: localSettings.customWindowBadge1,
+          custom_window_badge2: localSettings.customWindowBadge2,
+          custom_window_title: localSettings.customWindowTitle,
+          custom_window_subtitle: localSettings.customWindowSubtitle,
+          custom_window_btn1_text: localSettings.customWindowBtn1Text,
+          custom_window_btn1_url: localSettings.customWindowBtn1Url,
+          custom_window_btn2_text: localSettings.customWindowBtn2Text,
+          custom_window_btn2_url: localSettings.customWindowBtn2Url
         })
         .eq('id', 1);
 

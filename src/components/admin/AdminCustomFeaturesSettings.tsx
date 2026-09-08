@@ -222,6 +222,44 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
           </div>
         </div>
 
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 mb-6">
+          <h4 className="text-sm font-bold text-gray-800 mb-4 border-b pb-2">نصوص وأزرار النافذة الأساسية</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">الشريط العلوي (Badge 1)</label>
+              <input type="text" value={localSettings.customWindowBadge1} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBadge1: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">النص الملون (Badge 2)</label>
+              <input type="text" value={localSettings.customWindowBadge2} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBadge2: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي</label>
+              <input type="text" value={localSettings.customWindowTitle} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي</label>
+              <textarea value={localSettings.customWindowSubtitle} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowSubtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الأول (البرتقالي)</label>
+              <input type="text" value={localSettings.customWindowBtn1Text} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn1Text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الأول</label>
+              <input type="text" value={localSettings.customWindowBtn1Url} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn1Url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الثاني (الداكن)</label>
+              <input type="text" value={localSettings.customWindowBtn2Text} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn2Text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الثاني</label>
+              <input type="text" value={localSettings.customWindowBtn2Url} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn2Url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-6">
           {localSettings.customWindowCards.map((card: CustomWindowCard, cardIndex: number) => (
             <div key={card.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 flex gap-4">

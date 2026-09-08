@@ -15,13 +15,13 @@ export default function NewsTicker() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-8">
       <div className="w-full bg-white border border-gray-200 text-gray-800 rounded-full py-1.5 overflow-hidden flex items-center relative shadow-sm">
-        <div className="absolute right-1 top-1 bottom-1 bg-white z-10 flex items-center pr-1 pl-8 rounded-r-full">
-          <span className="font-bold whitespace-nowrap bg-[#4f46e5] text-white px-5 py-1.5 rounded-full text-sm flex items-center gap-2">
+        <div className="absolute right-1 top-1 bottom-1 z-10 flex items-center pr-1">
+          <span className="font-bold whitespace-nowrap bg-[#4f46e5] text-white px-5 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm">
             {newsTickerTitle || 'آخر الأخبار'}
           </span>
         </div>
         
-        <div className="flex animate-marquee whitespace-nowrap mr-40 items-center">
+        <div className="flex animate-marquee whitespace-nowrap mr-[140px] items-center">
           {displayItems.map((item, index) => (
             <span key={index} className="mx-6 font-bold text-sm flex items-center text-gray-700">
               <span className="w-1.5 h-1.5 bg-[#4f46e5] ml-4 inline-block opacity-40"></span>

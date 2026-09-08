@@ -1,4 +1,5 @@
 import { useSettingsStore } from '../store/useSettingsStore';
+import { FileText } from 'lucide-react';
 
 export default function CustomWindowSlider() {
   const { 
@@ -24,7 +25,7 @@ export default function CustomWindowSlider() {
         )}
 
         {/* Section Header */}
-        <div className="mb-8 mt-2">
+        <div className="mb-8 mt-6">
           {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 mb-2">{customWindowTitle}</h2>}
           {customWindowSubtitle && (
             <p className="text-sm text-gray-500">
@@ -115,8 +116,13 @@ export default function CustomWindowSlider() {
                   {allTags.length > 0 && (
                     <div className="flex flex-wrap items-center justify-center w-full gap-2 mb-5 mt-auto">
                       {allTags.map((badge, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1 rounded-md shadow-sm" style={{ backgroundColor: badge.color }}>
+                        <div key={idx} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border shadow-sm" style={{ 
+                          backgroundColor: `${badge.color}15`, 
+                          color: badge.color, 
+                          borderColor: `${badge.color}30` 
+                        }}>
                           {badge.text}
+                          <FileText size={12} />
                         </div>
                       ))}
                     </div>

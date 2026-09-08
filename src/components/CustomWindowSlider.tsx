@@ -39,6 +39,7 @@ export default function CustomWindowSlider() {
             const hasImage = !!card.imageUrl;
             const topBadge = card.topBadge;
             const title = card.title;
+            const subtitle = card.subtitle;
             const allTags: { text: string; color: string }[] = [];
             if (card.infoBadge1) allTags.push({ text: card.infoBadge1, color: '#6b7280' });
             if (card.infoBadge2) allTags.push({ text: card.infoBadge2, color: '#6b7280' });

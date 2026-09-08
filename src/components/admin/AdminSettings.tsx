@@ -109,13 +109,16 @@ export default function AdminSettings() {
       footerEmail: settingsStore.footerEmail || '',
       customWindowCards: settingsStore.customWindowCards || [],
       customWindowActive: settingsStore.customWindowActive ?? true,
+      customWindowTopBadge: settingsStore.customWindowTopBadge || 'جديد الموقع',
+      customWindowTitle: settingsStore.customWindowTitle || 'آخر ما نُشر',
+      customWindowSubtitle: settingsStore.customWindowSubtitle || 'اطلع مباشرة على أحدث موضوع وآخر فيديو دون الحاجة إلى البحث داخل أقسام الموقع.',
       newsTickerItems: settingsStore.newsTickerItems || [],
       newsTickerActive: settingsStore.newsTickerActive ?? false,
       newsTickerTitle: settingsStore.newsTickerTitle || 'آخر الأخبار',
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

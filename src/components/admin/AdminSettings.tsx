@@ -44,6 +44,7 @@ export default function AdminSettings() {
     customWindowActive: settingsStore.customWindowActive ?? true,
     newsTickerItems: settingsStore.newsTickerItems || [],
     newsTickerActive: settingsStore.newsTickerActive ?? true,
+    newsTickerTitle: settingsStore.newsTickerTitle || 'آخر الأخبار',
     youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
     youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
   });

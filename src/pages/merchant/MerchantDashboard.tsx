@@ -5,6 +5,9 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useNavigate } from 'react-router-dom';
+import CustomWindowSlider from '../../components/CustomWindowSlider';
+import NewsTicker from '../../components/NewsTicker';
+import YoutubePlayer from '../../components/YoutubePlayer';
 
 export default function MerchantDashboard() {
   const { user } = useAuthStore();
@@ -69,6 +72,10 @@ export default function MerchantDashboard() {
         { label: 'الشكاوى', href: '/merchant/complaints', icon: <AlertTriangle size={20} /> },
       ]}
     >
+      <div className="mb-6 -mx-8 -mt-8">
+        <NewsTicker />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[
           { title: 'عروض قيد الانتظار', value: stats.activeOrders.toString(), color: 'text-blue-600' },
@@ -127,6 +134,11 @@ export default function MerchantDashboard() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="mt-12 -mx-8">
+        <CustomWindowSlider />
+        <YoutubePlayer />
       </div>
     </DashboardLayout>
   );

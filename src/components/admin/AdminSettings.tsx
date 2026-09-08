@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
 import RichTextEditor from './RichTextEditor';
+import AdminCustomFeaturesSettings from './AdminCustomFeaturesSettings';
 
 export default function AdminSettings() {
   const settingsStore = useSettingsStore();
@@ -37,7 +38,13 @@ export default function AdminSettings() {
     footerLinkedin: settingsStore.footerLinkedin || '',
     footerAddress: settingsStore.footerAddress || '',
     footerPhone: settingsStore.footerPhone || '',
-    footerEmail: settingsStore.footerEmail || ''
+    footerEmail: settingsStore.footerEmail || '',
+    customWindowCards: settingsStore.customWindowCards || [],
+    customWindowActive: settingsStore.customWindowActive ?? true,
+    newsTickerItems: settingsStore.newsTickerItems || [],
+    newsTickerActive: settingsStore.newsTickerActive ?? true,
+    youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
+    youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
   });
 
   useEffect(() => {
@@ -93,9 +100,15 @@ export default function AdminSettings() {
       footerLinkedin: settingsStore.footerLinkedin || '',
       footerAddress: settingsStore.footerAddress || '',
       footerPhone: settingsStore.footerPhone || '',
-      footerEmail: settingsStore.footerEmail || ''
+      footerEmail: settingsStore.footerEmail || '',
+      customWindowCards: settingsStore.customWindowCards || [],
+      customWindowActive: settingsStore.customWindowActive ?? true,
+      newsTickerItems: settingsStore.newsTickerItems || [],
+      newsTickerActive: settingsStore.newsTickerActive ?? true,
+      youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
+      youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -194,7 +207,13 @@ export default function AdminSettings() {
           footer_linkedin: localSettings.footerLinkedin,
           footer_address: localSettings.footerAddress,
           footer_phone: localSettings.footerPhone,
-          footer_email: localSettings.footerEmail
+          footer_email: localSettings.footerEmail,
+          custom_window_cards: localSettings.customWindowCards,
+          custom_window_active: localSettings.customWindowActive,
+          news_ticker_items: localSettings.newsTickerItems,
+          news_ticker_active: localSettings.newsTickerActive,
+          youtube_playlist_url: localSettings.youtubePlaylistUrl,
+          youtube_playlist_active: localSettings.youtubePlaylistActive
         })
         .eq('id', 1);
 
@@ -707,6 +726,8 @@ export default function AdminSettings() {
           </div>
         </div>
       </div>
+
+      <AdminCustomFeaturesSettings localSettings={localSettings} setLocalSettings={setLocalSettings} />
 
       <div className="pt-6">
         <button

@@ -4,6 +4,16 @@ import { supabase } from '../lib/supabase';
 
 export type Currency = 'USD' | 'DZD';
 
+export interface CustomWindowCard {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  buttonText: string;
+  buttonUrl: string;
+  layoutOrder: string[]; // e.g., ['image', 'title', 'subtitle', 'button']
+}
+
 interface SettingsState {
   currency: Currency;
   exchangeRate: number; // dynamically fetched from DB, default 135
@@ -32,6 +42,12 @@ interface SettingsState {
   footerAddress: string | null;
   footerPhone: string | null;
   footerEmail: string | null;
+  customWindowCards: CustomWindowCard[];
+  customWindowActive: boolean;
+  newsTickerItems: string[];
+  newsTickerActive: boolean;
+  youtubePlaylistUrl: string;
+  youtubePlaylistActive: boolean;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -68,6 +84,12 @@ export const useSettingsStore = create<SettingsState>()(
       footerAddress: 'الجزائر العاصمة، الجزائر',
       footerPhone: '+213 (0) 555 55 55 55',
       footerEmail: 'contact@jiibha.com',
+      customWindowCards: [],
+      customWindowActive: true,
+      newsTickerItems: [],
+      newsTickerActive: true,
+      youtubePlaylistUrl: '',
+      youtubePlaylistActive: false,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
@@ -113,7 +135,13 @@ export const useSettingsStore = create<SettingsState>()(
               footerLinkedin: data.footer_linkedin ?? null,
               footerAddress: data.footer_address ?? 'الجزائر العاصمة، الجزائر',
               footerPhone: data.footer_phone ?? '+213 (0) 555 55 55 55',
-              footerEmail: data.footer_email ?? 'contact@jiibha.com'
+              footerEmail: data.footer_email ?? 'contact@jiibha.com',
+              customWindowCards: data.custom_window_cards || [],
+              customWindowActive: data.custom_window_active ?? true,
+              newsTickerItems: data.news_ticker_items || [],
+              newsTickerActive: data.news_ticker_active ?? true,
+              youtubePlaylistUrl: data.youtube_playlist_url || '',
+              youtubePlaylistActive: data.youtube_playlist_active ?? false,
             });
           }
         } catch (error) {

@@ -6,6 +6,9 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import WhatsAppButton from '../../components/WhatsAppButton';
 import FAQSection from '../../components/FAQSection';
 import Footer from '../../components/Footer';
+import CustomWindowSlider from '../../components/CustomWindowSlider';
+import NewsTicker from '../../components/NewsTicker';
+import YoutubePlayer from '../../components/YoutubePlayer';
 
 export default function LandingPage() {
   const { user } = useAuthStore();
@@ -52,6 +55,8 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+
+      <NewsTicker />
 
       {/* Hero Section */}
       <section className="flex-1 flex items-center pt-20 pb-24 px-4 relative overflow-hidden">
@@ -159,6 +164,9 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      <CustomWindowSlider />
+      <YoutubePlayer />
 
       <FAQSection />
 

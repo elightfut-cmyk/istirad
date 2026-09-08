@@ -107,6 +107,9 @@ export default function CustomWindowSlider() {
           );
         }
         return null;
+      default:
+        return null;
+    }
   };
 
   return (

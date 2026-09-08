@@ -20,7 +20,7 @@ export default function CustomWindowSlider() {
     switch (element) {
       case 'topBadge':
         return card.topBadge ? (
-          <div key="topBadge" className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full border border-gray-600 bg-white/5 text-gray-200 text-sm mb-4 backdrop-blur-sm w-max font-bold">
+          <div key="topBadge" className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-full border border-gray-600 bg-white/5 text-gray-200 text-sm mb-4 backdrop-blur-sm w-max font-bold">
             {card.topBadge}
           </div>
         ) : null;
@@ -38,14 +38,14 @@ export default function CustomWindowSlider() {
         ) : null;
       case 'infoBadges':
         return (card.infoBadge1 || card.infoBadge2) ? (
-          <div key="infoBadges" className="flex flex-wrap gap-3 mb-8">
+          <div key="infoBadges" className="flex flex-wrap items-center justify-center gap-3 mb-8">
             {card.infoBadge1 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
                 {card.infoBadge1}
               </div>
             )}
             {card.infoBadge2 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
                 {card.infoBadge2}
               </div>
             )}
@@ -53,7 +53,7 @@ export default function CustomWindowSlider() {
         ) : null;
       case 'button':
         return (card.buttonText || card.button2Text) ? (
-          <div key="button" className="flex flex-wrap gap-4 mt-auto pt-4">
+          <div key="button" className="flex flex-wrap items-center justify-center gap-4 mt-auto pt-4">
             {card.buttonText && (
               <a 
                 href={card.buttonUrl || '#'} 
@@ -82,43 +82,46 @@ export default function CustomWindowSlider() {
   };
 
   return (
-    <div className="w-full bg-transparent font-['Tajawal'] mb-8">
+    <div className="w-full bg-transparent font-['Tajawal'] mb-8 mt-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Carousel Container */}
         <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 custom-scrollbar">
           {customWindowCards.map((card) => {
             const isImageLeft = card.imagePosition === 'left';
+            const hasImage = !!card.imageUrl;
+            const widthClass = customWindowCards.length > 1 ? 'w-full md:w-[calc(33.333%-1rem)]' : 'w-full md:w-[calc(33.333%-1rem)]'; // The user wants 1/3 width on desktop
 
             return (
               <div 
                 key={card.id} 
-                className="snap-center shrink-0 w-full relative bg-[#0a0514] rounded-[2rem] shadow-2xl border border-gray-800 overflow-hidden flex flex-col md:flex-row"
+                className={`snap-center shrink-0 w-full md:w-[calc(33.333%-1rem)] relative rounded-[2rem] shadow-2xl p-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500`}
               >
-                {/* Subtle Glow Effects specific to the card */}
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#0a0514] opacity-50 pointer-events-none z-0"></div>
-                <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#4f46e5] rounded-full blur-[150px] opacity-20 pointer-events-none"></div>
+                <div className="relative w-full h-full bg-[#0a0514] rounded-[calc(2rem-2px)] overflow-hidden flex flex-col md:flex-row">
+                  {/* Subtle Glow Effects specific to the card */}
+                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#0a0514] opacity-50 pointer-events-none z-0"></div>
+                  <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#4f46e5] rounded-full blur-[150px] opacity-20 pointer-events-none"></div>
 
-                {/* Text Content Column */}
-                <div className={`relative z-10 w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center ${isImageLeft ? 'md:order-2 text-right' : 'md:order-1 text-right'}`}>
-                  {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
-                </div>
-
-                {/* Image Column */}
-                {card.imageUrl && (
-                  <div className={`relative z-10 w-full md:w-1/2 p-6 md:p-8 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
-                    <div className="relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
-                      {/* Inner glow for the image to blend it nicely */}
-                      <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
-                      <img 
-                        src={card.imageUrl} 
-                        alt={card.title || "Banner Image"} 
-                        className="absolute inset-0 w-full h-full object-cover" 
-                      />
-                    </div>
+                  {/* Text Content Column */}
+                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-8 md:p-14 flex flex-col items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
+                    {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
                   </div>
-                )}
-                
+
+                  {/* Image Column */}
+                  {hasImage && (
+                    <div className={`relative z-10 w-full md:w-1/2 p-6 md:p-8 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
+                      <div className="relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+                        {/* Inner glow for the image to blend it nicely */}
+                        <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
+                        <img 
+                          src={card.imageUrl} 
+                          alt={card.title || "Banner Image"} 
+                          className="absolute inset-0 w-full h-full object-cover" 
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}

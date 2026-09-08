@@ -63,7 +63,7 @@ export default function CustomWindowSlider() {
         {/* Cards Slider */}
         <div 
           ref={sliderRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 hide-scrollbar"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-4 sm:gap-6 pb-4 hide-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
         >
           {customWindowCards.map((card) => {
             const hasImage = !!card.imageUrl;
@@ -98,7 +98,7 @@ export default function CustomWindowSlider() {
             }
 
             return (
-              <div key={card.id} className="snap-center flex-none w-full md:w-[calc(50%-12px)] relative rounded-2xl p-[2px] flex flex-col group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={card.id} className="snap-center flex-none w-[85%] sm:w-[75%] md:w-[46%] relative rounded-2xl p-[2px] flex flex-col group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 {/* Rainbow animated border */}
                 <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#9400d3,#ff0000)] animate-[spin_4s_linear_infinite] opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
                 

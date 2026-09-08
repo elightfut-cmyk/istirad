@@ -13,8 +13,8 @@ export default function NewsTicker() {
     : newsTickerItems;
 
   return (
-    <div className="w-full relative z-20 px-4 sm:px-6 lg:px-0">
-      <div className="w-full bg-white rounded-3xl p-4 sm:p-6 shadow-sm">
+    <div className="w-full relative z-20 sm:px-6 lg:px-0">
+      <div className="w-full bg-white sm:rounded-3xl p-3 sm:p-6 shadow-sm border-y sm:border-y-0 border-gray-200">
         <div className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-full py-1.5 overflow-hidden flex items-center relative" style={{ backgroundColor: '#f9fafb' }}>
         <div className="absolute right-1 top-1 bottom-1 z-10 flex items-center pr-1">
           <span className="font-bold whitespace-nowrap bg-gradient-to-r from-red-600 to-red-500 text-white px-5 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm">

@@ -15,7 +15,7 @@ export default function CustomWindowSlider() {
 
   return (
     <div className="w-full relative z-10 px-4 sm:px-6 lg:px-0 font-['Tajawal']">
-      <div className="w-full bg-white rounded-3xl p-4 sm:p-6 relative shadow-sm">
+      <div className="w-full lg:max-w-2xl mx-auto bg-white rounded-3xl p-4 sm:p-6 relative shadow-sm">
         {/* Top Badge */}
         {customWindowTopBadge && (
           <div className="absolute -top-3 right-8 bg-indigo-50 text-[#4f46e5] border border-indigo-100 px-4 py-1 rounded-full text-sm font-bold shadow-sm">
@@ -60,8 +60,13 @@ export default function CustomWindowSlider() {
             }
 
             return (
-              <div key={card.id} className="border border-indigo-100/60 bg-white rounded-2xl p-3 flex flex-col hover:border-indigo-200 transition-colors shadow-sm">
-                {/* Image */}
+              <div key={card.id} className="relative rounded-2xl p-[2px] flex flex-col group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                {/* Rainbow animated border */}
+                <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#9400d3,#ff0000)] animate-[spin_4s_linear_infinite] opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
+                
+                {/* Inner content wrapper */}
+                <div className="relative h-full w-full bg-white rounded-[14px] p-3 flex flex-col z-10">
+                  {/* Image */}
                 {hasImage && (
                   <div className="w-full h-40 sm:h-48 rounded-xl overflow-hidden mb-3">
                     <img 

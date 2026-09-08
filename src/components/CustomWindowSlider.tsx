@@ -1,46 +1,80 @@
 import { useSettingsStore } from '../store/useSettingsStore';
 
 export default function CustomWindowSlider() {
-  const { 
-    customWindowCards, 
-    customWindowActive,
-    customWindowBadge1,
-    customWindowBadge2,
-    customWindowTitle,
-    customWindowSubtitle,
-    customWindowBtn1Text,
-    customWindowBtn1Url,
-    customWindowBtn2Text,
-    customWindowBtn2Url
-  } = useSettingsStore();
+  const { customWindowCards, customWindowActive } = useSettingsStore();
 
   if (!customWindowActive || !customWindowCards || customWindowCards.length === 0) {
     return null;
   }
 
-  const renderCardElement = (element: string, card: any) => {
+  // Ensure older cards have the new layout elements if they are missing it
+  const getLayoutOrder = (card: any) => {
+    const defaultLayout = ['topBadge', 'title', 'subtitle', 'infoBadges', 'button'];
+    if (!card.layoutOrder || card.layoutOrder.length === 0 || card.layoutOrder.includes('image')) {
+      return defaultLayout;
+    }
+    return card.layoutOrder;
+  };
+
+  const renderTextElement = (element: string, card: any) => {
     switch (element) {
-      case 'image':
-        return card.imageUrl ? (
-          <img key="image" src={card.imageUrl} alt={card.title} className="w-full h-32 object-cover rounded-xl mb-4 shadow-inner" />
+      case 'topBadge':
+        return card.topBadge ? (
+          <div key="topBadge" className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full border border-gray-600 bg-white/5 text-gray-200 text-sm mb-4 backdrop-blur-sm w-max font-bold">
+            {card.topBadge}
+          </div>
         ) : null;
       case 'title':
         return card.title ? (
-          <h3 key="title" className="text-xs font-bold text-[#f97316] mb-2 text-center">{card.title}</h3>
+          <h2 key="title" className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
+            {card.title}
+          </h2>
         ) : null;
       case 'subtitle':
         return card.subtitle ? (
-          <p key="subtitle" className="text-3xl font-black text-white mb-2 text-center">{card.subtitle}</p>
+          <p key="subtitle" className="text-base md:text-lg text-gray-300 max-w-2xl mb-6 leading-relaxed">
+            {card.subtitle}
+          </p>
+        ) : null;
+      case 'infoBadges':
+        return (card.infoBadge1 || card.infoBadge2) ? (
+          <div key="infoBadges" className="flex flex-wrap gap-3 mb-8">
+            {card.infoBadge1 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
+                {card.infoBadge1}
+              </div>
+            )}
+            {card.infoBadge2 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
+                {card.infoBadge2}
+              </div>
+            )}
+          </div>
         ) : null;
       case 'button':
-        return card.buttonText && card.buttonUrl ? (
-          <a 
-            key="button"
-            href={card.buttonUrl} 
-            className="inline-block mt-auto pt-4 text-xs text-gray-400 font-medium hover:text-white transition-colors text-center w-full"
-          >
-            {card.buttonText}
-          </a>
+        return (card.buttonText || card.button2Text) ? (
+          <div key="button" className="flex flex-wrap gap-4 mt-auto pt-4">
+            {card.buttonText && (
+              <a 
+                href={card.buttonUrl || '#'} 
+                className="px-8 py-3.5 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 min-w-[160px] text-center"
+                style={{ 
+                  backgroundColor: card.buttonColor || '#a855f7', 
+                  boxShadow: `0 8px 20px -6px ${card.buttonColor || '#a855f7'}80` 
+                }}
+              >
+                {card.buttonText}
+              </a>
+            )}
+            {card.button2Text && (
+              <a 
+                href={card.button2Url || '#'} 
+                className="px-8 py-3.5 rounded-xl bg-[#0f172a] border border-[#334155] text-gray-200 font-bold hover:bg-[#1e293b] hover:text-white transition-all min-w-[160px] text-center"
+              >
+                {card.button2Text}
+              </a>
+            )}
+          </div>
         ) : null;
       default:
         return null;
@@ -48,72 +82,65 @@ export default function CustomWindowSlider() {
   };
 
   return (
-    <div className="w-full py-12 px-4 sm:px-6 lg:px-8 bg-transparent font-['Tajawal']">
-      <div className="max-w-7xl mx-auto">
-        {/* Main Dark Purple Container */}
-        <div className="relative bg-[#130b2e] rounded-[2.5rem] shadow-2xl border border-[#4f46e5]/20 p-8 md:p-14 overflow-hidden">
-          
-          {/* Subtle Glow Effects */}
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#4f46e5] rounded-full blur-[120px] opacity-30 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#f97316] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+    <div className="w-full bg-transparent font-['Tajawal'] mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Carousel Container */}
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 custom-scrollbar">
+          {customWindowCards.map((card) => {
+            const isImageLeft = card.imagePosition === 'left';
 
-          {/* Header Content */}
-          <div className="relative z-10 flex flex-col items-center text-center mb-12">
-            
-            {customWindowBadge1 && (
-              <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-gray-300 text-sm mb-4 backdrop-blur-sm shadow-sm">
-                {customWindowBadge1}
-              </div>
-            )}
-            
-            {customWindowBadge2 && (
-              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-red-500/30 text-red-400 text-xs font-bold mb-8 bg-red-500/5">
-                {customWindowBadge2}
-              </div>
-            )}
-
-            {customWindowTitle && (
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
-                {customWindowTitle}
-              </h2>
-            )}
-
-            {customWindowSubtitle && (
-              <p className="text-base md:text-lg text-gray-400 max-w-3xl mb-10 leading-relaxed">
-                {customWindowSubtitle}
-              </p>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
-              {customWindowBtn1Text && (
-                <a href={customWindowBtn1Url} className="px-8 py-3.5 rounded-xl bg-[#f97316] text-white font-bold hover:bg-[#ea580c] transition-all shadow-lg shadow-orange-500/20 min-w-[160px]">
-                  {customWindowBtn1Text}
-                </a>
-              )}
-              {customWindowBtn2Text && (
-                <a href={customWindowBtn2Url} className="px-8 py-3.5 rounded-xl bg-[#1a103c] border border-white/10 text-white font-bold hover:bg-[#231552] transition-all backdrop-blur-sm min-w-[160px]">
-                  {customWindowBtn2Text}
-                </a>
-              )}
-            </div>
-
-          </div>
-          
-          {/* Cards Grid */}
-          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {customWindowCards.map((card) => (
+            return (
               <div 
                 key={card.id} 
-                className="flex flex-col items-center justify-center bg-[#1a103c] border border-white/5 rounded-2xl p-6 hover:bg-[#231552] transition-all duration-300 group hover:-translate-y-1 hover:border-white/10 shadow-lg"
+                className="snap-center shrink-0 w-full relative bg-[#0a0514] rounded-[2rem] shadow-2xl border border-gray-800 overflow-hidden flex flex-col md:flex-row"
               >
-                {/* Dynamically render elements based on the admin layoutOrder */}
-                {card.layoutOrder.map((element: string) => renderCardElement(element, card))}
-              </div>
-            ))}
-          </div>
+                {/* Subtle Glow Effects specific to the card */}
+                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#0a0514] opacity-50 pointer-events-none z-0"></div>
+                <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#4f46e5] rounded-full blur-[150px] opacity-20 pointer-events-none"></div>
 
+                {/* Text Content Column */}
+                <div className={`relative z-10 w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center ${isImageLeft ? 'md:order-2 text-right' : 'md:order-1 text-right'}`}>
+                  {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
+                </div>
+
+                {/* Image Column */}
+                {card.imageUrl && (
+                  <div className={`relative z-10 w-full md:w-1/2 p-6 md:p-8 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
+                    <div className="relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+                      {/* Inner glow for the image to blend it nicely */}
+                      <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
+                      <img 
+                        src={card.imageUrl} 
+                        alt={card.title || "Banner Image"} 
+                        className="absolute inset-0 w-full h-full object-cover" 
+                      />
+                    </div>
+                  </div>
+                )}
+                
+              </div>
+            );
+          })}
         </div>
+
       </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #334155; 
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #475569; 
+        }
+      `}} />
     </div>
   );
 }

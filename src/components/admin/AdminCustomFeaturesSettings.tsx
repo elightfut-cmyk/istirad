@@ -38,7 +38,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
       imageUrl: '',
       buttonText: 'اضغط هنا',
       buttonUrl: '#',
-      layoutOrder: ['image', 'title', 'subtitle', 'button']
+      layoutOrder: ['topBadge', 'title', 'subtitle', 'infoBadges', 'button']
     };
     setLocalSettings((prev: any) => ({
       ...prev,
@@ -113,10 +113,12 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
   };
 
   const layoutLabels: Record<string, string> = {
-    image: 'الصورة',
-    title: 'العنوان',
-    subtitle: 'الوصف',
-    button: 'الزر'
+    topBadge: 'الشريط العلوي',
+    title: 'العنوان الرئيسي',
+    subtitle: 'الوصف الفرعي',
+    infoBadges: 'شارات المعلومات',
+    button: 'الأزرار',
+    image: 'الصورة (تجاهل في البانر)' // Keeping it for backwards compatibility but not needed for banner text flow
   };
 
   return (
@@ -222,44 +224,6 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 mb-6">
-          <h4 className="text-sm font-bold text-gray-800 mb-4 border-b pb-2">نصوص وأزرار النافذة الأساسية</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">الشريط العلوي (Badge 1)</label>
-              <input type="text" value={localSettings.customWindowBadge1} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBadge1: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">النص الملون (Badge 2)</label>
-              <input type="text" value={localSettings.customWindowBadge2} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBadge2: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي</label>
-              <input type="text" value={localSettings.customWindowTitle} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي</label>
-              <textarea value={localSettings.customWindowSubtitle} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowSubtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الأول (البرتقالي)</label>
-              <input type="text" value={localSettings.customWindowBtn1Text} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn1Text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الأول</label>
-              <input type="text" value={localSettings.customWindowBtn1Url} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn1Url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الثاني (الداكن)</label>
-              <input type="text" value={localSettings.customWindowBtn2Text} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn2Text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الثاني</label>
-              <input type="text" value={localSettings.customWindowBtn2Url} onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowBtn2Url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
-            </div>
-          </div>
-        </div>
-
         <div className="space-y-6">
           {localSettings.customWindowCards.map((card: CustomWindowCard, cardIndex: number) => (
             <div key={card.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 flex gap-4">
@@ -275,23 +239,69 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
 
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">العنوان</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">الشريط العلوي (مثل: خصم 10%)</label>
+                  <input type="text" value={card.topBadge || ''} onChange={(e) => handleUpdateCard(cardIndex, 'topBadge', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي</label>
                   <input type="text" value={card.title} onChange={(e) => handleUpdateCard(cardIndex, 'title', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي (أو النص أسفل العنوان)</label>
+                  <textarea value={card.subtitle} onChange={(e) => handleUpdateCard(cardIndex, 'subtitle', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
+                </div>
+                
+                {/* Info Badges */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">الوصف</label>
-                  <input type="text" value={card.subtitle} onChange={(e) => handleUpdateCard(cardIndex, 'subtitle', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-700 mb-1">شارة معلومات 1 (مثل: الجناح المركزي)</label>
+                  <input type="text" value={card.infoBadge1 || ''} onChange={(e) => handleUpdateCard(cardIndex, 'infoBadge1', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">شارة معلومات 2 (مثل: 7-10 أكتوبر)</label>
+                  <input type="text" value={card.infoBadge2 || ''} onChange={(e) => handleUpdateCard(cardIndex, 'infoBadge2', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+
+                {/* Buttons */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الأول الملون</label>
                   <input type="text" value={card.buttonText} onChange={(e) => handleUpdateCard(cardIndex, 'buttonText', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الأول</label>
                   <input type="text" value={card.buttonUrl} onChange={(e) => handleUpdateCard(cardIndex, 'buttonUrl', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">لون الزر الأول</label>
+                  <select value={card.buttonColor || '#a855f7'} onChange={(e) => handleUpdateCard(cardIndex, 'buttonColor', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
+                    <option value="#a855f7">بنفسجي (Purple)</option>
+                    <option value="#0ea5e9">أزرق سماوي (Sky Blue)</option>
+                    <option value="#4f46e5">أزرق داكن (Indigo)</option>
+                    <option value="#f97316">برتقالي (Orange)</option>
+                    <option value="#ef4444">أحمر (Red)</option>
+                    <option value="#10b981">أخضر (Emerald)</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1"></div> {/* Spacer */}
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الثاني (الشفاف/مفرغ)</label>
+                  <input type="text" value={card.button2Text || ''} onChange={(e) => handleUpdateCard(cardIndex, 'button2Text', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الثاني</label>
+                  <input type="text" value={card.button2Url || ''} onChange={(e) => handleUpdateCard(cardIndex, 'button2Url', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+                </div>
+
+                {/* Image */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">مكان الصورة</label>
+                  <select value={card.imagePosition || 'left'} onChange={(e) => handleUpdateCard(cardIndex, 'imagePosition', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
+                    <option value="left">يسار النص</option>
+                    <option value="right">يمين النص</option>
+                  </select>
+                </div>
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">الصورة</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الصورة (أو رفعها)</label>
                   <div className="flex gap-2">
                     <input type="text" value={card.imageUrl} onChange={(e) => handleUpdateCard(cardIndex, 'imageUrl', e.target.value)} placeholder="رابط الصورة..." className="flex-1 px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                     <label className="flex items-center justify-center px-4 py-2 bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">

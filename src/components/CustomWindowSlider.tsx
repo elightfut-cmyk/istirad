@@ -90,7 +90,6 @@ export default function CustomWindowSlider() {
           {customWindowCards.map((card) => {
             const isImageLeft = card.imagePosition === 'left';
             const hasImage = !!card.imageUrl;
-            const widthClass = customWindowCards.length > 1 ? 'w-full md:w-[calc(33.333%-1rem)]' : 'w-full md:w-[calc(33.333%-1rem)]'; // The user wants 1/3 width on desktop
 
             return (
               <div 

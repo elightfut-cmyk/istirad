@@ -106,11 +106,12 @@ export default function AdminSettings() {
       customWindowCards: settingsStore.customWindowCards || [],
       customWindowActive: settingsStore.customWindowActive ?? true,
       newsTickerItems: settingsStore.newsTickerItems || [],
-      newsTickerActive: settingsStore.newsTickerActive ?? true,
+      newsTickerActive: settingsStore.newsTickerActive ?? false,
+      newsTickerTitle: settingsStore.newsTickerTitle || 'آخر الأخبار',
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -215,6 +216,7 @@ export default function AdminSettings() {
           custom_window_active: localSettings.customWindowActive,
           news_ticker_items: localSettings.newsTickerItems,
           news_ticker_active: localSettings.newsTickerActive,
+          news_ticker_title: localSettings.newsTickerTitle,
           youtube_playlist_url: localSettings.youtubePlaylistUrl,
           youtube_playlist_active: localSettings.youtubePlaylistActive
         })

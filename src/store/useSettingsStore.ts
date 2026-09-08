@@ -64,6 +64,7 @@ interface SettingsState {
   customWindowActive: boolean;
   newsTickerItems: string[];
   newsTickerActive: boolean;
+  newsTickerTitle: string;
   youtubePlaylistUrl: string;
   youtubePlaylistActive: boolean;
   toggleCurrency: () => void;
@@ -104,9 +105,10 @@ export const useSettingsStore = create<SettingsState>()(
       footerPhone: '+213 (0) 555 55 55 55',
       footerEmail: 'contact@jiibha.com',
       customWindowCards: [],
-      customWindowActive: true,
-      newsTickerItems: [],
-      newsTickerActive: true,
+      customWindowActive: false,
+      newsTickerItems: ['أهلاً بك في منصتنا', 'تحديثات جديدة قريباً', 'اكتشف أفضل المنتجات'],
+      newsTickerActive: false,
+      newsTickerTitle: 'آخر الأخبار',
       youtubePlaylistUrl: '',
       youtubePlaylistActive: false,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
@@ -157,9 +159,10 @@ export const useSettingsStore = create<SettingsState>()(
               footerPhone: data.footer_phone ?? '+213 (0) 555 55 55 55',
               footerEmail: data.footer_email ?? 'contact@jiibha.com',
               customWindowCards: data.custom_window_cards || [],
-              customWindowActive: data.custom_window_active ?? true,
-              newsTickerItems: data.news_ticker_items || [],
-              newsTickerActive: data.news_ticker_active ?? true,
+              customWindowActive: data.custom_window_active ?? false,
+              newsTickerItems: data.news_ticker_items ?? ['أهلاً بك في منصتنا', 'تحديثات جديدة قريباً', 'اكتشف أفضل المنتجات'],
+              newsTickerActive: data.news_ticker_active ?? false,
+              newsTickerTitle: data.news_ticker_title ?? 'آخر الأخبار',
               youtubePlaylistUrl: data.youtube_playlist_url || '',
               youtubePlaylistActive: data.youtube_playlist_active ?? false,
             });

@@ -1,7 +1,7 @@
 import { useSettingsStore } from '../store/useSettingsStore';
 
 export default function NewsTicker() {
-  const { newsTickerItems, newsTickerActive } = useSettingsStore();
+  const { newsTickerItems, newsTickerActive, newsTickerTitle } = useSettingsStore();
 
   if (!newsTickerActive || !newsTickerItems || newsTickerItems.length === 0) {
     return null;
@@ -17,8 +17,7 @@ export default function NewsTicker() {
       <div className="w-full bg-white border border-gray-200 text-gray-800 rounded-full py-1.5 overflow-hidden flex items-center relative shadow-sm">
         <div className="absolute right-1 top-1 bottom-1 bg-white z-10 flex items-center pr-1 pl-8 rounded-r-full">
           <span className="font-bold whitespace-nowrap bg-[#4f46e5] text-white px-5 py-1.5 rounded-full text-sm flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-white inline-block"></span>
-            آخر الأخبار
+            {newsTickerTitle || 'آخر الأخبار'}
           </span>
         </div>
         

@@ -205,6 +205,16 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
           </label>
         </div>
         
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">عنوان شريط الأخبار (الافتراضي: آخر الأخبار)</label>
+          <input
+            type="text"
+            value={localSettings.newsTickerTitle || ''}
+            onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, newsTickerTitle: e.target.value }))}
+            className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+        </div>
+
         <div className="flex gap-2 mb-4">
           <input
             type="text"

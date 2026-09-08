@@ -62,6 +62,9 @@ interface SettingsState {
   footerEmail: string | null;
   customWindowCards: CustomWindowCard[];
   customWindowActive: boolean;
+  customWindowTopBadge: string;
+  customWindowTitle: string;
+  customWindowSubtitle: string;
   newsTickerItems: string[];
   newsTickerActive: boolean;
   newsTickerTitle: string;
@@ -105,7 +108,10 @@ export const useSettingsStore = create<SettingsState>()(
       footerPhone: '+213 (0) 555 55 55 55',
       footerEmail: 'contact@jiibha.com',
       customWindowCards: [],
-      customWindowActive: false,
+      customWindowActive: true,
+      customWindowTopBadge: 'جديد الموقع',
+      customWindowTitle: 'آخر ما نُشر',
+      customWindowSubtitle: 'اطلع مباشرة على أحدث موضوع وآخر فيديو دون الحاجة إلى البحث داخل أقسام الموقع.',
       newsTickerItems: ['أهلاً بك في منصتنا', 'تحديثات جديدة قريباً', 'اكتشف أفضل المنتجات'],
       newsTickerActive: false,
       newsTickerTitle: 'آخر الأخبار',
@@ -159,8 +165,11 @@ export const useSettingsStore = create<SettingsState>()(
               footerPhone: data.footer_phone ?? '+213 (0) 555 55 55 55',
               footerEmail: data.footer_email ?? 'contact@jiibha.com',
               customWindowCards: data.custom_window_cards || [],
-              customWindowActive: data.custom_window_active ?? false,
-              newsTickerItems: data.news_ticker_items ?? ['أهلاً بك في منصتنا', 'تحديثات جديدة قريباً', 'اكتشف أفضل المنتجات'],
+              customWindowActive: data.custom_window_active ?? true,
+              customWindowTopBadge: data.custom_window_top_badge || 'جديد الموقع',
+              customWindowTitle: data.custom_window_title || 'آخر ما نُشر',
+              customWindowSubtitle: data.custom_window_subtitle || 'اطلع مباشرة على أحدث موضوع وآخر فيديو دون الحاجة إلى البحث داخل أقسام الموقع.',
+              newsTickerItems: data.news_ticker_items || ['أهلاً بك في منصتنا', 'تحديثات جديدة قريباً', 'اكتشف أفضل المنتجات'],
               newsTickerActive: data.news_ticker_active ?? false,
               newsTickerTitle: data.news_ticker_title ?? 'آخر الأخبار',
               youtubePlaylistUrl: data.youtube_playlist_url || '',

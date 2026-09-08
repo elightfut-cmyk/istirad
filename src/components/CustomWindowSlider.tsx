@@ -1,7 +1,13 @@
 import { useSettingsStore } from '../store/useSettingsStore';
 
 export default function CustomWindowSlider() {
-  const { customWindowCards, customWindowActive } = useSettingsStore();
+  const { 
+    customWindowCards, 
+    customWindowActive,
+    customWindowTopBadge,
+    customWindowTitle,
+    customWindowSubtitle
+  } = useSettingsStore();
 
   if (!customWindowActive || !customWindowCards || customWindowCards.length === 0) {
     return null;
@@ -11,16 +17,20 @@ export default function CustomWindowSlider() {
     <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-12 font-['Tajawal']">
       <div className="w-full bg-white border border-gray-200 rounded-[2rem] p-6 sm:p-8 relative">
         {/* Top Badge */}
-        <div className="absolute -top-3 right-8 bg-red-50 text-red-600 border border-red-100 px-4 py-1 rounded-full text-sm font-bold shadow-sm">
-          جديد الموقع
-        </div>
+        {customWindowTopBadge && (
+          <div className="absolute -top-3 right-8 bg-indigo-50 text-[#4f46e5] border border-indigo-100 px-4 py-1 rounded-full text-sm font-bold shadow-sm">
+            {customWindowTopBadge}
+          </div>
+        )}
 
         {/* Section Header */}
         <div className="mb-8 mt-2">
-          <h2 className="text-3xl font-black text-gray-900 mb-2">آخر ما نُشر</h2>
-          <p className="text-sm text-gray-500">
-            اطلع مباشرة على أحدث موضوع وآخر فيديو دون الحاجة إلى البحث داخل أقسام الموقع.
-          </p>
+          {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 mb-2">{customWindowTitle}</h2>}
+          {customWindowSubtitle && (
+            <p className="text-sm text-gray-500">
+              {customWindowSubtitle}
+            </p>
+          )}
         </div>
 
         {/* Cards Grid */}
@@ -50,7 +60,7 @@ export default function CustomWindowSlider() {
             }
 
             return (
-              <div key={card.id} className="border border-red-100/60 bg-white rounded-2xl p-3 flex flex-col hover:border-red-200 transition-colors shadow-sm">
+              <div key={card.id} className="border border-indigo-100/60 bg-white rounded-2xl p-3 flex flex-col hover:border-indigo-200 transition-colors shadow-sm">
                 {/* Image */}
                 {hasImage && (
                   <div className="w-full h-56 sm:h-64 rounded-xl overflow-hidden mb-3">
@@ -67,8 +77,8 @@ export default function CustomWindowSlider() {
                   {/* Inner Top Badge */}
                   {topBadge && (
                     <div className="flex justify-end mb-3">
-                      <span className="inline-flex items-center gap-1.5 bg-red-50 text-red-500 border border-red-100 px-3 py-1 rounded-full text-xs font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                      <span className="inline-flex items-center gap-1.5 bg-indigo-50 text-[#4f46e5] border border-indigo-100 px-3 py-1 rounded-full text-xs font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5]"></span>
                         {topBadge}
                       </span>
                     </div>
@@ -103,7 +113,7 @@ export default function CustomWindowSlider() {
                   <div className={infoBadges.length === 0 ? "mt-auto" : ""}>
                     <a 
                       href={mainButtonUrl}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-red-50 text-red-600 hover:bg-red-100 transition-colors rounded-xl font-bold text-sm"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-50 text-[#4f46e5] hover:bg-indigo-100 transition-colors rounded-xl font-bold text-sm"
                     >
                       {mainButtonText}
                       <span className="text-lg leading-none">‹</span> {/* Left chevron for RTL layout */}

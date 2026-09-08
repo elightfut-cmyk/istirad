@@ -297,6 +297,39 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
           </div>
         </div>
 
+        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-4">
+          <h4 className="font-bold text-gray-800">النصوص الرئيسية للنافذة (جديد الموقع، آخر ما نُشر...)</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">الشارة العلوية (مثال: جديد الموقع)</label>
+              <input
+                type="text"
+                value={localSettings.customWindowTopBadge || ''}
+                onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTopBadge: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي (مثال: آخر ما نُشر)</label>
+              <input
+                type="text"
+                value={localSettings.customWindowTitle || ''}
+                onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTitle: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي</label>
+            <textarea
+              value={localSettings.customWindowSubtitle || ''}
+              onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowSubtitle: e.target.value }))}
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+            />
+          </div>
+        </div>
+
         <div className="space-y-6">
           {localSettings.customWindowCards.map((card: CustomWindowCard, cardIndex: number) => (
             <div key={card.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 flex gap-4">

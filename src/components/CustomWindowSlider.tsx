@@ -14,8 +14,8 @@ export default function CustomWindowSlider() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-12 font-['Tajawal']">
-      <div className="w-full bg-white border border-gray-200 rounded-[2rem] p-6 sm:p-8 relative">
+    <div className="w-full relative z-10 px-4 sm:px-6 lg:px-0 font-['Tajawal']">
+      <div className="w-full bg-white rounded-3xl p-4 sm:p-6 relative shadow-sm">
         {/* Top Badge */}
         {customWindowTopBadge && (
           <div className="absolute -top-3 right-8 bg-indigo-50 text-[#4f46e5] border border-indigo-100 px-4 py-1 rounded-full text-sm font-bold shadow-sm">
@@ -63,7 +63,7 @@ export default function CustomWindowSlider() {
               <div key={card.id} className="border border-indigo-100/60 bg-white rounded-2xl p-3 flex flex-col hover:border-indigo-200 transition-colors shadow-sm">
                 {/* Image */}
                 {hasImage && (
-                  <div className="w-full h-56 sm:h-64 rounded-xl overflow-hidden mb-3">
+                  <div className="w-full h-40 sm:h-48 rounded-xl overflow-hidden mb-3">
                     <img 
                       src={card.imageUrl} 
                       alt={title || "Image"} 

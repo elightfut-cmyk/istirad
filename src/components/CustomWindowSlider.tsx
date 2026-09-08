@@ -124,6 +124,7 @@ export default function CustomWindowSlider() {
                       <span className="text-lg leading-none">‹</span> {/* Left chevron for RTL layout */}
                     </a>
                   </div>
+                  </div>
                 </div>
               </div>
             );

@@ -112,13 +112,76 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
     }
   };
 
+  const handleAddTag = (cardIndex: number) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const tags = newCards[cardIndex].tags || [];
+      newCards[cardIndex] = { ...newCards[cardIndex], tags: [...tags, 'مستطيل جديد'] };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
+  const handleUpdateTag = (cardIndex: number, tagIndex: number, value: string) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const tags = [...(newCards[cardIndex].tags || [])];
+      tags[tagIndex] = value;
+      newCards[cardIndex] = { ...newCards[cardIndex], tags };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
+  const handleRemoveTag = (cardIndex: number, tagIndex: number) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const tags = [...(newCards[cardIndex].tags || [])];
+      tags.splice(tagIndex, 1);
+      newCards[cardIndex] = { ...newCards[cardIndex], tags };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
+  const handleAddButton = (cardIndex: number) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const buttons = newCards[cardIndex].buttons || [];
+      newCards[cardIndex] = { 
+        ...newCards[cardIndex], 
+        buttons: [...buttons, { id: Math.random().toString(36).substring(2), text: 'زر جديد', url: '#', color: '#f97316', outlined: false }] 
+      };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
+  const handleUpdateButton = (cardIndex: number, btnIndex: number, field: string, value: any) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const buttons = [...(newCards[cardIndex].buttons || [])];
+      buttons[btnIndex] = { ...buttons[btnIndex], [field]: value };
+      newCards[cardIndex] = { ...newCards[cardIndex], buttons };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
+  const handleRemoveButton = (cardIndex: number, btnIndex: number) => {
+    setLocalSettings((prev: any) => {
+      const newCards = [...prev.customWindowCards];
+      const buttons = [...(newCards[cardIndex].buttons || [])];
+      buttons.splice(btnIndex, 1);
+      newCards[cardIndex] = { ...newCards[cardIndex], buttons };
+      return { ...prev, customWindowCards: newCards };
+    });
+  };
+
   const layoutLabels: Record<string, string> = {
     topBadge: 'الشريط العلوي',
     title: 'العنوان الرئيسي',
     subtitle: 'الوصف الفرعي',
-    infoBadges: 'شارات المعلومات',
-    button: 'الأزرار',
-    image: 'الصورة (تجاهل في البانر)' // Keeping it for backwards compatibility but not needed for banner text flow
+    infoBadges: 'شارات المعلومات (قديمة)',
+    tags: 'المستطيلات العلوية',
+    button: 'الأزرار (قديمة)',
+    buttons: 'الأزرار الديناميكية',
+    image: 'الصورة'
   };
 
   return (
@@ -251,45 +314,54 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                   <textarea value={card.subtitle} onChange={(e) => handleUpdateCard(cardIndex, 'subtitle', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
                 </div>
                 
-                {/* Info Badges */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">شارة معلومات 1 (مثل: الجناح المركزي)</label>
-                  <input type="text" value={card.infoBadge1 || ''} onChange={(e) => handleUpdateCard(cardIndex, 'infoBadge1', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">شارة معلومات 2 (مثل: 7-10 أكتوبر)</label>
-                  <input type="text" value={card.infoBadge2 || ''} onChange={(e) => handleUpdateCard(cardIndex, 'infoBadge2', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
+                {/* Dynamic Tags */}
+                <div className="md:col-span-2 border-t pt-4 mt-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-bold text-gray-700">المستطيلات (Tags) فوق الأزرار</label>
+                    <button onClick={() => handleAddTag(cardIndex)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 font-bold flex items-center gap-1">
+                      <Plus size={14} /> إضافة مستطيل
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(card.tags || []).map((tag: string, tagIndex: number) => (
+                      <div key={tagIndex} className="flex items-center gap-1 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
+                        <input type="text" value={tag} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, e.target.value)} className="w-32 px-2 py-1 text-xs border-none focus:ring-0" placeholder="نص المستطيل" />
+                        <button onClick={() => handleRemoveTag(cardIndex, tagIndex)} className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
+                      </div>
+                    ))}
+                    {(!card.tags || card.tags.length === 0) && <p className="text-xs text-gray-500 italic">لا يوجد مستطيلات مضافة.</p>}
+                  </div>
                 </div>
 
-                {/* Buttons */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الأول الملون</label>
-                  <input type="text" value={card.buttonText} onChange={(e) => handleUpdateCard(cardIndex, 'buttonText', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الأول</label>
-                  <input type="text" value={card.buttonUrl} onChange={(e) => handleUpdateCard(cardIndex, 'buttonUrl', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">لون الزر الأول</label>
-                  <select value={card.buttonColor || '#a855f7'} onChange={(e) => handleUpdateCard(cardIndex, 'buttonColor', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
-                    <option value="#a855f7">بنفسجي (Purple)</option>
-                    <option value="#0ea5e9">أزرق سماوي (Sky Blue)</option>
-                    <option value="#4f46e5">أزرق داكن (Indigo)</option>
-                    <option value="#f97316">برتقالي (Orange)</option>
-                    <option value="#ef4444">أحمر (Red)</option>
-                    <option value="#10b981">أخضر (Emerald)</option>
-                  </select>
-                </div>
-                <div className="md:col-span-1"></div> {/* Spacer */}
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر الثاني (الشفاف/مفرغ)</label>
-                  <input type="text" value={card.button2Text || ''} onChange={(e) => handleUpdateCard(cardIndex, 'button2Text', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر الثاني</label>
-                  <input type="text" value={card.button2Url || ''} onChange={(e) => handleUpdateCard(cardIndex, 'button2Url', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+                {/* Dynamic Buttons */}
+                <div className="md:col-span-2 border-t pt-4 mt-2 mb-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-bold text-gray-700">الأزرار الديناميكية (الأسفل)</label>
+                    <button onClick={() => handleAddButton(cardIndex)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 font-bold flex items-center gap-1">
+                      <Plus size={14} /> إضافة زر
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(card.buttons || []).map((btn: any, btnIndex: number) => (
+                      <div key={btn.id || btnIndex} className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg border border-gray-200">
+                        <input type="text" value={btn.text} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'text', e.target.value)} placeholder="نص الزر" className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]" />
+                        <input type="text" value={btn.url} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'url', e.target.value)} placeholder="الرابط" className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]" dir="ltr" />
+                        <select value={btn.color} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'color', e.target.value)} className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]">
+                          <option value="#f97316">برتقالي (Orange)</option>
+                          <option value="#a855f7">بنفسجي (Purple)</option>
+                          <option value="#0ea5e9">أزرق سماوي (Sky Blue)</option>
+                          <option value="#ef4444">أحمر (Red)</option>
+                          <option value="#10b981">أخضر (Emerald)</option>
+                        </select>
+                        <label className="flex items-center gap-1 text-xs cursor-pointer bg-white px-2 py-1.5 rounded border">
+                          <input type="checkbox" checked={btn.outlined || false} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'outlined', e.target.checked)} className="rounded text-[#4f46e5]" />
+                          مفرغ (Outlined)
+                        </label>
+                        <button onClick={() => handleRemoveButton(cardIndex, btnIndex)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg mr-auto"><Trash2 size={16}/></button>
+                      </div>
+                    ))}
+                    {(!card.buttons || card.buttons.length === 0) && <p className="text-xs text-gray-500 italic">لا يوجد أزرار مضافة.</p>}
+                  </div>
                 </div>
 
                 {/* Image */}

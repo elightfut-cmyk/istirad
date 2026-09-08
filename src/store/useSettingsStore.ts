@@ -4,6 +4,14 @@ import { supabase } from '../lib/supabase';
 
 export type Currency = 'USD' | 'DZD';
 
+export interface CustomWindowButton {
+  id: string;
+  text: string;
+  url: string;
+  color: string;
+  outlined?: boolean;
+}
+
 export interface CustomWindowCard {
   id: string;
   title: string;
@@ -12,11 +20,13 @@ export interface CustomWindowCard {
   topBadge?: string;
   infoBadge1?: string;
   infoBadge2?: string;
-  buttonText: string;
-  buttonUrl: string;
-  buttonColor?: string;
-  button2Text?: string;
-  button2Url?: string;
+  tags?: string[]; // Dynamic bars/rectangles
+  buttonText?: string; // Legacy
+  buttonUrl?: string; // Legacy
+  buttonColor?: string; // Legacy
+  button2Text?: string; // Legacy
+  button2Url?: string; // Legacy
+  buttons?: CustomWindowButton[]; // Dynamic buttons
   imagePosition?: 'left' | 'right';
   layoutOrder: string[]; // e.g., ['image', 'title', 'subtitle', 'button']
 }

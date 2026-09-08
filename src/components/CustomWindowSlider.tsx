@@ -9,7 +9,7 @@ export default function CustomWindowSlider() {
 
   // Ensure older cards have the new layout elements if they are missing it
   const getLayoutOrder = (card: any) => {
-    const defaultLayout = ['topBadge', 'title', 'subtitle', 'infoBadges', 'button'];
+    const defaultLayout = ['topBadge', 'title', 'subtitle', 'infoBadges', 'tags', 'buttons'];
     if (!card.layoutOrder || card.layoutOrder.length === 0 || card.layoutOrder.includes('image')) {
       return defaultLayout;
     }
@@ -51,34 +51,62 @@ export default function CustomWindowSlider() {
             )}
           </div>
         ) : null;
-      case 'button':
-        return (card.buttonText || card.button2Text) ? (
-          <div key="button" className="flex flex-wrap items-center justify-center gap-4 mt-auto pt-4">
-            {card.buttonText && (
-              <a 
-                href={card.buttonUrl || '#'} 
-                className="px-8 py-3.5 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 min-w-[160px] text-center"
-                style={{ 
-                  backgroundColor: card.buttonColor || '#a855f7', 
-                  boxShadow: `0 8px 20px -6px ${card.buttonColor || '#a855f7'}80` 
-                }}
-              >
-                {card.buttonText}
-              </a>
-            )}
-            {card.button2Text && (
-              <a 
-                href={card.button2Url || '#'} 
-                className="px-8 py-3.5 rounded-xl bg-[#0f172a] border border-[#334155] text-gray-200 font-bold hover:bg-[#1e293b] hover:text-white transition-all min-w-[160px] text-center"
-              >
-                {card.button2Text}
-              </a>
-            )}
+      case 'tags':
+        return (card.tags && card.tags.length > 0) ? (
+          <div key="tags" className="flex flex-wrap items-center justify-center gap-2 mb-4 w-full">
+            {card.tags.map((tag: string, index: number) => (
+              <div key={index} className="px-4 py-1.5 rounded-full border border-[#f97316]/40 bg-[#f97316]/5 text-[#f97316] text-xs font-bold shadow-sm whitespace-nowrap">
+                {tag}
+              </div>
+            ))}
           </div>
         ) : null;
-      default:
+      case 'buttons':
+        const hasLegacyButtons = card.buttonText || card.button2Text;
+        const dynamicButtons = card.buttons || [];
+        
+        if (dynamicButtons.length > 0) {
+          return (
+            <div key="buttons" className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto pt-4 w-full">
+              {dynamicButtons.map((btn: any) => (
+                <a 
+                  key={btn.id}
+                  href={btn.url || '#'} 
+                  className={`px-6 py-3.5 rounded-xl font-bold transition-all hover:-translate-y-0.5 text-center flex items-center justify-center ${btn.outlined ? 'bg-transparent border-2 text-white hover:bg-white/5' : 'text-white shadow-lg'}`}
+                  style={btn.outlined ? { borderColor: btn.color || '#f97316' } : { backgroundColor: btn.color || '#f97316', boxShadow: `0 8px 20px -6px ${btn.color || '#f97316'}80` }}
+                >
+                  {btn.text}
+                </a>
+              ))}
+            </div>
+          );
+        } else if (hasLegacyButtons) {
+          return (
+            <div key="button" className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto pt-4 w-full">
+              {card.buttonText && (
+                <a 
+                  href={card.buttonUrl || '#'} 
+                  className="px-6 py-3.5 rounded-xl text-white font-bold transition-all hover:-translate-y-0.5 text-center"
+                  style={{ 
+                    backgroundColor: card.buttonColor || '#a855f7', 
+                    boxShadow: `0 8px 20px -6px ${card.buttonColor || '#a855f7'}80` 
+                  }}
+                >
+                  {card.buttonText}
+                </a>
+              )}
+              {card.button2Text && (
+                <a 
+                  href={card.button2Url || '#'} 
+                  className="px-6 py-3.5 rounded-xl bg-[#0f172a] border border-[#334155] text-gray-200 font-bold hover:bg-[#1e293b] hover:text-white transition-all text-center"
+                >
+                  {card.button2Text}
+                </a>
+              )}
+            </div>
+          );
+        }
         return null;
-    }
   };
 
   return (
@@ -94,22 +122,17 @@ export default function CustomWindowSlider() {
             return (
               <div 
                 key={card.id} 
-                className={`snap-center shrink-0 w-full md:w-[calc(33.333%-1rem)] relative rounded-[2rem] shadow-2xl p-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500`}
+                className={`snap-center shrink-0 w-full md:w-[calc(66.666%-1rem)] relative rounded-[2rem] shadow-2xl p-[2px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500`}
               >
                 <div className="relative w-full h-full bg-[#0a0514] rounded-[calc(2rem-2px)] overflow-hidden flex flex-col md:flex-row">
                   {/* Subtle Glow Effects specific to the card */}
                   <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-transparent to-[#0a0514] opacity-50 pointer-events-none z-0"></div>
                   <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#4f46e5] rounded-full blur-[150px] opacity-20 pointer-events-none"></div>
 
-                  {/* Text Content Column */}
-                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-8 md:p-14 flex flex-col items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
-                    {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
-                  </div>
-
-                  {/* Image Column */}
+                  {/* Image Column - Moved above text in DOM so it renders on top on mobile */}
                   {hasImage && (
                     <div className={`relative z-10 w-full md:w-1/2 p-6 md:p-8 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
-                      <div className="relative w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+                      <div className="relative w-full h-full min-h-[300px] md:min-h-[400px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
                         {/* Inner glow for the image to blend it nicely */}
                         <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
                         <img 
@@ -120,6 +143,12 @@ export default function CustomWindowSlider() {
                       </div>
                     </div>
                   )}
+
+                  {/* Text Content Column */}
+                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-8 md:p-14 flex flex-col items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
+                    {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
+                  </div>
+
                 </div>
               </div>
             );

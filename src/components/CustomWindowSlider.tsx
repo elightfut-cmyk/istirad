@@ -20,25 +20,25 @@ export default function CustomWindowSlider() {
     switch (element) {
       case 'topBadge':
         return card.topBadge ? (
-          <div key="topBadge" className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-full border border-gray-600 bg-white/5 text-gray-200 text-sm mb-4 backdrop-blur-sm w-max font-bold">
+          <div key="topBadge" className="inline-flex items-center justify-center gap-2 px-5 py-1.5 rounded-full border border-gray-600 bg-white/5 text-gray-200 text-sm backdrop-blur-sm w-max font-bold">
             {card.topBadge}
           </div>
         ) : null;
       case 'title':
         return card.title ? (
-          <h2 key="title" className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
+          <h2 key="title" className="text-2xl md:text-4xl font-black text-white leading-tight">
             {card.title}
           </h2>
         ) : null;
       case 'subtitle':
         return card.subtitle ? (
-          <p key="subtitle" className="text-base md:text-lg text-gray-300 max-w-2xl mb-6 leading-relaxed">
+          <p key="subtitle" className="text-sm md:text-base text-gray-300 max-w-2xl leading-relaxed">
             {card.subtitle}
           </p>
         ) : null;
       case 'infoBadges':
         return (card.infoBadge1 || card.infoBadge2) ? (
-          <div key="infoBadges" className="flex flex-wrap items-center justify-center gap-3 mb-8">
+          <div key="infoBadges" className="flex flex-wrap items-center justify-center gap-2">
             {card.infoBadge1 && (
               <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-[#1e293b] bg-[#0f172a] text-gray-300 text-sm font-bold shadow-sm">
                 {card.infoBadge1}
@@ -53,7 +53,7 @@ export default function CustomWindowSlider() {
         ) : null;
       case 'tags':
         return (card.tags && card.tags.length > 0) ? (
-          <div key="tags" className="flex flex-wrap items-center justify-center gap-2 mb-4 w-full">
+          <div key="tags" className="flex flex-wrap items-center justify-center gap-2 w-full">
             {card.tags.map((tag: string, index: number) => (
               <div key={index} className="px-4 py-1.5 rounded-full border border-[#f97316]/40 bg-[#f97316]/5 text-[#f97316] text-xs font-bold shadow-sm whitespace-nowrap">
                 {tag}
@@ -67,7 +67,7 @@ export default function CustomWindowSlider() {
         
         if (dynamicButtons.length > 0) {
           return (
-            <div key="buttons" className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto pt-4 w-full">
+            <div key="buttons" className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               {dynamicButtons.map((btn: any) => (
                 <a 
                   key={btn.id}
@@ -82,7 +82,7 @@ export default function CustomWindowSlider() {
           );
         } else if (hasLegacyButtons) {
           return (
-            <div key="button" className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto pt-4 w-full">
+            <div key="button" className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               {card.buttonText && (
                 <a 
                   href={card.buttonUrl || '#'} 
@@ -134,8 +134,8 @@ export default function CustomWindowSlider() {
 
                   {/* Image Column - Moved above text in DOM so it renders on top on mobile */}
                   {hasImage && (
-                    <div className={`relative z-10 w-full md:w-1/2 p-6 md:p-8 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
-                      <div className="relative w-full h-full min-h-[300px] md:min-h-[400px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+                    <div className={`relative z-10 w-full md:w-1/2 p-6 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
+                      <div className="relative w-full h-full min-h-[250px] md:min-h-[350px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
                         {/* Inner glow for the image to blend it nicely */}
                         <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
                         <img 
@@ -148,7 +148,7 @@ export default function CustomWindowSlider() {
                   )}
 
                   {/* Text Content Column */}
-                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-8 md:p-14 flex flex-col items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
+                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-6 md:p-8 flex flex-col gap-2.5 items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
                     {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
                   </div>
 

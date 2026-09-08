@@ -73,19 +73,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
     });
   };
 
-  const moveLayoutElement = (cardIndex: number, elementIndex: number, direction: 'up' | 'down') => {
-    setLocalSettings((prev: any) => {
-      const newCards = [...prev.customWindowCards];
-      const layout = [...newCards[cardIndex].layoutOrder];
-      if (direction === 'up' && elementIndex > 0) {
-        [layout[elementIndex - 1], layout[elementIndex]] = [layout[elementIndex], layout[elementIndex - 1]];
-      } else if (direction === 'down' && elementIndex < layout.length - 1) {
-        [layout[elementIndex + 1], layout[elementIndex]] = [layout[elementIndex], layout[elementIndex + 1]];
-      }
-      newCards[cardIndex] = { ...newCards[cardIndex], layoutOrder: layout };
-      return { ...prev, customWindowCards: newCards };
-    });
-  };
+
 
   const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, cardIndex: number) => {
     try {
@@ -139,49 +127,6 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
       newCards[cardIndex] = { ...newCards[cardIndex], tags };
       return { ...prev, customWindowCards: newCards };
     });
-  };
-
-  const handleAddButton = (cardIndex: number) => {
-    setLocalSettings((prev: any) => {
-      const newCards = [...prev.customWindowCards];
-      const buttons = newCards[cardIndex].buttons || [];
-      newCards[cardIndex] = { 
-        ...newCards[cardIndex], 
-        buttons: [...buttons, { id: Math.random().toString(36).substring(2), text: 'زر جديد', url: '#', color: '#f97316', outlined: false }] 
-      };
-      return { ...prev, customWindowCards: newCards };
-    });
-  };
-
-  const handleUpdateButton = (cardIndex: number, btnIndex: number, field: string, value: any) => {
-    setLocalSettings((prev: any) => {
-      const newCards = [...prev.customWindowCards];
-      const buttons = [...(newCards[cardIndex].buttons || [])];
-      buttons[btnIndex] = { ...buttons[btnIndex], [field]: value };
-      newCards[cardIndex] = { ...newCards[cardIndex], buttons };
-      return { ...prev, customWindowCards: newCards };
-    });
-  };
-
-  const handleRemoveButton = (cardIndex: number, btnIndex: number) => {
-    setLocalSettings((prev: any) => {
-      const newCards = [...prev.customWindowCards];
-      const buttons = [...(newCards[cardIndex].buttons || [])];
-      buttons.splice(btnIndex, 1);
-      newCards[cardIndex] = { ...newCards[cardIndex], buttons };
-      return { ...prev, customWindowCards: newCards };
-    });
-  };
-
-  const layoutLabels: Record<string, string> = {
-    topBadge: 'الشريط العلوي',
-    title: 'العنوان الرئيسي',
-    subtitle: 'الوصف الفرعي',
-    infoBadges: 'شارات المعلومات (قديمة)',
-    tags: 'المستطيلات العلوية',
-    button: 'الأزرار (قديمة)',
-    buttons: 'الأزرار الديناميكية',
-    image: 'الصورة'
   };
 
   return (

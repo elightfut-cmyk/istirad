@@ -30,7 +30,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
               <PackageSearch size={24} />
@@ -65,7 +65,7 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[600px] h-[600px] bg-indigo-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10">
+        <div className="max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10">
           
           {/* Title and Description */}
           <div className="text-center lg:text-right lg:col-start-1 lg:row-start-1 lg:self-end">

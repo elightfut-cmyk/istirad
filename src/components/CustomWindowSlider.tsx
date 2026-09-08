@@ -1,5 +1,6 @@
 import { useSettingsStore } from '../store/useSettingsStore';
-import { FileText } from 'lucide-react';
+import { FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useRef } from 'react';
 
 export default function CustomWindowSlider() {
   const { 
@@ -14,8 +15,19 @@ export default function CustomWindowSlider() {
     return null;
   }
 
+  const sliderRef = useRef<HTMLDivElement>(null);
+  
+  const scroll = (direction: 'next' | 'prev') => {
+    if (sliderRef.current) {
+      // In RTL, next (visually left) is negative scrollLeft
+      const scrollAmount = direction === 'next' ? -320 : 320;
+      sliderRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="w-full relative z-10 px-4 sm:px-6 lg:px-0 font-['Tajawal']">
+      <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       <div className="w-full lg:max-w-2xl mx-auto bg-white rounded-3xl p-4 sm:p-6 relative shadow-sm">
         {/* Top Badge */}
         {customWindowTopBadge && (
@@ -25,17 +37,34 @@ export default function CustomWindowSlider() {
         )}
 
         {/* Section Header */}
-        <div className="mb-8 mt-6">
-          {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 mb-2">{customWindowTitle}</h2>}
-          {customWindowSubtitle && (
-            <p className="text-sm text-gray-500">
-              {customWindowSubtitle}
-            </p>
+        <div className="mb-8 mt-6 flex justify-between items-end">
+          <div>
+            {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 mb-2">{customWindowTitle}</h2>}
+            {customWindowSubtitle && (
+              <p className="text-sm text-gray-500">
+                {customWindowSubtitle}
+              </p>
+            )}
+          </div>
+          
+          {/* Navigation Arrows */}
+          {customWindowCards.length > 2 && (
+            <div className="hidden md:flex gap-2">
+              <button onClick={() => scroll('prev')} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                <ChevronRight size={20} />
+              </button>
+              <button onClick={() => scroll('next')} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                <ChevronLeft size={20} />
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Cards Slider */}
+        <div 
+          ref={sliderRef}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 hide-scrollbar"
+        >
           {customWindowCards.map((card) => {
             const hasImage = !!card.imageUrl;
             const topBadge = card.topBadge;
@@ -69,7 +98,7 @@ export default function CustomWindowSlider() {
             }
 
             return (
-              <div key={card.id} className="relative rounded-2xl p-[2px] flex flex-col group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={card.id} className="snap-center flex-none w-full md:w-[calc(50%-12px)] relative rounded-2xl p-[2px] flex flex-col group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 {/* Rainbow animated border */}
                 <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#9400d3,#ff0000)] animate-[spin_4s_linear_infinite] opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
                 

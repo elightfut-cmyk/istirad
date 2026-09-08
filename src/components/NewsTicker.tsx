@@ -13,25 +13,30 @@ export default function NewsTicker() {
     : newsTickerItems;
 
   return (
-    <div className="w-full bg-[#4f46e5] text-white py-2 overflow-hidden flex items-center relative">
-      <div className="absolute right-0 top-0 bottom-0 bg-[#4f46e5] z-10 px-4 flex items-center shadow-[10px_0_10px_-5px_rgba(79,70,229,1)]">
-        <span className="font-bold whitespace-nowrap bg-white text-[#4f46e5] px-3 py-1 rounded-full text-xs">آخر الأخبار</span>
-      </div>
-      
-      <div className="flex animate-marquee whitespace-nowrap mr-24">
-        {displayItems.map((item, index) => (
-          <span key={index} className="mx-8 font-medium text-sm flex items-center">
-            <span className="w-2 h-2 rounded-full bg-orange-400 ml-3 inline-block"></span>
-            {item}
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-8">
+      <div className="w-full bg-white border border-gray-200 text-gray-800 rounded-full py-1.5 overflow-hidden flex items-center relative shadow-sm">
+        <div className="absolute right-1 top-1 bottom-1 bg-white z-10 flex items-center pr-1 pl-8 rounded-r-full">
+          <span className="font-bold whitespace-nowrap bg-[#4f46e5] text-white px-5 py-1.5 rounded-full text-sm flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-white inline-block"></span>
+            آخر الأخبار
           </span>
-        ))}
-        {/* Duplicate array for seamless infinite scroll */}
-        {displayItems.map((item, index) => (
-          <span key={`dup-${index}`} className="mx-8 font-medium text-sm flex items-center">
-            <span className="w-2 h-2 rounded-full bg-orange-400 ml-3 inline-block"></span>
-            {item}
-          </span>
-        ))}
+        </div>
+        
+        <div className="flex animate-marquee whitespace-nowrap mr-40 items-center">
+          {displayItems.map((item, index) => (
+            <span key={index} className="mx-6 font-bold text-sm flex items-center text-gray-700">
+              <span className="w-1.5 h-1.5 bg-[#4f46e5] ml-4 inline-block opacity-40"></span>
+              {item}
+            </span>
+          ))}
+          {/* Duplicate array for seamless infinite scroll */}
+          {displayItems.map((item, index) => (
+            <span key={`dup-${index}`} className="mx-6 font-bold text-sm flex items-center text-gray-700">
+              <span className="w-1.5 h-1.5 bg-[#4f46e5] ml-4 inline-block opacity-40"></span>
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `

@@ -54,6 +54,7 @@ interface SettingsState {
   footerDescription: string | null;
   footerFacebook: string | null;
   footerTwitter: string | null;
+  footerTelegram: string | null;
   footerInstagram: string | null;
   footerLinkedin: string | null;
   footerAddress: string | null;
@@ -96,6 +97,7 @@ export const useSettingsStore = create<SettingsState>()(
       footerDescription: 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.',
       footerFacebook: null,
       footerTwitter: null,
+      footerTelegram: null,
       footerInstagram: null,
       footerLinkedin: null,
       footerAddress: 'الجزائر العاصمة، الجزائر',
@@ -148,6 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
               footerDescription: data.footer_description ?? 'المنصة الأولى للربط التجاري B2B. استورد منتجاتك بكل سهولة وأمان من الصين إلى باب منزلك.',
               footerFacebook: data.footer_facebook ?? null,
               footerTwitter: data.footer_twitter ?? null,
+              footerTelegram: data.footer_telegram ?? null,
               footerInstagram: data.footer_instagram ?? null,
               footerLinkedin: data.footer_linkedin ?? null,
               footerAddress: data.footer_address ?? 'الجزائر العاصمة، الجزائر',

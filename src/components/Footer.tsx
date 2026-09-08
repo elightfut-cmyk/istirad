@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { Store, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
+import { Store, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Send } from 'lucide-react';
 
 interface Page {
   id: string;
@@ -59,6 +59,11 @@ export default function Footer() {
               {settings.footerTwitter && (
                 <a href={settings.footerTwitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Twitter size={20} />
+                </a>
+              )}
+              {settings.footerTelegram && (
+                <a href={settings.footerTelegram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                  <Send size={18} className="mr-1 mt-0.5" />
                 </a>
               )}
               {settings.footerInstagram && (

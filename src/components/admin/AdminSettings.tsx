@@ -34,6 +34,7 @@ export default function AdminSettings() {
     footerDescription: settingsStore.footerDescription || '',
     footerFacebook: settingsStore.footerFacebook || '',
     footerTwitter: settingsStore.footerTwitter || '',
+    footerTelegram: settingsStore.footerTelegram || '',
     footerInstagram: settingsStore.footerInstagram || '',
     footerLinkedin: settingsStore.footerLinkedin || '',
     footerAddress: settingsStore.footerAddress || '',
@@ -96,6 +97,7 @@ export default function AdminSettings() {
       footerDescription: settingsStore.footerDescription || '',
       footerFacebook: settingsStore.footerFacebook || '',
       footerTwitter: settingsStore.footerTwitter || '',
+      footerTelegram: settingsStore.footerTelegram || '',
       footerInstagram: settingsStore.footerInstagram || '',
       footerLinkedin: settingsStore.footerLinkedin || '',
       footerAddress: settingsStore.footerAddress || '',
@@ -108,7 +110,7 @@ export default function AdminSettings() {
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -203,6 +205,7 @@ export default function AdminSettings() {
           footer_description: localSettings.footerDescription,
           footer_facebook: localSettings.footerFacebook,
           footer_twitter: localSettings.footerTwitter,
+          footer_telegram: localSettings.footerTelegram,
           footer_instagram: localSettings.footerInstagram,
           footer_linkedin: localSettings.footerLinkedin,
           footer_address: localSettings.footerAddress,
@@ -698,8 +701,12 @@ export default function AdminSettings() {
               <input type="text" name="footerFacebook" value={localSettings.footerFacebook} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط تويتر</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">رابط تويتر (X)</label>
               <input type="text" name="footerTwitter" value={localSettings.footerTwitter} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">رابط تلغرام</label>
+              <input type="text" name="footerTelegram" value={localSettings.footerTelegram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">رابط انستغرام</label>

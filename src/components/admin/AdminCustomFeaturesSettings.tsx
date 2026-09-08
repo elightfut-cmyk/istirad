@@ -376,70 +376,30 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                   </div>
                 </div>
 
-                {/* Dynamic Buttons */}
+                {/* Simple Button */}
                 <div className="md:col-span-2 border-t pt-4 mt-2 mb-2">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-gray-700">الأزرار الديناميكية (الأسفل)</label>
-                    <button onClick={() => handleAddButton(cardIndex)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 font-bold flex items-center gap-1">
-                      <Plus size={14} /> إضافة زر
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {(card.buttons || []).map((btn: any, btnIndex: number) => (
-                      <div key={btn.id || btnIndex} className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg border border-gray-200">
-                        <input type="text" value={btn.text} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'text', e.target.value)} placeholder="نص الزر" className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]" />
-                        <input type="text" value={btn.url} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'url', e.target.value)} placeholder="الرابط" className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]" dir="ltr" />
-                        <select value={btn.color} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'color', e.target.value)} className="w-1/4 px-2 py-1.5 text-xs rounded border focus:ring-[#4f46e5]">
-                          <option value="#f97316">برتقالي (Orange)</option>
-                          <option value="#a855f7">بنفسجي (Purple)</option>
-                          <option value="#0ea5e9">أزرق سماوي (Sky Blue)</option>
-                          <option value="#ef4444">أحمر (Red)</option>
-                          <option value="#10b981">أخضر (Emerald)</option>
-                        </select>
-                        <label className="flex items-center gap-1 text-xs cursor-pointer bg-white px-2 py-1.5 rounded border">
-                          <input type="checkbox" checked={btn.outlined || false} onChange={(e) => handleUpdateButton(cardIndex, btnIndex, 'outlined', e.target.checked)} className="rounded text-[#4f46e5]" />
-                          مفرغ (Outlined)
-                        </label>
-                        <button onClick={() => handleRemoveButton(cardIndex, btnIndex)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg mr-auto"><Trash2 size={16}/></button>
-                      </div>
-                    ))}
-                    {(!card.buttons || card.buttons.length === 0) && <p className="text-xs text-gray-500 italic">لا يوجد أزرار مضافة.</p>}
+                  <label className="block text-sm font-bold text-gray-700 mb-2">إعدادات الزر</label>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر</label>
+                      <input type="text" value={card.buttonText || ''} onChange={(e) => handleUpdateCard(cardIndex, 'buttonText', e.target.value)} placeholder="مثال: شاهد هنا" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر</label>
+                      <input type="text" value={card.buttonUrl || ''} onChange={(e) => handleUpdateCard(cardIndex, 'buttonUrl', e.target.value)} placeholder="رابط الزر" className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Image */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">مكان الصورة</label>
-                  <select value={card.imagePosition || 'left'} onChange={(e) => handleUpdateCard(cardIndex, 'imagePosition', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
-                    <option value="left">يسار النص</option>
-                    <option value="right">يمين النص</option>
-                  </select>
-                </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">رابط الصورة (أو رفعها)</label>
                   <div className="flex gap-2">
-                    <input type="text" value={card.imageUrl} onChange={(e) => handleUpdateCard(cardIndex, 'imageUrl', e.target.value)} placeholder="رابط الصورة..." className="flex-1 px-3 py-2 border rounded-lg text-sm" dir="ltr" />
+                    <input type="text" value={card.imageUrl || ''} onChange={(e) => handleUpdateCard(cardIndex, 'imageUrl', e.target.value)} placeholder="رابط الصورة..." className="flex-1 px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                     <label className="flex items-center justify-center px-4 py-2 bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">
                       <ImageIcon size={18} className="mr-2" /> رفع
                       <input type="file" accept="image/*" onChange={(e) => handleCardImageUpload(e, cardIndex)} className="hidden" disabled={uploadingImage} />
                     </label>
                   </div>
-                </div>
-              </div>
-
-              {/* Element Ordering (Drag & Drop replacement using Up/Down arrows) */}
-              <div className="w-48 bg-white p-3 rounded-xl border border-gray-200">
-                <h4 className="text-xs font-bold text-gray-600 mb-2 text-center">ترتيب العناصر (السحب)</h4>
-                <div className="space-y-1">
-                  {card.layoutOrder.map((element, elIndex) => (
-                    <div key={element} className="flex items-center justify-between bg-gray-100 px-2 py-1.5 rounded-lg text-xs font-medium">
-                      <span>{layoutLabels[element]}</span>
-                      <div className="flex flex-col">
-                        <button onClick={() => moveLayoutElement(cardIndex, elIndex, 'up')} disabled={elIndex === 0} className="text-gray-500 hover:text-black disabled:opacity-20"><ChevronUp size={14}/></button>
-                        <button onClick={() => moveLayoutElement(cardIndex, elIndex, 'down')} disabled={elIndex === card.layoutOrder.length - 1} className="text-gray-500 hover:text-black disabled:opacity-20"><ChevronDown size={14}/></button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
 

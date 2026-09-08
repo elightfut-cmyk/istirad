@@ -37,13 +37,15 @@ export default function CustomWindowSlider() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {customWindowCards.map((card) => {
             const hasImage = !!card.imageUrl;
-            const topBadge = card.topBadge || (card.tags && card.tags.length > 0 ? card.tags[0] : null);
+            const topBadge = card.topBadge;
             const title = card.title;
             const subtitle = card.subtitle;
-            const infoBadges = [];
-            if (card.infoBadge1) infoBadges.push(card.infoBadge1);
-            if (card.infoBadge2) infoBadges.push(card.infoBadge2);
-            // Optionally, we can also add other tags if we want, but the design shows only a few badges.
+            const allTags = [];
+            if (card.infoBadge1) allTags.push(card.infoBadge1);
+            if (card.infoBadge2) allTags.push(card.infoBadge2);
+            if (card.tags && card.tags.length > 0) {
+              allTags.push(...card.tags);
+            }
             
             // Buttons logic
             const hasLegacyButtons = card.buttonText || card.button2Text;
@@ -103,11 +105,11 @@ export default function CustomWindowSlider() {
                     </p>
                   )}
 
-                  {/* Info Badges */}
-                  {infoBadges.length > 0 && (
+                  {/* Tags / Info Badges */}
+                  {allTags.length > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mb-5 mt-auto">
-                      {infoBadges.map((badge, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-gray-500 border border-gray-100 px-2 py-1 rounded-lg">
+                      {allTags.map((badge, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-xs font-medium text-gray-500 border border-gray-100 px-2 py-1 rounded-lg bg-gray-50/50">
                           {badge}
                         </div>
                       ))}
@@ -115,7 +117,7 @@ export default function CustomWindowSlider() {
                   )}
 
                   {/* Action Button */}
-                  <div className={infoBadges.length === 0 ? "mt-auto" : ""}>
+                  <div className={allTags.length === 0 ? "mt-auto" : ""}>
                     <a 
                       href={mainButtonUrl}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-50 text-[#4f46e5] hover:bg-indigo-100 transition-colors rounded-xl font-bold text-sm"

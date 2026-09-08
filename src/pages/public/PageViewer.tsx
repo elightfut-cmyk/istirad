@@ -41,10 +41,11 @@ export default function PageViewer() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] flex flex-col font-['Tajawal'] text-[#1a1a1a]">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center font-['Tajawal'] text-[#1a1a1a]">
+      <div className="w-full max-w-5xl bg-white min-h-screen shadow-xl flex flex-col relative overflow-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
               <PackageSearch size={24} />
@@ -86,6 +87,7 @@ export default function PageViewer() {
       </main>
 
       <Footer />
+      </div>
     </div>
   );
 }

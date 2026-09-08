@@ -27,10 +27,11 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] flex flex-col">
+    <div className="min-h-screen bg-gray-100 text-[#1a1a1a] font-['Tajawal'] flex flex-col items-center">
+      <div className="w-full max-w-5xl bg-white min-h-screen shadow-xl flex flex-col relative overflow-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
               <PackageSearch size={24} />
@@ -60,12 +61,12 @@ export default function LandingPage() {
       <CustomWindowSlider />
 
       {/* Hero Section */}
-      <section className="flex-1 flex items-center pt-20 pb-24 px-4 relative overflow-hidden">
+      <section className="flex-1 flex items-center pt-20 pb-24 px-4 relative">
         {/* Background blobs */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[600px] h-[600px] bg-indigo-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
         
-        <div className="max-w-5xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 lg:gap-x-16 gap-y-12 items-center relative z-10 px-4 sm:px-6 lg:px-8">
           
           {/* Title and Description */}
           <div className="text-center lg:text-right lg:col-start-1 lg:row-start-1 lg:self-end">
@@ -173,6 +174,7 @@ export default function LandingPage() {
       <WhatsAppButton />
 
       <Footer />
+      </div>
     </div>
   );
 }

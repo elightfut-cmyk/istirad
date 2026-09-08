@@ -134,10 +134,10 @@ export default function CustomWindowSlider() {
 
                   {/* Image Column - Moved above text in DOM so it renders on top on mobile */}
                   {hasImage && (
-                    <div className={`relative z-10 w-full md:w-1/2 p-6 flex items-center justify-center ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
-                      <div className="relative w-full h-full min-h-[250px] md:min-h-[350px] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
-                        {/* Inner glow for the image to blend it nicely */}
-                        <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(10,5,20,0.8)] pointer-events-none z-10"></div>
+                    <div className={`relative z-10 w-full md:w-[35%] flex items-stretch ${isImageLeft ? 'md:order-1' : 'md:order-2'}`}>
+                      <div className="relative w-full min-h-[250px] md:min-h-full">
+                        {/* Inner shadow to blend image edges */}
+                        <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(10,5,20,0.5)] pointer-events-none z-10"></div>
                         <img 
                           src={card.imageUrl} 
                           alt={card.title || "Banner Image"} 
@@ -148,7 +148,7 @@ export default function CustomWindowSlider() {
                   )}
 
                   {/* Text Content Column */}
-                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-1/2' : ''} p-6 md:p-8 flex flex-col gap-2.5 items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
+                  <div className={`relative z-10 w-full ${hasImage ? 'md:w-[65%]' : ''} p-6 md:p-8 flex flex-col gap-2.5 items-center justify-center text-center ${isImageLeft ? 'md:order-2' : 'md:order-1'}`}>
                     {getLayoutOrder(card).map((element: string) => renderTextElement(element, card))}
                   </div>
 

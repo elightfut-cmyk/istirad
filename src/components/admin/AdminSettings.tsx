@@ -124,6 +124,16 @@ export default function AdminSettings() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    // Extract Facebook Pixel ID if user pastes the whole script
+    if (name === 'facebookPixelId' && value) {
+      const match = value.match(/fbq\s*\(\s*['"]init['"]\s*,\s*['"](\d+)['"]\s*\)/);
+      if (match && match[1]) {
+        setLocalSettings(prev => ({ ...prev, [name]: match[1] }));
+        return;
+      }
+    }
+    
     setLocalSettings(prev => ({ ...prev, [name]: value }));
   };
 
@@ -201,8 +211,8 @@ export default function AdminSettings() {
           ad_subtitle: localSettings.adSubtitle || null,
           ad_image_url: localSettings.adImageUrl || null,
           ad_link_url: localSettings.adLinkUrl || null,
-          chargily_live_key: localSettings.chargilyLiveKey || null,
-          facebook_pixel_id: localSettings.facebookPixelId || null,
+          chargily_live_key: localSettings.chargilyLiveKey || '',
+          facebook_pixel_id: localSettings.facebookPixelId || '',
           hero_image_url: localSettings.heroImageUrl || null,
           hero_image_url_2: localSettings.heroImageUrl2 || null,
           referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
@@ -267,8 +277,8 @@ export default function AdminSettings() {
             name="facebookPixelId"
             value={localSettings.facebookPixelId}
             onChange={handleChange}
-            placeholder="مثال: 123456789012345"
-            className="block w-full max-w-md px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            placeholder="مثال: 123456789012345 (يمكنك لصق كود البيكسل كاملاً وسنستخرج الرقم تلقائياً)"
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
           />
         </div>
         <p className="text-gray-500 text-sm mt-2">

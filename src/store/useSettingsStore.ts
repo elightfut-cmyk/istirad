@@ -70,6 +70,7 @@ interface SettingsState {
   newsTickerTitle: string;
   youtubePlaylistUrl: string;
   youtubePlaylistActive: boolean;
+  facebookPixelId: string | null;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -117,6 +118,7 @@ export const useSettingsStore = create<SettingsState>()(
       newsTickerTitle: 'آخر الأخبار',
       youtubePlaylistUrl: '',
       youtubePlaylistActive: false,
+      facebookPixelId: null,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
@@ -174,6 +176,7 @@ export const useSettingsStore = create<SettingsState>()(
               newsTickerTitle: data.news_ticker_title ?? 'آخر الأخبار',
               youtubePlaylistUrl: data.youtube_playlist_url || '',
               youtubePlaylistActive: data.youtube_playlist_active ?? false,
+              facebookPixelId: data.facebook_pixel_id || null,
             });
           }
         } catch (error) {

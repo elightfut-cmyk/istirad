@@ -14,6 +14,7 @@ import CountdownCircle from '../../components/CountdownCircle';
 import InvoiceDocument from '../../components/InvoiceDocument';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
+import { trackCustomFacebookEvent } from '../../components/FacebookPixel';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -68,6 +69,9 @@ export default function MerchantOrders() {
     if (pStatus && user) {
       if (pStatus === 'success') {
         setPaymentNotification({ type: 'success', message: '✅ تمت عملية الدفع بنجاح! سيتم تأكيد طلبك قريباً.' });
+        if (pType !== 'remaining') {
+          trackCustomFacebookEvent('PayDeposit');
+        }
         // Notifications and referral commissions have been moved to the Chargily webhook
         // to ensure they trigger even if the user closes the window.
 
@@ -340,6 +344,7 @@ export default function MerchantOrders() {
         sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلبك`, 'success');
         sendNotification(user.id, 'تم الدفع بنجاح', `تم دفع العربون وقبول عرض المورد من محفظتك لطلبك`, 'success');
         sendNotification('all_admins', 'عملية دفع جديدة', `قام التاجر ${user.name} بدفع العربون لطلب من المحفظة`, 'info');
+        trackCustomFacebookEvent('PayDeposit', { value: amountToPay, currency: 'DZD' });
       } else {
         await supabase.from('supplier_bids').update({ is_fully_paid: true }).eq('id', selectedBidForPayment.id);
         sendNotification(selectedBidForPayment.supplier_id, 'دفع المبلغ المتبقي', `قام التاجر ${user.name} بدفع المبلغ المتبقي لطلبك`, 'success');

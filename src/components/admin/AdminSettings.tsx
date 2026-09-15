@@ -21,6 +21,7 @@ export default function AdminSettings() {
     adImageUrl: settingsStore.adImageUrl || '',
     adLinkUrl: settingsStore.adLinkUrl || '',
     chargilyLiveKey: settingsStore.chargilyLiveKey || '',
+    facebookPixelId: settingsStore.facebookPixelId || '',
     heroImageUrl: settingsStore.heroImageUrl || '',
     heroImageUrl2: settingsStore.heroImageUrl2 || '',
     referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
@@ -88,6 +89,7 @@ export default function AdminSettings() {
       adImageUrl: settingsStore.adImageUrl || '',
       adLinkUrl: settingsStore.adLinkUrl || '',
       chargilyLiveKey: settingsStore.chargilyLiveKey || '',
+      facebookPixelId: settingsStore.facebookPixelId || '',
       heroImageUrl: settingsStore.heroImageUrl || '',
       heroImageUrl2: settingsStore.heroImageUrl2 || '',
       referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
@@ -118,7 +120,7 @@ export default function AdminSettings() {
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.facebookPixelId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -200,6 +202,7 @@ export default function AdminSettings() {
           ad_image_url: localSettings.adImageUrl || null,
           ad_link_url: localSettings.adLinkUrl || null,
           chargily_live_key: localSettings.chargilyLiveKey || null,
+          facebook_pixel_id: localSettings.facebookPixelId || null,
           hero_image_url: localSettings.heroImageUrl || null,
           hero_image_url_2: localSettings.heroImageUrl2 || null,
           referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
@@ -252,6 +255,27 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-8">
+      {/* Facebook Pixel */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">خدمات الطرف الثالث</h3>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          معرف فايسبوك بيكسل (Facebook Pixel ID)
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="text"
+            name="facebookPixelId"
+            value={localSettings.facebookPixelId}
+            onChange={handleChange}
+            placeholder="مثال: 123456789012345"
+            className="block w-full max-w-md px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+          />
+        </div>
+        <p className="text-gray-500 text-sm mt-2">
+          أدخل كود البيكسل لتتبع زوار الموقع والأحداث المهمة (مثل دفع العربون). اترك الحقل فارغاً لإلغاء التتبع.
+        </p>
+      </div>
+
       {/* Min Quantity */}
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات الطلبات المخصصة</h3>

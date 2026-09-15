@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSettingsStore } from '../store/useSettingsStore';
 
 // Extend the Window interface to include fbq
@@ -27,32 +28,35 @@ export const trackCustomFacebookEvent = (eventName: string, data: any = {}) => {
 
 export default function FacebookPixel() {
   const { facebookPixelId } = useSettingsStore();
+  const location = useLocation();
 
   useEffect(() => {
     if (!facebookPixelId) return;
 
     // Check if pixel is already initialized to avoid duplicate scripts
-    if (window.fbq) return;
-
-    // Initialize Facebook Pixel
-    (function(f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
-      if(f.fbq) return; n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      if (s && s.parentNode) {
-        s.parentNode.insertBefore(t,s);
-      } else {
-        b.head.appendChild(t);
-      }
-    })(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      
-    window.fbq('init', facebookPixelId);
+    if (!window.fbq) {
+      // Initialize Facebook Pixel
+      (function(f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
+        if(f.fbq) return; n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        if (s && s.parentNode) {
+          s.parentNode.insertBefore(t,s);
+        } else {
+          b.head.appendChild(t);
+        }
+      })(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        
+      window.fbq('init', facebookPixelId);
+    }
+    
+    // Track PageView on route change
     window.fbq('track', 'PageView');
 
-  }, [facebookPixelId]);
+  }, [facebookPixelId, location.pathname, location.search]);
 
   return null;
 }

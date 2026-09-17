@@ -86,12 +86,17 @@ export default function SupplierOrders() {
 
   const updateShippingStatus = async (bidId: string, status: string) => {
     try {
+      const updateData: any = { shipping_status: status };
+      if (status === 'delivered') {
+        updateData.is_fully_paid = true;
+      }
+
       const { error } = await supabase
         .from('supplier_bids')
-        .update({ shipping_status: status })
+        .update(updateData)
         .eq('id', bidId);
       if (error) throw error;
-      setOrders(orders.map(o => o.id === bidId ? { ...o, shipping_status: status } : o));
+      setOrders(orders.map(o => o.id === bidId ? { ...o, ...updateData } : o));
 
       const order = orders.find(o => o.id === bidId);
       if (order && order.custom_requests?.merchant_id) {

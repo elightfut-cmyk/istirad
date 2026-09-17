@@ -316,6 +316,27 @@ export default function SupplierRequests() {
                       </button>
                     </div>
                   )}
+
+                  {/* Show other suppliers' bids */}
+                  {req.supplier_bids && req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).length > 0 && (
+                    <div className="w-full mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="font-bold text-gray-700 mb-3 text-sm text-right">عروض الموردين الآخرين ({req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).length})</h4>
+                      <div className="space-y-3">
+                        {req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).map((otherBid: any) => (
+                          <div key={otherBid.id} className="bg-white border border-gray-200 rounded-lg p-3 text-right">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-500">سعر القطعة:</span>
+                              <span className="font-bold text-sm">{formatCurrency(otherBid.price / (req.quantity || 1))}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-500">السعر الإجمالي:</span>
+                              <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.price)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 </div>
                 

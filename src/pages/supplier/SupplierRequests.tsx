@@ -337,7 +337,7 @@ export default function SupplierRequests() {
                               <span className="text-xs text-gray-500">السعر الإجمالي:</span>
                               <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.price)}</span>
                             </div>
-                            {otherBid.allow_negotiation && (otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
+                            {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
                               <div className="mt-3 pt-3 border-t border-gray-100 bg-orange-50/50 p-2 rounded-lg">
                                 <p className="text-xs font-bold text-orange-800 mb-1">تفاوض التاجر مع هذا المورد:</p>
                                 <p className="text-xs text-gray-700">اقترح التاجر: <strong>{formatCurrency(otherBid.negotiated_price)}</strong></p>

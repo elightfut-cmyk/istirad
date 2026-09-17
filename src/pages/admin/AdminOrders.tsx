@@ -285,7 +285,7 @@ export default function AdminOrders() {
                                       </div>
 
                                       {/* Negotiation Info for Admin */}
-                                      {bid.allow_negotiation && (bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
+                                      {(bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
                                         <div className="mt-4 bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm">
                                           <p className="font-bold text-orange-800 mb-2">تفاوض التاجر والمورد:</p>
                                           <p className="text-gray-700">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong></p>
@@ -405,7 +405,7 @@ export default function AdminOrders() {
                             )}
                           </td>
                         </tr>
-                        {directBid?.allow_negotiation && (directBid.negotiated_by === 'merchant' || directBid.negotiated_by === 'supplier_accepted' || directBid.negotiated_by === 'supplier_rejected') && (
+                        {directBid && (directBid.negotiated_by === 'merchant' || directBid.negotiated_by === 'supplier_accepted' || directBid.negotiated_by === 'supplier_rejected') && (
                           <tr className="bg-orange-50/50">
                             <td colSpan={5} className="p-4 border-t border-orange-100">
                               <div className="flex gap-4 items-start">

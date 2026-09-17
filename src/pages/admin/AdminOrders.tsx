@@ -356,54 +356,77 @@ export default function AdminOrders() {
                     const remainingPaid = directBid?.is_fully_paid === true;
 
                     return (
-                      <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                              <Package size={20} className="text-gray-500" />
+                      <React.Fragment key={req.id}>
+                        <tr className="hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                <Package size={20} className="text-gray-500" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-800">{req.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">الكمية: {req.quantity}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-bold text-gray-800">{req.title}</p>
-                              <p className="text-xs text-gray-500 mt-1">الكمية: {req.quantity}</p>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-bold text-gray-800">التاجر: {req.merchant?.name || '-'}</span>
+                              <span className="text-sm text-gray-600">المورد: {directBid?.supplier?.name || '-'}</span>
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-sm font-bold text-gray-800">التاجر: {req.merchant?.name || '-'}</span>
-                            <span className="text-sm text-gray-600">المورد: {directBid?.supplier?.name || '-'}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className="font-bold text-gray-700">{directBid ? formatCurrency(directBid.price) : '-'}</span>
-                        </td>
-                        <td className="p-4">
-                          {advancePaid ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
-                              <CheckCircle2 size={14} />
-                              مدفوع
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-orange-50 text-orange-700">
-                              <Clock size={14} />
-                              بانتظار الدفع
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          {remainingPaid ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
-                              <CheckCircle2 size={14} />
-                              مدفوع
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-                              <CreditCard size={14} />
-                              غير مدفوع
-                            </span>
-                          )}
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="p-4">
+                            <span className="font-bold text-gray-700">{directBid ? formatCurrency(directBid.price) : '-'}</span>
+                          </td>
+                          <td className="p-4">
+                            {advancePaid ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
+                                <CheckCircle2 size={14} />
+                                مدفوع
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-orange-50 text-orange-700">
+                                <Clock size={14} />
+                                بانتظار الدفع
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {remainingPaid ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
+                                <CheckCircle2 size={14} />
+                                مدفوع
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                                <CreditCard size={14} />
+                                غير مدفوع
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                        {directBid?.allow_negotiation && (directBid.negotiated_by === 'merchant' || directBid.negotiated_by === 'supplier_accepted' || directBid.negotiated_by === 'supplier_rejected') && (
+                          <tr className="bg-orange-50/50">
+                            <td colSpan={5} className="p-4 border-t border-orange-100">
+                              <div className="flex gap-4 items-start">
+                                <div className="bg-orange-100 p-2 rounded-lg text-orange-600 shrink-0">
+                                  <MessageSquare size={16} />
+                                </div>
+                                <div className="text-sm w-full">
+                                  <p className="font-bold text-orange-800 mb-1">تفاوض التاجر والمورد:</p>
+                                  <p className="text-gray-700">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong></p>
+                                  {directBid.customer_reply && (
+                                    <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{directBid.customer_reply}"</p>
+                                  )}
+                                  {directBid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
+                                  {directBid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
+                                  {directBid.negotiated_by === 'merchant' && <p className="text-orange-600 font-bold mt-2">موقف المورد: في انتظار الرد</p>}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     );
                   })
                 )}

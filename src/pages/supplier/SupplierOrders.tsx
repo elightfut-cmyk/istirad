@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { ShoppingBag, Package, CheckCircle2, DollarSign, Clock } from 'lucide-react';
+import { ShoppingBag, Package, CheckCircle2, DollarSign, Clock, Store, User, MapPin, Phone } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -230,8 +230,9 @@ export default function SupplierOrders() {
       const remaining = order.price - advancePaid;
 
       return (
-        <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
-          <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100 flex flex-col">
+        <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+          <div className="flex flex-col md:flex-row">
+            <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100 flex flex-col">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-xl text-gray-900 mb-2">{req?.title?.replace('طلب مباشر: ', '')}</h3>
@@ -269,14 +270,7 @@ export default function SupplierOrders() {
           </div>
 
           <div className="p-6 md:w-1/3 bg-gray-50 flex flex-col justify-center">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">تفاصيل العميل والدفع</h4>
-
-            <div className="mb-4">
-              <p className="text-sm font-bold text-gray-900">{merchant?.company_name}</p>
-              <p className="text-xs text-gray-500 mt-1">الاسم: {merchant?.name}</p>
-              <p className="text-xs text-gray-500 mt-1">الهاتف: {merchant?.phone || 'غير متوفر'}</p>
-              <p className="text-xs text-gray-500 mt-1">المنطقة: {merchant?.address || 'غير متوفر'}</p>
-            </div>
+            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">تفاصيل الدفع</h4>
 
             <div className="bg-white p-3 rounded-xl border border-gray-100 mb-4">
               <div className="flex justify-between text-sm mb-2">
@@ -370,6 +364,27 @@ export default function SupplierOrders() {
               </div>
             )}
 
+          </div>
+          </div>
+          
+          {/* Footer for Merchant Details */}
+          <div className="bg-blue-50/30 border-t border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
+            <div className="flex items-center gap-2 text-gray-800">
+              <Store size={18} className="text-[#4f46e5]" />
+              <span className="font-bold text-sm">{merchant?.company_name}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <User size={18} className="text-gray-400" />
+              <span className="text-sm font-medium">{merchant?.name}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <MapPin size={18} className="text-gray-400" />
+              <span className="text-sm font-medium">{merchant?.address || 'غير متوفر'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Phone size={18} className="text-gray-400" />
+              <span className="text-sm font-medium" dir="ltr">{merchant?.phone || 'غير متوفر'}</span>
+            </div>
           </div>
         </div>
       );

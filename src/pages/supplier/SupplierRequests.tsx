@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -188,14 +188,12 @@ export default function SupplierRequests() {
             const isClosed = req.status === 'closed';
 
             return (
-              <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
-                <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md mb-2 inline-block">
-                        التاجر: {req.merchant?.company_name} | المنطقة: {req.merchant?.address || 'غير متوفر'} | الهاتف: {req.merchant?.phone || 'غير متوفر'}
-                      </span>
-                      <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
+              <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                <div className="flex flex-col md:flex-row">
+                  <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${isClosed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                       {isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
@@ -318,6 +316,27 @@ export default function SupplierRequests() {
                       </button>
                     </div>
                   )}
+                </div>
+                </div>
+                
+                {/* Footer for Merchant Details */}
+                <div className="bg-blue-50/30 border-t border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
+                  <div className="flex items-center gap-2 text-gray-800">
+                    <Store size={18} className="text-[#4f46e5]" />
+                    <span className="font-bold text-sm">{req.merchant?.company_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <User size={18} className="text-gray-400" />
+                    <span className="text-sm font-medium">{req.merchant?.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin size={18} className="text-gray-400" />
+                    <span className="text-sm font-medium">{req.merchant?.address || 'غير متوفر'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone size={18} className="text-gray-400" />
+                    <span className="text-sm font-medium" dir="ltr">{req.merchant?.phone || 'غير متوفر'}</span>
+                  </div>
                 </div>
               </div>
             );

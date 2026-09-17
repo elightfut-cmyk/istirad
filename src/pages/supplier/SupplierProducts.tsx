@@ -324,7 +324,7 @@ export default function SupplierProducts() {
                     onChange={e => setForm({...form, price: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
-                  <p className="text-xs text-gray-500 mt-1">يساوي: ${((form.price || 0) / exchangeRate).toFixed(2)}</p>
+                  <p className="text-xs text-gray-500 mt-1">يساوي: ${Number(((form.price || 0) / exchangeRate).toFixed(2))}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">نسبة الدفعة المقدمة (العربون) %</label>
@@ -349,7 +349,7 @@ export default function SupplierProducts() {
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                     placeholder="اختياري"
                   />
-                  {form.discount_price > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: ${((form.discount_price || 0) / exchangeRate).toFixed(2)}</p>}
+                  {form.discount_price > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: ${Number(((form.discount_price || 0) / exchangeRate).toFixed(2))}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">أقل كمية للطلب (MOQ)</label>

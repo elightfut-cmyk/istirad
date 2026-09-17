@@ -125,13 +125,17 @@ export const useSettingsStore = create<SettingsState>()(
         const { currency, exchangeRate } = get();
         if (currency === 'USD') {
           const usdAmount = amount / exchangeRate;
-          const parts = usdAmount.toFixed(2).split('.');
+          let formatted = usdAmount.toFixed(2);
+          if (formatted.endsWith('.00')) formatted = formatted.slice(0, -3);
+          const parts = formatted.split('.');
           parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           return `$${parts.join(',')}`;
         } else {
-          const parts = amount.toFixed(2).split('.');
+          let formatted = amount.toFixed(2);
+          if (formatted.endsWith('.00')) formatted = formatted.slice(0, -3);
+          const parts = formatted.split('.');
           parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-          return `${parts.join(',')} د.ج`;
+          return `${parts.join(',')} دج`;
         }
       },
       fetchSettings: async () => {

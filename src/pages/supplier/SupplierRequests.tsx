@@ -386,7 +386,7 @@ export default function SupplierRequests() {
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   placeholder="أدخل سعر القطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${((bidForm.price || 0) / exchangeRate).toFixed(2)} | الإجمالي: {formatCurrency((bidForm.price || 0) * biddingRequest.quantity)}</p>
+                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${Number(((bidForm.price || 0) / exchangeRate).toFixed(2))} | الإجمالي: {formatCurrency((bidForm.price || 0) * biddingRequest.quantity)}</p>
               </div>
               
 

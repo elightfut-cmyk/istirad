@@ -51,7 +51,7 @@ export default function SupplierOrders() {
             product_link, 
             request_type,
             merchant_id,
-            merchant:users!merchant_id(company_name, name, email, phone)
+            merchant:users!merchant_id(company_name, name, email, phone, address)
           )
         `)
         .eq('supplier_id', user!.id)
@@ -275,6 +275,7 @@ export default function SupplierOrders() {
               <p className="text-sm font-bold text-gray-900">{merchant?.company_name}</p>
               <p className="text-xs text-gray-500 mt-1">الاسم: {merchant?.name}</p>
               <p className="text-xs text-gray-500 mt-1">الهاتف: {merchant?.phone || 'غير متوفر'}</p>
+              <p className="text-xs text-gray-500 mt-1">المنطقة: {merchant?.address || 'غير متوفر'}</p>
             </div>
 
             <div className="bg-white p-3 rounded-xl border border-gray-100 mb-4">

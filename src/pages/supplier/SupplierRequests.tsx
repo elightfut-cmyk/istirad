@@ -33,7 +33,7 @@ export default function SupplierRequests() {
         .from('custom_requests')
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
-          merchant:users!merchant_id(name, company_name),
+          merchant:users!merchant_id(name, company_name, phone, address),
           supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by)
         `)
         .order('created_at', { ascending: false })
@@ -193,7 +193,7 @@ export default function SupplierRequests() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md mb-2 inline-block">
-                        التاجر: {req.merchant?.company_name}
+                        التاجر: {req.merchant?.company_name} | المنطقة: {req.merchant?.address || 'غير متوفر'} | الهاتف: {req.merchant?.phone || 'غير متوفر'}
                       </span>
                       <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
                     </div>

@@ -694,19 +694,30 @@ export default function MerchantOrders() {
                   </div>
                   
                   {req.status === 'open' && bid && bid.status === 'pending' && (
-                    <div className="p-4 bg-white border-t border-gray-100 flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-gray-500">العربون المطلوب ({bid.advance_percentage}%):</p>
-                        <p className="font-black text-xl text-red-600">
-                          {formatCurrency((bid.price * bid.advance_percentage) / 100)}
-                        </p>
+                    <div className="p-4 bg-white border-t border-gray-100 flex flex-col gap-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-500">العربون المطلوب ({bid.advance_percentage}%):</p>
+                          <p className="font-black text-xl text-red-600">
+                            {formatCurrency((bid.price * bid.advance_percentage) / 100)}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
+                          className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
+                        >
+                          دفع العربون
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
-                        className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
+                      <a 
+                        href={`https://wa.me/${bid.supplier?.phone || '+213000000000'}?text=${encodeURIComponent(`مرحباً، أتواصل معك بخصوص الطلب المباشر رقم: ${req.id}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-bold border border-green-200 hover:bg-green-100 transition w-full sm:w-auto justify-center self-start"
                       >
-                        دفع العربون
-                      </button>
+                        <MessageCircle size={18} />
+                        تواصل مع المورد (واتساب) - متاح قبل الدفع
+                      </a>
                     </div>
                   )}
                   {req.status === 'closed' && (
@@ -915,6 +926,18 @@ export default function MerchantOrders() {
                             </div>
                           )}
 
+                          <div className="mb-4">
+                            <a 
+                              href={`https://wa.me/${bid.supplier?.phone || '+213000000000'}?text=${encodeURIComponent(`مرحباً، أتواصل معك بخصوص عرضك على مناقصة رقم: ${req.id}`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-bold border border-green-200 hover:bg-green-100 transition w-full justify-center"
+                            >
+                              <MessageCircle size={18} />
+                              تواصل مع المورد (واتساب)
+                            </a>
+                          </div>
+
                           {req.status === 'open' && bid.status === 'pending' && (!bid.negotiated_by || bid.negotiated_by === 'supplier_rejected') && (
                             <div className="flex flex-col sm:flex-row gap-2 mt-4">
                               <button 
@@ -1019,17 +1042,6 @@ export default function MerchantOrders() {
                                   currentStatus={bid.shipping_status || (req.request_type === 'direct' ? 'processing' : 'pending_in_china')} 
                                   isDirectOrder={req.request_type === 'direct'}
                                 />
-                              </div>
-                              <div className="flex flex-col gap-3">
-                                <a 
-                                  href={`https://wa.me/${bid.supplier?.phone || '+213000000000'}?text=${encodeURIComponent(`مرحباً، أتواصل معك بخصوص عرضك على مناقصة رقم: ${req.id}`)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-green-700 transition w-full sm:w-max justify-center"
-                                >
-                                  <MessageCircle size={18} />
-                                  تواصل عبر الواتساب
-                                </a>
                               </div>
                               <button 
                                 onClick={() => handleDownloadInvoice(req)}

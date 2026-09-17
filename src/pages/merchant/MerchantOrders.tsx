@@ -30,6 +30,7 @@ export default function MerchantOrders() {
   const [showNegotiationModal, setShowNegotiationModal] = useState(false);
   const [negotiationBid, setNegotiationBid] = useState<any>(null);
   const [negotiatedPrice, setNegotiatedPrice] = useState<number>(0);
+  const [customerReply, setCustomerReply] = useState<string>('');
   const [negotiating, setNegotiating] = useState(false);
   const [cancellingDealId, setCancellingDealId] = useState<string | null>(null);
 
@@ -128,7 +129,7 @@ export default function MerchantOrders() {
         .select(`
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
           supplier_bids (
-            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by,
+            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users(name, company_name, phone, verification_badge)
           )
         `)
@@ -522,7 +523,8 @@ export default function MerchantOrders() {
     try {
       const { error } = await supabase.from('supplier_bids').update({
         negotiated_price: negotiatedPrice,
-        negotiated_by: 'merchant'
+        negotiated_by: 'merchant',
+        customer_reply: customerReply
       }).eq('id', negotiationBid.id);
 
       if (error) throw error;
@@ -531,6 +533,7 @@ export default function MerchantOrders() {
       setShowNegotiationModal(false);
       setNegotiationBid(null);
       setNegotiatedPrice(0);
+      setCustomerReply('');
       fetchRequests();
     } catch (error) {
       console.error(error);
@@ -1306,11 +1309,21 @@ export default function MerchantOrders() {
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">رسالة للمورد (اختياري)</label>
+                <textarea
+                  value={customerReply}
+                  onChange={e => setCustomerReply(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 min-h-[100px]"
+                  placeholder="اكتب ردك أو مبررك لاقتراح هذا السعر..."
+                />
+              </div>
+
               <div className="pt-4 flex gap-4">
                 <button type="submit" disabled={negotiating || !negotiatedPrice} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition disabled:opacity-50">
                   {negotiating ? 'جاري الإرسال...' : 'إرسال الاقتراح'}
                 </button>
-                <button type="button" onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); }} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button type="button" onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); setCustomerReply(''); }} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>

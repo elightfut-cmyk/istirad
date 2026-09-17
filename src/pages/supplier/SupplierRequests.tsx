@@ -34,7 +34,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
           merchant:users!merchant_id(name, company_name, phone, address),
-          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by)
+          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply)
         `)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -254,6 +254,11 @@ export default function SupplierRequests() {
                       ) : myBid.negotiated_by === 'merchant' ? (
                         <div className="bg-orange-100 text-orange-800 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200">
                           <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price)}</strong> للقطعة الواحدة.</p>
+                          {myBid.customer_reply && (
+                            <div className="mb-4 bg-white p-3 rounded-lg border border-orange-200 text-gray-700 font-normal">
+                              <strong>رسالة التاجر:</strong> {myBid.customer_reply}
+                            </div>
+                          )}
                           <div className="flex gap-2">
                             <button 
                               onClick={() => handleAcceptProposedPrice(myBid, req.quantity || 1, req.merchant_id)}

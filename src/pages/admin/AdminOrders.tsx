@@ -35,7 +35,7 @@ export default function AdminOrders() {
           id, title, quantity, status, created_at, request_type,
           merchant:users!merchant_id(name, company_name),
           supplier_bids(
-            id, price, status, created_at, is_fully_paid, advance_percentage,
+            id, price, status, created_at, is_fully_paid, advance_percentage, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users!supplier_id(name, company_name)
           )
         `)
@@ -283,6 +283,21 @@ export default function AdminOrders() {
                                           </span>
                                         )}
                                       </div>
+
+                                      {/* Negotiation Info for Admin */}
+                                      {bid.allow_negotiation && (bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
+                                        <div className="mt-4 bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm">
+                                          <p className="font-bold text-orange-800 mb-2">تفاوض التاجر والمورد:</p>
+                                          <p className="text-gray-700">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong></p>
+                                          {bid.customer_reply && (
+                                            <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{bid.customer_reply}"</p>
+                                          )}
+                                          {bid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
+                                          {bid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
+                                          {bid.negotiated_by === 'merchant' && <p className="text-orange-600 font-bold mt-2">موقف المورد: في انتظار الرد</p>}
+                                        </div>
+                                      )}
+
                                       <div className="mt-4 pt-3 border-t border-gray-100/50 flex justify-between items-end">
                                         <div>
                                           <p className="text-xs text-gray-500 mb-1">السعر المعروض:</p>

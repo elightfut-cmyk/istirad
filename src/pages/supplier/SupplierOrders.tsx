@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, ExternalLink, Package, Shield, ExternalLink as LinkIcon, CheckCircle2, MessageCircle, AlertTriangle, ShoppingBag, DollarSign, Clock, Store, User, MapPin, Phone } from 'lucide-react';
+import { Package, CheckCircle2, ShoppingBag, DollarSign, Clock, Store, User, MapPin, Phone } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';

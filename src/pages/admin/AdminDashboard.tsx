@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, Download, ExternalLink, Package, Shield, Store, TrendingUp, Users, Wallet, CheckCircle, AlertTriangle, LayoutDashboard, ShoppingBag, MessageSquare, Ticket } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';

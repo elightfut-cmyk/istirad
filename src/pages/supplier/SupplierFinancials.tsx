@@ -68,7 +68,7 @@ export default function SupplierFinancials() {
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             fee = totalFee;
           } else if (bid.status === 'accepted') {
-            fee = advancePaid * (percentage / 100);
+            fee = totalFee * (bid.advance_percentage / 100);
           }
           
           totalSales += bid.price;

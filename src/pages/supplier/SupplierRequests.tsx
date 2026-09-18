@@ -34,7 +34,8 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
           merchant:users!merchant_id(name, company_name, phone, address),
-          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply)
+          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply),
+          supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -129,6 +130,28 @@ export default function SupplierRequests() {
       fetchRequests();
     } catch (error) {
       toast.error('حدث خطأ أثناء رفض السعر المقترح');
+    }
+  };
+
+  const handleIndicateInterest = async (requestId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from('supplier_interests').insert({
+        request_id: requestId,
+        supplier_id: user.id
+      });
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          toast.success('لقد قمت بإعلام التاجر مسبقاً.');
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success('تم إعلام التاجر بأنك تبحث عن عرض مناسب لطلبه.');
+      }
+      fetchRequests();
+    } catch (error) {
+      toast.error('حدث خطأ أثناء المحاولة');
     }
   };
 
@@ -311,14 +334,26 @@ export default function SupplierRequests() {
                   ) : isClosed ? (
                     <div className="text-gray-500 font-medium">الطلب مغلق. لم تقدم عرضاً عليه.</div>
                   ) : (
-                    <div className="w-full">
-                      <p className="text-sm text-gray-500 mb-4">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
+                    <div className="w-full flex flex-col gap-2">
+                      <p className="text-sm text-gray-500 mb-2">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
                       <button 
                         onClick={() => setBiddingRequest(req)}
                         className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
                       >
                         تقديم عرض سعر
                       </button>
+                      {!req.supplier_interests?.some((i: any) => i.supplier_id === user?.id) ? (
+                        <button 
+                          onClick={() => handleIndicateInterest(req.id)}
+                          className="w-full bg-orange-50 text-orange-600 border border-orange-200 py-3 rounded-xl font-bold hover:bg-orange-100 transition shadow-sm"
+                        >
+                          جاري البحث عن المنتج والسعر (إعلام التاجر)
+                        </button>
+                      ) : (
+                        <div className="w-full bg-gray-50 text-gray-600 border border-gray-200 py-2 rounded-xl text-center text-sm font-bold">
+                          تم إعلام التاجر باهتمامك بالطلب
+                        </div>
+                      )}
                     </div>
                   )}
 

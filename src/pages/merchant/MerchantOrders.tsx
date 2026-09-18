@@ -139,7 +139,8 @@ export default function MerchantOrders() {
           supplier_bids (
             id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users(name, company_name, phone, verification_badge)
-          )
+          ),
+          supplier_interests(id)
         `)
         .eq('merchant_id', user.id)
         .order('created_at', { ascending: false })
@@ -641,6 +642,16 @@ export default function MerchantOrders() {
         </button>
       </div>
 
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <div className="text-blue-600 mt-0.5">
+          <Clock size={20} />
+        </div>
+        <div className="text-blue-800 text-sm">
+          <p className="font-bold mb-1">تنويه هام حول أوقات الرد</p>
+          <p>في الغالب لا يتجاوز رد المورد وطرح السعر مدة <strong>24 ساعة</strong>، عدا أيام العطل الأسبوعية (السبت والأحد) فقد يتأجل الرد حتى يوم الإثنين نظراً لإجازة الشركات.</p>
+        </div>
+      </div>
+
       <div className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('direct')}
@@ -870,6 +881,11 @@ export default function MerchantOrders() {
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
+                      {req.status === 'open' && req.supplier_interests && req.supplier_interests.length > 0 && (
+                        <span className="flex items-center gap-1 font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded animate-pulse">
+                          👀 يوجد {req.supplier_interests.length} مورد يبحث عن عرض مناسب لطلبك الآن...
+                        </span>
+                      )}
                       {req.product_link && (
                         <a href={req.product_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
                           <LinkIcon size={14} /> رابط المنتج

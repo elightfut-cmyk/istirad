@@ -543,6 +543,7 @@ export default function MerchantOrders() {
       const supplierNegotiatedPrice = calculateSupplierPriceFromFinal(negotiatedPrice, quantity, profitSettings);
 
       const { error } = await supabase.from('supplier_bids').update({
+        status: 'pending',
         negotiated_price: supplierNegotiatedPrice,
         negotiated_by: 'merchant',
         customer_reply: customerReply
@@ -995,9 +996,21 @@ export default function MerchantOrders() {
                           )}
                           
                           {bid.status === 'rejected' && (
-                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-bold border border-red-100 flex items-center justify-center gap-2">
-                              <XCircle size={18} />
-                              تم رفض هذا العرض
+                            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100 flex flex-col items-center justify-center gap-3">
+                              <div className="flex items-center gap-2 font-bold">
+                                <XCircle size={18} />
+                                تم رفض هذا العرض
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setNegotiationBid(bid);
+                                  setShowNegotiationModal(true);
+                                }}
+                                className="px-4 py-2 bg-white text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-50 transition flex items-center gap-2"
+                              >
+                                <MessageCircle size={16} />
+                                إعادة فتح التفاوض واقتراح سعر جديد
+                              </button>
                             </div>
                           )}
                           {bid.negotiated_by === 'merchant' && bid.status === 'pending' && (

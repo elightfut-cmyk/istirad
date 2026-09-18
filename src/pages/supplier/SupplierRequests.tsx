@@ -334,7 +334,7 @@ export default function SupplierRequests() {
                               <span className="font-bold text-sm">{formatCurrency(otherBid.price / (req.quantity || 1))}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500">السعر الإجمالي:</span>
+                              <span className="text-xs text-gray-500">السعر الإجمالي (بنسبة عربون {otherBid.advance_percentage}%):</span>
                               <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.price)}</span>
                             </div>
                             {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (

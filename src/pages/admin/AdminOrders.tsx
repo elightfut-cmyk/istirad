@@ -300,7 +300,7 @@ export default function AdminOrders() {
 
                                       <div className="mt-4 pt-3 border-t border-gray-100/50 flex justify-between items-end">
                                         <div>
-                                          <p className="text-xs text-gray-500 mb-1">السعر المعروض:</p>
+                                          <p className="text-xs text-gray-500 mb-1">السعر المعروض (بنسبة عربون {bid.advance_percentage}%):</p>
                                           <p className={`font-bold ${bid.status === 'accepted' ? 'text-green-700' : 'text-gray-800'}`}>
                                             {formatCurrency(bid.price)}
                                           </p>

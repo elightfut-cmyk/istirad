@@ -27,6 +27,11 @@ export default function AdminSettings() {
     referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
     profitFixedAmount: settingsStore.profitFixedAmount || 100,
     profitPercentage: settingsStore.profitPercentage || 5,
+    markupTier1Percentage: settingsStore.markupTier1Percentage || 10,
+    markupTier2Percentage: settingsStore.markupTier2Percentage || 7,
+    markupTier3Percentage: settingsStore.markupTier3Percentage || 5,
+    markupTier4Percentage: settingsStore.markupTier4Percentage || 3,
+    orderFixedFee: settingsStore.orderFixedFee || 2000,
     loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
     loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
     loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
@@ -95,6 +100,11 @@ export default function AdminSettings() {
       referralCommissionPercentage: settingsStore.referralCommissionPercentage || 0,
       profitFixedAmount: settingsStore.profitFixedAmount || 100,
       profitPercentage: settingsStore.profitPercentage || 5,
+      markupTier1Percentage: settingsStore.markupTier1Percentage || 10,
+      markupTier2Percentage: settingsStore.markupTier2Percentage || 7,
+      markupTier3Percentage: settingsStore.markupTier3Percentage || 5,
+      markupTier4Percentage: settingsStore.markupTier4Percentage || 3,
+      orderFixedFee: settingsStore.orderFixedFee || 2000,
       loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
       loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
       loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
@@ -120,7 +130,7 @@ export default function AdminSettings() {
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.facebookPixelId]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.markupTier1Percentage, settingsStore.markupTier2Percentage, settingsStore.markupTier3Percentage, settingsStore.markupTier4Percentage, settingsStore.orderFixedFee, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.facebookPixelId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -218,6 +228,11 @@ export default function AdminSettings() {
           referral_commission_percentage: parseFloat(localSettings.referralCommissionPercentage.toString()) || 0,
           profit_fixed_amount: parseFloat(localSettings.profitFixedAmount.toString()) || 0,
           profit_percentage: parseFloat(localSettings.profitPercentage.toString()) || 0,
+          markup_tier1_percentage: parseFloat(localSettings.markupTier1Percentage.toString()) || 0,
+          markup_tier2_percentage: parseFloat(localSettings.markupTier2Percentage.toString()) || 0,
+          markup_tier3_percentage: parseFloat(localSettings.markupTier3Percentage.toString()) || 0,
+          markup_tier4_percentage: parseFloat(localSettings.markupTier4Percentage.toString()) || 0,
+          order_fixed_fee: parseFloat(localSettings.orderFixedFee.toString()) || 0,
           loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
           loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
           loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
@@ -335,29 +350,74 @@ export default function AdminSettings() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              الربح الثابت للقطعة (دج)
+              رسوم الطلبية الثابتة (دج)
             </label>
             <input
               type="number"
               min="0"
               step="0.01"
-              name="profitFixedAmount"
-              value={localSettings.profitFixedAmount}
+              name="orderFixedFee"
+              value={localSettings.orderFixedFee}
               onChange={handleChange}
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              نسبة ربح المنصة من المبيعات (%)
+              نسبة الربح (أقل من 100 ألف دج) %
             </label>
             <input
               type="number"
               min="0"
               max="100"
               step="0.01"
-              name="profitPercentage"
-              value={localSettings.profitPercentage}
+              name="markupTier1Percentage"
+              value={localSettings.markupTier1Percentage}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              نسبة الربح (أقل من 500 ألف دج) %
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              name="markupTier2Percentage"
+              value={localSettings.markupTier2Percentage}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              نسبة الربح (أقل من 2 مليون دج) %
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              name="markupTier3Percentage"
+              value={localSettings.markupTier3Percentage}
+              onChange={handleChange}
+              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              نسبة الربح (أكثر من 2 مليون دج) %
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              name="markupTier4Percentage"
+              value={localSettings.markupTier4Percentage}
               onChange={handleChange}
               className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
             />

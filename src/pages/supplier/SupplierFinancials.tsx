@@ -4,6 +4,7 @@ import { DollarSign, ArrowDownLeft, ArrowUpRight, Wallet, Activity } from 'lucid
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { calculateFinalPrice } from '../../utils/profitCalculator';
 
 export default function SupplierFinancials() {
   const { user } = useAuthStore();
@@ -45,9 +46,14 @@ export default function SupplierFinancials() {
       let advanceTotal = 0;
       let pending = 0;
       
-      const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage').single();
-      const fixedAmount = settings?.profit_fixed_amount ?? 100;
-      const percentage = settings?.profit_percentage ?? 5;
+      const { data: settings } = await supabase.from('platform_settings').select('markup_tier1_percentage, markup_tier2_percentage, markup_tier3_percentage, markup_tier4_percentage, order_fixed_fee').single();
+      const profitSettings = {
+        markupTier1Percentage: settings?.markup_tier1_percentage ?? 10,
+        markupTier2Percentage: settings?.markup_tier2_percentage ?? 7,
+        markupTier3Percentage: settings?.markup_tier3_percentage ?? 5,
+        markupTier4Percentage: settings?.markup_tier4_percentage ?? 3,
+        orderFixedFee: settings?.order_fixed_fee ?? 2000,
+      };
 
       const successfulTransactions: any[] = [];
 
@@ -56,7 +62,8 @@ export default function SupplierFinancials() {
           const advancePaid = (bid.price * bid.advance_percentage) / 100;
           let fee = 0;
           const quantity = (bid.custom_requests as any)?.quantity || 1;
-          const totalFee = (quantity * fixedAmount) + (bid.price * (percentage / 100));
+          const profitDetails = calculateFinalPrice(bid.price / quantity, quantity, profitSettings);
+          const totalFee = profitDetails.platformProfit;
           
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             fee = totalFee;

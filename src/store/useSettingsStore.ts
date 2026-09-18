@@ -44,8 +44,13 @@ interface SettingsState {
   heroImageUrl2: string | null;
   referralCommissionPercentage: number;
   platformFeePercentage: number;
-  profitFixedAmount: number;
-  profitPercentage: number;
+  profitFixedAmount: number; // Legacy
+  profitPercentage: number; // Legacy
+  markupTier1Percentage: number;
+  markupTier2Percentage: number;
+  markupTier3Percentage: number;
+  markupTier4Percentage: number;
+  orderFixedFee: number;
   loyaltyPointsPerOrder: number;
   loyaltyPointsToDzdRatio: number;
   loyaltyPointsMinConversion: number;
@@ -92,8 +97,13 @@ export const useSettingsStore = create<SettingsState>()(
       heroImageUrl2: null,
       referralCommissionPercentage: 0,
       platformFeePercentage: 0,
-      profitFixedAmount: 100,
-      profitPercentage: 5,
+      profitFixedAmount: 100, // Legacy
+      profitPercentage: 5, // Legacy
+      markupTier1Percentage: 10,
+      markupTier2Percentage: 7,
+      markupTier3Percentage: 5,
+      markupTier4Percentage: 3,
+      orderFixedFee: 2000,
       loyaltyPointsPerOrder: 50,
       loyaltyPointsToDzdRatio: 10,
       loyaltyPointsMinConversion: 500,
@@ -153,8 +163,13 @@ export const useSettingsStore = create<SettingsState>()(
               heroImageUrl2: data.hero_image_url_2 || null,
               referralCommissionPercentage: data.referral_commission_percentage || 0,
               platformFeePercentage: data.platform_fee_percentage || 0,
-              profitFixedAmount: data.profit_fixed_amount ?? 100,
-              profitPercentage: data.profit_percentage ?? 5,
+              profitFixedAmount: data.profit_fixed_amount ?? 100, // Legacy
+              profitPercentage: data.profit_percentage ?? 5, // Legacy
+              markupTier1Percentage: data.markup_tier1_percentage ?? 10,
+              markupTier2Percentage: data.markup_tier2_percentage ?? 7,
+              markupTier3Percentage: data.markup_tier3_percentage ?? 5,
+              markupTier4Percentage: data.markup_tier4_percentage ?? 3,
+              orderFixedFee: data.order_fixed_fee ?? 2000,
               exchangeRate: data.exchange_rate || 135,
               loyaltyPointsPerOrder: data.loyalty_points_per_order || 50,
               loyaltyPointsToDzdRatio: data.loyalty_points_to_dzd_ratio || 10,

@@ -5,6 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { calculateFinalPrice, calculateSupplierPriceFromFinal } from '../../utils/profitCalculator';
 import { sendNotification } from '../../store/useNotificationStore';
 import { createChargilyCheckout } from '../../lib/chargily';
 import toast from 'react-hot-toast';
@@ -18,7 +19,14 @@ import { trackCustomFacebookEvent } from '../../components/FacebookPixel';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
-  const { formatCurrency, minQuantity, exchangeRate } = useSettingsStore();
+  const { formatCurrency, minQuantity, exchangeRate, markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee } = useSettingsStore();
+  const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
+
+  const getBidFinalPrices = (bidPrice: number, reqQuantity: number) => {
+    if (!bidPrice) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
+    return calculateFinalPrice(bidPrice / reqQuantity, reqQuantity, profitSettings);
+  };
+
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -291,12 +299,10 @@ export default function MerchantOrders() {
       
       const req = requests.find(r => r.id === selectedBidForPayment.reqId);
       const quantity = req?.quantity || 1;
-      const { data: settings } = await supabase.from('platform_settings').select('profit_fixed_amount, profit_percentage').single();
-      const fixedAmount = settings?.profit_fixed_amount ?? 100;
-      const percentage = settings?.profit_percentage ?? 5;
       
       const price = selectedBidForPayment.price;
-      const platformProfit = (quantity * fixedAmount) + (price * (percentage / 100));
+      const finalPricing = getBidFinalPrices(price, quantity);
+      const platformProfit = finalPricing.platformProfit;
       
       const discount = platformProfit * (data.discount_percentage / 100);
       
@@ -312,11 +318,16 @@ export default function MerchantOrders() {
     if (!selectedBidForPayment || !user || isProcessingWalletPayment) return;
     setIsProcessingWalletPayment(true);
     
+    const req = requests.find((r: any) => r.id === selectedBidForPayment.reqId);
+    const quantity = req?.quantity || 1;
+    const finalPricing = getBidFinalPrices(selectedBidForPayment.price, quantity);
+    const finalTotal = finalPricing.finalTotal;
+
     let amountToPay = 0;
     if (paymentType === 'advance') {
-      amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
+      amountToPay = (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     } else {
-      amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
+      amountToPay = finalTotal - (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
     }
 
     const amountToPayUSD = amountToPay / exchangeRate;
@@ -419,11 +430,16 @@ export default function MerchantOrders() {
   const handleChargilyPayment = async () => {
     if (!selectedBidForPayment) return;
     try {
+      const req = requests.find((r: any) => r.id === selectedBidForPayment.reqId);
+      const quantity = req?.quantity || 1;
+      const finalPricing = getBidFinalPrices(selectedBidForPayment.price, quantity);
+      const finalTotal = finalPricing.finalTotal;
+
       let amountToPay = 0;
       if (paymentType === 'advance') {
-        amountToPay = (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
+        amountToPay = (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       } else {
-        amountToPay = selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
+        amountToPay = finalTotal - (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       }
       
       const amountInDzd = Math.round(amountToPay);
@@ -467,7 +483,9 @@ export default function MerchantOrders() {
         return;
       }
 
-      const depositAmount = (bidData.price * bidData.advance_percentage) / 100;
+      const quantity = bidData.custom_requests?.quantity || 1;
+      const finalPricing = getBidFinalPrices(bidData.price, quantity);
+      const depositAmount = (finalPricing.finalTotal * bidData.advance_percentage) / 100;
 
       // 2. Update bid and request status
       const { error: bidUpdateError } = await supabase.from('supplier_bids').update({ status: 'cancelled' }).eq('id', bidId);
@@ -521,14 +539,17 @@ export default function MerchantOrders() {
     if (!negotiationBid || negotiatedPrice <= 0) return;
     setNegotiating(true);
     try {
+      const quantity = requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1;
+      const supplierNegotiatedPrice = calculateSupplierPriceFromFinal(negotiatedPrice, quantity, profitSettings);
+
       const { error } = await supabase.from('supplier_bids').update({
-        negotiated_price: negotiatedPrice,
+        negotiated_price: supplierNegotiatedPrice,
         negotiated_by: 'merchant',
         customer_reply: customerReply
       }).eq('id', negotiationBid.id);
 
       if (error) throw error;
-      sendNotification(negotiationBid.supplier_id, 'اقتراح سعر جديد', `قام التاجر ${user?.name || ''} باقتراح سعر جديد لعرضك: ${formatCurrency(negotiatedPrice)} للقطعة الواحدة.`, 'info');
+      sendNotification(negotiationBid.supplier_id, 'اقتراح سعر جديد', `قام التاجر ${user?.name || ''} باقتراح سعر جديد لعرضك: ${formatCurrency(supplierNegotiatedPrice)} للقطعة الواحدة.`, 'info');
       toast.success('تم إرسال السعر المقترح بنجاح');
       setShowNegotiationModal(false);
       setNegotiationBid(null);
@@ -702,7 +723,7 @@ export default function MerchantOrders() {
                         <div>
                           <p className="text-sm text-gray-500">العربون المطلوب ({bid.advance_percentage}%):</p>
                           <p className="font-black text-xl text-red-600">
-                            {formatCurrency((bid.price * bid.advance_percentage) / 100)}
+                            {formatCurrency((getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)}
                           </p>
                         </div>
                         <button 
@@ -756,7 +777,7 @@ export default function MerchantOrders() {
                             <div className="flex justify-between items-center gap-4">
                               <span className="text-gray-600 font-medium">المبلغ المتبقي:</span>
                               <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
-                                {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(bid.price - (bid.price * bid.advance_percentage / 100))}
+                                {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal - (getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                               </span>
                             </div>
                             {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
@@ -815,8 +836,8 @@ export default function MerchantOrders() {
                       formatCurrency={formatCurrency}
                       itemName={req.title.replace('طلب مباشر: ', '')}
                       quantity={req.quantity || 1}
-                      unitPrice={bid.price / (req.quantity || 1)}
-                      totalPrice={bid.price}
+                      unitPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice}
+                      totalPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalTotal}
                       advancePercentage={bid.advance_percentage || 20}
                     />
                   )}
@@ -910,16 +931,16 @@ export default function MerchantOrders() {
                           
                           <div className="flex justify-between items-center mb-1">
                             <span className="text-sm text-gray-600">سعر القطعة الواحدة:</span>
-                            <span className="font-bold text-gray-800">{formatCurrency(bid.price / (req.quantity || 1))}</span>
+                            <span className="font-bold text-gray-800">{formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-600">السعر الإجمالي:</span>
-                            <span className="font-black text-[#4f46e5]">{formatCurrency(bid.price)}</span>
+                            <span className="font-black text-[#4f46e5]">{formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-600">الدفعة المقدمة (العربون):</span>
                             <span className="font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-sm">
-                              {formatCurrency((bid.price * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
+                              {formatCurrency((getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
                             </span>
                           </div>
                           
@@ -1027,7 +1048,7 @@ export default function MerchantOrders() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">المبلغ المتبقي:</span>
                                   <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
-                                    {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(bid.price - (bid.price * bid.advance_percentage / 100))}
+                                    {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal - (getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                                   </span>
                                 </div>
                                 {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
@@ -1065,8 +1086,8 @@ export default function MerchantOrders() {
                               formatCurrency={formatCurrency}
                               itemName={req.title}
                               quantity={req.quantity || 1}
-                              unitPrice={bid.price / (req.quantity || 1)}
-                              totalPrice={bid.price}
+                              unitPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice}
+                              totalPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalTotal}
                               advancePercentage={bid.advance_percentage || 20}
                             />
                           )}
@@ -1294,7 +1315,7 @@ export default function MerchantOrders() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">اقتراح سعر جديد</h2>
             
             <div className="bg-orange-50 p-4 rounded-xl mb-6 text-sm text-orange-800 border border-orange-100">
-              <p>سعر المورد الحالي: <strong>{formatCurrency(negotiationBid.price / (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1))}</strong> للقطعة الواحدة.</p>
+              <p>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid.price, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</p>
             </div>
 
             <form onSubmit={handleProposePriceSubmit} className="space-y-4">

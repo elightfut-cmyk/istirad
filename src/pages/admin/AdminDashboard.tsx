@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket } from 'lucide-react';
+import { CreditCard, Download, ExternalLink, Package, Shield, Store, TrendingUp, Users, Wallet, CheckCircle, AlertTriangle, LayoutDashboard, ShoppingBag, MessageSquare, Ticket } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { calculateFinalPrice } from '../../utils/profitCalculator';
 import AdminSettings from '../../components/admin/AdminSettings';
 import toast from 'react-hot-toast';
 
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
         pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
       
-      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, profit_fixed_amount, profit_percentage').single();
+      const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, markup_tier1_percentage, markup_tier2_percentage, markup_tier3_percentage, markup_tier4_percentage, order_fixed_fee').single();
       setPlatformSettings(settingsData);
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
 
@@ -66,17 +67,26 @@ export default function AdminDashboard() {
       if (bidsData && !bidsError) {
         setAllBids(bidsData);
         if (reqData) setAllRequests(reqData);
-        const fixedAmount = settingsData?.profit_fixed_amount ?? 100;
-        const percentage = settingsData?.profit_percentage ?? 5;
+        const profitSettings = {
+          markupTier1Percentage: settingsData?.markup_tier1_percentage ?? 10,
+          markupTier2Percentage: settingsData?.markup_tier2_percentage ?? 7,
+          markupTier3Percentage: settingsData?.markup_tier3_percentage ?? 5,
+          markupTier4Percentage: settingsData?.markup_tier4_percentage ?? 3,
+          orderFixedFee: settingsData?.order_fixed_fee ?? 2000,
+        };
+
         bidsData.forEach(bid => {
-          const price = bid.price || 0;
-          const advancePct = bid.advance_percentage || 20;
-          const advancePaid = (price * advancePct) / 100;
+          const price = bid.price || 0; // supplier total price
           const quantity = (bid.custom_requests as any)?.quantity || 1;
-          const totalFee = (quantity * fixedAmount) + (price * (percentage / 100));
+          const advancePct = bid.advance_percentage || 20;
+          
+          const profitDetails = calculateFinalPrice(price / quantity, quantity, profitSettings);
+          const totalFee = profitDetails.platformProfit;
+          const percentage = profitDetails.markupPercentage * 100;
+          const advancePaid = (profitDetails.finalTotal * advancePct) / 100;
           
           if (bid.status === 'cancelled') {
-            const fee = advancePaid * (percentage / 100);
+            const fee = totalFee * (advancePct / 100); // Only keep advance portion of fee
             profitsSum += fee;
           } else if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             const fee = totalFee;
@@ -130,8 +140,13 @@ export default function AdminDashboard() {
     const user = users.find(u => u.id === selectedUserId);
     if (!user) return null;
 
-    const fixedAmount = platformSettings?.profit_fixed_amount ?? 100;
-    const percentage = platformSettings?.profit_percentage ?? 5;
+    const profitSettings = {
+      markupTier1Percentage: platformSettings?.markup_tier1_percentage ?? 10,
+      markupTier2Percentage: platformSettings?.markup_tier2_percentage ?? 7,
+      markupTier3Percentage: platformSettings?.markup_tier3_percentage ?? 5,
+      markupTier4Percentage: platformSettings?.markup_tier4_percentage ?? 3,
+      orderFixedFee: platformSettings?.order_fixed_fee ?? 2000,
+    };
 
     if (user.role === 'supplier') {
       const userBids = allBids.filter(b => b.supplier_id === user.id);
@@ -144,9 +159,12 @@ export default function AdminDashboard() {
           
           const price = bid.price || 0;
           const advancePct = bid.advance_percentage || 20;
-          const advancePaid = (price * advancePct) / 100;
           const quantity = (bid.custom_requests as any)?.quantity || 1;
-          const totalFee = (quantity * fixedAmount) + (price * (percentage / 100));
+          
+          const profitDetails = calculateFinalPrice(price / quantity, quantity, profitSettings);
+          const totalFee = profitDetails.platformProfit;
+          const percentage = profitDetails.markupPercentage * 100;
+          const advancePaid = (profitDetails.finalTotal * advancePct) / 100;
           
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             const fee = totalFee;

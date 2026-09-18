@@ -253,7 +253,7 @@ export default function SupplierRequests() {
                         </div>
                       ) : myBid.negotiated_by === 'merchant' ? (
                         <div className="bg-orange-100 text-orange-800 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200">
-                          <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price)}</strong> للقطعة الواحدة.</p>
+                          <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price)}</strong> للقطعة الواحدة. <span className="text-sm font-normal block mt-1">(ونسبة العربون المطلوبة: <strong>{myBid.advance_percentage}%</strong>)</span></p>
                           {myBid.customer_reply && (
                             <div className="mb-4 bg-white p-3 rounded-lg border border-orange-200 text-gray-700 font-normal">
                               <strong>رسالة التاجر:</strong> {myBid.customer_reply}
@@ -340,7 +340,7 @@ export default function SupplierRequests() {
                             {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
                               <div className="mt-3 pt-3 border-t border-gray-100 bg-orange-50/50 p-2 rounded-lg">
                                 <p className="text-xs font-bold text-orange-800 mb-1">تفاوض التاجر مع هذا المورد:</p>
-                                <p className="text-xs text-gray-700">اقترح التاجر: <strong>{formatCurrency(otherBid.negotiated_price)}</strong></p>
+                                <p className="text-xs text-gray-700">اقترح التاجر: <strong>{formatCurrency(otherBid.negotiated_price)}</strong> (بنسبة عربون: <strong>{otherBid.advance_percentage}%</strong>)</p>
                                 {otherBid.customer_reply && (
                                   <p className="text-xs text-gray-600 mt-1 italic">"{otherBid.customer_reply}"</p>
                                 )}

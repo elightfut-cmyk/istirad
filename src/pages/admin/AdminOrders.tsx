@@ -288,7 +288,7 @@ export default function AdminOrders() {
                                       {(bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
                                         <div className="mt-4 bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm">
                                           <p className="font-bold text-orange-800 mb-2">تفاوض التاجر والمورد:</p>
-                                          <p className="text-gray-700">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong></p>
+                                          <p className="text-gray-700">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong> (بنسبة عربون: <strong>{bid.advance_percentage}%</strong>)</p>
                                           {bid.customer_reply && (
                                             <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{bid.customer_reply}"</p>
                                           )}
@@ -414,7 +414,7 @@ export default function AdminOrders() {
                                 </div>
                                 <div className="text-sm w-full">
                                   <p className="font-bold text-orange-800 mb-1">تفاوض التاجر والمورد:</p>
-                                  <p className="text-gray-700">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong></p>
+                                  <p className="text-gray-700">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong> (بنسبة عربون: <strong>{directBid.advance_percentage}%</strong>)</p>
                                   {directBid.customer_reply && (
                                     <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{directBid.customer_reply}"</p>
                                   )}

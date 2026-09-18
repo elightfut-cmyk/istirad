@@ -73,15 +73,14 @@ export default function AdminUsers() {
     try {
       setUsers(users.filter(u => u.id !== userId));
 
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
+      const { error } = await supabase.rpc('delete_user_by_admin', {
+        user_id_to_delete: userId
+      });
 
       if (error) throw error;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error('حدث خطأ أثناء الحذف. لا يمكن حذف مستخدم مرتبط ببيانات أخرى في النظام.');
+      toast.error(error.message || 'حدث خطأ أثناء الحذف. تأكد من أن المستخدم غير مرتبط بطلبات نشطة.');
       fetchUsers();
     }
   };

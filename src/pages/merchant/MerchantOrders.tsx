@@ -707,7 +707,7 @@ export default function MerchantOrders() {
                         <img src={req.image_url} alt="صورة المنتج" className="w-full h-full object-cover" />
                       </div>
                     )}
-                    {(req.status === 'open' || (bid?.shipping_status === 'delivered' && bid?.is_fully_paid)) && (
+                    {(req.status === 'open' || bid?.shipping_status === 'delivered') && (
                       <button 
                         onClick={() => handleDeleteRequest(req.id)}
                         className="text-gray-400 hover:text-red-600 transition p-2 bg-white rounded-lg border border-gray-100 shadow-sm"
@@ -883,7 +883,7 @@ export default function MerchantOrders() {
                     </div>
                   )}
                   <div className="flex flex-col items-end justify-between md:ml-auto">
-                    {(req.status === 'open' || req.supplier_bids?.some((b:any) => b.shipping_status === 'delivered' && b.is_fully_paid)) && (
+                    {(req.status === 'open' || req.supplier_bids?.some((b:any) => b.shipping_status === 'delivered')) && (
                       <div className="flex gap-2 mb-2">
                         {req.status === 'open' && (
                           <button 

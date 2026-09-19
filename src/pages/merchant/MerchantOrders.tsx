@@ -302,7 +302,7 @@ export default function MerchantOrders() {
       const quantity = req?.quantity || 1;
       
       const price = selectedBidForPayment.price;
-      const finalPricing = getBidFinalPrices(price, quantity);
+      const finalPricing = getBidFinalPrices(selectedBidForPayment, quantity);
       const platformProfit = finalPricing.platformProfit;
       
       const discount = platformProfit * (data.discount_percentage / 100);
@@ -321,7 +321,7 @@ export default function MerchantOrders() {
     
     const req = requests.find((r: any) => r.id === selectedBidForPayment.reqId);
     const quantity = req?.quantity || 1;
-    const finalPricing = getBidFinalPrices(selectedBidForPayment.price, quantity);
+    const finalPricing = getBidFinalPrices(selectedBidForPayment, quantity);
     const finalTotal = finalPricing.finalTotal;
 
     let amountToPay = 0;
@@ -433,7 +433,7 @@ export default function MerchantOrders() {
     try {
       const req = requests.find((r: any) => r.id === selectedBidForPayment.reqId);
       const quantity = req?.quantity || 1;
-      const finalPricing = getBidFinalPrices(selectedBidForPayment.price, quantity);
+      const finalPricing = getBidFinalPrices(selectedBidForPayment, quantity);
       const finalTotal = finalPricing.finalTotal;
 
       let amountToPay = 0;
@@ -485,7 +485,7 @@ export default function MerchantOrders() {
       }
 
       const quantity = bidData.custom_requests?.quantity || 1;
-      const finalPricing = getBidFinalPrices(bidData.price, quantity);
+      const finalPricing = getBidFinalPrices(bidData, quantity);
       const depositAmount = (finalPricing.finalTotal * bidData.advance_percentage) / 100;
 
       // 2. Update bid and request status
@@ -735,7 +735,7 @@ export default function MerchantOrders() {
                         <div>
                           <p className="text-sm text-gray-500">العربون المطلوب ({bid.advance_percentage}%):</p>
                           <p className="font-black text-xl text-red-600">
-                            {formatCurrency((getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)}
+                            {formatCurrency((getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)}
                           </p>
                         </div>
                         <button 
@@ -789,7 +789,7 @@ export default function MerchantOrders() {
                             <div className="flex justify-between items-center gap-4">
                               <span className="text-gray-600 font-medium">المبلغ المتبقي:</span>
                               <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
-                                {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal - (getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
+                                {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal - (getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                               </span>
                             </div>
                             {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
@@ -848,8 +848,8 @@ export default function MerchantOrders() {
                       formatCurrency={formatCurrency}
                       itemName={req.title.replace('طلب مباشر: ', '')}
                       quantity={req.quantity || 1}
-                      unitPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice}
-                      totalPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalTotal}
+                      unitPrice={getBidFinalPrices(bid, req.quantity || 1).finalItemPrice}
+                      totalPrice={getBidFinalPrices(bid, req.quantity || 1).finalTotal}
                       advancePercentage={bid.advance_percentage || 20}
                     />
                   )}
@@ -948,16 +948,16 @@ export default function MerchantOrders() {
                           
                           <div className="flex justify-between items-center mb-1">
                             <span className="text-sm text-gray-600">سعر القطعة الواحدة:</span>
-                            <span className="font-bold text-gray-800">{formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice)}</span>
+                            <span className="font-bold text-gray-800">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalItemPrice)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-600">السعر الإجمالي:</span>
-                            <span className="font-black text-[#4f46e5]">{formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal)}</span>
+                            <span className="font-black text-[#4f46e5]">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-600">الدفعة المقدمة (العربون):</span>
                             <span className="font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-sm">
-                              {formatCurrency((getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
+                              {formatCurrency((getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
                             </span>
                           </div>
                           
@@ -1077,7 +1077,7 @@ export default function MerchantOrders() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">المبلغ المتبقي:</span>
                                   <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
-                                    {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid.price, req.quantity || 1).finalTotal - (getBidFinalPrices(bid.price, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
+                                    {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal - (getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                                   </span>
                                 </div>
                                 {(!bid.is_fully_paid && bid.shipping_status !== 'delivered') && (
@@ -1115,8 +1115,8 @@ export default function MerchantOrders() {
                               formatCurrency={formatCurrency}
                               itemName={req.title}
                               quantity={req.quantity || 1}
-                              unitPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalItemPrice}
-                              totalPrice={getBidFinalPrices(bid.price, req.quantity || 1).finalTotal}
+                              unitPrice={getBidFinalPrices(bid, req.quantity || 1).finalItemPrice}
+                              totalPrice={getBidFinalPrices(bid, req.quantity || 1).finalTotal}
                               advancePercentage={bid.advance_percentage || 20}
                             />
                           )}
@@ -1344,7 +1344,7 @@ export default function MerchantOrders() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">اقتراح سعر جديد</h2>
             
             <div className="bg-orange-50 p-4 rounded-xl mb-6 text-sm text-orange-800 border border-orange-100">
-              <p>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid.price, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</p>
+              <p>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</p>
             </div>
 
             <form onSubmit={handleProposePriceSubmit} className="space-y-4">

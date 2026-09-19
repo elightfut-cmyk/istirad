@@ -394,12 +394,12 @@ export default function SupplierRequests() {
                         {req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).map((otherBid: any) => (
                           <div key={otherBid.id} className="bg-white border border-gray-200 rounded-lg p-3 text-right">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-gray-500">سعر القطعة:</span>
-                              <span className="font-bold text-sm">{formatCurrency(otherBid.price / (req.quantity || 1))}</span>
+                              <span className="text-xs text-gray-500">سعر القطعة (الخام):</span>
+                              <span className="font-bold text-sm">{formatCurrency((otherBid.cost_price || otherBid.price) / (req.quantity || 1))}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500">السعر الإجمالي (بنسبة عربون {otherBid.advance_percentage}%):</span>
-                              <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.price)}</span>
+                              <span className="text-xs text-gray-500">السعر الإجمالي الخام (بنسبة عربون {otherBid.advance_percentage}%):</span>
+                              <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.cost_price || otherBid.price)}</span>
                             </div>
                             {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
                               <div className="mt-3 pt-3 border-t border-gray-100 bg-orange-50/50 p-2 rounded-lg">

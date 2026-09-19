@@ -6,10 +6,27 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
+import { calculateFinalPrice } from '../../utils/profitCalculator';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
-  const { formatCurrency } = useSettingsStore();
+  const { 
+    formatCurrency,
+    markupTier1Percentage,
+    markupTier2Percentage,
+    markupTier3Percentage,
+    markupTier4Percentage,
+    orderFixedFee
+  } = useSettingsStore();
+  
+  const profitSettings = {
+    markupTier1Percentage,
+    markupTier2Percentage,
+    markupTier3Percentage,
+    markupTier4Percentage,
+    orderFixedFee
+  };
+
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [biddingRequest, setBiddingRequest] = useState<any>(null);
@@ -55,15 +72,19 @@ export default function SupplierRequests() {
     if (!user || !biddingRequest) return;
     setSubmitting(true);
     
-
+    const quantity = biddingRequest.quantity || 1;
+    const calculation = calculateFinalPrice(bidForm.cost_price, quantity, profitSettings);
+    
+    const calculatedPriceTotal = calculation.finalTotal;
+    const calculatedCostTotal = bidForm.cost_price * quantity;
 
     try {
       if (bidForm.id) {
         const { error } = await supabase.from('supplier_bids').update({
-          price: bidForm.price * biddingRequest.quantity,
-          cost_price: bidForm.cost_price * biddingRequest.quantity,
-          price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
-          cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
+          price: calculatedPriceTotal,
+          cost_price: calculatedCostTotal,
+          price_usd: calculatedPriceTotal / exchangeRate,
+          cost_price_usd: calculatedCostTotal / exchangeRate,
           advance_percentage: bidForm.advance_percentage,
           notes: bidForm.notes,
         }).eq('id', bidForm.id);
@@ -74,10 +95,10 @@ export default function SupplierRequests() {
         const { error } = await supabase.from('supplier_bids').insert({
           request_id: biddingRequest.id,
           supplier_id: user.id,
-          price: bidForm.price * biddingRequest.quantity,
-          cost_price: bidForm.cost_price * biddingRequest.quantity,
-          price_usd: (bidForm.price / exchangeRate) * biddingRequest.quantity,
-          cost_price_usd: (bidForm.cost_price / exchangeRate) * biddingRequest.quantity,
+          price: calculatedPriceTotal,
+          cost_price: calculatedCostTotal,
+          price_usd: calculatedPriceTotal / exchangeRate,
+          cost_price_usd: calculatedCostTotal / exchangeRate,
           advance_percentage: bidForm.advance_percentage,
           notes: bidForm.notes,
           shipping_status: biddingRequest.request_type === 'direct' ? 'processing' : 'pending_in_china'
@@ -430,15 +451,30 @@ export default function SupplierRequests() {
             
             <form onSubmit={handleSubmitBid} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعر القطعة الواحدة بالدينار (DZD)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">سعرك الخام للقطعة الواحدة بالدينار (DZD)</label>
                 <input 
                   type="number" step="0.01" required min="0.01"
-                  value={bidForm.price || ''} 
-                  onChange={e => setBidForm({...bidForm, price: parseFloat(e.target.value) || 0})}
+                  value={bidForm.cost_price || ''} 
+                  onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
                   className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
-                  placeholder="أدخل سعر القطعة الواحدة"
+                  placeholder="أدخل السعر الخام للقطعة الواحدة"
                 />
-                <p className="text-xs text-gray-500 mt-1">يساوي بالدولار: ${Number(((bidForm.price || 0) / exchangeRate).toFixed(2))} | الإجمالي: {formatCurrency((bidForm.price || 0) * biddingRequest.quantity)}</p>
+                
+                {bidForm.cost_price > 0 && (
+                  <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
+                    <p className="text-gray-600 mb-1 text-xs font-bold">السعر النهائي الذي سيظهر للتاجر (بعد إضافة العمولة والرسوم):</p>
+                    <div className="flex justify-between items-center font-bold">
+                      <span>للقطعة الواحدة:</span>
+                      <span className="text-[#4f46e5]">{formatCurrency(calculateFinalPrice(bidForm.cost_price, biddingRequest?.quantity || 1, profitSettings).finalItemPrice)}</span>
+                    </div>
+                    <div className="flex justify-between items-center font-bold mt-1">
+                      <span>الإجمالي:</span>
+                      <span className="text-[#4f46e5]">{formatCurrency(calculateFinalPrice(bidForm.cost_price, biddingRequest?.quantity || 1, profitSettings).finalTotal)}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="text-xs text-gray-500 mt-2">يساوي بالدولار (خام): ${Number(((bidForm.cost_price || 0) / exchangeRate).toFixed(2))} | إجمالي السعر الخام: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
               </div>
               
 

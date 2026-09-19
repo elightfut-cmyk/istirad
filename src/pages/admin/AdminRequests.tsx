@@ -70,7 +70,7 @@ export default function AdminRequests() {
       isNegotiated = true;
     }
 
-    const finalPricing = calculateFinalPrice(baseRawPrice, reqQuantity, settings);
+    const finalPricing = calculateFinalPrice(baseRawPrice / (reqQuantity || 1), reqQuantity, settings);
 
     return {
       rawPrice: baseRawPrice,

@@ -270,13 +270,19 @@ export default function SupplierRequests() {
                     <div className="w-full">
                       <h4 className="font-bold text-gray-700 mb-4 border-b pb-2">عرضك المقدم</h4>
                         <div className="flex justify-between items-center mb-1 text-sm">
-                          <span className="text-gray-600">سعر القطعة الواحدة:</span>
-                          <span className="font-bold">{formatCurrency(myBid.price / (req.quantity || 1))}</span>
+                          <span className="text-gray-600">سعرك الخام للقطعة:</span>
+                          <span className="font-bold">{formatCurrency((myBid.cost_price || myBid.price) / (req.quantity || 1))}</span>
                         </div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-gray-600">السعر الإجمالي:</span>
-                          <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.price)}</span>
+                          <span className="text-gray-600">إجمالي سعرك الخام:</span>
+                          <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.cost_price || myBid.price)}</span>
                         </div>
+                        {(myBid.cost_price && myBid.cost_price !== myBid.price) ? (
+                          <div className="flex justify-between items-center text-xs mt-1 mb-2 bg-indigo-50 p-2 rounded border border-indigo-100">
+                            <span className="text-gray-600">السعر النهائي المعروض للتاجر:</span>
+                            <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.price)}</span>
+                          </div>
+                        ) : null}
                       <div className="flex justify-between text-sm mb-4">
                         <span className="text-gray-500">الدفعة المقدمة:</span>
                         <span className="font-bold bg-orange-100 text-orange-800 px-2 rounded">{myBid.advance_percentage}%</span>
@@ -339,7 +345,7 @@ export default function SupplierRequests() {
                             setBidForm({ 
                               id: myBid.id, 
                               price: myBid.price / req.quantity, 
-                              cost_price: myBid.cost_price ? myBid.cost_price / req.quantity : 0, 
+                              cost_price: myBid.cost_price ? myBid.cost_price / req.quantity : myBid.price / req.quantity, 
                               advance_percentage: myBid.advance_percentage, 
                               notes: myBid.notes
                             });

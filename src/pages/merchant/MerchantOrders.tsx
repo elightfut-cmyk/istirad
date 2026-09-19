@@ -22,9 +22,11 @@ export default function MerchantOrders() {
   const { formatCurrency, minQuantity, exchangeRate, markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee } = useSettingsStore();
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
-  const getBidFinalPrices = (bidPrice: number, reqQuantity: number) => {
-    if (!bidPrice) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
-    return calculateFinalPrice(bidPrice / reqQuantity, reqQuantity, profitSettings);
+  const getBidFinalPrices = (bid: any, reqQuantity: number) => {
+    if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
+    const rawTotal = typeof bid === 'number' ? bid : (bid.cost_price || bid.price);
+    if (!rawTotal) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
+    return calculateFinalPrice(rawTotal / reqQuantity, reqQuantity, profitSettings);
   };
 
   const [requests, setRequests] = useState<any[]>([]);

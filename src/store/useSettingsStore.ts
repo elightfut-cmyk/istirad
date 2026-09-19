@@ -132,6 +132,7 @@ export const useSettingsStore = create<SettingsState>()(
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
+          if (amount === undefined || amount === null || isNaN(amount)) amount = 0;
         const { currency, exchangeRate } = get();
         if (currency === 'USD') {
           const usdAmount = amount / exchangeRate;

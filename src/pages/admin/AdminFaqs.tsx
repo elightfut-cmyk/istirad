@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Plus, Edit2, Trash2, Check, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Plus, Edit2, Trash2, Check, X, ArrowUp, ArrowDown , Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface FAQ {
@@ -175,6 +175,7 @@ export default function AdminFaqs() {
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
         { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
+        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
         { label: 'الصفحات', href: '/admin/pages', icon: <FileText size={20} /> },

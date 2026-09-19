@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Send, MessageSquare, Ticket } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Send, MessageSquare, Ticket , Package } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -95,6 +95,7 @@ export default function AdminNotifications() {
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
         { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
+        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}

@@ -124,7 +124,9 @@ export default function SupplierRequests() {
       const newPriceTotal = bid.negotiated_price * reqQuantity;
       const { error } = await supabase.from('supplier_bids').update({
         price: newPriceTotal,
+        cost_price: newPriceTotal,
         price_usd: newPriceTotal / exchangeRate,
+        cost_price_usd: newPriceTotal / exchangeRate,
         negotiated_price: null,
         negotiated_by: 'supplier_accepted'
       }).eq('id', bid.id);

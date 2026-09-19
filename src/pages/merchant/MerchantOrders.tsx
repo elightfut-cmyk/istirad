@@ -24,7 +24,11 @@ export default function MerchantOrders() {
 
   const getBidFinalPrices = (bid: any, reqQuantity: number) => {
     if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
-    const rawTotal = typeof bid === 'number' ? bid : (bid.cost_price || bid.price);
+    let activeTotal = bid.cost_price || bid.price;
+    if (bid.negotiated_price && bid.negotiated_by !== 'supplier_rejected') {
+      activeTotal = bid.negotiated_price * reqQuantity;
+    }
+    const rawTotal = typeof bid === 'number' ? bid : activeTotal;
     if (!rawTotal) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
     return calculateFinalPrice(rawTotal / reqQuantity, reqQuantity, profitSettings);
   };
@@ -1033,7 +1037,7 @@ export default function MerchantOrders() {
                           )}
                           {bid.negotiated_by === 'merchant' && bid.status === 'pending' && (
                             <div className="mt-4 p-3 bg-orange-50 text-orange-700 rounded-lg text-sm font-bold border border-orange-100 text-center">
-                              لقد قمت باقتراح سعر جديد ({formatCurrency(bid.negotiated_price)} للقطعة) وفي انتظار رد المورد.
+                              لقد قمت باقتراح سعر جديد ({formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalItemPrice)} للقطعة) وفي انتظار رد المورد.
                             </div>
                           )}
                           {bid.negotiated_by === 'supplier_rejected' && bid.status === 'pending' && (
@@ -1267,8 +1271,8 @@ export default function MerchantOrders() {
               <p className="text-gray-500 mb-1">المبلغ المطلوب {paymentType === 'remaining' ? '(باقي الدفعة)' : ''}</p>
               <p className="text-3xl font-black text-gray-900">
                 {paymentType === 'advance' 
-                  ? formatCurrency((selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)
-                  : formatCurrency(selectedBidForPayment.price - (selectedBidForPayment.price * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)}
+                    ? formatCurrency((getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)
+                    : formatCurrency(getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal - (getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)}
               </p>
               {couponDiscountAmount > 0 && (
                 <p className="text-green-600 text-sm font-bold mt-2">

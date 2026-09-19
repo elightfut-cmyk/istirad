@@ -301,7 +301,7 @@ export default function MerchantOrders() {
       const req = requests.find(r => r.id === selectedBidForPayment.reqId);
       const quantity = req?.quantity || 1;
       
-      const price = selectedBidForPayment.price;
+
       const finalPricing = getBidFinalPrices(selectedBidForPayment, quantity);
       const platformProfit = finalPricing.platformProfit;
       

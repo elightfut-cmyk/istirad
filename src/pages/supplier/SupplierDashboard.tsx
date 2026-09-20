@@ -197,7 +197,7 @@ export default function SupplierDashboard() {
           <p><strong>2. السعر بالفائدة (للتاجر):</strong> السعر الخام + <strong>نسبة ربح المنصة</strong> + <strong>رسوم ثابتة ({formatCurrency(settings.orderFixedFee)})</strong>.</p>
           <div className="mt-3 p-3 bg-white border border-indigo-100 rounded-lg text-indigo-800 font-medium">
             <span className="font-bold text-indigo-900">عملية التفاوض:</span><br />
-            عندما يقترح التاجر سعراً نهائياً لك، يمكنك استخدام أداة الحساب العكسي أعلاه لمعرفة السعر الخام الصافي الذي ستحصل عليه بعد خصم رسوم المنصة.
+            عند تفاوض التاجر، يقوم النظام تلقائياً بالحساب العكسي ويعرض لك "السعر الخام" الصافي مباشرة. يمكنك استخدام الأداة أعلاه متى ما أردت محاكاة أسعار مختلفة بحرية لمعرفة الفوارق بين السعر الخام والسعر النهائي.
           </div>
         </div>
       </div>

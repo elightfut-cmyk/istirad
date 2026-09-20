@@ -31,9 +31,15 @@ export function calculateFinalPrice(
   const fixedOrderFee = settings.orderFixedFee;
 
   // 4. Final outputs
-  const finalTotalForMerchant = totalSupplierPrice + markupAmount + fixedOrderFee;
-  const finalItemPriceForMerchant = finalTotalForMerchant / quantity;
-  const platformProfit = markupAmount + fixedOrderFee;
+  let finalTotalForMerchant = totalSupplierPrice + markupAmount + fixedOrderFee;
+  let finalItemPriceForMerchant = finalTotalForMerchant / quantity;
+  
+  // Round up the item price to avoid decimals
+  finalItemPriceForMerchant = Math.ceil(finalItemPriceForMerchant);
+  
+  // Recalculate total and profit based on the rounded item price
+  finalTotalForMerchant = finalItemPriceForMerchant * quantity;
+  const platformProfit = finalTotalForMerchant - totalSupplierPrice;
 
   return {
     finalItemPrice: finalItemPriceForMerchant,

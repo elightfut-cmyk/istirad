@@ -232,6 +232,7 @@ export default function SupplierRequests() {
           }).map(req => {
             const myBid = req.supplier_bids?.find((b: any) => b.supplier_id === user?.id);
             const isClosed = req.status === 'closed';
+            const activeInterests = req.supplier_interests?.filter((i: any) => !req.supplier_bids?.some((b: any) => b.supplier_id === i.supplier_id)) || [];
 
             return (
               <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
@@ -247,16 +248,16 @@ export default function SupplierRequests() {
                     </span>
                   </div>
 
-                  {(req.supplier_bids?.length > 0 || req.supplier_interests?.length > 0) && (
+                  {(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
                     <div className="flex flex-wrap gap-2 mb-3">
                       {req.supplier_bids?.length > 0 && (
                         <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
                           <Gavel size={14} /> {req.supplier_bids.length} مورد(ين) قدموا عروضاً
                         </span>
                       )}
-                      {req.supplier_interests?.length > 0 && (
+                      {activeInterests.length > 0 && (
                         <span className="text-xs font-bold bg-orange-50 text-orange-700 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1">
-                          <Eye size={14} /> {req.supplier_interests.length} مورد(ين) يبحثون عن المنتج
+                          <Eye size={14} /> {activeInterests.length} مورد(ين) يبحثون عن المنتج
                         </span>
                       )}
                     </div>

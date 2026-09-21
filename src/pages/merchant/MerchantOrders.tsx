@@ -146,7 +146,7 @@ export default function MerchantOrders() {
             id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users(name, company_name, phone, verification_badge)
           ),
-          supplier_interests(id)
+          supplier_interests(id, supplier_id)
         `)
         .eq('merchant_id', user.id)
         .order('created_at', { ascending: false })
@@ -871,7 +871,9 @@ export default function MerchantOrders() {
               <p className="text-gray-500">قم بإنشاء طلب استيراد جديد ليتنافس عليه الموردون.</p>
             </div>
           ) : (
-            customRequests.map(req => (
+            customRequests.map(req => {
+              const activeInterests = req.supplier_interests?.filter((i: any) => !req.supplier_bids?.some((b: any) => b.supplier_id === i.supplier_id)) || [];
+              return (
               <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start gap-4">
                   <div className="flex-1">
@@ -887,16 +889,16 @@ export default function MerchantOrders() {
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
-                      {(req.supplier_bids?.length > 0 || req.supplier_interests?.length > 0) && (
+                      {(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
                         <div className="flex flex-wrap gap-2">
                           {req.supplier_bids?.length > 0 && (
                             <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
                               <Gavel size={14} /> يوجد {req.supplier_bids.length} مورد(ين) قدموا عروضاً
                             </span>
                           )}
-                          {req.status === 'open' && req.supplier_interests?.length > 0 && (
+                          {req.status === 'open' && activeInterests.length > 0 && (
                             <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded animate-pulse border border-orange-100 flex items-center gap-1">
-                              👀 يوجد {req.supplier_interests.length} مورد يبحث عن عرض مناسب لطلبك الآن...
+                              👀 يوجد {activeInterests.length} مورد يبحث عن عرض مناسب لطلبك الآن...
                             </span>
                           )}
                         </div>
@@ -1143,7 +1145,8 @@ export default function MerchantOrders() {
                   )}
                 </div>
               </div>
-            ))
+              );
+            })
           )
         )}
       </div>

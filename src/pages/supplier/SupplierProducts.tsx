@@ -68,9 +68,8 @@ export default function SupplierProducts() {
       const { data, error } = await supabase
         .from('products')
         .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd')
-        .eq('supplier_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
         
       if (error) {
         console.error('Products fetch error:', error);
@@ -224,14 +223,16 @@ export default function SupplierProducts() {
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-bold text-lg text-gray-900">{product.title}</h3>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditProduct(product)} className="text-gray-400 hover:text-blue-600 transition-colors" title="تعديل">
-                      <Edit size={18} />
-                    </button>
-                    <button onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-600 transition-colors" title="حذف">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                  {product.supplier_id === user?.id && (
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEditProduct(product)} className="text-gray-400 hover:text-blue-600 transition-colors" title="تعديل">
+                        <Edit size={18} />
+                      </button>
+                      <button onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-600 transition-colors" title="حذف">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-500 text-sm mt-1 truncate">{product.description}</p>
                 <div className="mt-4 flex justify-between items-center">
@@ -276,6 +277,8 @@ export default function SupplierProducts() {
 
             <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 text-sm text-blue-800">
               <strong>ملاحظة هامة:</strong> يرجى إدخال جميع الأسعار بالدينار الجزائري (د.ج) دائماً. سيقوم النظام تلقائياً بتحويلها وعرضها بالدولار للتجار الذين يفضلون ذلك، مع الحفاظ على تسعيرتك الأصلية ثابتة مهما تغير سعر الصرف.
+              <br/><br/>
+              <strong>توضيح بخصوص الأرباح:</strong> أرباح المنصة هي 10% من سعر البيع. وعلى هذا الأساس، أي سعر تدخله هنا سيتم إضافة 10% عليه ليظهر للتاجر (حق المنصة).
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-4">

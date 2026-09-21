@@ -240,7 +240,8 @@ export default function SupplierRequests() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
-                    </div>
+                        <p className="text-sm text-gray-500 mt-1">بواسطة التاجر: <span className="font-bold">{req.merchant?.name || 'غير معروف'} {req.merchant?.company_name ? `(${req.merchant.company_name})` : ''}</span></p>
+                      </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${isClosed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                       {isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
                     </span>
@@ -454,6 +455,8 @@ export default function SupplierRequests() {
               <h2 className="text-xl font-bold text-gray-900 mb-2">{bidForm.id ? 'تعديل عرض السعر' : 'تقديم عرض سعر'}</h2>
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
                 <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار (DZD). سيتم تحويله تلقائياً للدولار عند الحاجة.
+                <br/><br/>
+                <strong>توضيح بخصوص الأرباح:</strong> أرباح المنصة هي 10% من سعر البيع. وعلى هذا الأساس، أي سعر تدخله هنا سيتم إضافة 10% عليه ليظهر للتاجر (حق المنصة).
               </div>
             <p className="text-sm text-gray-500 mb-6 border-b pb-4">{biddingRequest.title}</p>
             

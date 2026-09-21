@@ -23,13 +23,25 @@ export default function MerchantOrders() {
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
   const getBidFinalPrices = (bid: any, reqQuantity: number) => {
-    if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
+    if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0, supplierTotal: 0, markupPercentage: 0 };
     let activeTotal = bid.cost_price || bid.price;
     if (bid.negotiated_price && bid.negotiated_by !== 'supplier_rejected') {
       activeTotal = bid.negotiated_price * reqQuantity;
     }
     const rawTotal = typeof bid === 'number' ? bid : activeTotal;
-    if (!rawTotal) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0 };
+    if (!rawTotal) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0, supplierTotal: 0, markupPercentage: 0 };
+    
+    // Determine if the request is a direct order
+    const req = requests.find(r => r.id === (bid.request_id || bid.reqId));
+    const isDirect = req?.request_type === 'direct';
+    
+    if (isDirect) {
+      // Marketplace direct requests always get exactly a 10% flat markup on the total, with no fixed fee
+      const finalTotal = rawTotal * 1.10;
+      const finalItemPrice = finalTotal / reqQuantity;
+      return { finalItemPrice, finalTotal, platformProfit: finalTotal - rawTotal, supplierTotal: rawTotal, markupPercentage: 0.10 };
+    }
+    
     return calculateFinalPrice(rawTotal / reqQuantity, reqQuantity, profitSettings);
   };
 

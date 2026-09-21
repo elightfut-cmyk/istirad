@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Eye, Gavel } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -887,10 +887,19 @@ export default function MerchantOrders() {
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
-                      {req.status === 'open' && req.supplier_interests && req.supplier_interests.length > 0 && (
-                        <span className="flex items-center gap-1 font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded animate-pulse">
-                          👀 يوجد {req.supplier_interests.length} مورد يبحث عن عرض مناسب لطلبك الآن...
-                        </span>
+                      {(req.supplier_bids?.length > 0 || req.supplier_interests?.length > 0) && (
+                        <div className="flex flex-wrap gap-2">
+                          {req.supplier_bids?.length > 0 && (
+                            <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
+                              <Gavel size={14} /> يوجد {req.supplier_bids.length} مورد(ين) قدموا عروضاً
+                            </span>
+                          )}
+                          {req.status === 'open' && req.supplier_interests?.length > 0 && (
+                            <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded animate-pulse border border-orange-100 flex items-center gap-1">
+                              👀 يوجد {req.supplier_interests.length} مورد يبحث عن عرض مناسب لطلبك الآن...
+                            </span>
+                          )}
+                        </div>
                       )}
                       {req.product_link && (
                         <a href={req.product_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">

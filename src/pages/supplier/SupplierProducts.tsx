@@ -13,13 +13,13 @@ export default function SupplierProducts() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
+  const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, stock: 100, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
   const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'my'>('all');
 
   const handleOpenAddModal = () => {
-    setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: productCategories[0] || '' });
+    setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, stock: 100, image_url: '', advance_percentage: 20, discount_price: 0, category: productCategories[0] || '' });
     setImageFile(null);
     setEditingProductId(null);
     setIsModalOpen(true);
@@ -33,6 +33,7 @@ export default function SupplierProducts() {
       cost_price: product.cost_price || Math.round(product.cost_price_usd * exchangeRate),
       discount_price: product.discount_price || (product.discount_price_usd ? Math.round(product.discount_price_usd * exchangeRate) : 0),
       moq: product.moq,
+      stock: product.stock || 100,
       advance_percentage: product.advance_percentage || 20,
       category: product.category || productCategories[0] || '',
       image_url: product.images && product.images.length > 0 ? product.images[0] : ''
@@ -68,7 +69,7 @@ export default function SupplierProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd, supplier:users!supplier_id(name)')
+        .select('id, title, description, price, cost_price, moq, stock, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd, supplier:users!supplier_id(name)')
         .order('created_at', { ascending: false })
         .limit(100);
         
@@ -128,6 +129,7 @@ export default function SupplierProducts() {
           cost_price: form.cost_price,
           cost_price_usd: form.cost_price / exchangeRate,
           moq: form.moq,
+          stock: form.stock,
           advance_percentage: form.advance_percentage,
           discount_price: form.discount_price > 0 ? form.discount_price : null,
           discount_price_usd: form.discount_price > 0 ? (form.discount_price / exchangeRate) : null,
@@ -145,6 +147,7 @@ export default function SupplierProducts() {
           cost_price: form.cost_price,
           cost_price_usd: form.cost_price / exchangeRate,
           moq: form.moq,
+          stock: form.stock,
           advance_percentage: form.advance_percentage,
           discount_price: form.discount_price > 0 ? form.discount_price : null,
           discount_price_usd: form.discount_price > 0 ? (form.discount_price / exchangeRate) : null,
@@ -156,7 +159,7 @@ export default function SupplierProducts() {
       }
       
       setIsModalOpen(false);
-      setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
+      setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, stock: 100, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
       setImageFile(null);
       setEditingProductId(null);
       fetchProducts();
@@ -179,19 +182,19 @@ export default function SupplierProducts() {
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
       ]}
     >
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
         
-        <div className="flex bg-gray-100 p-1 rounded-lg">
+        <div className="flex bg-gray-100 p-1 rounded-lg w-full sm:w-auto">
           <button 
             onClick={() => setActiveTab('all')}
-            className={`px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
             الكل
           </button>
           <button 
             onClick={() => setActiveTab('my')}
-            className={`px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'my' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'my' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
             منتجاتي
           </button>
@@ -199,7 +202,7 @@ export default function SupplierProducts() {
 
         <button 
           onClick={handleOpenAddModal}
-          className="bg-[#4f46e5] text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-[#4338ca] transition-colors"
+          className="w-full sm:w-auto bg-[#4f46e5] text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-[#4338ca] transition-colors"
         >
           <Plus size={20} />
           <span>إضافة منتج جديد</span>
@@ -380,6 +383,13 @@ export default function SupplierProducts() {
                     type="number" required min="1"
                     value={form.moq || ''} 
                     onChange={e => setForm({...form, moq: parseInt(e.target.value) || 0})}
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 mb-4"
+                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">الكمية المتوفرة (المخزون)</label>
+                  <input 
+                    type="number" required min="1"
+                    value={form.stock || ''} 
+                    onChange={e => setForm({...form, stock: parseInt(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
                 </div>

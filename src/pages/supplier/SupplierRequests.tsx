@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -246,6 +246,22 @@ export default function SupplierRequests() {
                       {isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
                     </span>
                   </div>
+
+                  {(req.supplier_bids?.length > 0 || req.supplier_interests?.length > 0) && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {req.supplier_bids?.length > 0 && (
+                        <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
+                          <Gavel size={14} /> {req.supplier_bids.length} مورد(ين) قدموا عروضاً
+                        </span>
+                      )}
+                      {req.supplier_interests?.length > 0 && (
+                        <span className="text-xs font-bold bg-orange-50 text-orange-700 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1">
+                          <Eye size={14} /> {req.supplier_interests.length} مورد(ين) يبحثون عن المنتج
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <p className="text-gray-600 text-sm leading-relaxed mb-4">{req.description}</p>
                   
                   {req.notes && (

@@ -86,7 +86,7 @@ export default function Marketplace() {
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, supplier_id, created_at, status, category,
+          id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, stock, supplier_id, created_at, status, category,
           supplier:users!supplier_id(name, company_name, verification_badge)
         `)
         .eq('status', 'active')
@@ -145,8 +145,12 @@ export default function Marketplace() {
       const discountedPrice = orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price
         ? orderingProduct.discount_price
         : orderingProduct.price;
-      const totalPrice = discountedPrice * quantity;
-      const totalCostPrice = (orderingProduct.cost_price || 0) * quantity;
+      
+      const supplierPrice = discountedPrice;
+      const merchantPrice = discountedPrice * 1.10;
+      
+      const totalPrice = merchantPrice * quantity;
+      const totalCostPrice = supplierPrice * quantity;
       
       const { error: bidError } = await supabase.from('supplier_bids').insert({
         request_id: requestData.id,
@@ -301,14 +305,14 @@ export default function Marketplace() {
                           <p className="text-xs text-gray-400 mb-1">سعر الجملة</p>
                           {product.discount_price > 0 && product.discount_price < product.price ? (
                             <div className="flex flex-col">
-                              <span className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</span>
+                              <span className="text-xs text-gray-400 line-through">{formatCurrency(product.price * 1.10)}</span>
                               <div className="flex items-center gap-2">
-                                <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.discount_price)}</p>
+                                <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.discount_price * 1.10)}</p>
                                 <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</span>
                               </div>
                             </div>
                           ) : (
-                            <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.price)}</p>
+                            <p className="font-black text-[#4f46e5] text-xl">{formatCurrency(product.price * 1.10)}</p>
                           )}
                         </div>
                         <div className="text-left">
@@ -368,11 +372,11 @@ export default function Marketplace() {
                 <span className="text-sm text-gray-500">السعر للوحدة:</span>
                 {orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price ? (
                   <>
-                    <span className="text-sm text-gray-400 line-through">{formatCurrency(orderingProduct.price)}</span>
-                    <span className="font-bold text-[#4f46e5]">{formatCurrency(orderingProduct.discount_price)}</span>
+                    <span className="text-sm text-gray-400 line-through">{formatCurrency(orderingProduct.price * 1.10)}</span>
+                    <span className="font-bold text-[#4f46e5]">{formatCurrency(orderingProduct.discount_price * 1.10)}</span>
                   </>
                 ) : (
-                  <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price)}</span>
+                  <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price * 1.10)}</span>
                 )}
               </div>
               <p className="text-sm text-gray-500 mb-1">المورد: <span className="font-bold text-gray-800">{orderingProduct.supplier?.name}</span></p>
@@ -385,13 +389,16 @@ export default function Marketplace() {
               <input 
                 type="number" 
                 min={orderingProduct.moq}
-                max={999999}
+                max={orderingProduct.stock || 999999}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < orderingProduct.moq ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < orderingProduct.moq || (orderingProduct.stock && quantity > orderingProduct.stock) ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
               />
               {quantity < orderingProduct.moq && (
                 <p className="text-red-500 text-xs mt-2">لا يمكنك طلب أقل من {orderingProduct.moq} وحدة (شرط المورد).</p>
+              )}
+              {orderingProduct.stock && quantity > orderingProduct.stock && (
+                <p className="text-red-500 text-xs mt-2">الكمية المطلوبة أكبر من المخزون المتوفر ({orderingProduct.stock} وحدة).</p>
               )}
             </div>
 
@@ -399,14 +406,14 @@ export default function Marketplace() {
               <span className="font-bold text-gray-700">الإجمالي:</span>
               <span className="font-black text-[#4f46e5] text-2xl">
                 {formatCurrency(quantity * (orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price
-                  ? orderingProduct.discount_price 
-                  : orderingProduct.price))}
+                  ? orderingProduct.discount_price * 1.10
+                  : orderingProduct.price * 1.10))}
               </span>
             </div>
 
             <button 
               onClick={submitOrder}
-              disabled={submittingOrder || quantity < orderingProduct.moq}
+              disabled={submittingOrder || quantity < orderingProduct.moq || (orderingProduct.stock && quantity > orderingProduct.stock)}
               className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
             >
               {submittingOrder ? 'جاري المعالجة...' : 'تأكيد الطلب والانتقال للدفع'}

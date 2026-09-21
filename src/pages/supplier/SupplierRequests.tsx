@@ -51,7 +51,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
           merchant:users!merchant_id(name, company_name, phone, address),
-          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply),
+          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply, supplier:users!supplier_id(name, company_name)),
           supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
@@ -394,6 +394,12 @@ export default function SupplierRequests() {
                       <div className="space-y-3">
                         {req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).map((otherBid: any) => (
                           <div key={otherBid.id} className="bg-white border border-gray-200 rounded-lg p-3 text-right">
+                            <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-2">
+                              <span className="font-bold text-gray-800 flex items-center gap-2 text-sm">
+                                <Store size={14} className="text-gray-400" />
+                                {otherBid.supplier?.company_name || otherBid.supplier?.name || 'مورد'}
+                              </span>
+                            </div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-xs text-gray-500">سعر القطعة (الخام):</span>
                               <span className="font-bold text-sm">{formatCurrency((otherBid.cost_price || otherBid.price) / (req.quantity || 1))}</span>

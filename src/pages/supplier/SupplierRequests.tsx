@@ -397,7 +397,7 @@ export default function SupplierRequests() {
                             <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-2">
                               <span className="font-bold text-gray-800 flex items-center gap-2 text-sm">
                                 <Store size={14} className="text-gray-400" />
-                                {otherBid.supplier?.company_name || otherBid.supplier?.name || 'مورد'}
+                                {otherBid.supplier?.name || 'مورد'}
                               </span>
                             </div>
                             <div className="flex justify-between items-center mb-1">

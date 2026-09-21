@@ -715,7 +715,7 @@ export default function MerchantOrders() {
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500">المورد:</span>
-                          <span className="font-bold">{bid?.supplier?.company_name || 'غير معروف'}</span>
+                          <span className="font-bold">{bid?.supplier?.name || 'غير معروف'}</span>
                         </div>
                       </div>
                     </div>
@@ -849,7 +849,7 @@ export default function MerchantOrders() {
                     <InvoiceDocument
                       orderId={req.id}
                       merchantName={user?.name || user?.company_name || 'تاجر'}
-                      supplierName={bid.supplier?.company_name || 'مورد'}
+                      supplierName={bid.supplier?.name || 'مورد'}
                       paymentStatus={bid.is_fully_paid ? 'fully_paid' : 'deposit_paid'}
                       formatCurrency={formatCurrency}
                       itemName={req.title.replace('طلب مباشر: ', '')}
@@ -942,7 +942,7 @@ export default function MerchantOrders() {
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
                           )}
                           <div className="flex items-center gap-1 mb-1">
-                            <h5 className="font-bold text-gray-900">{bid.supplier?.company_name}</h5>
+                            <h5 className="font-bold text-gray-900">{bid.supplier?.name}</h5>
                             {bid.supplier?.verification_badge === 'blue' && (
                               <span title="مورد موثق"><BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" /></span>
                             )}
@@ -1116,7 +1116,7 @@ export default function MerchantOrders() {
                             <InvoiceDocument
                               orderId={req.id}
                               merchantName={user?.name || user?.company_name || 'تاجر'}
-                              supplierName={bid.supplier?.company_name || 'مورد'}
+                              supplierName={bid.supplier?.name || 'مورد'}
                               paymentStatus={bid.is_fully_paid ? 'fully_paid' : 'deposit_paid'}
                               formatCurrency={formatCurrency}
                               itemName={req.title}

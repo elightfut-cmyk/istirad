@@ -87,7 +87,7 @@ export default function Marketplace() {
         .from('products')
         .select(`
           id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, supplier_id, created_at, status, category,
-          supplier:users!supplier_id(company_name, verification_badge)
+          supplier:users!supplier_id(name, company_name, verification_badge)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -287,7 +287,7 @@ export default function Marketplace() {
 
                       <div className="flex items-center gap-1 mb-4 bg-orange-50 w-full sm:w-max px-2 py-1 rounded-md">
                         <Store size={14} className="text-orange-500" />
-                        <span className="text-xs text-orange-700">{product.supplier?.company_name || 'مورد غير معروف'}</span>
+                        <span className="text-xs text-orange-700">{product.supplier?.name || 'مورد غير معروف'}</span>
                         {product.supplier?.verification_badge === 'blue' && (
                           <span title="مورد موثق"><BadgeCheck size={16} className="text-blue-500" fill="currentColor" color="white" /></span>
                         )}
@@ -375,7 +375,7 @@ export default function Marketplace() {
                   <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price)}</span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mb-1">المورد: <span className="font-bold text-gray-800">{orderingProduct.supplier?.company_name}</span></p>
+              <p className="text-sm text-gray-500 mb-1">المورد: <span className="font-bold text-gray-800">{orderingProduct.supplier?.name}</span></p>
               <p className="text-sm text-gray-500 mb-1">أقل كمية للبيع (MOQ): <span className="font-bold text-orange-600">{orderingProduct.moq} وحدة</span></p>
               <p className="text-sm text-gray-500">نسبة العربون: <span className="font-bold text-red-600">{orderingProduct.advance_percentage || 20}%</span></p>
             </div>

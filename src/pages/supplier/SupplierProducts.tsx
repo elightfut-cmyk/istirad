@@ -16,6 +16,7 @@ export default function SupplierProducts() {
   const [form, setForm] = useState({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: '' });
   const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'my'>('all');
 
   const handleOpenAddModal = () => {
     setForm({ title: '', description: '', price: 0, cost_price: 0, moq: 1, image_url: '', advance_percentage: 20, discount_price: 0, category: productCategories[0] || '' });
@@ -67,7 +68,7 @@ export default function SupplierProducts() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd')
+        .select('id, title, description, price, cost_price, moq, advance_percentage, discount_price, images, created_at, supplier_id, category, price_usd, cost_price_usd, discount_price_usd, supplier:users!supplier_id(name)')
         .order('created_at', { ascending: false })
         .limit(100);
         
@@ -169,10 +170,10 @@ export default function SupplierProducts() {
 
   return (
     <DashboardLayout
-      title="منتجاتي"
+      title="المنتجات"
       sidebarLinks={[
         { label: 'الرئيسية', href: '/supplier', icon: <Package size={20} /> },
-        { label: 'منتجاتي', href: '/supplier/products', icon: <Package size={20} /> },
+        { label: 'المنتجات', href: '/supplier/products', icon: <Package size={20} /> },
         { label: 'سوق الطلبات', href: '/supplier/requests', icon: <Package size={20} /> },
         { label: 'الطلبات الواردة', href: '/supplier/orders', icon: <Package size={20} /> },
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
@@ -180,6 +181,22 @@ export default function SupplierProducts() {
     >
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
+        
+        <div className="flex bg-gray-100 p-1 rounded-lg">
+          <button 
+            onClick={() => setActiveTab('all')}
+            className={`px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            الكل
+          </button>
+          <button 
+            onClick={() => setActiveTab('my')}
+            className={`px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'my' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            منتجاتي
+          </button>
+        </div>
+
         <button 
           onClick={handleOpenAddModal}
           className="bg-[#4f46e5] text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-[#4338ca] transition-colors"
@@ -209,7 +226,7 @@ export default function SupplierProducts() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products.map(product => (
+          {products.filter(p => activeTab === 'all' || p.supplier_id === user?.id).map(product => (
             <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <div className="w-full h-48 bg-gray-50 flex items-center justify-center p-2">
@@ -222,7 +239,10 @@ export default function SupplierProducts() {
               )}
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-gray-900">{product.title}</h3>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900">{product.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">المورد: <span className="font-bold">{product.supplier?.name || 'مورد'}</span></p>
+                  </div>
                   {product.supplier_id === user?.id && (
                     <div className="flex gap-2">
                       <button onClick={() => handleEditProduct(product)} className="text-gray-400 hover:text-blue-600 transition-colors" title="تعديل">

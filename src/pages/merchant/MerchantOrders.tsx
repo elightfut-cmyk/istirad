@@ -155,7 +155,7 @@ export default function MerchantOrders() {
         .select(`
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
           supplier_bids (
-            id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
+            id, request_id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users(name, company_name, phone, verification_badge)
           ),
           supplier_interests(id, supplier_id)

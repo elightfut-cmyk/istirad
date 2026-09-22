@@ -81,17 +81,21 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
       const file = e.target.files[0];
       setUploadingImage(true);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `card_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('platform_assets')
-        .upload(fileName, file);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
 
-      if (uploadError) throw uploadError;
+      const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      const { data } = supabase.storage.from('platform_assets').getPublicUrl(fileName);
-      handleUpdateCard(cardIndex, 'imageUrl', data.publicUrl);
+      if (!res.ok) {
+        throw new Error('فشل رفع الصورة');
+      }
+
+      const data = await res.json();
+      handleUpdateCard(cardIndex, 'imageUrl', data.secure_url);
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('حدث خطأ أثناء رفع الصورة.');

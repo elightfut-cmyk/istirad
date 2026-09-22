@@ -158,9 +158,15 @@ export default function AdminRequests() {
                       <p className="text-xs text-gray-500 mb-1">رسوم الطلب الثابتة:</p>
                       <p className="font-bold">{formatCurrency(settings.orderFixedFee)}</p>
                     </div>
-                    <div className="md:col-span-3 pt-3 border-t border-gray-100 flex justify-between items-center bg-indigo-50/30 p-3 rounded-lg">
-                      <span className="font-bold text-indigo-900">السعر النهائي للتاجر (للقطعة):</span>
-                      <span className="text-xl font-black text-[#4f46e5]">{formatCurrency(finalPricing.finalItemPrice)}</span>
+                    <div className="md:col-span-3 pt-3 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 flex justify-between items-center">
+                        <span className="font-bold text-green-900">ربح المنصة الإجمالي:</span>
+                        <span className="text-lg font-black text-green-700">{formatCurrency(finalPricing.platformProfit)}</span>
+                      </div>
+                      <div className="bg-indigo-50/30 p-3 rounded-lg flex justify-between items-center">
+                        <span className="font-bold text-indigo-900">السعر النهائي للتاجر (للقطعة):</span>
+                        <span className="text-xl font-black text-[#4f46e5]">{formatCurrency(finalPricing.finalItemPrice)}</span>
+                      </div>
                     </div>
                   </div>
                 );

@@ -153,21 +153,22 @@ export default function AdminSettings() {
       const file = e.target.files[0];
       setUploadingImage(true);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `ad_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
 
-      const { error: uploadError } = await supabase.storage
-        .from('platform_assets')
-        .upload(filePath, file);
+      const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) {
-        throw uploadError;
+      if (!res.ok) {
+        throw new Error('فشل رفع الصورة');
       }
 
-      const { data } = supabase.storage.from('platform_assets').getPublicUrl(filePath);
+      const data = await res.json();
       
-      setLocalSettings(prev => ({ ...prev, adImageUrl: data.publicUrl }));
+      setLocalSettings(prev => ({ ...prev, adImageUrl: data.secure_url }));
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('حدث خطأ أثناء رفع الصورة. تأكد من إنشاء الـ Bucket في قاعدة البيانات.');
@@ -182,24 +183,25 @@ export default function AdminSettings() {
       const file = e.target.files[0];
       setUploadingImage(true);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `hero_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
 
-      const { error: uploadError } = await supabase.storage
-        .from('platform_assets')
-        .upload(filePath, file);
+      const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) {
-        throw uploadError;
+      if (!res.ok) {
+        throw new Error('فشل رفع الصورة');
       }
 
-      const { data } = supabase.storage.from('platform_assets').getPublicUrl(filePath);
+      const data = await res.json();
       
       if (isSecond) {
-        setLocalSettings(prev => ({ ...prev, heroImageUrl2: data.publicUrl }));
+        setLocalSettings(prev => ({ ...prev, heroImageUrl2: data.secure_url }));
       } else {
-        setLocalSettings(prev => ({ ...prev, heroImageUrl: data.publicUrl }));
+        setLocalSettings(prev => ({ ...prev, heroImageUrl: data.secure_url }));
       }
     } catch (error) {
       console.error('Error uploading image:', error);

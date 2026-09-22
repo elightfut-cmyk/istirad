@@ -98,26 +98,28 @@ export default function SupplierProducts() {
       let finalImageUrl = form.image_url;
 
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
 
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, imageFile);
+        try {
+          const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+            method: 'POST',
+            body: formData,
+          });
 
-        if (uploadError) {
+          if (!res.ok) {
+            throw new Error('فشل رفع الصورة');
+          }
+
+          const data = await res.json();
+          finalImageUrl = data.secure_url;
+        } catch (uploadError) {
           console.error('Upload error:', uploadError);
-          toast.error('حدث خطأ أثناء رفع الصورة. يرجى التأكد من إنشاء Storage Bucket باسم products.');
+          toast.error('حدث خطأ أثناء رفع الصورة إلى منصة التخزين.');
           setSubmitting(false);
           return;
         }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-
-        finalImageUrl = publicUrl;
       }
 
       if (editingProductId) {

@@ -192,21 +192,25 @@ export default function MerchantOrders() {
       let finalImageUrl = formData.image_url;
 
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
 
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, imageFile);
+        try {
+          const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+            method: 'POST',
+            body: formData,
+          });
 
-        if (uploadError) throw uploadError;
+          if (!res.ok) {
+            throw new Error('فشل رفع الصورة');
+          }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-
-        finalImageUrl = publicUrl;
+          const data = await res.json();
+          finalImageUrl = data.secure_url;
+        } catch (uploadError) {
+          throw uploadError;
+        }
       }
 
       const requestData = {

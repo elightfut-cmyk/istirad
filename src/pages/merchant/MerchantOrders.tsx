@@ -194,7 +194,7 @@ export default function MerchantOrders() {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-        formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
+        formData.append('upload_preset', 'jiibha');
 
         try {
           const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {

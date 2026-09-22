@@ -317,7 +317,7 @@ export default function Marketplace() {
                         </div>
                         <div className="text-left">
                           <p className="text-xs text-gray-400 mb-1">الكمية المتوفرة</p>
-                          <p className="font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg inline-block">{product.stock} وحدة</p>
+                          <p className="font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg inline-block">{product.stock || product.moq} وحدة</p>
                         </div>
                       </div>
 
@@ -380,7 +380,7 @@ export default function Marketplace() {
                 )}
               </div>
               <p className="text-sm text-gray-500 mb-1">المورد: <span className="font-bold text-gray-800">{orderingProduct.supplier?.name}</span></p>
-              <p className="text-sm text-gray-500 mb-1">الكمية المتوفرة: <span className="font-bold text-orange-600">{orderingProduct.stock} وحدة</span></p>
+              <p className="text-sm text-gray-500 mb-1">الكمية المتوفرة: <span className="font-bold text-orange-600">{orderingProduct.stock || orderingProduct.moq} وحدة</span></p>
               <p className="text-sm text-gray-500">نسبة العربون: <span className="font-bold text-red-600">{orderingProduct.advance_percentage || 20}%</span></p>
             </div>
 
@@ -389,16 +389,16 @@ export default function Marketplace() {
               <input 
                 type="number" 
                 min={3}
-                max={orderingProduct.stock || 999999}
+                max={orderingProduct.stock || orderingProduct.moq || 999999}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < 3 || (orderingProduct.stock && quantity > orderingProduct.stock) ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < 3 || ((orderingProduct.stock || orderingProduct.moq) && quantity > (orderingProduct.stock || orderingProduct.moq)) ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
               />
               {quantity < 3 && (
                 <p className="text-red-500 text-xs mt-2">لا يمكنك طلب أقل من 3 وحدات.</p>
               )}
-              {orderingProduct.stock && quantity > orderingProduct.stock && (
-                <p className="text-red-500 text-xs mt-2">الكمية المطلوبة أكبر من المخزون المتوفر ({orderingProduct.stock} وحدة).</p>
+              {(orderingProduct.stock || orderingProduct.moq) && quantity > (orderingProduct.stock || orderingProduct.moq) && (
+                <p className="text-red-500 text-xs mt-2">الكمية المطلوبة أكبر من المخزون المتوفر ({orderingProduct.stock || orderingProduct.moq} وحدة).</p>
               )}
             </div>
 
@@ -413,7 +413,7 @@ export default function Marketplace() {
 
             <button 
               onClick={submitOrder}
-              disabled={submittingOrder || quantity < 3 || (orderingProduct.stock && quantity > orderingProduct.stock)}
+              disabled={submittingOrder || quantity < 3 || ((orderingProduct.stock || orderingProduct.moq) && quantity > (orderingProduct.stock || orderingProduct.moq))}
               className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
             >
               {submittingOrder ? 'جاري المعالجة...' : 'تأكيد الطلب والانتقال للدفع'}

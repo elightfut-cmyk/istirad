@@ -83,7 +83,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
+      formData.append('upload_preset', 'jiibha');
 
       const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
         method: 'POST',

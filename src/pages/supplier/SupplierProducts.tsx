@@ -100,7 +100,7 @@ export default function SupplierProducts() {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-        formData.append('upload_preset', 'YOUR_UNSIGNED_PRESET');
+        formData.append('upload_preset', 'jiibha');
 
         try {
           const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
@@ -275,7 +275,7 @@ export default function SupplierProducts() {
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">الكمية المتوفرة: {product.stock}</span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">الكمية المتوفرة: {product.stock || product.moq}</span>
                     <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-md">عربون: {product.advance_percentage || 20}%</span>
                   </div>
                 </div>

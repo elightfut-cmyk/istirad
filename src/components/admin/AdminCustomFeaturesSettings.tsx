@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CustomWindowCard } from '../../store/useSettingsStore';
-import { supabase } from '../../lib/supabase';
+
 import toast from 'react-hot-toast';
 import { ChevronUp, ChevronDown, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 

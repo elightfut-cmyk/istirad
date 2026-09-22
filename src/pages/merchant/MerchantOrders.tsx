@@ -9,6 +9,7 @@ import { calculateFinalPrice, calculateSupplierPriceFromFinal } from '../../util
 import { sendNotification } from '../../store/useNotificationStore';
 import { createChargilyCheckout } from '../../lib/chargily';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 import OrderProgressBar from '../../components/OrderProgressBar';
 import TermsOfUseModal from '../../components/TermsOfUseModal';
 import CountdownCircle from '../../components/CountdownCircle';
@@ -192,11 +193,18 @@ export default function MerchantOrders() {
       let finalImageUrl = formData.image_url;
 
       if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', 'jiibha');
-
         try {
+          const options = {
+            maxSizeMB: 4.5,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          const compressedFile = await imageCompression(imageFile, options);
+
+          const formData = new FormData();
+          formData.append('file', compressedFile);
+          formData.append('upload_preset', 'jiibha');
+
           const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
             method: 'POST',
             body: formData,

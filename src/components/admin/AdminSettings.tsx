@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 import RichTextEditor from './RichTextEditor';
 import AdminCustomFeaturesSettings from './AdminCustomFeaturesSettings';
 
@@ -153,8 +154,15 @@ export default function AdminSettings() {
       const file = e.target.files[0];
       setUploadingImage(true);
 
+      const options = {
+        maxSizeMB: 4.5,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('upload_preset', 'jiibha');
 
       const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
@@ -183,8 +191,15 @@ export default function AdminSettings() {
       const file = e.target.files[0];
       setUploadingImage(true);
 
+      const options = {
+        maxSizeMB: 4.5,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('upload_preset', 'jiibha');
 
       const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {

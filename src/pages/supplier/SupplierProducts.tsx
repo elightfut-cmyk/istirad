@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 
 export default function SupplierProducts() {
   const { user } = useAuthStore();
@@ -98,11 +99,18 @@ export default function SupplierProducts() {
       let finalImageUrl = form.image_url;
 
       if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', 'jiibha');
-
         try {
+          const options = {
+            maxSizeMB: 4.5,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          const compressedFile = await imageCompression(imageFile, options);
+
+          const formData = new FormData();
+          formData.append('file', compressedFile);
+          formData.append('upload_preset', 'jiibha');
+
           const res = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
             method: 'POST',
             body: formData,

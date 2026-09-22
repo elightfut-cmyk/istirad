@@ -273,7 +273,7 @@ export default function SupplierProducts() {
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">أقل كمية: {product.moq}</span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">الكمية المتوفرة: {product.stock}</span>
                     <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-md">عربون: {product.advance_percentage || 20}%</span>
                   </div>
                 </div>
@@ -378,18 +378,11 @@ export default function SupplierProducts() {
                   {form.discount_price > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: ${Number(((form.discount_price || 0) / exchangeRate).toFixed(2))}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">أقل كمية للطلب (MOQ)</label>
-                  <input 
-                    type="number" required min="1"
-                    value={form.moq || ''} 
-                    onChange={e => setForm({...form, moq: parseInt(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 mb-4"
-                  />
                   <label className="block text-sm font-medium text-gray-700 mb-1">الكمية المتوفرة (المخزون)</label>
                   <input 
-                    type="number" required min="1"
+                    type="number" required min="3"
                     value={form.stock || ''} 
-                    onChange={e => setForm({...form, stock: parseInt(e.target.value) || 0})}
+                    onChange={e => setForm({...form, stock: parseInt(e.target.value) || 0, moq: 3})}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
                   />
                 </div>

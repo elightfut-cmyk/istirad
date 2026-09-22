@@ -153,6 +153,9 @@ export default function Register() {
                   className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
                   placeholder="05XXXXXXXX" />
               </div>
+              <p className="mt-2 text-xs text-gray-500">
+                يجب أن يكون الهاتف مرتبطاً بالواتساب لتسهيل التواصل.
+              </p>
             </div>
           </div>
 

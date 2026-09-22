@@ -203,19 +203,14 @@ export default function SupplierRequests() {
 
       <div className="relative">
         {user?.status === 'pending' && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200">
-            <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md mx-4">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Gavel size={32} className="text-orange-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">حسابك قيد المراجعة</h3>
-              <p className="text-gray-500">
-                لا يمكنك الاطلاع على طلبات ومناقصات التجار أو تقديم عروض حتى يتم مراجعة حسابك وقبوله من قِبل الإدارة.
-              </p>
-            </div>
+          <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl mb-6 text-orange-800 flex items-center gap-3">
+            <Gavel size={24} className="text-orange-600 flex-shrink-0" />
+            <p className="text-sm font-bold">
+              حسابك قيد المراجعة. يمكنك الاطلاع على الطلبات ولكن لا يمكنك تقديم عروض أو تفاعل حتى يتم تفعيل حسابك.
+            </p>
           </div>
         )}
-        <div className={`space-y-6 ${user?.status === 'pending' ? 'pointer-events-none select-none opacity-50 blur-sm' : ''}`}>
+        <div className="space-y-6">
         {loading ? (
           <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
         ) : requests.length === 0 ? (
@@ -383,23 +378,31 @@ export default function SupplierRequests() {
                   ) : (
                     <div className="w-full flex flex-col gap-2">
                       <p className="text-sm text-gray-500 mb-2">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
-                      <button 
-                        onClick={() => setBiddingRequest(req)}
-                        className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
-                      >
-                        تقديم عرض سعر
-                      </button>
-                      {!req.supplier_interests?.some((i: any) => i.supplier_id === user?.id) ? (
-                        <button 
-                          onClick={() => handleIndicateInterest(req.id)}
-                          className="w-full bg-orange-50 text-orange-600 border border-orange-200 py-3 rounded-xl font-bold hover:bg-orange-100 transition shadow-sm"
-                        >
-                          جاري البحث عن المنتج والسعر (إعلام التاجر)
-                        </button>
-                      ) : (
-                        <div className="w-full bg-gray-50 text-gray-600 border border-gray-200 py-2 rounded-xl text-center text-sm font-bold">
-                          تم إعلام التاجر باهتمامك بالطلب
+                      {user?.status === 'pending' ? (
+                        <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center text-sm border border-gray-200">
+                          تقديم العروض متاح للموردين المعتمدين فقط
                         </div>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => setBiddingRequest(req)}
+                            className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
+                          >
+                            تقديم عرض سعر
+                          </button>
+                          {!req.supplier_interests?.some((i: any) => i.supplier_id === user?.id) ? (
+                            <button 
+                              onClick={() => handleIndicateInterest(req.id)}
+                              className="w-full bg-orange-50 text-orange-600 border border-orange-200 py-3 rounded-xl font-bold hover:bg-orange-100 transition shadow-sm"
+                            >
+                              جاري البحث عن المنتج والسعر (إعلام التاجر)
+                            </button>
+                          ) : (
+                            <div className="w-full bg-gray-50 text-gray-600 border border-gray-200 py-2 rounded-xl text-center text-sm font-bold">
+                              تم إعلام التاجر باهتمامك بالطلب
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   )}

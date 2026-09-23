@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Package, Clock, ChevronDown, ChevronUp, User, MessageSquare, Ticket, Calculator } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Package, Clock, ChevronDown, ChevronUp, User, MessageSquare, Ticket, Calculator  } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -34,7 +34,7 @@ export default function AdminRequests() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, quantity, status, created_at, description,
+          id, title, quantity, status, created_at, description, cancellation_reason,
           merchant:users!merchant_id(name, company_name),
           supplier_bids(
             id, price, cost_price, status, created_at, is_fully_paid, advance_percentage, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
@@ -256,11 +256,13 @@ export default function AdminRequests() {
                         req.status === 'open' ? 'bg-green-50 text-green-700' :
                         req.status === 'in_progress' ? 'bg-blue-50 text-blue-700' :
                         req.status === 'completed' ? 'bg-purple-50 text-purple-700' :
+                        req.status === 'cancelled' ? 'bg-red-50 text-red-700' :
                         'bg-gray-100 text-gray-600'
                       }`}>
                         {req.status === 'open' ? 'مفتوح للعروض' :
                          req.status === 'in_progress' ? 'قيد التنفيذ' :
-                         req.status === 'completed' ? 'مكتمل' : 'مغلق'}
+                         req.status === 'completed' ? 'مكتمل' : 
+                         req.status === 'cancelled' ? 'ملغاة' : 'مغلق'}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
@@ -289,7 +291,14 @@ export default function AdminRequests() {
 
                 {expandedRequestId === req.id && (
                   <div className="p-5 bg-gray-50 border-t border-gray-200">
-                    <p className="text-sm text-gray-700 mb-4 bg-white p-4 rounded-xl border border-gray-100">
+                    
+                    {req.status === 'cancelled' && (
+                      <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-4">
+                        <p className="font-bold flex items-center gap-2">تم إلغاء هذه المناقصة من قبل التاجر</p>
+                        {req.cancellation_reason && <p className="text-sm mt-2 font-normal">سبب الإلغاء: {req.cancellation_reason}</p>}
+                      </div>
+                    )}
+<p className="text-sm text-gray-700 mb-4 bg-white p-4 rounded-xl border border-gray-100">
                       <strong>الوصف:</strong> {req.description}
                     </p>
 

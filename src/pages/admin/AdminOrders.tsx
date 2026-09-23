@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Package, CheckCircle2, Clock, ChevronDown, ChevronUp, User, CreditCard, MessageSquare, Ticket } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Package, CheckCircle2, Clock, ChevronDown, ChevronUp, User, CreditCard, MessageSquare, Ticket  } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';

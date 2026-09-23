@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye , AlertTriangle} from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -222,7 +222,7 @@ export default function SupplierRequests() {
           requests.filter(req => {
             if (filterStatus === 'all') return true;
             if (filterStatus === 'open') return req.status !== 'closed';
-            if (filterStatus === 'closed') return req.status === 'closed';
+            if (filterStatus === 'closed') return req.status === 'closed' || req.status === 'cancelled';
             return true;
           }).map(req => {
             const myBid = req.supplier_bids?.find((b: any) => b.supplier_id === user?.id);
@@ -238,12 +238,19 @@ export default function SupplierRequests() {
                         <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
                         <p className="text-sm text-gray-500 mt-1">بواسطة التاجر: <span className="font-bold">{req.merchant?.name || 'غير معروف'} {req.merchant?.company_name ? `(${req.merchant.company_name})` : ''}</span></p>
                       </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${isClosed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'cancelled' ? 'bg-red-100 text-red-700' : isClosed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {req.status === 'cancelled' ? 'ملغاة' : isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
                     </span>
                   </div>
 
-                  {(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
+                  
+                  {req.status === 'cancelled' && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-4">
+                      <p className="font-bold flex items-center gap-2"><AlertTriangle size={18} /> تم إلغاء هذه المناقصة من قبل التاجر</p>
+                      {req.cancellation_reason && <p className="text-sm mt-2 font-normal">سبب الإلغاء: {req.cancellation_reason}</p>}
+                    </div>
+                  )}
+{(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
                     <div className="flex flex-wrap gap-2 mb-3">
                       {req.supplier_bids?.length > 0 && (
                         <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
@@ -303,12 +310,12 @@ export default function SupplierRequests() {
                         <span className="font-bold bg-orange-100 text-orange-800 px-2 rounded">{myBid.advance_percentage}%</span>
                       </div>
                       
-                      {myBid.status === 'accepted' ? (
+                      {req.status === 'cancelled' ? (<div className="text-gray-500 font-medium">تم إلغاء الطلب من التاجر.</div>) : myBid.status === 'accepted' ? (
                         <div className="bg-green-100 text-green-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-sm">
                           <CheckCircle2 size={18} />
                           تهانينا! تم قبول عرضك وتم دفع العربون
                         </div>
-                      ) : isClosed ? (
+                      ) : isClosed || req.status === 'cancelled' ? (
                         <div className="bg-gray-200 text-gray-600 p-3 rounded-xl font-bold text-sm">
                           تم إغلاق الطلب وقبول عرض مورد آخر
                         </div>

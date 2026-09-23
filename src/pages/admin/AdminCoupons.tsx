@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, Search, Plus, Edit, Trash2, CheckCircle, Ban , Package } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, Search, Plus, Edit, Trash2, CheckCircle, Ban , Package  } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, Loader2, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, Loader2, CheckCircle2, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSmartImport() {
@@ -8,20 +8,25 @@ export default function AdminSmartImport() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
-  const [result, setResult] = useState<{
-    originalPriceUSD: number;
-    weightKg: number;
-    shippingCostUSD: number;
-    totalCostUSD: number;
-    finalPriceDZD: number;
-  } | null>(null);
+  
+  // Interactive State
+  const [basePriceUSD, setBasePriceUSD] = useState<number>(0);
+  const [baseWeightKg, setBaseWeightKg] = useState<number>(0.5);
+  const [hasResult, setHasResult] = useState(false);
+
+  // Dynamic Calculations (on the fly)
+  const shippingCostUSD = baseWeightKg * 15;
+  const totalCostUSD = basePriceUSD + shippingCostUSD;
+  const platformMargin = totalCostUSD * 0.10; // 10%
+  const finalPriceUSD = totalCostUSD + platformMargin;
+  const finalPriceDZD = finalPriceUSD * 220; // 1 USD = 220 DZD
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
-      setResult(null);
+      setHasResult(false);
     }
   };
 
@@ -32,6 +37,7 @@ export default function AdminSmartImport() {
     }
 
     setLoading(true);
+    setHasResult(false);
     try {
       // 1. Upload to Cloudinary
       setLoadingStep('Uploading image to Cloudinary...');
@@ -68,27 +74,23 @@ export default function AdminSmartImport() {
 
       const rapidApiData = await rapidApiRes.json();
       
-      // 3. Data Extraction & Calculation
+      // 3. Data Extraction
       setLoadingStep('Calculating costs & estimating price...');
       
       let originalPriceUSD = 0;
       let weightKg = 0.5; // fallback
       
-      // Safely extract products from the specific RapidAPI response format
       const items = rapidApiData?.products || rapidApiData?.items || rapidApiData?.data?.items || rapidApiData?.data || rapidApiData;
       const firstItem = Array.isArray(items) ? items[0] : items;
       
       if (firstItem) {
-         // Safely extract price (usually returned directly as a number in .price)
          let rawPrice = firstItem.price?.value || firstItem.price?.current || firstItem.price || firstItem.originalPrice || firstItem.salePrice;
          if (typeof rawPrice === 'string') {
-             // Handle "US $12.50" or similar
              const match = rawPrice.match(/[\d.]+/);
              if (match) rawPrice = match[0];
          }
          originalPriceUSD = parseFloat(rawPrice || 0);
 
-         // Extract weight if available
          let rawWeight = firstItem.weight?.value || firstItem.weight;
          if (rawWeight) {
              const wMatch = String(rawWeight).match(/[\d.]+/);
@@ -100,23 +102,11 @@ export default function AdminSmartImport() {
           throw new Error('لم يتم العثور على منتج مطابق أو تعذر استخراج السعر');
       }
 
-      // Calculations
-      const shippingCostUSD = weightKg * 15;
-      const totalCostUSD = originalPriceUSD + shippingCostUSD;
-      const platformMargin = totalCostUSD * 0.10; // 10%
-      const finalPriceUSD = totalCostUSD + platformMargin;
-      
-      // Conversion 1 USD = 220 DZD
-      const finalPriceDZD = finalPriceUSD * 220;
-
-      setResult({
-        originalPriceUSD,
-        weightKg,
-        shippingCostUSD,
-        totalCostUSD,
-        finalPriceDZD
-      });
-      toast.success('تم الحساب بنجاح');
+      // Update interactive state
+      setBasePriceUSD(originalPriceUSD);
+      setBaseWeightKg(weightKg);
+      setHasResult(true);
+      toast.success('تم جلب البيانات! يمكنك تعديل السعر والوزن يدوياً');
       
     } catch (error: any) {
       console.error('Smart Import Error:', error);
@@ -152,7 +142,7 @@ export default function AdminSmartImport() {
           <div>
             <h3 className="font-bold text-blue-900">ميزة الاستيراد الذكي (Admin Only)</h3>
             <p className="text-sm text-blue-800 mt-1">
-              هذه الأداة مخصصة للإدارة فقط للبحث عن المنتجات بالصور عبر AliExpress (عبر RapidAPI)، وتقدير الأسعار والتكاليف النهائية تلقائياً للعميل بناءً على سعر الدولار وهامش ربح المنصة.
+              هذه الأداة مخصصة للإدارة فقط للبحث عن المنتجات بالصور عبر AliExpress (عبر RapidAPI)، وتقدير الأسعار والتكاليف النهائية تلقائياً للعميل بناءً على سعر الدولار وهامش ربح المنصة. يمكنك تعديل السعر والوزن بعد البحث للحصول على نتائج أدق.
             </p>
           </div>
         </div>
@@ -207,7 +197,7 @@ export default function AdminSmartImport() {
 
           {/* Result Section */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center relative overflow-hidden">
-             {!result && !loading && (
+             {!hasResult && !loading && (
                <div className="text-center text-gray-400">
                  <Search size={64} className="mx-auto mb-4 opacity-50" />
                  <p className="font-bold text-lg">النتيجة ستظهر هنا</p>
@@ -222,7 +212,7 @@ export default function AdminSmartImport() {
                </div>
              )}
 
-             {result && !loading && (
+             {hasResult && !loading && (
                <div className="space-y-4 animate-in fade-in zoom-in duration-300">
                  <div className="flex items-center gap-2 text-green-600 mb-4 pb-4 border-b border-gray-100">
                    <CheckCircle2 size={24} />
@@ -230,40 +220,61 @@ export default function AdminSmartImport() {
                  </div>
 
                  <div className="grid grid-cols-2 gap-4">
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                     <p className="text-sm text-gray-500 mb-1">السعر الأصلي (المورد)</p>
-                     <p className="text-xl font-black text-gray-900">${result.originalPriceUSD.toFixed(2)}</p>
+                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-[#4f46e5] transition group">
+                     <label className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                       السعر الأصلي ($)
+                       <Edit3 size={14} className="opacity-0 group-hover:opacity-100 text-[#4f46e5] transition" />
+                     </label>
+                     <input 
+                       type="number" 
+                       min="0"
+                       step="0.01"
+                       value={basePriceUSD} 
+                       onChange={(e) => setBasePriceUSD(parseFloat(e.target.value) || 0)}
+                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-black text-gray-900 transition-colors py-1"
+                     />
                    </div>
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                     <p className="text-sm text-gray-500 mb-1">الوزن التقديري</p>
-                     <p className="text-xl font-bold text-gray-900">{result.weightKg} kg</p>
+                   
+                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-[#4f46e5] transition group">
+                     <label className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                       الوزن (kg)
+                       <Edit3 size={14} className="opacity-0 group-hover:opacity-100 text-[#4f46e5] transition" />
+                     </label>
+                     <input 
+                       type="number" 
+                       min="0"
+                       step="0.01"
+                       value={baseWeightKg} 
+                       onChange={(e) => setBaseWeightKg(parseFloat(e.target.value) || 0)}
+                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-bold text-gray-900 transition-colors py-1"
+                     />
                    </div>
+
                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                      <p className="text-sm text-gray-500 mb-1">تكلفة الشحن (15$/kg)</p>
-                     <p className="text-xl font-bold text-orange-600">${result.shippingCostUSD.toFixed(2)}</p>
+                     <p className="text-xl font-bold text-orange-600">${shippingCostUSD.toFixed(2)}</p>
                    </div>
+                   
                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                      <p className="text-sm text-gray-500 mb-1">التكلفة الإجمالية</p>
-                     <p className="text-xl font-bold text-gray-900">${result.totalCostUSD.toFixed(2)}</p>
+                     <p className="text-xl font-bold text-gray-900">${totalCostUSD.toFixed(2)}</p>
                    </div>
                  </div>
 
-                 <div className="mt-6 pt-4 border-t border-gray-100">
-                   <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-200">
-                     <p className="text-sm font-bold text-indigo-900 mb-1">السعر النهائي المقترح للعميل</p>
-                     <p className="text-xs text-indigo-700 mb-3">(يشمل التكلفة + 10% هامش المنصة. تحويل بـ 1 USD = 220 DZD)</p>
-                     <div className="flex items-end justify-between">
-                       <p className="text-4xl font-black text-[#4f46e5]">
-                         {new Intl.NumberFormat('fr-DZ', { style: 'currency', currency: 'DZD' }).format(result.finalPriceDZD)}
-                       </p>
-                     </div>
+                 <div className="bg-[#4f46e5] bg-opacity-10 border border-[#4f46e5] border-opacity-20 rounded-xl p-6 mt-4 flex flex-col items-center justify-center text-center">
+                   <h4 className="font-bold text-[#4f46e5] mb-1">السعر النهائي المقترح للعميل</h4>
+                   <p className="text-sm text-[#4f46e5] opacity-80 mb-3">(يشمل التكلفة + 10% هامش المنصة، تحويل بـ 1 DZD = 220 USD)</p>
+                   <div className="text-4xl font-black text-[#4f46e5]">
+                     DA {finalPriceDZD.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                    </div>
                  </div>
+
                </div>
              )}
           </div>
+
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

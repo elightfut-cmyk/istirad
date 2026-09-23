@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket , Package , Lightbulb } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket , Package , Lightbulb , Search } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -207,6 +207,7 @@ export default function AdminDashboard() {
         { label: 'الأسئلة الشائعة', href: '/admin/faqs', icon: <MessageSquare size={20} /> },
         { label: 'الشكاوى', href: '/admin/complaints', icon: <Users size={20} /> },
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
+        { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

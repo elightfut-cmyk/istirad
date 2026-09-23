@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle , Package , Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle , Package , Lightbulb , Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Complaint {
@@ -91,6 +91,7 @@ export default function AdminComplaints() {
         { label: 'الأسئلة الشائعة', href: '/admin/faqs', icon: <HelpCircle size={20} /> },
         { label: 'الشكاوى', href: '/admin/complaints', icon: <AlertTriangle size={20} /> },
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
+        { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
       ]}
     >
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">

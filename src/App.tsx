@@ -16,6 +16,7 @@ import AdminPages from './pages/admin/AdminPages';
 import AdminFaqs from './pages/admin/AdminFaqs';
 import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminSuggestions from './pages/admin/AdminSuggestions';
+import AdminSmartImport from './pages/admin/AdminSmartImport';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import Marketplace from './pages/merchant/Marketplace';
 import MerchantOrders from './pages/merchant/MerchantOrders';
@@ -123,6 +124,12 @@ function App() {
           <Route path="/admin/suggestions" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminSuggestions />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/smart-import" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminSmartImport />
             </ProtectedRoute>
           } />
           

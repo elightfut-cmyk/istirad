@@ -74,12 +74,12 @@ export default function AdminSmartImport() {
       let originalPriceUSD = 0;
       let weightKg = 0.5; // fallback
       
-      // Safely extract from whatever array structure rapidapi returns
-      const items = rapidApiData?.data?.items || rapidApiData?.items || rapidApiData?.data || rapidApiData;
+      // Safely extract products from the specific RapidAPI response format
+      const items = rapidApiData?.products || rapidApiData?.items || rapidApiData?.data?.items || rapidApiData?.data || rapidApiData;
       const firstItem = Array.isArray(items) ? items[0] : items;
       
       if (firstItem) {
-         // Safely extract price
+         // Safely extract price (usually returned directly as a number in .price)
          let rawPrice = firstItem.price?.value || firstItem.price?.current || firstItem.price || firstItem.originalPrice || firstItem.salePrice;
          if (typeof rawPrice === 'string') {
              // Handle "US $12.50" or similar
@@ -97,9 +97,7 @@ export default function AdminSmartImport() {
       }
 
       if (!originalPriceUSD || isNaN(originalPriceUSD)) {
-          console.log("RapidAPI Response Data: ", rapidApiData);
-          const snippet = JSON.stringify(rapidApiData).substring(0, 300);
-          throw new Error('تعذر استخراج السعر من استجابة الـ API. تفاصيل البيانات: ' + snippet);
+          throw new Error('لم يتم العثور على منتج مطابق أو تعذر استخراج السعر');
       }
 
       // Calculations

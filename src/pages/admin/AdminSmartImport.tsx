@@ -51,25 +51,19 @@ export default function AdminSmartImport() {
       const cloudinaryData = await cloudinaryRes.json();
       const secureUrl = cloudinaryData.secure_url;
 
-      // 2. RapidAPI Image Search
-      setLoadingStep('Fetching supplier data (RapidAPI)...');
-      const apiKey = import.meta.env.VITE_RAPIDAPI_KEY;
-      if (!apiKey) {
-        throw new Error('VITE_RAPIDAPI_KEY is not set in .env');
-      }
+      // 2. Serverless API Image Search (Secure)
+      setLoadingStep('Fetching supplier data (Secure Server)...');
 
-      const rapidApiRes = await fetch('https://alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com/search/aliexpress', {
+      const rapidApiRes = await fetch('/api/smart-import', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-rapidapi-host': 'alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com',
-          'x-rapidapi-key': apiKey
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ imageUrl: secureUrl })
       });
 
       if (!rapidApiRes.ok) {
-        throw new Error('فشل التواصل مع خدمة البحث RapidAPI');
+        throw new Error('فشل التواصل مع الخادم الآمن لجلب البيانات');
       }
 
       const rapidApiData = await rapidApiRes.json();

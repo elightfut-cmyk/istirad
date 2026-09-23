@@ -81,17 +81,31 @@ export default function AdminSmartImport() {
       let weightKg = 0.5; // fallback
       
       const items = rapidApiData?.products || rapidApiData?.items || rapidApiData?.data?.items || rapidApiData?.data || rapidApiData;
-      const firstItem = Array.isArray(items) ? items[0] : items;
+      let selectedItem = Array.isArray(items) ? items[0] : items;
       
-      if (firstItem) {
-         let rawPrice = firstItem.price?.value || firstItem.price?.current || firstItem.price || firstItem.originalPrice || firstItem.salePrice;
+      if (Array.isArray(items) && items.length > 0) {
+        // Find the item with the minimum price to get the cheapest match
+        selectedItem = items.reduce((minItem, currentItem) => {
+          const getPrice = (item: any) => parseFloat(item?.price?.value || item?.price?.current || item?.price || item?.originalPrice || item?.salePrice || 0);
+          const minPrice = getPrice(minItem);
+          const currentPrice = getPrice(currentItem);
+          
+          if (currentPrice > 0 && (minPrice === 0 || currentPrice < minPrice)) {
+            return currentItem;
+          }
+          return minItem;
+        }, items[0]);
+      }
+      
+      if (selectedItem) {
+         let rawPrice = selectedItem.price?.value || selectedItem.price?.current || selectedItem.price || selectedItem.originalPrice || selectedItem.salePrice;
          if (typeof rawPrice === 'string') {
              const match = rawPrice.match(/[\d.]+/);
              if (match) rawPrice = match[0];
          }
          originalPriceUSD = parseFloat(rawPrice || 0);
 
-         let rawWeight = firstItem.weight?.value || firstItem.weight;
+         let rawWeight = selectedItem.weight?.value || selectedItem.weight;
          if (rawWeight) {
              const wMatch = String(rawWeight).match(/[\d.]+/);
              if (wMatch) weightKg = parseFloat(wMatch[0]);

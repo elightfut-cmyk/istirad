@@ -97,7 +97,9 @@ export default function AdminSmartImport() {
       }
 
       if (!originalPriceUSD || isNaN(originalPriceUSD)) {
-          throw new Error('لم يتم العثور على منتج مطابق أو تعذر استخراج السعر');
+          console.log("RapidAPI Response Data: ", rapidApiData);
+          const snippet = JSON.stringify(rapidApiData).substring(0, 300);
+          throw new Error('تعذر استخراج السعر من استجابة الـ API. تفاصيل البيانات: ' + snippet);
       }
 
       // Calculations

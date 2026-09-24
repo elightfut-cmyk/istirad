@@ -146,6 +146,7 @@ export default function AdminSmartImport() {
         { label: 'الشكاوى', href: '/admin/complaints', icon: <Users size={20} /> },
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
+        { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
       ]}
     >
       <div className="max-w-4xl mx-auto space-y-6">

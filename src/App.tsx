@@ -18,6 +18,7 @@ import AdminFaqs from './pages/admin/AdminFaqs';
 import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminSuggestions from './pages/admin/AdminSuggestions';
 import AdminSmartImport from './pages/admin/AdminSmartImport';
+import AdminAlibabaSearch from './pages/admin/AdminAlibabaSearch';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import Marketplace from './pages/merchant/Marketplace';
 import MerchantOrders from './pages/merchant/MerchantOrders';
@@ -25,7 +26,6 @@ import MerchantWallet from './pages/merchant/MerchantWallet';
 import MerchantReferrals from './pages/merchant/MerchantReferrals';
 import MerchantWishlist from './pages/merchant/MerchantWishlist';
 import MerchantComplaints from './pages/merchant/MerchantComplaints';
-import MerchantSmartSearch from './pages/merchant/MerchantSmartSearch';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierRequests from './pages/supplier/SupplierRequests';
 import SupplierProducts from './pages/supplier/SupplierProducts';
@@ -143,6 +143,12 @@ function App() {
               <AdminSmartImport />
             </ProtectedRoute>
           } />
+
+          <Route path="/admin/alibaba-search" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminAlibabaSearch />
+            </ProtectedRoute>
+          } />
           
           <Route path="/merchant" element={
             <ProtectedRoute allowedRoles={['merchant']}>
@@ -153,12 +159,6 @@ function App() {
           <Route path="/merchant/marketplace" element={
             <ProtectedRoute allowedRoles={['merchant']}>
               <Marketplace />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/merchant/smart-search" element={
-            <ProtectedRoute allowedRoles={['merchant']}>
-              <MerchantSmartSearch />
             </ProtectedRoute>
           } />
           

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { LayoutDashboard, Store, Package, CreditCard, Heart, Users, AlertTriangle, Search, Loader, Image as ImageIcon, ExternalLink, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, ShoppingCart, Loader } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
 
-export default function MerchantSmartSearch() {
+export default function AdminAlibabaSearch() {
   const { formatCurrency } = useSettingsStore();
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,6 @@ export default function MerchantSmartSearch() {
     setProduct(null);
 
     try {
-      // Step 1: Image Search
       setLoadingStep('جاري البحث في قاعدة البيانات باستخدام الصورة...');
       
       const lensUrl = "https://alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com/search/alibaba";
@@ -53,8 +52,7 @@ export default function MerchantSmartSearch() {
 
       if (!pUrl) throw new Error('حدث خطأ في استخراج رابط المنتج.');
 
-      // Step 2: Fetch Product Details
-      setLoadingStep('تم العثور على المنتج! جاري جلب التفاصيل الدقيقة (الأسعار، الألوان، المقاسات)...');
+      setLoadingStep('تم العثور على المنتج! جاري جلب التفاصيل الدقيقة...');
       
       const encodedUrl = encodeURIComponent(pUrl);
       const detailsUrl = `https://alibaba-api2.p.rapidapi.com/alibaba/product-details?url=${encodedUrl}`; 
@@ -86,16 +84,20 @@ export default function MerchantSmartSearch() {
 
   return (
     <DashboardLayout
-      title="الاستيراد الذكي بالصورة"
+      title="البحث المتقدم (إدارة)"
       sidebarLinks={[
-        { label: 'الرئيسية', href: '/merchant', icon: <LayoutDashboard size={20} /> },
-        { label: 'تصفح المنتجات', href: '/merchant/marketplace', icon: <Store size={20} /> },
-        { label: 'الاستيراد الذكي', href: '/merchant/smart-search', icon: <Search size={20} /> },
-        { label: 'طلباتي', href: '/merchant/orders', icon: <Package size={20} /> },
-        { label: 'المحفظة', href: '/merchant/wallet', icon: <CreditCard size={20} /> },
-        { label: 'نظام الإحالة', href: '/merchant/referrals', icon: <Users size={20} /> },
-        { label: 'المفضلة', href: '/merchant/wishlist', icon: <Heart size={20} /> },
-        { label: 'الشكاوى', href: '/merchant/complaints', icon: <AlertTriangle size={20} /> },
+        { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
+        { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
+        { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
+        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
+        { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
+        { label: 'الإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+        { label: 'الصفحات', href: '/admin/pages', icon: <LayoutDashboard size={20} /> },
+        { label: 'الأسئلة الشائعة', href: '/admin/faqs', icon: <MessageSquare size={20} /> },
+        { label: 'الشكاوى', href: '/admin/complaints', icon: <Users size={20} /> },
+        { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
+        { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
+        { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
       ]}
     >
       <div className="max-w-4xl mx-auto">
@@ -103,7 +105,7 @@ export default function MerchantSmartSearch() {
           <div className="w-16 h-16 bg-[#4f46e5]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <ImageIcon className="text-[#4f46e5]" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">البحث الذكي في موقع Alibaba</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">البحث الذكي في موقع Alibaba (للإدارة فقط)</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
             أدخل رابط صورة المنتج الذي تبحث عنه، وسيقوم النظام الذكي بالبحث في موقع علي بابا، واستخراج كافة التفاصيل والأسعار الدقيقة فوراً.
           </p>
@@ -138,7 +140,6 @@ export default function MerchantSmartSearch() {
         {product && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Product Images */}
               <div>
                 <div className="rounded-xl overflow-hidden mb-4 border border-gray-200 dark:border-gray-700">
                   <img 
@@ -156,7 +157,6 @@ export default function MerchantSmartSearch() {
                 )}
               </div>
 
-              {/* Product Details */}
               <div className="flex flex-col justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 leading-relaxed">
@@ -174,7 +174,6 @@ export default function MerchantSmartSearch() {
                     )}
                   </div>
 
-                  {/* Attributes/Variants Preview */}
                   {product.attributes && Object.keys(product.attributes).length > 0 && (
                     <div className="mb-6">
                       <h4 className="font-bold text-gray-700 dark:text-gray-300 mb-2">المواصفات:</h4>
@@ -191,18 +190,15 @@ export default function MerchantSmartSearch() {
                 </div>
 
                 <div className="flex gap-4 mt-6">
-                  <button className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30">
-                    <ShoppingCart size={20} />
-                    طلب استيراد هذا المنتج
-                  </button>
                   {product.productUrl && (
                     <a 
                       href={product.productUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                      className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30"
                     >
                       <ExternalLink size={20} />
+                      زيارة صفحة المنتج
                     </a>
                   )}
                 </div>

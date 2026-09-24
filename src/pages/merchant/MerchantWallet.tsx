@@ -148,7 +148,6 @@ export default function MerchantWallet() {
       sidebarLinks={[
         { label: 'الرئيسية', href: '/merchant', icon: <LayoutDashboard size={20} /> },
         { label: 'تصفح المنتجات', href: '/merchant/marketplace', icon: <Store size={20} /> },
-        { label: 'الاستيراد الذكي', href: '/merchant/smart-search', icon: <Search size={20} /> },
         { label: 'طلباتي', href: '/merchant/orders', icon: <Package size={20} /> },
         { label: 'المحفظة', href: '/merchant/wallet', icon: <CreditCard size={20} /> },
         { label: 'نظام الإحالة', href: '/merchant/referrals', icon: <Users size={20} /> },

@@ -208,6 +208,7 @@ export default function AdminDashboard() {
         { label: 'الشكاوى', href: '/admin/complaints', icon: <Users size={20} /> },
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
+        { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

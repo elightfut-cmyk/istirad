@@ -12,14 +12,20 @@ export default function AdminAlibabaSearch() {
   const [product, setProduct] = useState<any>(null);
 
   // API Keys state
-  const [lensApiKey, setLensApiKey] = useState(localStorage.getItem('alibaba_lens_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898');
-  const [detailsApiKey, setDetailsApiKey] = useState(localStorage.getItem('alibaba_details_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898');
+  const [lensApiKey, setLensApiKey] = useState(() => {
+    return localStorage.getItem('alibaba_lens_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898';
+  });
+  const [detailsApiKey, setDetailsApiKey] = useState(() => {
+    return localStorage.getItem('alibaba_details_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898';
+  });
   const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
+  const saveApiKeys = () => {
     localStorage.setItem('alibaba_lens_api_key', lensApiKey);
     localStorage.setItem('alibaba_details_api_key', detailsApiKey);
-  }, [lensApiKey, detailsApiKey]);
+    toast.success('تم حفظ المفاتيح بنجاح!');
+    setShowSettings(false);
+  };
 
   // Handle global paste event
   useEffect(() => {
@@ -245,6 +251,13 @@ export default function AdminAlibabaSearch() {
                   dir="ltr"
                 />
               </div>
+              
+              <button 
+                onClick={saveApiKeys}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-lg transition"
+              >
+                حفظ التغييرات
+              </button>
             </div>
           </div>
         )}

@@ -122,6 +122,8 @@ export default function AdminAlibabaSearch() {
       let items: any[] = [];
       if (Array.isArray(lensData)) {
         items = lensData;
+      } else if (lensData.products && Array.isArray(lensData.products)) {
+        items = lensData.products;
       } else if (lensData.data && Array.isArray(lensData.data)) {
         items = lensData.data;
       } else if (lensData.data && Array.isArray(lensData.data.items)) {

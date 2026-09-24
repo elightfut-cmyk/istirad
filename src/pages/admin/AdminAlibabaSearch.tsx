@@ -89,6 +89,9 @@ export default function AdminAlibabaSearch() {
       };
 
       const lensResponse = await fetch(lensUrl, lensOptions);
+      if (lensResponse.status === 429) {
+        throw new Error('لقد تجاوزت الحد المسموح به للبحث (Too Many Requests). يرجى الانتظار قليلاً أو ترقية خطة RapidAPI الخاصة بك.');
+      }
       if (!lensResponse.ok) throw new Error('فشل الاتصال بخادم البحث بالصورة');
       
       const lensData = await lensResponse.json();
@@ -119,6 +122,9 @@ export default function AdminAlibabaSearch() {
       };
 
       const detailsResponse = await fetch(detailsUrl, detailsOptions);
+      if (detailsResponse.status === 429) {
+        throw new Error('لقد تجاوزت الحد المسموح به لجلب تفاصيل المنتجات (Too Many Requests).');
+      }
       if (!detailsResponse.ok) throw new Error('فشل جلب تفاصيل المنتج من علي بابا.');
       
       const detailsData = await detailsResponse.json();

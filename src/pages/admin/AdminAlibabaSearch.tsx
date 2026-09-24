@@ -1,19 +1,50 @@
-import { useState } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, Loader, UploadCloud } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import toast from 'react-hot-toast';
 
 export default function AdminAlibabaSearch() {
-    const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
   const [product, setProduct] = useState<any>(null);
 
   const RAPIDAPI_KEY = "70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898";
 
+  // Handle global paste event
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+        const file = e.clipboardData.files[0];
+        if (file.type.startsWith('image/')) {
+          setImageFile(file);
+          setImagePreview(URL.createObjectURL(file));
+          setImageUrl('');
+          setProduct(null);
+          toast.success('تم لصق الصورة بنجاح!');
+        }
+      }
+    };
+    
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setImageUrl('');
+      setProduct(null);
+    }
+  };
+
   const handleSearch = async () => {
-    if (!imageUrl) {
-      toast.error('الرجاء إدخال رابط الصورة أولاً');
+    if (!imageUrl && !imageFile) {
+      toast.error('الرجاء إدخال رابط الصورة أو رفع/لصق صورة أولاً');
       return;
     }
 
@@ -21,6 +52,29 @@ export default function AdminAlibabaSearch() {
     setProduct(null);
 
     try {
+      let finalImageUrl = imageUrl;
+
+      // 1. Upload to Cloudinary if it's a file
+      if (imageFile) {
+        setLoadingStep('جاري رفع الصورة للخادم السحابي...');
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'jiibha');
+
+        const cloudinaryRes = await fetch('https://api.cloudinary.com/v1_1/xvhtji4c/image/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!cloudinaryRes.ok) {
+          throw new Error('فشل رفع الصورة إلى الخادم السحابي');
+        }
+
+        const cloudinaryData = await cloudinaryRes.json();
+        finalImageUrl = cloudinaryData.secure_url;
+      }
+
+      // 2. Search by Image
       setLoadingStep('جاري البحث في قاعدة البيانات باستخدام الصورة...');
       
       const lensUrl = "https://alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com/search/alibaba";
@@ -31,7 +85,7 @@ export default function AdminAlibabaSearch() {
           'x-rapidapi-host': 'alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com',
           'x-rapidapi-key': RAPIDAPI_KEY
         },
-        body: JSON.stringify({ imageUrl: imageUrl })
+        body: JSON.stringify({ imageUrl: finalImageUrl })
       };
 
       const lensResponse = await fetch(lensUrl, lensOptions);
@@ -50,6 +104,7 @@ export default function AdminAlibabaSearch() {
 
       if (!pUrl) throw new Error('حدث خطأ في استخراج رابط المنتج.');
 
+      // 3. Fetch Product Details
       setLoadingStep('تم العثور على المنتج! جاري جلب التفاصيل الدقيقة...');
       
       const encodedUrl = encodeURIComponent(pUrl);
@@ -99,38 +154,78 @@ export default function AdminAlibabaSearch() {
       ]}
     >
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 mb-8 text-center">
-          <div className="w-16 h-16 bg-[#4f46e5]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ImageIcon className="text-[#4f46e5]" size={32} />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 mb-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-[#4f46e5]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="text-[#4f46e5]" size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">البحث الذكي في موقع Alibaba (للإدارة فقط)</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+              يمكنك رفع صورة، نسخها ولصقها هنا مباشرة (Ctrl+V)، أو إدخال رابط الصورة للبحث عن تفاصيل المنتج بدقة من موقع علي بابا.
+            </p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">البحث الذكي في موقع Alibaba (للإدارة فقط)</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-            أدخل رابط صورة المنتج الذي تبحث عنه، وسيقوم النظام الذكي بالبحث في موقع علي بابا، واستخراج كافة التفاصيل والأسعار الدقيقة فوراً.
-          </p>
 
-          <div className="flex max-w-2xl mx-auto">
-            <input
-              type="text"
-              placeholder="ضع رابط الصورة هنا (مثال: https://example.com/image.jpg)"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-r-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent dark:bg-gray-700 dark:text-white"
-              dir="ltr"
-            />
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="bg-[#4f46e5] text-white px-8 py-3 rounded-l-xl font-bold hover:bg-[#4338ca] transition-colors disabled:opacity-70 flex items-center gap-2"
-            >
-              {loading ? <Loader className="animate-spin" size={20} /> : <Search size={20} />}
-              <span>بحث</span>
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Image Upload / Paste Area */}
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 transition cursor-pointer p-6 relative min-h-[200px]">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+                className="hidden" 
+              />
+              
+              {imagePreview ? (
+                <div className="absolute inset-0 p-2">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-contain rounded-lg" />
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition rounded-lg">
+                    <span className="text-white font-bold flex items-center gap-2"><ImageIcon size={20} /> تغيير الصورة</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  <UploadCloud size={48} className="mx-auto mb-3 text-gray-400" />
+                  <p className="font-bold mb-1">اضغط لاختيار صورة</p>
+                  <p className="text-sm font-medium text-[#4f46e5] bg-[#4f46e5]/10 px-3 py-1 rounded-full inline-block mt-2">
+                    أو اضغط Ctrl + V للصق صورة 📋
+                  </p>
+                </div>
+              )}
+            </label>
+
+            {/* URL Input Area */}
+            <div className="flex flex-col justify-center">
+              <div className="text-center mb-4">
+                <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-bold">أو</span>
+              </div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">استخدام رابط صورة (URL):</label>
+              <input
+                type="text"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  setImageFile(null);
+                  setImagePreview(null);
+                }}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent dark:bg-gray-700 dark:text-white mb-4"
+                dir="ltr"
+              />
+            </div>
           </div>
+
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="w-full bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#4338ca] transition-colors disabled:opacity-70 flex items-center justify-center gap-3 text-lg shadow-lg shadow-indigo-500/30"
+          >
+            {loading ? <Loader className="animate-spin" size={24} /> : <Search size={24} />}
+            <span>بدء البحث وجلب البيانات الدقيقة</span>
+          </button>
 
           {loading && (
-            <div className="mt-8 flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-[#4f46e5] border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-[#4f46e5] font-medium animate-pulse">{loadingStep}</p>
+            <div className="mt-8 flex flex-col items-center animate-in fade-in">
+              <p className="text-[#4f46e5] font-bold animate-pulse text-lg">{loadingStep}</p>
             </div>
           )}
         </div>
@@ -141,7 +236,7 @@ export default function AdminAlibabaSearch() {
               <div>
                 <div className="rounded-xl overflow-hidden mb-4 border border-gray-200 dark:border-gray-700">
                   <img 
-                    src={product.image || product.images?.[0] || imageUrl} 
+                    src={product.image || product.images?.[0] || imagePreview || imageUrl} 
                     alt="Product" 
                     className="w-full h-80 object-cover"
                   />
@@ -176,10 +271,10 @@ export default function AdminAlibabaSearch() {
                     <div className="mb-6">
                       <h4 className="font-bold text-gray-700 dark:text-gray-300 mb-2">المواصفات:</h4>
                       <ul className="space-y-1">
-                        {Object.entries(product.attributes).slice(0, 4).map(([key, val]: any, i) => (
-                          <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex">
-                            <span className="w-24 font-semibold">{key}:</span>
-                            <span>{val}</span>
+                        {Object.entries(product.attributes).slice(0, 6).map(([key, val]: any, i) => (
+                          <li key={i} className="text-sm text-gray-600 dark:text-gray-400 flex border-b border-gray-100 dark:border-gray-700 pb-1">
+                            <span className="w-32 font-semibold">{key}:</span>
+                            <span className="flex-1">{val}</span>
                           </li>
                         ))}
                       </ul>
@@ -196,7 +291,7 @@ export default function AdminAlibabaSearch() {
                       className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30"
                     >
                       <ExternalLink size={20} />
-                      زيارة صفحة المنتج
+                      زيارة صفحة المنتج في Alibaba
                     </a>
                   )}
                 </div>

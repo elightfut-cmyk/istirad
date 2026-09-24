@@ -173,6 +173,9 @@ export default function AdminAlibabaSearch() {
       if (detailsResponse.status === 429) {
         throw new Error('لقد تجاوزت الحد المسموح به لجلب تفاصيل المنتجات (Too Many Requests). يرجى تحديث مفتاح Details API.');
       }
+      if (detailsResponse.status === 401 || detailsResponse.status === 403) {
+        throw new Error('مفتاح جلب التفاصيل (Alibaba API2) غير صالح أو غير مشترك في الخدمة. يرجى التأكد منه.');
+      }
       if (!detailsResponse.ok) throw new Error('فشل جلب تفاصيل المنتج من علي بابا.');
       
       const detailsData = await detailsResponse.json();
@@ -233,7 +236,10 @@ export default function AdminAlibabaSearch() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">مفتاح البحث بالصورة (Lens API Key):</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                  1. مفتاح البحث بالصورة <span className="text-orange-500">(Alibaba 1688 ECOM China Lens Search API)</span>:
+                </label>
+                <p className="text-xs text-gray-500 mb-2">هذه الخدمة مسؤولة عن تحليل الصورة واستخراج رابط المنتج.</p>
                 <input
                   type="text"
                   value={lensApiKey}
@@ -244,7 +250,10 @@ export default function AdminAlibabaSearch() {
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">مفتاح جلب التفاصيل (Details API Key):</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                  2. مفتاح جلب التفاصيل الدقيقة <span className="text-orange-500">(Alibaba API2)</span>:
+                </label>
+                <p className="text-xs text-gray-500 mb-2">هذه الخدمة مسؤولة عن جلب الأسعار، الألوان، المقاسات، والحد الأدنى للطلب.</p>
                 <input
                   type="text"
                   value={detailsApiKey}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, Loader, UploadCloud } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, Loader, UploadCloud, Key, Settings } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import toast from 'react-hot-toast';
 
@@ -11,7 +11,15 @@ export default function AdminAlibabaSearch() {
   const [loadingStep, setLoadingStep] = useState('');
   const [product, setProduct] = useState<any>(null);
 
-  const RAPIDAPI_KEY = "70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898";
+  // API Keys state
+  const [lensApiKey, setLensApiKey] = useState(localStorage.getItem('alibaba_lens_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898');
+  const [detailsApiKey, setDetailsApiKey] = useState(localStorage.getItem('alibaba_details_api_key') || '70ce2ef3e8mshc1e2d39c2a3d623p166ef2jsnf91121818898');
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('alibaba_lens_api_key', lensApiKey);
+    localStorage.setItem('alibaba_details_api_key', detailsApiKey);
+  }, [lensApiKey, detailsApiKey]);
 
   // Handle global paste event
   useEffect(() => {
@@ -45,6 +53,12 @@ export default function AdminAlibabaSearch() {
   const handleSearch = async () => {
     if (!imageUrl && !imageFile) {
       toast.error('الرجاء إدخال رابط الصورة أو رفع/لصق صورة أولاً');
+      return;
+    }
+    
+    if (!lensApiKey || !detailsApiKey) {
+      toast.error('الرجاء التأكد من إدخال مفاتيح API الخاصة بك أولاً');
+      setShowSettings(true);
       return;
     }
 
@@ -83,14 +97,14 @@ export default function AdminAlibabaSearch() {
         headers: {
           'Content-Type': 'application/json',
           'x-rapidapi-host': 'alibaba-1688-ecom-china-lens-search-api.p.rapidapi.com',
-          'x-rapidapi-key': RAPIDAPI_KEY
+          'x-rapidapi-key': lensApiKey
         },
         body: JSON.stringify({ imageUrl: finalImageUrl })
       };
 
       const lensResponse = await fetch(lensUrl, lensOptions);
       if (lensResponse.status === 429) {
-        throw new Error('لقد تجاوزت الحد المسموح به للبحث (Too Many Requests). يرجى الانتظار قليلاً أو ترقية خطة RapidAPI الخاصة بك.');
+        throw new Error('لقد تجاوزت الحد المسموح به للبحث (Too Many Requests). يرجى تحديث مفتاح Lens API الخاص بك.');
       }
       if (!lensResponse.ok) throw new Error('فشل الاتصال بخادم البحث بالصورة');
       
@@ -117,13 +131,13 @@ export default function AdminAlibabaSearch() {
         method: 'GET',
         headers: {
           'x-rapidapi-host': 'alibaba-api2.p.rapidapi.com',
-          'x-rapidapi-key': RAPIDAPI_KEY
+          'x-rapidapi-key': detailsApiKey
         }
       };
 
       const detailsResponse = await fetch(detailsUrl, detailsOptions);
       if (detailsResponse.status === 429) {
-        throw new Error('لقد تجاوزت الحد المسموح به لجلب تفاصيل المنتجات (Too Many Requests).');
+        throw new Error('لقد تجاوزت الحد المسموح به لجلب تفاصيل المنتجات (Too Many Requests). يرجى تحديث مفتاح Details API.');
       }
       if (!detailsResponse.ok) throw new Error('فشل جلب تفاصيل المنتج من علي بابا.');
       
@@ -160,6 +174,55 @@ export default function AdminAlibabaSearch() {
       ]}
     >
       <div className="max-w-4xl mx-auto">
+        
+        {/* Settings Toggle */}
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+          >
+            <Settings size={18} />
+            إعدادات مفاتيح API
+          </button>
+        </div>
+
+        {/* API Keys Configuration Area */}
+        {showSettings && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/50 p-6 mb-6 animate-fadeIn">
+            <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+              <Key size={20} className="text-orange-500" />
+              تحديث مفاتيح RapidAPI
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              بإمكانك تغيير هذه المفاتيح متى ما انتهى اشتراكك أو قمت بفتح حساب جديد، وسيتم حفظها في متصفحك تلقائياً.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">مفتاح البحث بالصورة (Lens API Key):</label>
+                <input
+                  type="text"
+                  value={lensApiKey}
+                  onChange={(e) => setLensApiKey(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                  dir="ltr"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">مفتاح جلب التفاصيل (Details API Key):</label>
+                <input
+                  type="text"
+                  value={detailsApiKey}
+                  onChange={(e) => setDetailsApiKey(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 mb-8">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-[#4f46e5]/10 rounded-full flex items-center justify-center mx-auto mb-4">

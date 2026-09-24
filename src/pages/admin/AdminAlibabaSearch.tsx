@@ -113,7 +113,7 @@ export default function AdminAlibabaSearch() {
       let pUrl = '';
       
       // Aggressive extraction of items from various possible API response structures
-      let items = [];
+      let items: any[] = [];
       if (Array.isArray(lensData)) {
         items = lensData;
       } else if (lensData.data && Array.isArray(lensData.data)) {
@@ -130,7 +130,7 @@ export default function AdminAlibabaSearch() {
 
       if (items.length > 0) {
         // Try to find the first item that has a productUrl or itemUrl or url
-        const match = items.find(i => i.productUrl || i.itemUrl || i.url);
+        const match = items.find((i: any) => i.productUrl || i.itemUrl || i.url);
         if (match) {
           pUrl = match.productUrl || match.itemUrl || match.url;
         } else {

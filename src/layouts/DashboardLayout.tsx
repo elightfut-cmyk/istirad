@@ -2,8 +2,9 @@ import { ReactNode, useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
 
 interface DashboardLayoutProps {
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const { user, logout } = useAuthStore();
   const { currency, toggleCurrency, adTitle, adSubtitle, adImageUrl, adLinkUrl } = useSettingsStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead, deleteNotification } = useNotificationStore();
+  const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -26,8 +28,6 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       fetchNotifications(user.id);
     }
   }, [user]);
-
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,12 +45,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   };
 
   return (
-    <div className="flex h-screen bg-[#f5f5f0]">
+    <div className="flex h-screen bg-[#f5f5f0] dark:bg-[#121212] transition-colors">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md flex flex-col hidden md:flex">
-        <div className="p-6 text-center border-b border-gray-100">
-          <Link to="/" className="text-2xl font-bold text-[#4f46e5] hover:opacity-80 transition-opacity inline-block">جيبها-jiibha</Link>
-          <p className="text-sm text-gray-500 mt-1">{user?.role === 'admin' ? 'الإدارة' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}</p>
+      <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col hidden md:flex transition-colors">
+        <div className="p-6 text-center border-b border-gray-100 dark:border-gray-700">
+          <Link to="/" className="text-2xl font-bold text-[#4f46e5] dark:text-indigo-400 hover:opacity-80 transition-opacity inline-block">جيبها-jiibha</Link>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user?.role === 'admin' ? 'الإدارة' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {sidebarLinks.map((link) => {
@@ -64,7 +64,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                   navigate(link.href);
                 }}
                 className={`flex items-center space-x-3 space-x-reverse px-4 py-3 rounded-xl transition-colors ${
-                  isActive ? 'bg-[#4f46e5] text-white' : 'text-gray-600 hover:bg-gray-50'
+                  isActive ? 'bg-[#4f46e5] text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 {link.icon}
@@ -73,10 +73,10 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             );
           })}
         </nav>
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 space-x-reverse px-4 py-3 w-full text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+            className="flex items-center space-x-3 space-x-reverse px-4 py-3 w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
           >
             <LogOut size={20} />
             <span className="font-medium">تسجيل الخروج</span>
@@ -87,18 +87,26 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+        <header className="h-16 bg-white dark:bg-gray-800 shadow-sm flex items-center justify-between px-6 transition-colors">
           <div className="flex items-center md:hidden">
-            <Link to="/" className="text-[#4f46e5] mr-4 hover:opacity-80 transition-opacity">
+            <Link to="/" className="text-[#4f46e5] dark:text-indigo-400 mr-4 hover:opacity-80 transition-opacity">
               <Package size={28} />
             </Link>
           </div>
-          <h1 className="text-xl font-bold text-gray-800 hidden md:block">{title}</h1>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{title}</h1>
           <div className="flex items-center gap-3 sm:gap-4">
 
             <button
+              onClick={toggleTheme}
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-yellow-400 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+              title="تغيير المظهر (ليلي / نهاري)"
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+
+            <button
               onClick={toggleCurrency}
-              className="bg-gray-100 hover:bg-gray-200 text-[#4f46e5] font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-[#4f46e5] dark:text-indigo-400 font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
               title="تغيير العملة (دولار / دينار)"
             >
               <DollarSign size={16} />
@@ -106,8 +114,8 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             </button>
             
             <Link to="/profile" className="hidden md:flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
-              <span className="text-sm font-medium text-gray-700 hidden md:inline">{user?.name}</span>
-              <UserCircle size={28} className="text-gray-400 hover:text-[#4f46e5] transition-colors" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">{user?.name}</span>
+              <UserCircle size={28} className="text-gray-400 dark:text-gray-500 hover:text-[#4f46e5] dark:hover:text-indigo-400 transition-colors" />
             </Link>
 
 
@@ -119,33 +127,33 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                     markAsRead();
                   }
                 }}
-                className={`relative p-2 rounded-full transition-colors ${unreadCount > 0 ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                className={`relative p-2 rounded-full transition-colors ${unreadCount > 0 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 title="التنبيهات"
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-gray-800">
                     {unreadCount}
                   </span>
                 )}
               </button>
               
               {isNotificationsOpen && (
-                <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                  <div className="p-4 border-b border-gray-50 bg-gray-50 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800">التنبيهات</h3>
+                <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
+                  <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 dark:text-white">التنبيهات</h3>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500 text-sm">
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         لا توجد تنبيهات حالياً
                       </div>
                     ) : (
                       notifications.map(notif => (
-                        <div key={notif.id} className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors relative group ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30'}`}>
+                        <div key={notif.id} className={`p-4 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative group ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-indigo-900/20'}`}>
                           <div className="pr-6">
-                            <h4 className="text-sm font-bold text-gray-800 mb-1">{notif.title}</h4>
-                            <p className="text-xs text-gray-600 leading-relaxed">{notif.message}</p>
+                            <h4 className="text-sm font-bold text-gray-800 dark:text-white mb-1">{notif.title}</h4>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{notif.message}</p>
                             <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('en-GB')}</span>
                           </div>
                           <button 
@@ -153,7 +161,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                               e.stopPropagation();
                               deleteNotification(notif.id);
                             }}
-                            className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 p-1 rounded-md"
+                            className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 dark:bg-red-900/30 p-1 rounded-md"
                             title="حذف التنبيه"
                           >
                             <Trash2 size={16} />
@@ -194,7 +202,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       </main>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.05)] border-t border-gray-100 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] border-t border-gray-100 dark:border-gray-700 z-50 transition-colors">
         <div className="flex w-full overflow-x-auto">
           {(() => {
             const links = [...sidebarLinks];
@@ -209,11 +217,11 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 key={link.href}
                 to={link.href}
                 className={`flex-1 min-w-[70px] flex flex-col items-center justify-center py-3 px-1 transition-colors relative ${
-                  isActive ? 'text-[#4f46e5]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                  isActive ? 'text-[#4f46e5] dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 {isActive && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#4f46e5] rounded-b-full"></div>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-[#4f46e5] dark:bg-indigo-400 rounded-b-full"></div>
                 )}
                 <div className={`mb-1 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                   {link.icon}
@@ -224,7 +232,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           })}
           <button
             onClick={handleLogout}
-            className="flex-1 min-w-[70px] flex flex-col items-center justify-center py-3 px-1 transition-colors relative text-gray-500 hover:bg-red-50 hover:text-red-600"
+            className="flex-1 min-w-[70px] flex flex-col items-center justify-center py-3 px-1 transition-colors relative text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400"
           >
             <div className="mb-1 transition-transform duration-200">
               <LogOut size={20} />

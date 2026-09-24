@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useSettingsStore } from './store/useSettingsStore';
+import { useThemeStore } from './store/useThemeStore';
 import LandingPage from './pages/public/LandingPage';
 import PageViewer from './pages/public/PageViewer';
 import Login from './pages/auth/Login';
@@ -36,11 +37,20 @@ import FacebookPixel from './components/FacebookPixel';
 function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
+  const { theme } = useThemeStore();
 
   useEffect(() => {
     checkSession();
     fetchSettings();
   }, [checkSession, fetchSettings]);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   if (isLoading) {
     return (
@@ -54,7 +64,7 @@ function App() {
     <Router>
       <FacebookPixel />
       <Toaster position="top-center" toastOptions={{ duration: 4000, style: { fontFamily: 'Tajawal', padding: '16px', borderRadius: '12px' } }} />
-      <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal']">
+      <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] dark:bg-[#121212] dark:text-gray-100 transition-colors">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/page/:slug" element={<PageViewer />} />

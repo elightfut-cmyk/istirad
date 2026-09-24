@@ -115,7 +115,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             
             <Link to="/profile" className="hidden md:flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">{user?.name}</span>
-              <UserCircle size={28} className="text-gray-400 dark:text-gray-500 hover:text-[#4f46e5] dark:hover:text-indigo-400 transition-colors" />
+              <UserCircle size={28} className="text-gray-400 dark:text-gray-500 dark:text-gray-400 hover:text-[#4f46e5] dark:hover:text-indigo-400 transition-colors" />
             </Link>
 
 
@@ -189,12 +189,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                   {adSubtitle && <p className="text-blue-100 opacity-90 mb-0">{adSubtitle}</p>}
                 </div>
                 {adLinkUrl && (
-                  <a href={adLinkUrl} target="_blank" rel="noopener noreferrer" className="px-6 py-3 bg-white text-blue-700 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition-colors whitespace-nowrap text-sm mt-4 md:mt-0">
+                  <a href={adLinkUrl} target="_blank" rel="noopener noreferrer" className="px-6 py-3 bg-white dark:bg-gray-800 text-blue-700 rounded-xl font-bold shadow-sm hover:bg-gray-50 dark:bg-gray-900 transition-colors whitespace-nowrap text-sm mt-4 md:mt-0">
                     اضغط هنا للمزيد
                   </a>
                 )}
               </div>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white dark:bg-gray-800 opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
             </div>
           )}
           {children}

@@ -151,7 +151,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
       {/* News Ticker */}
       <div>
         <div className="flex items-center justify-between mb-4 border-b pb-2">
-          <h3 className="text-lg font-bold text-gray-800">شريط آخر الأخبار</h3>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">شريط آخر الأخبار</h3>
           <label className="flex items-center cursor-pointer">
             <div className="relative">
               <input 
@@ -161,19 +161,19 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                 onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, newsTickerActive: e.target.checked }))}
               />
               <div className={`block w-14 h-8 rounded-full transition-colors ${localSettings.newsTickerActive ? 'bg-[#4f46e5]' : 'bg-gray-300'}`}></div>
-              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${localSettings.newsTickerActive ? 'transform translate-x-6' : ''}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-800 w-6 h-6 rounded-full transition-transform ${localSettings.newsTickerActive ? 'transform translate-x-6' : ''}`}></div>
             </div>
-            <span className="mr-3 font-medium text-gray-700">تفعيل الشريط</span>
+            <span className="mr-3 font-medium text-gray-700 dark:text-gray-200">تفعيل الشريط</span>
           </label>
         </div>
         
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">عنوان شريط الأخبار (الافتراضي: آخر الأخبار)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">عنوان شريط الأخبار (الافتراضي: آخر الأخبار)</label>
           <input
             type="text"
             value={localSettings.newsTickerTitle || ''}
             onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, newsTickerTitle: e.target.value }))}
-            className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
 
@@ -184,7 +184,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
             value={newNewsItem}
             onChange={(e) => setNewNewsItem(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleNewsItemAdd()}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5]"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5]"
           />
           <button onClick={handleNewsItemAdd} className="px-4 py-2 bg-[#4f46e5] text-white rounded-xl font-bold">
             إضافة
@@ -193,21 +193,21 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
         
         <div className="space-y-2">
           {localSettings.newsTickerItems.map((item: string, index: number) => (
-            <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+            <div key={index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border">
               <span>{item}</span>
               <button onClick={() => handleNewsItemRemove(index)} className="text-red-500 hover:text-red-700">
                 <Trash2 size={18} />
               </button>
             </div>
           ))}
-          {localSettings.newsTickerItems.length === 0 && <p className="text-sm text-gray-500">لا توجد أخبار مضافة.</p>}
+          {localSettings.newsTickerItems.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">لا توجد أخبار مضافة.</p>}
         </div>
       </div>
 
       {/* YouTube Playlist */}
       <div>
         <div className="flex items-center justify-between mb-4 border-b pb-2">
-          <h3 className="text-lg font-bold text-gray-800">قائمة فيديوهات يوتيوب</h3>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">قائمة فيديوهات يوتيوب</h3>
           <label className="flex items-center cursor-pointer">
             <div className="relative">
               <input 
@@ -217,28 +217,28 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                 onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, youtubePlaylistActive: e.target.checked }))}
               />
               <div className={`block w-14 h-8 rounded-full transition-colors ${localSettings.youtubePlaylistActive ? 'bg-[#4f46e5]' : 'bg-gray-300'}`}></div>
-              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${localSettings.youtubePlaylistActive ? 'transform translate-x-6' : ''}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-800 w-6 h-6 rounded-full transition-transform ${localSettings.youtubePlaylistActive ? 'transform translate-x-6' : ''}`}></div>
             </div>
-            <span className="mr-3 font-medium text-gray-700">تفعيل القائمة</span>
+            <span className="mr-3 font-medium text-gray-700 dark:text-gray-200">تفعيل القائمة</span>
           </label>
         </div>
         <div className="mb-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">رابط الفيديو أو القائمة (URL أو ID)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رابط الفيديو أو القائمة (URL أو ID)</label>
           <input
             type="text"
             value={localSettings.youtubePlaylistUrl}
             onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, youtubePlaylistUrl: e.target.value }))}
             placeholder="مثال: https://www.youtube.com/embed/videoseries?list=..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5]"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5]"
           />
-          <p className="text-xs text-gray-500 mt-1">يفضل وضع رابط التضمين (Embed URL) لضمان العمل الصحيح.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">يفضل وضع رابط التضمين (Embed URL) لضمان العمل الصحيح.</p>
         </div>
       </div>
 
       {/* Custom Window / Cards Slider */}
       <div>
         <div className="flex items-center justify-between mb-4 border-b pb-2">
-          <h3 className="text-lg font-bold text-gray-800">النافذة المخصصة (البطاقات)</h3>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">النافذة المخصصة (البطاقات)</h3>
           <div className="flex gap-4 items-center">
             <button onClick={handleAddCard} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700">
               <Plus size={16} /> إضافة بطاقة
@@ -252,78 +252,78 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                   onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowActive: e.target.checked }))}
                 />
                 <div className={`block w-14 h-8 rounded-full transition-colors ${localSettings.customWindowActive ? 'bg-[#4f46e5]' : 'bg-gray-300'}`}></div>
-                <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${localSettings.customWindowActive ? 'transform translate-x-6' : ''}`}></div>
+                <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-800 w-6 h-6 rounded-full transition-transform ${localSettings.customWindowActive ? 'transform translate-x-6' : ''}`}></div>
               </div>
-              <span className="mr-3 font-medium text-gray-700">تفعيل النافذة</span>
+              <span className="mr-3 font-medium text-gray-700 dark:text-gray-200">تفعيل النافذة</span>
             </label>
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-4">
-          <h4 className="font-bold text-gray-800">النصوص الرئيسية للنافذة (جديد الموقع، آخر ما نُشر...)</h4>
+        <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 space-y-4">
+          <h4 className="font-bold text-gray-800 dark:text-gray-100">النصوص الرئيسية للنافذة (جديد الموقع، آخر ما نُشر...)</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">الشارة العلوية (مثال: جديد الموقع)</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">الشارة العلوية (مثال: جديد الموقع)</label>
               <input
                 type="text"
                 value={localSettings.customWindowTopBadge || ''}
                 onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTopBadge: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#4f46e5]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي (مثال: آخر ما نُشر)</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">العنوان الرئيسي (مثال: آخر ما نُشر)</label>
               <input
                 type="text"
                 value={localSettings.customWindowTitle || ''}
                 onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowTitle: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#4f46e5]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">الوصف الفرعي</label>
             <textarea
               value={localSettings.customWindowSubtitle || ''}
               onChange={(e) => setLocalSettings((prev: any) => ({ ...prev, customWindowSubtitle: e.target.value }))}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5]"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#4f46e5]"
             />
           </div>
         </div>
 
         <div className="space-y-6">
           {localSettings.customWindowCards.map((card: CustomWindowCard, cardIndex: number) => (
-            <div key={card.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 flex gap-4">
+            <div key={card.id} className="bg-gray-50 dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 flex gap-4">
               <div className="flex flex-col items-center justify-center gap-2 border-l pl-4">
-                <button onClick={() => moveCard(cardIndex, 'up')} disabled={cardIndex === 0} className="p-1 text-gray-500 hover:text-[#4f46e5] disabled:opacity-30">
+                <button onClick={() => moveCard(cardIndex, 'up')} disabled={cardIndex === 0} className="p-1 text-gray-500 dark:text-gray-400 hover:text-[#4f46e5] disabled:opacity-30">
                   <ChevronUp size={24} />
                 </button>
                 <span className="font-bold text-gray-400">{cardIndex + 1}</span>
-                <button onClick={() => moveCard(cardIndex, 'down')} disabled={cardIndex === localSettings.customWindowCards.length - 1} className="p-1 text-gray-500 hover:text-[#4f46e5] disabled:opacity-30">
+                <button onClick={() => moveCard(cardIndex, 'down')} disabled={cardIndex === localSettings.customWindowCards.length - 1} className="p-1 text-gray-500 dark:text-gray-400 hover:text-[#4f46e5] disabled:opacity-30">
                   <ChevronDown size={24} />
                 </button>
               </div>
 
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">الشريط العلوي (مثل: خصم 10%)</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">الشريط العلوي (مثل: خصم 10%)</label>
                   <input type="text" value={card.topBadge || ''} onChange={(e) => handleUpdateCard(cardIndex, 'topBadge', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">العنوان الرئيسي</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">العنوان الرئيسي</label>
                   <input type="text" value={card.title} onChange={(e) => handleUpdateCard(cardIndex, 'title', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">الوصف الفرعي (أو النص أسفل العنوان)</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">الوصف الفرعي (أو النص أسفل العنوان)</label>
                   <textarea value={card.subtitle} onChange={(e) => handleUpdateCard(cardIndex, 'subtitle', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
                 </div>
                 
                 {/* Dynamic Tags */}
                 <div className="md:col-span-2 border-t pt-4 mt-2">
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-gray-700">المستطيلات (Tags) فوق الأزرار</label>
-                    <button onClick={() => handleAddTag(cardIndex)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 font-bold flex items-center gap-1">
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200">المستطيلات (Tags) فوق الأزرار</label>
+                    <button onClick={() => handleAddTag(cardIndex)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 dark:text-gray-200 font-bold flex items-center gap-1">
                       <Plus size={14} /> إضافة مستطيل
                     </button>
                   </div>
@@ -333,38 +333,38 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
                       const tagColor = typeof tag === 'string' ? '#4f46e5' : (tag.color || '#4f46e5');
                       
                       return (
-                        <div key={tagIndex} className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg p-1.5 shadow-sm">
+                        <div key={tagIndex} className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1.5 shadow-sm">
                           <input type="text" value={tagText} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, 'text', e.target.value)} className="w-28 px-2 py-1 text-xs border-none focus:ring-0" placeholder="نص المستطيل" />
                           <input type="color" value={tagColor} onChange={(e) => handleUpdateTag(cardIndex, tagIndex, 'color', e.target.value)} className="w-6 h-6 border-none cursor-pointer p-0" title="اختر اللون" />
                           <button onClick={() => handleRemoveTag(cardIndex, tagIndex)} className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
                         </div>
                       );
                     })}
-                    {(!card.tags || card.tags.length === 0) && <p className="text-xs text-gray-500 italic">لا يوجد مستطيلات مضافة.</p>}
+                    {(!card.tags || card.tags.length === 0) && <p className="text-xs text-gray-500 dark:text-gray-400 italic">لا يوجد مستطيلات مضافة.</p>}
                   </div>
                 </div>
 
                 {/* Simple Button */}
                 <div className="md:col-span-2 border-t pt-4 mt-2 mb-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">إعدادات الزر</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">إعدادات الزر</label>
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">نص الزر</label>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">نص الزر</label>
                       <input type="text" value={card.buttonText || ''} onChange={(e) => handleUpdateCard(cardIndex, 'buttonText', e.target.value)} placeholder="مثال: شاهد هنا" className="w-full px-3 py-2 border rounded-lg text-sm" />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">رابط الزر</label>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">رابط الزر</label>
                       <input type="text" value={card.buttonUrl || ''} onChange={(e) => handleUpdateCard(cardIndex, 'buttonUrl', e.target.value)} placeholder="رابط الزر" className="w-full px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">لون الزر</label>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">لون الزر</label>
                       <input type="color" value={card.buttonColor || '#8b5cf6'} onChange={(e) => handleUpdateCard(cardIndex, 'buttonColor', e.target.value)} className="w-10 h-10 border-none cursor-pointer p-0" title="اختر اللون" />
                     </div>
                   </div>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">رابط الصورة (أو رفعها)</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">رابط الصورة (أو رفعها)</label>
                   <div className="flex gap-2">
                     <input type="text" value={card.imageUrl || ''} onChange={(e) => handleUpdateCard(cardIndex, 'imageUrl', e.target.value)} placeholder="رابط الصورة..." className="flex-1 px-3 py-2 border rounded-lg text-sm" dir="ltr" />
                     <label className="flex items-center justify-center px-4 py-2 bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors">
@@ -383,7 +383,7 @@ export default function AdminCustomFeaturesSettings({ localSettings, setLocalSet
             </div>
           ))}
           {localSettings.customWindowCards.length === 0 && (
-            <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-2xl border border-dashed">
+            <div className="text-center py-8 text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-dashed">
               لم تقم بإضافة أي بطاقات بعد.
             </div>
           )}

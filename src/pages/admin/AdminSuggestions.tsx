@@ -41,7 +41,7 @@ export default function AdminSuggestions() {
       case 'مهم وعاجل': return 'bg-red-100 text-red-800';
       case 'مهم وغير عاجل': return 'bg-orange-100 text-orange-800';
       case 'غير مهم وعاجل': return 'bg-yellow-100 text-yellow-800';
-      case 'غير مهم وغير عاجل': return 'bg-gray-100 text-gray-800';
+      case 'غير مهم وغير عاجل': return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
@@ -168,9 +168,9 @@ export default function AdminSuggestions() {
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">اقتراحات الإدارة (مصفوفة أيزنهاور)</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">اقتراحات الإدارة (مصفوفة أيزنهاور)</h2>
           <button
             onClick={() => handleOpenModal()}
             className="bg-[#4f46e5] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#4338ca] transition-colors flex items-center gap-2"
@@ -185,35 +185,35 @@ export default function AdminSuggestions() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             {categories.map(cat => (
-              <div key={cat} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+              <div key={cat} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
                 <h3 className={`font-bold mb-4 inline-block px-3 py-1 rounded-md text-sm ${getCategoryColor(cat)}`}>
                   {cat}
                 </h3>
                 <div className="space-y-3">
                   {suggestions.filter(s => s.category === cat).map((suggestion) => (
-                    <div key={suggestion.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div key={suggestion.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-sm font-semibold text-gray-600">
+                        <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                           كتب بواسطة: {suggestion.admin?.name || 'مجهول'}
                         </span>
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleOpenModal(suggestion)}
-                            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                            className="p-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 transition-colors"
                             title="تعديل"
                           >
                             <Edit2 size={16} />
                           </button>
                           <button
                             onClick={() => handleDelete(suggestion.id)}
-                            className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                            className="p-1 text-gray-500 dark:text-gray-400 hover:text-red-600 transition-colors"
                             title="حذف"
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-800 whitespace-pre-wrap text-sm">{suggestion.content}</p>
+                      <p className="text-gray-800 dark:text-gray-100 whitespace-pre-wrap text-sm">{suggestion.content}</p>
                       <div className="text-xs text-gray-400 mt-2 text-left">
                         {new Date(suggestion.created_at).toLocaleDateString('ar-DZ')}
                       </div>
@@ -232,9 +232,9 @@ export default function AdminSuggestions() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0 bg-gray-50">
-              <h3 className="font-bold text-lg text-gray-800">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center shrink-0 bg-gray-50 dark:bg-gray-900">
+              <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100">
                 {editingId ? 'تعديل الاقتراح' : 'إضافة اقتراح جديد'}
               </h3>
               <button onClick={handleCloseModal} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
@@ -245,11 +245,11 @@ export default function AdminSuggestions() {
             <div className="p-6 overflow-y-auto">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">التصنيف (مصفوفة أيزنهاور)</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">التصنيف (مصفوفة أيزنهاور)</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none bg-gray-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none bg-gray-50 dark:bg-gray-900"
                   >
                     {categories.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -258,21 +258,21 @@ export default function AdminSuggestions() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">نص الاقتراح</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">نص الاقتراح</label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none h-32 bg-gray-50 resize-none"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none h-32 bg-gray-50 dark:bg-gray-900 resize-none"
                     placeholder="اكتب تفاصيل الاقتراح هنا..."
                   />
                 </div>
               </div>
             </div>
             
-            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50">
+            <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 shrink-0 bg-gray-50 dark:bg-gray-900">
               <button
                 onClick={handleCloseModal}
-                className="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-xl transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200 rounded-xl transition-colors"
               >
                 إلغاء
               </button>

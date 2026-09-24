@@ -185,9 +185,9 @@ export default function AdminFaqs() {
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">قائمة الأسئلة الشائعة</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">قائمة الأسئلة الشائعة</h2>
           <button
             onClick={() => handleOpenModal()}
             className="bg-[#4f46e5] text-white px-4 py-2 rounded-xl font-bold hover:bg-[#4338ca] transition-colors flex items-center gap-2"
@@ -203,16 +203,16 @@ export default function AdminFaqs() {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="p-4 font-bold text-gray-700 w-16">الترتيب</th>
-                  <th className="p-4 font-bold text-gray-700">السؤال</th>
-                  <th className="p-4 font-bold text-gray-700 w-24">الحالة</th>
-                  <th className="p-4 font-bold text-gray-700 w-32">الإجراءات</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 w-16">الترتيب</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">السؤال</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 w-24">الحالة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 w-32">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {faqs.map((faq, index) => (
-                  <tr key={faq.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                  <tr key={faq.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-900/50">
                     <td className="p-4">
                       <div className="flex flex-col items-center gap-1 text-gray-400">
                         <button 
@@ -222,7 +222,7 @@ export default function AdminFaqs() {
                         >
                           <ArrowUp size={16} />
                         </button>
-                        <span className="text-sm font-bold text-gray-700">{faq.display_order}</span>
+                        <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{faq.display_order}</span>
                         <button 
                           onClick={() => moveOrder(index, 'down')}
                           disabled={index === faqs.length - 1}
@@ -232,12 +232,12 @@ export default function AdminFaqs() {
                         </button>
                       </div>
                     </td>
-                    <td className="p-4 font-medium text-gray-900">{faq.question}</td>
+                    <td className="p-4 font-medium text-gray-900 dark:text-white">{faq.question}</td>
                     <td className="p-4">
                       <button
                         onClick={() => handleToggleActive(faq.id, faq.is_active)}
                         className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          faq.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                          faq.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                         }`}
                       >
                         {faq.is_active ? 'مفعل' : 'معطل'}
@@ -265,7 +265,7 @@ export default function AdminFaqs() {
                 ))}
                 {faqs.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-500 dark:text-gray-400">
                       لا توجد أسئلة شائعة حالياً
                     </td>
                   </tr>
@@ -279,34 +279,34 @@ export default function AdminFaqs() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingId ? 'تعديل السؤال' : 'إضافة سؤال جديد'}
               </h3>
-              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 dark:text-gray-300 transition-colors">
                 <X size={24} />
               </button>
             </div>
             
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">السؤال</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">السؤال</label>
                 <input
                   type="text"
                   value={formData.question}
                   onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-colors"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-colors"
                   placeholder="مثال: كيف أطلب منتج؟"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">الإجابة (يدعم HTML)</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">الإجابة (يدعم HTML)</label>
                 <textarea
                   value={formData.answer}
                   onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-                  className="w-full h-48 px-4 py-2 rounded-xl border border-gray-200 focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-colors"
+                  className="w-full h-48 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] transition-colors"
                   placeholder="<p>للطلب، اتبع الخطوات التالية...</p>"
                   dir="rtl"
                 />
@@ -320,14 +320,14 @@ export default function AdminFaqs() {
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   className="w-4 h-4 text-[#4f46e5] rounded focus:ring-[#4f46e5]"
                 />
-                <label htmlFor="isActive" className="text-sm font-bold text-gray-700">تفعيل السؤال (يظهر في الرئيسية)</label>
+                <label htmlFor="isActive" className="text-sm font-bold text-gray-700 dark:text-gray-200">تفعيل السؤال (يظهر في الرئيسية)</label>
               </div>
             </div>
             
-            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+            <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
               <button
                 onClick={handleCloseModal}
-                className="px-6 py-2 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 rounded-xl font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 transition-colors"
               >
                 إلغاء
               </button>

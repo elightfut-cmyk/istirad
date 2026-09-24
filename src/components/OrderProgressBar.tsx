@@ -119,10 +119,10 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
                 onClick={() => handleStageClick(stage.id)}
                 className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-500 z-10 relative ${
                   isCompleted && !isCurrent
-                    ? 'bg-white text-green-500 border-2 border-green-500' 
+                    ? 'bg-white dark:bg-gray-800 text-green-500 border-2 border-green-500' 
                     : isCurrent
                     ? 'bg-green-500 text-white shadow-lg shadow-green-500/40 ring-4 ring-green-100 scale-110'
-                    : 'bg-white text-gray-300 border-2 border-gray-200'
+                    : 'bg-white dark:bg-gray-800 text-gray-300 border-2 border-gray-200 dark:border-gray-700'
                 } ${(isSupplier || stageComments.length > 0) ? 'hover:scale-110 cursor-pointer hover:shadow-md' : 'cursor-default'}`}
               >
                 {isCompleted && !isCurrent ? (
@@ -134,7 +134,7 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
               
               {/* Stage Label */}
               <span className={`mt-3 text-xs md:text-sm font-bold text-center max-w-[80px] leading-tight transition-colors duration-500 ${
-                isCurrent ? 'text-green-600 font-extrabold' : isCompleted ? 'text-gray-700' : 'text-gray-400'
+                isCurrent ? 'text-green-600 font-extrabold' : isCompleted ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'
               }`}>
                 {stage.label}
               </span>
@@ -147,7 +147,7 @@ export default function OrderProgressBar({ bidId, currentStatus, onUpdateStatus,
                       <MessageCircle className="w-4 h-4 text-green-500" />
                       ملاحظات المورد
                     </h4>
-                    <button onClick={() => setSelectedStage(null)} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setSelectedStage(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-300">
                       <X className="w-4 h-4" />
                     </button>
                   </div>

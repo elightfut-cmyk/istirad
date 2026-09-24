@@ -82,12 +82,12 @@ export default function Register() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center p-4">
-        <div className="bg-white p-12 rounded-2xl shadow-xl w-full max-w-md text-center border-t-4 border-[#4f46e5]">
+        <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-xl w-full max-w-md text-center border-t-4 border-[#4f46e5]">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <PackageSearch size={40} className="text-[#4f46e5]" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">تم التسجيل بنجاح!</h2>
-          <p className="text-gray-500 mb-8">مرحباً بك في منصة جيبها-jiibha. جاري توجيهك لصفحة الدخول...</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">تم التسجيل بنجاح!</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">مرحباً بك في منصة جيبها-jiibha. جاري توجيهك لصفحة الدخول...</p>
           <Link to="/login" className="text-[#4f46e5] font-bold hover:underline">
             الذهاب لتسجيل الدخول يدوياً
           </Link>
@@ -98,13 +98,13 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center p-4 py-12">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-xl">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#4f46e5] bg-opacity-10 mb-4 hover:bg-opacity-20 transition">
             <PackageSearch size={32} className="text-[#4f46e5]" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">إنشاء حساب جديد</h1>
-          <p className="text-gray-500 mt-2">انضم إلينا كتاجر إلكتروني أو مورد بالجملة</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">إنشاء حساب جديد</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">انضم إلينا كتاجر إلكتروني أو مورد بالجملة</p>
         </div>
 
         {errorMsg && (
@@ -116,44 +116,44 @@ export default function Register() {
         <form onSubmit={handleRegister} className="space-y-5">
           {/* Role Selection */}
           <div className="flex gap-4 mb-6">
-            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'merchant' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'merchant' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600'}`}>
               <input type="radio" name="role" value="merchant" checked={formData.role === 'merchant'} onChange={handleChange} className="hidden" />
               <PackageSearch size={24} className={formData.role === 'merchant' ? 'text-[#4f46e5]' : 'text-gray-400'} />
-              <span className={`mt-2 font-bold ${formData.role === 'merchant' ? 'text-[#4f46e5]' : 'text-gray-500'}`}>تاجر إلكتروني</span>
+              <span className={`mt-2 font-bold ${formData.role === 'merchant' ? 'text-[#4f46e5]' : 'text-gray-500 dark:text-gray-400'}`}>تاجر إلكتروني</span>
             </label>
-            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'supplier' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+            <label className={`flex-1 flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all ${formData.role === 'supplier' ? 'border-[#4f46e5] bg-green-50' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600'}`}>
               <input type="radio" name="role" value="supplier" checked={formData.role === 'supplier'} onChange={handleChange} className="hidden" />
               <Building2 size={24} className={formData.role === 'supplier' ? 'text-[#4f46e5]' : 'text-gray-400'} />
-              <span className={`mt-2 font-bold ${formData.role === 'supplier' ? 'text-[#4f46e5]' : 'text-gray-500'}`}>مورد بالجملة</span>
+              <span className={`mt-2 font-bold ${formData.role === 'supplier' ? 'text-[#4f46e5]' : 'text-gray-500 dark:text-gray-400'}`}>مورد بالجملة</span>
             </label>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">الاسم الكامل</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">الاسم الكامل</label>
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="text" name="name" value={formData.name} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   placeholder="الاسم الأول والأخير" />
               </div>
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">رقم الهاتف</label>
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   placeholder="05XXXXXXXX" />
               </div>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 يجب أن يكون الهاتف مرتبطاً بالواتساب لتسهيل التواصل.
               </p>
             </div>
@@ -162,26 +162,26 @@ export default function Register() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Company Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">اسم المتجر / الشركة</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">اسم المتجر / الشركة</label>
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Building2 className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="text" name="company_name" value={formData.company_name} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   placeholder="اسم نشاطك التجاري" />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">البريد الإلكتروني</label>
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input type="email" name="email" value={formData.email} onChange={handleChange} required
-                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                  className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   placeholder="example@domain.com" />
               </div>
             </div>
@@ -189,26 +189,26 @@ export default function Register() {
 
           {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">العنوان</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">العنوان</label>
             <div className="relative">
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <MapPin className="h-5 w-5 text-gray-400" />
               </div>
               <input type="text" name="address" value={formData.address} onChange={handleChange} required
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 placeholder="المدينة، الحي، الشارع" />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">كلمة المرور</label>
             <div className="relative">
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={6}
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 placeholder="6 أحرف على الأقل" autoComplete="new-password" />
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function Register() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
+        <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-300 border-t border-gray-100 dark:border-gray-700 pt-6">
           لديك حساب بالفعل؟{' '}
           <Link to="/login" className="font-bold text-[#4f46e5] hover:underline">
             تسجيل الدخول

@@ -100,15 +100,15 @@ export default function AdminNotifications() {
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-3xl">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
           <MessageSquare className="text-blue-500" />
           إرسال إشعار عبر تلغرام
         </h2>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">الفئة المستهدفة</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">الفئة المستهدفة</label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
@@ -147,20 +147,20 @@ export default function AdminNotifications() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">نص الرسالة</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">نص الرسالة</label>
             <textarea
               rows={6}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="اكتب رسالتك هنا..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 resize-none bg-gray-50 focus:bg-white"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-blue-500 focus:border-blue-500 resize-none bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               يمكنك استخدام تنسيق HTML البسيط مثل &lt;b&gt;نص عريض&lt;/b&gt; أو &lt;i&gt;نص مائل&lt;/i&gt;.
             </p>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <button
               onClick={handleSend}
               disabled={sending || !message.trim()}

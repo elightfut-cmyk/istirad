@@ -688,7 +688,7 @@ export default function MerchantOrders() {
       )}
 
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">إدارة الطلبات</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">إدارة الطلبات</h2>
         <button 
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition"
@@ -708,11 +708,11 @@ export default function MerchantOrders() {
         </div>
       </div>
 
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
         <button
           onClick={() => setActiveTab('direct')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
           }`}
         >
           الطلبات المباشرة
@@ -720,7 +720,7 @@ export default function MerchantOrders() {
         <button
           onClick={() => setActiveTab('custom')}
           className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
-            activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+            activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
           }`}
         >
           المناقصات المفتوحة
@@ -729,55 +729,55 @@ export default function MerchantOrders() {
 
       <div className="space-y-6">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري التحميل...</div>
         ) : activeTab === 'direct' ? (
           directOrders.length === 0 ? (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
+            <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
               <Package size={48} className="mx-auto mb-4 text-gray-300" />
-              <h3 className="text-xl font-bold text-gray-800 mb-2">لا توجد طلبات مباشرة</h3>
-              <p className="text-gray-500">تصفح سوق المنتجات واطلب مباشرة من الموردين.</p>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">لا توجد طلبات مباشرة</h3>
+              <p className="text-gray-500 dark:text-gray-400">تصفح سوق المنتجات واطلب مباشرة من الموردين.</p>
             </div>
           ) : (
             directOrders.map(req => {
               const bid = req.supplier_bids?.[0]; // Direct orders only have 1 bid
               return (
-                <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start gap-4">
+                <div key={req.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row justify-between items-start gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-lg text-gray-900">{req.title.replace('طلب مباشر: ', '')}</h3>
+                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">{req.title.replace('طلب مباشر: ', '')}</h3>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'cancelled' ? 'bg-red-100 text-red-700' : req.status === 'open' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
                           {req.status === 'cancelled' ? 'ملغاة' : req.status === 'open' ? 'في انتظار الدفع' : (bid?.shipping_status === 'delivered' ? 'تمت الإجراءات وانتهت المعاملة' : (bid?.is_fully_paid ? 'تم دفع المبلغ كاملا' : 'تم دفع العربون'))}
                         </span>
                       </div>
-                      <p className="text-gray-600 text-sm mb-4">{req.description}</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{req.description}</p>
                       
-                      <div className="flex flex-wrap items-center gap-4 text-sm bg-white p-3 rounded-xl border border-gray-100 w-full sm:w-max">
+                      <div className="flex flex-wrap items-center gap-4 text-sm bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 w-full sm:w-max">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500">السعر الإجمالي:</span>
+                          <span className="text-gray-500 dark:text-gray-400">السعر الإجمالي:</span>
                           <span className="font-bold text-lg text-[#4f46e5]">{formatCurrency(bid?.price || 0)}</span>
                         </div>
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500">الكمية:</span>
+                          <span className="text-gray-500 dark:text-gray-400">الكمية:</span>
                           <span className="font-bold">{req.quantity}</span>
                         </div>
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500">المورد:</span>
+                          <span className="text-gray-500 dark:text-gray-400">المورد:</span>
                           <span className="font-bold">{bid?.supplier?.name || 'غير معروف'}</span>
                         </div>
                       </div>
                     </div>
                     {req.image_url && (
-                      <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-white p-1">
+                      <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800 p-1">
                         <img src={req.image_url} alt="صورة المنتج" className="w-full h-full object-cover" />
                       </div>
                     )}
                     {(req.status === 'open' || bid?.shipping_status === 'delivered') && (
                       <button 
                         onClick={() => handleDeleteRequest(req.id)}
-                        className="text-gray-400 hover:text-red-600 transition p-2 bg-white rounded-lg border border-gray-100 shadow-sm"
+                        className="text-gray-400 hover:text-red-600 transition p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm"
                         title="حذف الطلب"
                       >
                         <Trash2 size={20} />
@@ -786,10 +786,10 @@ export default function MerchantOrders() {
                   </div>
                   
                   {req.status === 'open' && bid && bid.status === 'pending' && (
-                    <div className="p-4 bg-white border-t border-gray-100 flex flex-col gap-4">
+                    <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-4">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-sm text-gray-500">العربون المطلوب ({bid.advance_percentage}%):</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">العربون المطلوب ({bid.advance_percentage}%):</p>
                           <p className="font-black text-xl text-red-600">
                             {formatCurrency((getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)}
                           </p>
@@ -841,9 +841,9 @@ export default function MerchantOrders() {
                                 </button>
                               </div>
                             )}
-                            <div className={`flex flex-col gap-2 text-sm bg-white p-3 rounded-lg shadow-sm border w-full sm:w-max mt-2 ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
+                            <div className={`flex flex-col gap-2 text-sm bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border w-full sm:w-max mt-2 ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
                             <div className="flex justify-between items-center gap-4">
-                              <span className="text-gray-600 font-medium">المبلغ المتبقي:</span>
+                              <span className="text-gray-600 dark:text-gray-300 font-medium">المبلغ المتبقي:</span>
                               <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
                                 {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal - (getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                               </span>
@@ -872,7 +872,7 @@ export default function MerchantOrders() {
                             <MessageCircle size={18} />
                             تواصل مع المورد (واتساب)
                           </a>
-                          <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
+                          <div className="flex items-center gap-2 text-sm bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-green-100 w-full sm:w-auto justify-center">
                             <div className="w-full">
                               <OrderProgressBar 
                                 bidId={bid.id} 
@@ -915,27 +915,27 @@ export default function MerchantOrders() {
           )
         ) : (
           customRequests.length === 0 ? (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
+            <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
               <Package size={48} className="mx-auto mb-4 text-gray-300" />
-              <h3 className="text-xl font-bold text-gray-800 mb-2">لا توجد مناقصات بعد</h3>
-              <p className="text-gray-500">قم بإنشاء طلب استيراد جديد ليتنافس عليه الموردون.</p>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">لا توجد مناقصات بعد</h3>
+              <p className="text-gray-500 dark:text-gray-400">قم بإنشاء طلب استيراد جديد ليتنافس عليه الموردون.</p>
             </div>
           ) : (
             customRequests.map(req => {
               const activeInterests = req.supplier_interests?.filter((i: any) => !req.supplier_bids?.some((b: any) => b.supplier_id === i.supplier_id)) || [];
               return (
-              <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between items-start gap-4">
+              <div key={req.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row justify-between items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-lg text-gray-900">{req.title}</h3>
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">{req.title}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'open' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                         {req.status === 'open' ? 'مفتوح للعروض' : (req.supplier_bids?.some((b:any) => b.shipping_status === 'delivered') ? 'تم دفع المبلغ كاملا' : 'مغلق (تمت الصفقة)')}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-2">{req.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">{req.description}</p>
                     {req.notes && (
-                      <p className="text-gray-500 text-xs mb-3 italic">ملاحظات: {req.notes}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 italic">ملاحظات: {req.notes}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
@@ -961,7 +961,7 @@ export default function MerchantOrders() {
                     </div>
                   </div>
                   {req.image_url && (
-                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-white p-1">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800 p-1">
                       <img src={req.image_url} alt="صورة توضيحية" className="w-full h-full object-cover" />
                     </div>
                   )}
@@ -971,7 +971,7 @@ export default function MerchantOrders() {
                         {req.status === 'open' && (
                           <button 
                             onClick={() => handleEditRequest(req)}
-                            className="text-gray-400 hover:text-blue-600 transition p-2 bg-white rounded-lg border border-gray-100 shadow-sm"
+                            className="text-gray-400 hover:text-blue-600 transition p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm"
                             title="تعديل الطلب"
                           >
                             <Edit size={20} />
@@ -979,14 +979,14 @@ export default function MerchantOrders() {
                         )}
                         <button 
                           onClick={() => handleDeleteRequest(req.id)}
-                          className="text-gray-400 hover:text-red-600 transition p-2 bg-white rounded-lg border border-gray-100 shadow-sm"
+                          className="text-gray-400 hover:text-red-600 transition p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm"
                           title="حذف الطلب"
                         >
                           <Trash2 size={20} />
                         </button>
                       </div>
                     )}
-                    <div className="text-left text-sm text-gray-500">
+                    <div className="text-left text-sm text-gray-500 dark:text-gray-400">
                       <Clock size={16} className="inline mr-1" />
                       {new Date(req.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                     </div>
@@ -994,16 +994,16 @@ export default function MerchantOrders() {
                 </div>
                 
                 <div className="p-6">
-                  <h4 className="font-bold text-gray-700 mb-4">العروض المقدمة من الموردين ({req.supplier_bids?.length || 0})</h4>
+                  <h4 className="font-bold text-gray-700 dark:text-gray-200 mb-4">العروض المقدمة من الموردين ({req.supplier_bids?.length || 0})</h4>
                   {req.supplier_bids?.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {req.supplier_bids.map((bid: any) => (
-                        <div key={bid.id} className={`border rounded-xl p-4 relative ${bid.status === 'accepted' ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                        <div key={bid.id} className={`border rounded-xl p-4 relative ${bid.status === 'accepted' ? 'border-green-500 bg-green-50' : 'border-gray-200 dark:border-gray-700'}`}>
                           {bid.status === 'accepted' && (
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
                           )}
                           <div className="flex items-center gap-1 mb-1">
-                            <h5 className="font-bold text-gray-900">{bid.supplier?.name}</h5>
+                            <h5 className="font-bold text-gray-900 dark:text-white">{bid.supplier?.name}</h5>
                             {bid.supplier?.verification_badge === 'blue' && (
                               <span title="مورد موثق"><BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" /></span>
                             )}
@@ -1011,25 +1011,25 @@ export default function MerchantOrders() {
                               <span title="مورد مميز (VIP)"><BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" /></span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mb-4">{bid.supplier?.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{bid.supplier?.name}</p>
                           
                           <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm text-gray-600">سعر القطعة الواحدة:</span>
-                            <span className="font-bold text-gray-800">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalItemPrice)}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">سعر القطعة الواحدة:</span>
+                            <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalItemPrice)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-gray-600">السعر الإجمالي:</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">السعر الإجمالي:</span>
                             <span className="font-black text-[#4f46e5]">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-4">
-                            <span className="text-sm text-gray-600">الدفعة المقدمة (العربون):</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">الدفعة المقدمة (العربون):</span>
                             <span className="font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-sm">
                               {formatCurrency((getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
                             </span>
                           </div>
                           
                           {bid.notes && (
-                            <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-100 mb-4">
+                            <div className="text-sm text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 mb-4">
                               "{bid.notes}"
                             </div>
                           )}
@@ -1089,7 +1089,7 @@ export default function MerchantOrders() {
                                   setNegotiationBid(bid);
                                   setShowNegotiationModal(true);
                                 }}
-                                className="px-4 py-2 bg-white text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-50 transition flex items-center gap-2"
+                                className="px-4 py-2 bg-white dark:bg-gray-800 text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-50 transition flex items-center gap-2"
                               >
                                 <MessageCircle size={16} />
                                 إعادة فتح التفاوض واقتراح سعر جديد
@@ -1119,7 +1119,7 @@ export default function MerchantOrders() {
                           )}
                           
                           {bid.status === 'accepted' && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                               {bid.deposit_paid_at ? (
                                 <CountdownCircle 
                                   depositPaidAt={bid.deposit_paid_at} 
@@ -1140,9 +1140,9 @@ export default function MerchantOrders() {
                                   </button>
                                 </div>
                               )}
-                              <div className={`flex flex-col gap-2 mb-3 bg-white p-3 rounded-lg border ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
+                              <div className={`flex flex-col gap-2 mb-3 bg-white dark:bg-gray-800 p-3 rounded-lg border ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'border-green-100' : 'border-red-100'}`}>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-sm text-gray-600">المبلغ المتبقي:</span>
+                                  <span className="text-sm text-gray-600 dark:text-gray-300">المبلغ المتبقي:</span>
                                   <span className={`font-bold ${bid.is_fully_paid || bid.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
                                     {bid.is_fully_paid || bid.shipping_status === 'delivered' ? formatCurrency(0) : formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal - (getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage / 100))}
                                   </span>
@@ -1204,26 +1204,26 @@ export default function MerchantOrders() {
       {/* Modal for Creating Request */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col relative overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-xl max-h-[85vh] flex flex-col relative overflow-hidden">
             <div className="p-6 overflow-y-auto w-full">
-              <button onClick={closeModal} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 bg-white rounded-full p-1 z-10">
+              <button onClick={closeModal} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-full p-1 z-10">
                 <XCircle size={24} />
               </button>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingRequestId ? 'تعديل المناقصة' : 'إنشاء مناقصة / طلب جديد'}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{editingRequestId ? 'تعديل المناقصة' : 'إنشاء مناقصة / طلب جديد'}</h2>
             <form onSubmit={handleCreateRequest} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">اسم السلعة المطلوبة</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">اسم السلعة المطلوبة</label>
                 <input 
                   type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">التفاصيل والمواصفات</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">التفاصيل والمواصفات</label>
                 <textarea 
                   required rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 />
               </div>
 
@@ -1235,12 +1235,12 @@ export default function MerchantOrders() {
                     <input 
                       type="url" required value={formData.product_link} onChange={e => setFormData({...formData, product_link: e.target.value})}
                       placeholder="رابط المنتج (مثال من علي بابا وغيرها)..."
-                      className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                      className="w-full pr-10 pl-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                     />
                   </div>
                   <div className="relative">
                     <div className="flex items-center gap-4">
-                      <div className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer relative">
+                      <div className="flex-1 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-center hover:bg-gray-50 dark:bg-gray-900 transition cursor-pointer relative">
                         <input 
                           type="file" 
                           accept="image/*"
@@ -1254,7 +1254,7 @@ export default function MerchantOrders() {
                         />
                         <div className="flex flex-col items-center gap-2">
                           <Upload className="text-gray-400" size={24} />
-                          <span className="text-sm font-medium text-gray-600">
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                             {imageFile ? imageFile.name : 'اختر صورة من جهازك...'}
                           </span>
                         </div>
@@ -1270,7 +1270,7 @@ export default function MerchantOrders() {
                             setImageFile(null);
                           }}
                           placeholder="الصق رابط صورة..."
-                          className="w-full pr-10 pl-3 py-4 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                          className="w-full pr-10 pl-3 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                         />
                       </div>
                     </div>
@@ -1280,20 +1280,20 @@ export default function MerchantOrders() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">الكمية المطلوبة</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">الكمية المطلوبة</label>
                   <input 
                     type="number" required min={minQuantity} value={formData.quantity} onChange={e => setFormData({...formData, quantity: parseInt(e.target.value)})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   />
-                  <p className="text-xs text-gray-500 mt-1">الحد الأدنى الذي حددته الإدارة هو {minQuantity}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">الحد الأدنى الذي حددته الإدارة هو {minQuantity}</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات إضافية (اختياري)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">ملاحظات إضافية (اختياري)</label>
                 <textarea 
                   rows={2} value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 focus:bg-white"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                   placeholder="شروط خاصة، ألوان معينة، الخ..."
                 />
               </div>
@@ -1302,7 +1302,7 @@ export default function MerchantOrders() {
                 <button type="submit" disabled={creating} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
                   {creating ? 'جاري الحفظ...' : (editingRequestId ? 'حفظ التعديلات' : 'نشر الطلب للموردين')}
                 </button>
-                <button type="button" onClick={closeModal} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button type="button" onClick={closeModal} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>
@@ -1323,15 +1323,15 @@ export default function MerchantOrders() {
       {showPaymentModal && selectedBidForPayment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] p-4 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center">
-            <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
-              <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 relative">
+              <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 dark:text-gray-200">
                 <XCircle size={24} />
               </button>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">طريقة دفع العربون</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">طريقة دفع العربون</h2>
             
-            <div className="bg-gray-50 p-4 rounded-xl mb-6 text-center">
-              <p className="text-gray-500 mb-1">المبلغ المطلوب {paymentType === 'remaining' ? '(باقي الدفعة)' : ''}</p>
-              <p className="text-3xl font-black text-gray-900">
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl mb-6 text-center">
+              <p className="text-gray-500 dark:text-gray-400 mb-1">المبلغ المطلوب {paymentType === 'remaining' ? '(باقي الدفعة)' : ''}</p>
+              <p className="text-3xl font-black text-gray-900 dark:text-white">
                 {paymentType === 'advance' 
                     ? formatCurrency((getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)
                     : formatCurrency(getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal - (getBidFinalPrices(selectedBidForPayment, requests.find(r => r.id === selectedBidForPayment?.reqId)?.quantity || 1).finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount)}
@@ -1345,14 +1345,14 @@ export default function MerchantOrders() {
 
             {!existingCouponId && !appliedCoupon && (
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">هل لديك كود ترويجي (كوبون)؟</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">هل لديك كود ترويجي (كوبون)؟</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="أدخل الكوبون هنا..."
-                    className="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:outline-none uppercase"
+                    className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:outline-none uppercase"
                   />
                   <button
                     onClick={handleApplyCoupon}
@@ -1369,30 +1369,30 @@ export default function MerchantOrders() {
               <button 
                 onClick={handleWalletPayment}
                 disabled={isProcessingWalletPayment}
-                className={`w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl transition group ${isProcessingWalletPayment ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#4f46e5] hover:bg-green-50'}`}
+                className={`w-full flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl transition group ${isProcessingWalletPayment ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#4f46e5] hover:bg-green-50'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-2 rounded-lg text-green-700 group-hover:bg-[#4f46e5] group-hover:text-white transition">
                     <Wallet size={24} />
                   </div>
                   <div className="text-right">
-                    <h3 className="font-bold text-gray-900">الدفع من المحفظة</h3>
-                    <p className="text-sm text-gray-500">الرصيد المتاح: <span className="font-bold text-green-600">{formatCurrency(walletBalance)}</span></p>
+                    <h3 className="font-bold text-gray-900 dark:text-white">الدفع من المحفظة</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">الرصيد المتاح: <span className="font-bold text-green-600">{formatCurrency(walletBalance)}</span></p>
                   </div>
                 </div>
               </button>
 
               <button 
                 onClick={handleChargilyPayment}
-                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition group"
+                className="w-full flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition group"
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-blue-100 p-2 rounded-lg text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition">
                     <CreditCard size={24} />
                   </div>
                   <div className="text-right">
-                    <h3 className="font-bold text-gray-900">البطاقة البنكية / الذهبية</h3>
-                    <p className="text-sm text-gray-500">الدفع عبر منصة Chargily الآمنة</p>
+                    <h3 className="font-bold text-gray-900 dark:text-white">البطاقة البنكية / الذهبية</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">الدفع عبر منصة Chargily الآمنة</p>
                   </div>
                 </div>
               </button>
@@ -1405,11 +1405,11 @@ export default function MerchantOrders() {
       {/* Negotiation Modal */}
       {showNegotiationModal && negotiationBid && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] p-4 flex items-center justify-center">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
-            <button onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); }} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 relative">
+            <button onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); }} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 dark:text-gray-200">
               <XCircle size={24} />
             </button>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">اقتراح سعر جديد</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">اقتراح سعر جديد</h2>
             
             <div className="bg-orange-50 p-4 rounded-xl mb-6 text-sm text-orange-800 border border-orange-100">
               <p>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</p>
@@ -1417,22 +1417,22 @@ export default function MerchantOrders() {
 
             <form onSubmit={handleProposePriceSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">السعر المقترح للقطعة الواحدة (DZD)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">السعر المقترح للقطعة الواحدة (DZD)</label>
                 <input 
                   type="number" step="0.01" required min="0.01"
                   value={negotiatedPrice || ''} 
                   onChange={e => setNegotiatedPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   placeholder="أدخل سعرك المقترح هنا..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">رسالة للمورد (اختياري)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">رسالة للمورد (اختياري)</label>
                 <textarea
                   value={customerReply}
                   onChange={e => setCustomerReply(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 min-h-[100px]"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 min-h-[100px]"
                   placeholder="اكتب ردك أو مبررك لاقتراح هذا السعر..."
                 />
               </div>
@@ -1441,7 +1441,7 @@ export default function MerchantOrders() {
                 <button type="submit" disabled={negotiating || !negotiatedPrice} className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition disabled:opacity-50">
                   {negotiating ? 'جاري الإرسال...' : 'إرسال الاقتراح'}
                 </button>
-                <button type="button" onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); setCustomerReply(''); }} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button type="button" onClick={() => { setShowNegotiationModal(false); setNegotiationBid(null); setNegotiatedPrice(0); setCustomerReply(''); }} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>
@@ -1453,13 +1453,13 @@ export default function MerchantOrders() {
       {/* Delete Reason Modal */}
       {deleteModalOpen && deletingRequestId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] p-4 flex items-center justify-center">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
-            <button onClick={() => { setDeleteModalOpen(false); setDeletingRequestId(null); setDeleteReason(''); }} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 relative">
+            <button onClick={() => { setDeleteModalOpen(false); setDeletingRequestId(null); setDeleteReason(''); }} className="absolute top-4 left-4 text-gray-400 hover:text-gray-700 dark:text-gray-200">
               <XCircle size={24} />
             </button>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">سبب حذف المناقصة</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">سبب حذف المناقصة</h2>
             
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
               يرجى كتابة سبب حذف هذه المناقصة. سيتم إرسال هذا السبب للإدارة وللموردين الذين قدموا عروضاً.
             </p>
 
@@ -1468,7 +1468,7 @@ export default function MerchantOrders() {
                 <textarea
                   value={deleteReason}
                   onChange={e => setDeleteReason(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 min-h-[100px]"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 min-h-[100px]"
                   placeholder="اكتب سبب الحذف هنا..."
                 />
               </div>
@@ -1477,7 +1477,7 @@ export default function MerchantOrders() {
                 <button onClick={confirmDeleteRequest} disabled={!deleteReason.trim()} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50">
                   تأكيد الحذف
                 </button>
-                <button onClick={() => { setDeleteModalOpen(false); setDeletingRequestId(null); setDeleteReason(''); }} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button onClick={() => { setDeleteModalOpen(false); setDeletingRequestId(null); setDeleteReason(''); }} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>

@@ -34,7 +34,7 @@ const InvoiceDocument: React.FC<InvoiceDocumentProps> = ({
     <div style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', overflow: 'hidden', zIndex: -9999 }}>
       <div 
         id={`invoice-${orderId}`} 
-        className="bg-white p-6 w-[700px] text-right font-sans mx-auto" 
+        className="bg-white dark:bg-gray-800 p-6 w-[700px] text-right font-sans mx-auto" 
         dir="rtl" 
         style={{ 
           color: '#000', 

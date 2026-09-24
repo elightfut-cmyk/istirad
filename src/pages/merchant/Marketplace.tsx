@@ -197,19 +197,19 @@ export default function Marketplace() {
       <div className="flex flex-col md:flex-row gap-6">
         {/* Filters Sidebar */}
         <div className="w-full md:w-64 flex-shrink-0">
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 sticky top-4">
+          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 sticky top-4">
             <div className="flex items-center gap-2 mb-6 text-[#4f46e5]">
               <Filter size={20} />
               <h3 className="font-bold text-lg">الفلاتر</h3>
             </div>
 
             <div className="mb-6">
-              <h4 className="font-bold text-gray-700 mb-3 text-sm">الفئة</h4>
+              <h4 className="font-bold text-gray-700 dark:text-gray-200 mb-3 text-sm">الفئة</h4>
               <div className="space-y-2">
                 {categories.map((cat) => (
                   <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategory === cat ? 'bg-[#4f46e5] border-[#4f46e5]' : 'border-gray-300 group-hover:border-[#4f46e5]'}`}>
-                      {selectedCategory === cat && <div className="w-2.5 h-2.5 bg-white rounded-sm"></div>}
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedCategory === cat ? 'bg-[#4f46e5] border-[#4f46e5]' : 'border-gray-300 dark:border-gray-600 group-hover:border-[#4f46e5]'}`}>
+                      {selectedCategory === cat && <div className="w-2.5 h-2.5 bg-white dark:bg-gray-800 rounded-sm"></div>}
                     </div>
                     <input
                       type="radio"
@@ -218,7 +218,7 @@ export default function Marketplace() {
                       checked={selectedCategory === cat}
                       onChange={() => setSelectedCategory(cat)}
                     />
-                    <span className={`text-sm ${selectedCategory === cat ? 'font-bold text-[#4f46e5]' : 'text-gray-600 group-hover:text-gray-900'}`}>{cat}</span>
+                    <span className={`text-sm ${selectedCategory === cat ? 'font-bold text-[#4f46e5]' : 'text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:text-white'}`}>{cat}</span>
                   </label>
                 ))}
               </div>
@@ -226,7 +226,7 @@ export default function Marketplace() {
 
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="font-bold text-gray-700 text-sm">أقصى سعر</h4>
+                <h4 className="font-bold text-gray-700 dark:text-gray-200 text-sm">أقصى سعر</h4>
                 <span className="text-xs font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">{formatCurrency(maxPrice)}</span>
               </div>
               <input
@@ -245,7 +245,7 @@ export default function Marketplace() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col gap-6">
           {/* Search Bar */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
             <div className="relative flex-1">
               <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -255,23 +255,23 @@ export default function Marketplace() {
                 placeholder="ابحث عن المنتجات، الموردين..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pr-12 pl-4 py-3 border border-transparent bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-all sm:text-sm"
+                className="block w-full pr-12 pl-4 py-3 border border-transparent bg-gray-50 dark:bg-gray-900 rounded-xl focus:bg-white dark:bg-gray-800 focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent transition-all sm:text-sm"
               />
             </div>
           </div>
 
           {loading ? (
-            <div className="text-center py-12 text-gray-500">جاري تحميل المنتجات...</div>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري تحميل المنتجات...</div>
           ) : (
             <>
               {/* Products Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 group flex flex-col transition-all hover:shadow-lg hover:-translate-y-1">
-                    <div className="h-48 bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
+                  <div key={product.id} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 group flex flex-col transition-all hover:shadow-lg hover:-translate-y-1">
+                    <div className="h-48 bg-gray-50 dark:bg-gray-900 relative overflow-hidden flex items-center justify-center p-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                        className="absolute top-3 left-3 z-10 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
+                        className="absolute top-3 left-3 z-10 p-2 bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white dark:bg-gray-800 transition-colors"
                         title={wishlistIds.includes(product.id) ? "إزالة من المفضلة" : "إضافة للمفضلة"}
                       >
                         <Heart size={20} className={wishlistIds.includes(product.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
@@ -284,8 +284,8 @@ export default function Marketplace() {
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col">
-                      <h4 className="font-bold text-gray-800 text-lg line-clamp-1 mb-2">{product.title}</h4>
-                      <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">
+                      <h4 className="font-bold text-gray-800 dark:text-gray-100 text-lg line-clamp-1 mb-2">{product.title}</h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
                         {product.description}
                       </p>
 
@@ -317,7 +317,7 @@ export default function Marketplace() {
                         </div>
                         <div className="text-left">
                           <p className="text-xs text-gray-400 mb-1">الكمية المتوفرة</p>
-                          <p className="font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg inline-block">{product.stock || product.moq} وحدة</p>
+                          <p className="font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg inline-block">{product.stock || product.moq} وحدة</p>
                         </div>
                       </div>
 
@@ -334,15 +334,15 @@ export default function Marketplace() {
               </div>
 
               {filteredProducts.length === 0 && (
-                <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-4">
                     <Search size={32} className="text-gray-300" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">لم يتم العثور على منتجات</h3>
-                  <p className="text-gray-500 max-w-md">عذراً، لا توجد منتجات تطابق معايير البحث والفلترة الخاصة بك.</p>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">لم يتم العثور على منتجات</h3>
+                  <p className="text-gray-500 dark:text-gray-400 max-w-md">عذراً، لا توجد منتجات تطابق معايير البحث والفلترة الخاصة بك.</p>
                   <button
                     onClick={() => { setSearchQuery(''); setSelectedCategory('الكل'); setMaxPrice(5000); }}
-                    className="mt-6 px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                    className="mt-6 px-6 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-gray-200 transition-colors"
                   >
                     إعادة ضبط الفلاتر
                   </button>
@@ -356,43 +356,43 @@ export default function Marketplace() {
       {/* Order Modal */}
       {orderingProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 relative">
             <button 
               onClick={() => setOrderingProduct(null)}
-              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 dark:text-gray-300"
             >
               <X size={24} />
             </button>
             
-            <h2 className="text-xl font-bold text-gray-900 mb-6">تأكيد طلب المنتج</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">تأكيد طلب المنتج</h2>
             
-            <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div className="mb-6 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
               <h3 className="font-bold text-lg mb-2">{orderingProduct.title}</h3>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm text-gray-500">السعر للوحدة:</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">السعر للوحدة:</span>
                 {orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price ? (
                   <>
                     <span className="text-sm text-gray-400 line-through">{formatCurrency(orderingProduct.price * 1.10)}</span>
                     <span className="font-bold text-[#4f46e5]">{formatCurrency(orderingProduct.discount_price * 1.10)}</span>
                   </>
                 ) : (
-                  <span className="font-bold text-gray-800">{formatCurrency(orderingProduct.price * 1.10)}</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(orderingProduct.price * 1.10)}</span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mb-1">المورد: <span className="font-bold text-gray-800">{orderingProduct.supplier?.name}</span></p>
-              <p className="text-sm text-gray-500 mb-1">الكمية المتوفرة: <span className="font-bold text-orange-600">{orderingProduct.stock || orderingProduct.moq} وحدة</span></p>
-              <p className="text-sm text-gray-500">نسبة العربون: <span className="font-bold text-red-600">{orderingProduct.advance_percentage || 20}%</span></p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">المورد: <span className="font-bold text-gray-800 dark:text-gray-100">{orderingProduct.supplier?.name}</span></p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">الكمية المتوفرة: <span className="font-bold text-orange-600">{orderingProduct.stock || orderingProduct.moq} وحدة</span></p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">نسبة العربون: <span className="font-bold text-red-600">{orderingProduct.advance_percentage || 20}%</span></p>
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">الكمية المطلوبة</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">الكمية المطلوبة</label>
               <input 
                 type="number" 
                 min={3}
                 max={orderingProduct.stock || orderingProduct.moq || 999999}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < 3 || ((orderingProduct.stock || orderingProduct.moq) && quantity > (orderingProduct.stock || orderingProduct.moq)) ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] ${quantity < 3 || ((orderingProduct.stock || orderingProduct.moq) && quantity > (orderingProduct.stock || orderingProduct.moq)) ? 'border-red-300 bg-red-50' : 'border-gray-300 dark:border-gray-600'}`}
               />
               {quantity < 3 && (
                 <p className="text-red-500 text-xs mt-2">لا يمكنك طلب أقل من 3 وحدات.</p>
@@ -402,8 +402,8 @@ export default function Marketplace() {
               )}
             </div>
 
-            <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-100">
-              <span className="font-bold text-gray-700">الإجمالي:</span>
+            <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <span className="font-bold text-gray-700 dark:text-gray-200">الإجمالي:</span>
               <span className="font-black text-[#4f46e5] text-2xl">
                 {formatCurrency(quantity * (orderingProduct.discount_price > 0 && orderingProduct.discount_price < orderingProduct.price
                   ? orderingProduct.discount_price * 1.10

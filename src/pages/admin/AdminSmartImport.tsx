@@ -163,10 +163,10 @@ export default function AdminSmartImport() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Upload Section */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-            <h3 className="font-bold text-gray-900 mb-4">اختر صورة المنتج</h3>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">اختر صورة المنتج</h3>
             
-            <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition cursor-pointer p-6 relative overflow-hidden min-h-[250px]">
+            <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 transition cursor-pointer p-6 relative overflow-hidden min-h-[250px]">
               <input 
                 type="file" 
                 accept="image/*" 
@@ -182,7 +182,7 @@ export default function AdminSmartImport() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-500">
+                <div className="text-center text-gray-500 dark:text-gray-400">
                   <ImageIcon size={48} className="mx-auto mb-3 text-gray-400" />
                   <p className="font-bold">انقر لاختيار صورة أو اسحبها هنا</p>
                   <p className="text-sm mt-1">JPG, PNG, WEBP (الحد الأقصى 5MB)</p>
@@ -210,7 +210,7 @@ export default function AdminSmartImport() {
           </div>
 
           {/* Result Section */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-center relative overflow-hidden">
              {!hasResult && !loading && (
                <div className="text-center text-gray-400">
                  <Search size={64} className="mx-auto mb-4 opacity-50" />
@@ -228,14 +228,14 @@ export default function AdminSmartImport() {
 
              {hasResult && !loading && (
                <div className="space-y-4 animate-in fade-in zoom-in duration-300">
-                 <div className="flex items-center gap-2 text-green-600 mb-4 pb-4 border-b border-gray-100">
+                 <div className="flex items-center gap-2 text-green-600 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
                    <CheckCircle2 size={24} />
                    <h3 className="font-bold text-lg">تم جلب بيانات المورد بنجاح</h3>
                  </div>
 
                  <div className="grid grid-cols-2 gap-4">
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-[#4f46e5] transition group">
-                     <label className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-[#4f46e5] transition group">
+                     <label className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
                        السعر الأصلي ($)
                        <Edit3 size={14} className="opacity-0 group-hover:opacity-100 text-[#4f46e5] transition" />
                      </label>
@@ -245,12 +245,12 @@ export default function AdminSmartImport() {
                        step="0.01"
                        value={basePriceUSD} 
                        onChange={(e) => setBasePriceUSD(parseFloat(e.target.value) || 0)}
-                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-black text-gray-900 transition-colors py-1"
+                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-black text-gray-900 dark:text-white transition-colors py-1"
                      />
                    </div>
                    
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 hover:border-[#4f46e5] transition group">
-                     <label className="flex items-center justify-between text-sm text-gray-500 mb-1">
+                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-[#4f46e5] transition group">
+                     <label className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
                        الوزن (kg)
                        <Edit3 size={14} className="opacity-0 group-hover:opacity-100 text-[#4f46e5] transition" />
                      </label>
@@ -260,18 +260,18 @@ export default function AdminSmartImport() {
                        step="0.01"
                        value={baseWeightKg} 
                        onChange={(e) => setBaseWeightKg(parseFloat(e.target.value) || 0)}
-                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-bold text-gray-900 transition-colors py-1"
+                       className="w-full bg-transparent border-b-2 border-transparent focus:border-[#4f46e5] outline-none text-xl font-bold text-gray-900 dark:text-white transition-colors py-1"
                      />
                    </div>
 
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                     <p className="text-sm text-gray-500 mb-1">تكلفة الشحن (15$/kg)</p>
+                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">تكلفة الشحن (15$/kg)</p>
                      <p className="text-xl font-bold text-orange-600">${shippingCostUSD.toFixed(2)}</p>
                    </div>
                    
-                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                     <p className="text-sm text-gray-500 mb-1">التكلفة الإجمالية</p>
-                     <p className="text-xl font-bold text-gray-900">${totalCostUSD.toFixed(2)}</p>
+                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">التكلفة الإجمالية</p>
+                     <p className="text-xl font-bold text-gray-900 dark:text-white">${totalCostUSD.toFixed(2)}</p>
                    </div>
                  </div>
 

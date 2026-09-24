@@ -34,13 +34,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   };
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#4f46e5]">
+    <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#4f46e5]">
       {/* Toolbar */}
-      <div className="flex items-center gap-1 p-2 border-b border-gray-100 bg-gray-50 flex-wrap">
+      <div className="flex items-center gap-1 p-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex-wrap">
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); execCommand('bold'); }}
-          className="p-1.5 text-gray-700 hover:bg-gray-200 hover:text-black rounded transition-colors"
+          className="p-1.5 text-gray-700 dark:text-gray-200 hover:bg-gray-200 hover:text-black rounded transition-colors"
           title="غامق"
         >
           <Bold className="w-4 h-4" />
@@ -48,13 +48,13 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); execCommand('underline'); }}
-          className="p-1.5 text-gray-700 hover:bg-gray-200 hover:text-black rounded transition-colors"
+          className="p-1.5 text-gray-700 dark:text-gray-200 hover:bg-gray-200 hover:text-black rounded transition-colors"
           title="مسطر"
         >
           <Underline className="w-4 h-4" />
         </button>
-        <div className="flex items-center px-2 border-r border-gray-200 relative group cursor-pointer" title="لون النص">
-          <Palette className="w-4 h-4 text-gray-600" />
+        <div className="flex items-center px-2 border-r border-gray-200 dark:border-gray-700 relative group cursor-pointer" title="لون النص">
+          <Palette className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           <input
             type="color"
             onChange={(e) => execCommand('foreColor', e.target.value)}

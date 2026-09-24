@@ -191,13 +191,13 @@ export default function SupplierRequests() {
     >
       <div className="mb-6 flex flex-col md:flex-row justify-between md:items-end gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">سوق الطلبات والمناقصات</h2>
-          <p className="text-gray-500 text-sm mt-1">تصفح طلبات التجار الخاصة وقدم أفضل عروضك للفوز بالصفقة.</p>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">سوق الطلبات والمناقصات</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">تصفح طلبات التجار الخاصة وقدم أفضل عروضك للفوز بالصفقة.</p>
         </div>
-        <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-max">
-          <button onClick={() => setFilterStatus('all')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>الكل</button>
-          <button onClick={() => setFilterStatus('open')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'open' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>مفتوحة</button>
-          <button onClick={() => setFilterStatus('closed')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'closed' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>مغلقة</button>
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full sm:w-max">
+          <button onClick={() => setFilterStatus('all')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'all' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>الكل</button>
+          <button onClick={() => setFilterStatus('open')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'open' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مفتوحة</button>
+          <button onClick={() => setFilterStatus('closed')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'closed' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مغلقة</button>
         </div>
       </div>
 
@@ -212,11 +212,11 @@ export default function SupplierRequests() {
         )}
         <div className="space-y-6">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري التحميل...</div>
         ) : requests.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
+          <div className="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
             <Gavel size={48} className="mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">لا توجد طلبات مفتوحة حالياً</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">لا توجد طلبات مفتوحة حالياً</h3>
           </div>
         ) : (
           requests.filter(req => {
@@ -230,13 +230,13 @@ export default function SupplierRequests() {
             const activeInterests = req.supplier_interests?.filter((i: any) => !req.supplier_bids?.some((b: any) => b.supplier_id === i.supplier_id)) || [];
 
             return (
-              <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+              <div key={req.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
                 <div className="flex flex-col md:flex-row">
-                  <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100">
+                  <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100 dark:border-gray-700">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="font-bold text-xl text-gray-900">{req.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1">بواسطة التاجر: <span className="font-bold">{req.merchant?.name || 'غير معروف'} {req.merchant?.company_name ? `(${req.merchant.company_name})` : ''}</span></p>
+                        <h3 className="font-bold text-xl text-gray-900 dark:text-white">{req.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">بواسطة التاجر: <span className="font-bold">{req.merchant?.name || 'غير معروف'} {req.merchant?.company_name ? `(${req.merchant.company_name})` : ''}</span></p>
                       </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${req.status === 'cancelled' ? 'bg-red-100 text-red-700' : isClosed ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                       {req.status === 'cancelled' ? 'ملغاة' : isClosed ? 'مغلق (تمت الصفقة)' : 'مفتوح لتلقي العروض'}
@@ -265,14 +265,14 @@ export default function SupplierRequests() {
                     </div>
                   )}
 
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">{req.description}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">{req.description}</p>
                   
                   {req.notes && (
-                    <p className="text-gray-500 text-sm italic mb-4">ملاحظات التاجر: {req.notes}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm italic mb-4">ملاحظات التاجر: {req.notes}</p>
                   )}
 
                   <div className="flex flex-wrap items-center gap-4 text-sm mt-4">
-                    <span className="font-bold text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">الكمية المطلوبة: {req.quantity} وحدة</span>
+                    <span className="font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">الكمية المطلوبة: {req.quantity} وحدة</span>
                     
                     {req.product_link && (
                       <a href={req.product_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition">
@@ -287,36 +287,36 @@ export default function SupplierRequests() {
                   </div>
                 </div>
 
-                <div className="p-6 md:w-1/3 bg-gray-50 flex flex-col justify-center items-center text-center">
+                <div className="p-6 md:w-1/3 bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center text-center">
                   {myBid ? (
                     <div className="w-full">
-                      <h4 className="font-bold text-gray-700 mb-4 border-b pb-2">عرضك المقدم</h4>
+                      <h4 className="font-bold text-gray-700 dark:text-gray-200 mb-4 border-b pb-2">عرضك المقدم</h4>
                         <div className="flex justify-between items-center mb-1 text-sm">
-                          <span className="text-gray-600">سعرك الخام للقطعة:</span>
+                          <span className="text-gray-600 dark:text-gray-300">سعرك الخام للقطعة:</span>
                           <span className="font-bold">{formatCurrency((myBid.cost_price || myBid.price) / (req.quantity || 1))}</span>
                         </div>
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-gray-600">إجمالي سعرك الخام:</span>
+                          <span className="text-gray-600 dark:text-gray-300">إجمالي سعرك الخام:</span>
                           <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.cost_price || myBid.price)}</span>
                         </div>
                         {(myBid.cost_price && myBid.cost_price !== myBid.price) ? (
                           <div className="flex justify-between items-center text-xs mt-1 mb-2 bg-indigo-50 p-2 rounded border border-indigo-100">
-                            <span className="text-gray-600">السعر النهائي المعروض للتاجر:</span>
+                            <span className="text-gray-600 dark:text-gray-300">السعر النهائي المعروض للتاجر:</span>
                             <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.price)}</span>
                           </div>
                         ) : null}
                       <div className="flex justify-between text-sm mb-4">
-                        <span className="text-gray-500">الدفعة المقدمة:</span>
+                        <span className="text-gray-500 dark:text-gray-400">الدفعة المقدمة:</span>
                         <span className="font-bold bg-orange-100 text-orange-800 px-2 rounded">{myBid.advance_percentage}%</span>
                       </div>
                       
-                      {req.status === 'cancelled' ? (<div className="text-gray-500 font-medium">تم إلغاء الطلب من التاجر.</div>) : myBid.status === 'accepted' ? (
+                      {req.status === 'cancelled' ? (<div className="text-gray-500 dark:text-gray-400 font-medium">تم إلغاء الطلب من التاجر.</div>) : myBid.status === 'accepted' ? (
                         <div className="bg-green-100 text-green-800 p-3 rounded-xl flex items-center justify-center gap-2 font-bold text-sm">
                           <CheckCircle2 size={18} />
                           تهانينا! تم قبول عرضك وتم دفع العربون
                         </div>
                       ) : isClosed || req.status === 'cancelled' ? (
-                        <div className="bg-gray-200 text-gray-600 p-3 rounded-xl font-bold text-sm">
+                        <div className="bg-gray-200 text-gray-600 dark:text-gray-300 p-3 rounded-xl font-bold text-sm">
                           تم إغلاق الطلب وقبول عرض مورد آخر
                         </div>
                       ) : myBid.status === 'rejected' ? (
@@ -327,7 +327,7 @@ export default function SupplierRequests() {
                         <div className="bg-orange-100 text-orange-800 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200">
                           <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price || (myBid.cost_price / (req.quantity || 1)) || 0)}</strong> للقطعة الواحدة. <span className="text-sm font-normal block mt-1">(ونسبة العربون المطلوبة: <strong>{myBid.advance_percentage}%</strong>)</span></p>
                           {myBid.customer_reply && (
-                            <div className="mb-4 bg-white p-3 rounded-lg border border-orange-200 text-gray-700 font-normal">
+                            <div className="mb-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-orange-200 text-gray-700 dark:text-gray-200 font-normal">
                               <strong>رسالة التاجر:</strong> {myBid.customer_reply}
                             </div>
                           )}
@@ -372,7 +372,7 @@ export default function SupplierRequests() {
                               notes: myBid.notes
                             });
                           }}
-                          className="w-full bg-white text-blue-600 border border-blue-200 py-2 rounded-xl font-bold hover:bg-blue-50 transition shadow-sm"
+                          className="w-full bg-white dark:bg-gray-800 text-blue-600 border border-blue-200 py-2 rounded-xl font-bold hover:bg-blue-50 transition shadow-sm"
                         >
                           تعديل العرض
                         </button>
@@ -381,12 +381,12 @@ export default function SupplierRequests() {
 
                     </div>
                   ) : isClosed ? (
-                    <div className="text-gray-500 font-medium">الطلب مغلق. لم تقدم عرضاً عليه.</div>
+                    <div className="text-gray-500 dark:text-gray-400 font-medium">الطلب مغلق. لم تقدم عرضاً عليه.</div>
                   ) : (
                     <div className="w-full flex flex-col gap-2">
-                      <p className="text-sm text-gray-500 mb-2">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
                       {user?.status === 'pending' ? (
-                        <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-center text-sm border border-gray-200">
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 rounded-xl font-bold text-center text-sm border border-gray-200 dark:border-gray-700">
                           تقديم العروض متاح للموردين المعتمدين فقط
                         </div>
                       ) : (
@@ -405,7 +405,7 @@ export default function SupplierRequests() {
                               جاري البحث عن المنتج والسعر (إعلام التاجر)
                             </button>
                           ) : (
-                            <div className="w-full bg-gray-50 text-gray-600 border border-gray-200 py-2 rounded-xl text-center text-sm font-bold">
+                            <div className="w-full bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 py-2 rounded-xl text-center text-sm font-bold">
                               تم إعلام التاجر باهتمامك بالطلب
                             </div>
                           )}
@@ -416,31 +416,31 @@ export default function SupplierRequests() {
 
                   {/* Show other suppliers' bids */}
                   {req.supplier_bids && req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).length > 0 && (
-                    <div className="w-full mt-6 pt-6 border-t border-gray-200">
-                      <h4 className="font-bold text-gray-700 mb-3 text-sm text-right">عروض الموردين الآخرين ({req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).length})</h4>
+                    <div className="w-full mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                      <h4 className="font-bold text-gray-700 dark:text-gray-200 mb-3 text-sm text-right">عروض الموردين الآخرين ({req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).length})</h4>
                       <div className="space-y-3">
                         {req.supplier_bids.filter((b: any) => b.supplier_id !== user?.id).map((otherBid: any) => (
-                          <div key={otherBid.id} className="bg-white border border-gray-200 rounded-lg p-3 text-right">
-                            <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-2">
-                              <span className="font-bold text-gray-800 flex items-center gap-2 text-sm">
+                          <div key={otherBid.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-right">
+                            <div className="flex justify-between items-center mb-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+                              <span className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 text-sm">
                                 <Store size={14} className="text-gray-400" />
                                 {otherBid.supplier?.name || 'مورد'}
                               </span>
                             </div>
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-gray-500">سعر القطعة (الخام):</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">سعر القطعة (الخام):</span>
                               <span className="font-bold text-sm">{formatCurrency((otherBid.cost_price || otherBid.price) / (req.quantity || 1))}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500">السعر الإجمالي الخام (بنسبة عربون {otherBid.advance_percentage}%):</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">السعر الإجمالي الخام (بنسبة عربون {otherBid.advance_percentage}%):</span>
                               <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.cost_price || otherBid.price)}</span>
                             </div>
                             {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
-                              <div className="mt-3 pt-3 border-t border-gray-100 bg-orange-50/50 p-2 rounded-lg">
+                              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 bg-orange-50/50 p-2 rounded-lg">
                                 <p className="text-xs font-bold text-orange-800 mb-1">تفاوض التاجر مع هذا المورد:</p>
-                                <p className="text-xs text-gray-700">اقترح التاجر: <strong>{formatCurrency(otherBid.negotiated_price || (otherBid.cost_price / (req.quantity || 1)) || 0)}</strong> (بنسبة عربون: <strong>{otherBid.advance_percentage}%</strong>)</p>
+                                <p className="text-xs text-gray-700 dark:text-gray-200">اقترح التاجر: <strong>{formatCurrency(otherBid.negotiated_price || (otherBid.cost_price / (req.quantity || 1)) || 0)}</strong> (بنسبة عربون: <strong>{otherBid.advance_percentage}%</strong>)</p>
                                 {otherBid.customer_reply && (
-                                  <p className="text-xs text-gray-600 mt-1 italic">"{otherBid.customer_reply}"</p>
+                                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{otherBid.customer_reply}"</p>
                                 )}
                                 {otherBid.negotiated_by === 'supplier_accepted' && <p className="text-[10px] text-green-600 font-bold mt-1">قبل المورد السعر</p>}
                                 {otherBid.negotiated_by === 'supplier_rejected' && <p className="text-[10px] text-red-600 font-bold mt-1">رفض المورد السعر</p>}
@@ -456,20 +456,20 @@ export default function SupplierRequests() {
                 </div>
                 
                 {/* Footer for Merchant Details */}
-                <div className="bg-blue-50/30 border-t border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
-                  <div className="flex items-center gap-2 text-gray-800">
+                <div className="bg-blue-50/30 border-t border-gray-100 dark:border-gray-700 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
+                  <div className="flex items-center gap-2 text-gray-800 dark:text-gray-100">
                     <Store size={18} className="text-[#4f46e5]" />
                     <span className="font-bold text-sm">{req.merchant?.company_name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <User size={18} className="text-gray-400" />
                     <span className="text-sm font-medium">{req.merchant?.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <MapPin size={18} className="text-gray-400" />
                     <span className="text-sm font-medium">{req.merchant?.address || 'غير متوفر'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <Phone size={18} className="text-gray-400" />
                     <span className="text-sm font-medium" dir="ltr">{req.merchant?.phone || 'غير متوفر'}</span>
                   </div>
@@ -483,30 +483,30 @@ export default function SupplierRequests() {
       {/* Bid Modal */}
       {biddingRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col relative overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col relative overflow-hidden">
             <div className="p-6 overflow-y-auto w-full">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{bidForm.id ? 'تعديل عرض السعر' : 'تقديم عرض سعر'}</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{bidForm.id ? 'تعديل عرض السعر' : 'تقديم عرض سعر'}</h2>
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-4 text-sm text-blue-800">
                 <strong>ملاحظة هامة:</strong> يرجى إدخال السعر بالدينار (DZD). سيتم تحويله تلقائياً للدولار عند الحاجة.
                 <br/><br/>
                 <strong>توضيح بخصوص الأرباح:</strong> أرباح المنصة هي 10% من سعر البيع. وعلى هذا الأساس، أي سعر تدخله هنا سيتم إضافة 10% عليه ليظهر للتاجر (حق المنصة).
               </div>
-            <p className="text-sm text-gray-500 mb-6 border-b pb-4">{biddingRequest.title}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 border-b pb-4">{biddingRequest.title}</p>
             
             <form onSubmit={handleSubmitBid} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">سعرك الخام للقطعة الواحدة بالدينار (DZD)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">سعرك الخام للقطعة الواحدة بالدينار (DZD)</label>
                 <input 
                   type="number" step="0.01" required min="0.01"
                   value={bidForm.cost_price || ''} 
                   onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   placeholder="أدخل السعر الخام للقطعة الواحدة"
                 />
                 
                 {bidForm.cost_price > 0 && (
                   <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
-                    <p className="text-gray-600 mb-1 text-xs font-bold">السعر النهائي الذي سيظهر للتاجر (بعد إضافة العمولة والرسوم):</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs font-bold">السعر النهائي الذي سيظهر للتاجر (بعد إضافة العمولة والرسوم):</p>
                     <div className="flex justify-between items-center font-bold">
                       <span>للقطعة الواحدة:</span>
                       <span className="text-[#4f46e5]">{formatCurrency(calculateFinalPrice(bidForm.cost_price, biddingRequest?.quantity || 1, profitSettings).finalItemPrice)}</span>
@@ -518,29 +518,29 @@ export default function SupplierRequests() {
                   </div>
                 )}
                 
-                <p className="text-xs text-gray-500 mt-2">يساوي بالدولار (خام): ${Number(((bidForm.cost_price || 0) / exchangeRate).toFixed(2))} | إجمالي السعر الخام: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">يساوي بالدولار (خام): ${Number(((bidForm.cost_price || 0) / exchangeRate).toFixed(2))} | إجمالي السعر الخام: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
               </div>
               
 
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">نسبة الدفعة المقدمة (عربون) %</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">نسبة الدفعة المقدمة (عربون) %</label>
                 <input 
                   type="number" required min="0" max="100"
                   value={bidForm.advance_percentage} 
                   onChange={e => setBidForm({...bidForm, advance_percentage: parseInt(e.target.value)})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                 />
                 <p className="text-xs text-gray-400 mt-1">يُدفع هذا العربون فور قبول عرضك عبر بوابة Chargily.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ملاحظات إضافية للتاجر</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">ملاحظات إضافية للتاجر</label>
                 <textarea 
                   rows={3} 
                   value={bidForm.notes} 
                   onChange={e => setBidForm({...bidForm, notes: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   placeholder="مثال: متوفر بجميع الألوان، مدة الشحن 5 أيام..."
                 />
               </div>
@@ -551,7 +551,7 @@ export default function SupplierRequests() {
                 <button type="submit" disabled={submitting} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
                   {submitting ? 'جاري الإرسال...' : 'تأكيد العرض'}
                 </button>
-                <button type="button" onClick={() => setBiddingRequest(null)} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button type="button" onClick={() => setBiddingRequest(null)} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>

@@ -193,18 +193,18 @@ export default function SupplierProducts() {
       ]}
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">إدارة المنتجات</h2>
         
-        <div className="flex bg-gray-100 p-1 rounded-lg w-full sm:w-auto">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-full sm:w-auto">
           <button 
             onClick={() => setActiveTab('all')}
-            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'all' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
           >
             الكل
           </button>
           <button 
             onClick={() => setActiveTab('my')}
-            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'my' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 sm:flex-none px-4 py-2 text-sm font-bold rounded-md transition ${activeTab === 'my' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
           >
             منتجاتي
           </button>
@@ -220,19 +220,19 @@ export default function SupplierProducts() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري التحميل...</div>
       ) : products.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <Package size={40} className="text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">لا توجد منتجات بعد</h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-2">لا توجد منتجات بعد</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
             قم بإضافة منتجاتك الأولى للبدء في تلقي طلبات الشراء من التجار.
           </p>
           <button 
             onClick={handleOpenAddModal}
-            className="bg-gray-100 text-gray-700 px-6 py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+            className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-6 py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors"
           >
             إنشاء منتج
           </button>
@@ -240,21 +240,21 @@ export default function SupplierProducts() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {products.filter(p => activeTab === 'all' || p.supplier_id === user?.id).map(product => (
-            <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               {product.images && product.images.length > 0 ? (
-                <div className="w-full h-48 bg-gray-50 flex items-center justify-center p-2">
+                <div className="w-full h-48 bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-2">
                   <img src={product.images[0]} alt={product.title} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                <div className="w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                   <Package size={40} className="text-gray-400" />
                 </div>
               )}
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900">{product.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">المورد: <span className="font-bold">{product.supplier?.name || 'مورد'}</span></p>
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">{product.title}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">المورد: <span className="font-bold">{product.supplier?.name || 'مورد'}</span></p>
                   </div>
                   {product.supplier_id === user?.id && (
                     <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function SupplierProducts() {
                     </div>
                   )}
                 </div>
-                <p className="text-gray-500 text-sm mt-1 truncate">{product.description}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 truncate">{product.description}</p>
                 <div className="mt-4 flex justify-between items-center">
                   <div className="flex flex-col">
                     {product.discount_price > 0 && product.discount_price < product.price ? (
@@ -283,7 +283,7 @@ export default function SupplierProducts() {
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md">الكمية المتوفرة: {product.stock || product.moq}</span>
+                    <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md">الكمية المتوفرة: {product.stock || product.moq}</span>
                     <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-md">عربون: {product.advance_percentage || 20}%</span>
                   </div>
                 </div>
@@ -296,15 +296,15 @@ export default function SupplierProducts() {
       {/* Add Product Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 pb-12 max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 pb-12 max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative">
             <button 
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 dark:text-gray-300"
             >
               <X size={24} />
             </button>
             
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
               {editingProductId ? 'تعديل المنتج' : 'إضافة منتج جديد'}
             </h2>
 
@@ -316,23 +316,23 @@ export default function SupplierProducts() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المنتج</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">اسم المنتج</label>
                 <input 
                   type="text" required 
                   value={form.title} 
                   onChange={e => setForm({...form, title: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   placeholder="مثال: حقيبة سفر جلدية"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">التصنيف</label>
                 <select 
                   required 
                   value={form.category} 
                   onChange={e => setForm({...form, category: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                 >
                   <option value="" disabled>اختر التصنيف</option>
                   {productCategories.map((cat, index) => (
@@ -342,33 +342,33 @@ export default function SupplierProducts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">الوصف</label>
                 <textarea 
                   required rows={3}
                   value={form.description} 
                   onChange={e => setForm({...form, description: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">سعر الجملة بالدينار (دج)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">سعر الجملة بالدينار (دج)</label>
                   <input 
                     type="number" step="0.01" required min="0"
                     value={form.price || ''} 
                     onChange={e => setForm({...form, price: parseFloat(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   />
-                  <p className="text-xs text-gray-500 mt-1">يساوي: ${Number(((form.price || 0) / exchangeRate).toFixed(2))}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">يساوي: ${Number(((form.price || 0) / exchangeRate).toFixed(2))}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">نسبة الدفعة المقدمة (العربون) %</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">نسبة الدفعة المقدمة (العربون) %</label>
                   <input 
                     type="number" required min="0" max="100"
                     value={form.advance_percentage || ''} 
                     onChange={e => setForm({...form, advance_percentage: parseInt(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   />
                 </div>
               </div>
@@ -377,33 +377,33 @@ export default function SupplierProducts() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض بالدينار (دج)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">السعر بعد التخفيض بالدينار (دج)</label>
                   <input 
                     type="number" step="0.01" min="0"
                     value={form.discount_price || ''} 
                     onChange={e => setForm({...form, discount_price: parseFloat(e.target.value) || 0})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                     placeholder="اختياري"
                   />
-                  {form.discount_price > 0 && <p className="text-xs text-gray-500 mt-1">يساوي: ${Number(((form.discount_price || 0) / exchangeRate).toFixed(2))}</p>}
+                  {form.discount_price > 0 && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">يساوي: ${Number(((form.discount_price || 0) / exchangeRate).toFixed(2))}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الكمية المتوفرة (المخزون)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">الكمية المتوفرة (المخزون)</label>
                   <input 
                     type="number" required min="3"
                     value={form.stock || ''} 
                     onChange={e => setForm({...form, stock: parseInt(e.target.value) || 0, moq: 3})}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">صورة المنتج (رابط أو رفع ملف)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">صورة المنتج (رابط أو رفع ملف)</label>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <label className="flex-1 cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#4f46e5] transition-colors rounded-xl p-3 text-center bg-gray-50">
-                      <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                    <label className="flex-1 cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-[#4f46e5] transition-colors rounded-xl p-3 text-center bg-gray-50 dark:bg-gray-900">
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <Upload size={18} />
                         <span>{imageFile ? imageFile.name : 'اختر صورة من جهازك'}</span>
                       </div>
@@ -428,7 +428,7 @@ export default function SupplierProducts() {
                     value={form.image_url} 
                     onChange={e => setForm({...form, image_url: e.target.value})}
                     disabled={!!imageFile}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 disabled:opacity-50"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 disabled:opacity-50"
                     placeholder="https://example.com/image.jpg"
                   />
                 </div>

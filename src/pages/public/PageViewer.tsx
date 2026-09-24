@@ -41,10 +41,10 @@ export default function PageViewer() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center font-['Tajawal'] text-[#1a1a1a]">
-      <div className="w-full max-w-5xl bg-white min-h-screen shadow-xl flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-800 flex flex-col items-center font-['Tajawal'] text-[#1a1a1a]">
+      <div className="w-full max-w-5xl bg-white dark:bg-gray-800 min-h-screen shadow-xl flex flex-col relative overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-50">
         <div className="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
@@ -52,7 +52,7 @@ export default function PageViewer() {
             </div>
             <span className="text-2xl font-black text-[#4f46e5]"><span className="hidden sm:inline">جيبها-</span>jiibha</span>
           </Link>
-          <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-[#4f46e5] font-medium transition-colors">
+          <Link to="/" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] font-medium transition-colors">
             <ArrowRight size={20} />
             العودة للرئيسية
           </Link>
@@ -66,19 +66,19 @@ export default function PageViewer() {
             <div className="w-10 h-10 border-4 border-[#4f46e5] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : page ? (
-          <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100">
-            <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-8 pb-6 border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-8 pb-6 border-b border-gray-100 dark:border-gray-700">
               {page.title}
             </h1>
             <div 
-              className="prose prose-lg prose-indigo max-w-none text-gray-600 leading-relaxed"
+              className="prose prose-lg prose-indigo max-w-none text-gray-600 dark:text-gray-300 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: page.content }}
             />
           </div>
         ) : (
           <div className="text-center py-20">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">الصفحة غير موجودة</h2>
-            <p className="text-gray-600 mb-8">عذراً، لم نتمكن من العثور على الصفحة التي تبحث عنها.</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">الصفحة غير موجودة</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8">عذراً، لم نتمكن من العثور على الصفحة التي تبحث عنها.</p>
             <Link to="/" className="bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition-colors inline-block">
               العودة للرئيسية
             </Link>

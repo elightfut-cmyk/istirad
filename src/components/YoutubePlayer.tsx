@@ -30,13 +30,13 @@ export default function YoutubePlayer() {
 
   return (
     <div className="w-full relative z-10 px-4 sm:px-6 lg:px-0">
-      <div className="w-full bg-white rounded-3xl p-6 sm:p-8 relative shadow-sm">
+      <div className="w-full bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 relative shadow-sm">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">شروحات المنصة</h2>
-          <p className="text-gray-500 mt-2">تعرف على كيفية استخدام المنصة وتحقيق أقصى استفادة</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">شروحات المنصة</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">تعرف على كيفية استخدام المنصة وتحقيق أقصى استفادة</p>
         </div>
         
-        <div className="relative w-full overflow-hidden pt-[56.25%] rounded-2xl shadow-lg border border-gray-100">
+        <div className="relative w-full overflow-hidden pt-[56.25%] rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
           <iframe 
             className="absolute top-0 left-0 bottom-0 right-0 w-full h-full"
             src={embedUrl}

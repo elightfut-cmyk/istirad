@@ -124,7 +124,7 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
           </h2>
           <button 
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -159,7 +159,7 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
                     className={`relative overflow-hidden cursor-pointer p-4 rounded-xl border-2 transition-all duration-300 transform select-none flex items-start gap-3
                       ${isAck 
                         ? 'bg-green-50 border-green-500 shadow-md scale-[1.01]' 
-                        : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-gray-900'
                       }
                     `}
                   >
@@ -169,14 +169,14 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
                     )}
                     
                     <div className={`mt-0.5 shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors border-2 
-                      ${isAck ? 'bg-green-500 border-green-500' : 'bg-transparent border-gray-300'}
+                      ${isAck ? 'bg-green-500 border-green-500' : 'bg-transparent border-gray-300 dark:border-gray-600'}
                     `}>
                       <Check className={`w-4 h-4 text-white transition-transform ${isAck ? 'scale-100' : 'scale-0'}`} strokeWidth={3} />
                     </div>
                     
                     <div className="flex-1 overflow-hidden">
                       <div 
-                        className={`text-sm leading-relaxed transition-colors [&_b]:font-bold [&_u]:underline ${isAck ? 'text-green-900 font-medium' : 'text-gray-700'}`}
+                        className={`text-sm leading-relaxed transition-colors [&_b]:font-bold [&_u]:underline ${isAck ? 'text-green-900 font-medium' : 'text-gray-700 dark:text-gray-200'}`}
                         dangerouslySetInnerHTML={{ __html: term }}
                       />
                     </div>
@@ -221,7 +221,7 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
               <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${allTermsAcknowledged ? 'bg-green-500' : 'bg-gray-300'}`}>
                 <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
               </div>
-              <span className={`font-medium text-sm md:text-base transition-colors ${allTermsAcknowledged ? 'text-green-700' : 'text-gray-500'}`}>
+              <span className={`font-medium text-sm md:text-base transition-colors ${allTermsAcknowledged ? 'text-green-700' : 'text-gray-500 dark:text-gray-400'}`}>
                 {allTermsAcknowledged ? 'تمت الموافقة على جميع الشروط بنجاح' : 'يرجى الموافقة على جميع الشروط بالأعلى للمتابعة'}
               </span>
             </div>
@@ -230,7 +230,7 @@ export default function TermsOfUseModal({ onAccept, onClose }: TermsOfUseModalPr
           <div className="mt-6 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-bold text-gray-600 hover:text-gray-800 bg-gray-200 hover:bg-gray-300 transition-colors"
+              className="px-6 py-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:text-gray-100 bg-gray-200 hover:bg-gray-300 transition-colors"
             >
               إلغاء
             </button>

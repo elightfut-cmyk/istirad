@@ -157,22 +157,22 @@ export default function MerchantWallet() {
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-[#4f46e5] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white dark:bg-gray-800 opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">الرصيد المتاح</h3>
           <p className="text-4xl font-black mt-2">{formatCurrency(availableBalance * exchangeRate)}</p>
           <button 
             onClick={() => setShowTopupModal(true)}
-            className="mt-6 bg-white text-[#4f46e5] px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-50 transition-colors w-full"
+            className="mt-6 bg-white dark:bg-gray-800 text-[#4f46e5] px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-50 transition-colors w-full"
           >
             شحن الرصيد
           </button>
         </div>
         
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">إجمالي المدفوعات</h3>
-              <p className="text-2xl font-bold mt-1 text-gray-800">{formatCurrency(totalPayments)}</p>
+              <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">إجمالي المدفوعات</h3>
+              <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-gray-100">{formatCurrency(totalPayments)}</p>
             </div>
             <div className="bg-red-50 p-2 rounded-lg text-red-600">
               <ArrowUpRight size={20} />
@@ -180,11 +180,11 @@ export default function MerchantWallet() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">المستردات</h3>
-              <p className="text-2xl font-bold mt-1 text-gray-800">{formatCurrency(totalRefunds)}</p>
+              <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">المستردات</h3>
+              <p className="text-2xl font-bold mt-1 text-gray-800 dark:text-gray-100">{formatCurrency(totalRefunds)}</p>
             </div>
             <div className="bg-green-50 p-2 rounded-lg text-green-600">
               <ArrowDownLeft size={20} />
@@ -215,10 +215,10 @@ export default function MerchantWallet() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-6">سجل العمليات</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">سجل العمليات</h2>
         {loading ? (
-          <div className="text-center py-12 text-gray-500">جاري تحميل السجل...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري تحميل السجل...</div>
         ) : transactions.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <CreditCard size={48} className="mx-auto mb-4 opacity-20" />
@@ -227,7 +227,7 @@ export default function MerchantWallet() {
         ) : (
           <div className="space-y-4">
             {transactions.map((tx) => (
-              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition gap-4">
+              <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:bg-gray-900 transition gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl shrink-0 ${
                     tx.type === 'deposit' ? 'bg-blue-50 text-blue-600' :
@@ -239,12 +239,12 @@ export default function MerchantWallet() {
                      <ArrowUpRight size={24} />}
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900">
+                    <h4 className="font-bold text-gray-900 dark:text-white">
                       {tx.type === 'deposit' ? 'شحن رصيد' : 
                        tx.type === 'refund' ? 'استرداد مبلغ' : 
                        'دفع عربون طلب'}
                     </h4>
-                    <p className="text-sm text-gray-500 flex flex-wrap items-center gap-1 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-1 mt-1">
                       <Clock size={14} className="shrink-0" />
                       <span className="whitespace-nowrap">{new Date(tx.created_at).toLocaleDateString('ar-MA')}</span>
                       {tx.description && <span className="mr-0 sm:mr-2 sm:border-r sm:pr-2 w-full sm:w-auto mt-1 sm:mt-0">{tx.description}</span>}
@@ -265,11 +265,11 @@ export default function MerchantWallet() {
       {/* Topup Modal */}
       {showTopupModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowTopupModal(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setShowTopupModal(false)} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 dark:text-gray-300">
               <X size={24} />
             </button>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">شحن رصيد المحفظة</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">شحن رصيد المحفظة</h2>
             <form onSubmit={handleTopup} className="space-y-4">
               <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl text-sm text-blue-800 mb-4">
                 استخدم العملة الصعبة (الدولار أو الأورو) لشحن رصيدك. سيتم تحويله تلقائياً ليظهر بعملة المنصة (دينار جزائري).
@@ -277,22 +277,22 @@ export default function MerchantWallet() {
               
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">طريقة الدفع</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">طريقة الدفع</label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as any)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   >
                     <option value="redotpay">RedotPay</option>
                     <option value="binance">Binance Pay</option>
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">العملة</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">العملة</label>
                   <select
                     value={topupCurrency}
                     onChange={(e) => setTopupCurrency(e.target.value as 'USD' | 'EUR')}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -301,23 +301,23 @@ export default function MerchantWallet() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">المبلغ المرسل</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">المبلغ المرسل</label>
                 <input 
                   type="number" min="1" step="0.01" required
                   value={topupAmount || ''}
                   onChange={(e) => setTopupAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   placeholder="مثال: 1000"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">رقم المعاملة (TxID) أو الـ ID</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">رقم المعاملة (TxID) أو الـ ID</label>
                 <input 
                   type="text" required
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5]"
                   placeholder="أدخل رقم المعاملة للتحقق"
                 />
               </div>
@@ -326,12 +326,12 @@ export default function MerchantWallet() {
                 <strong>تعليمات الدفع:</strong><br />
                 <div className="flex items-center gap-2 mt-2 mb-2">
                   <span>- أرسل المبلغ إلى {paymentMethod === 'redotpay' ? 'ID' : 'Binance Pay ID'}:</span>
-                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-orange-200">
                     <span className="font-bold font-mono">{paymentMethod === 'redotpay' ? '1320881144' : '1054805981'}</span>
                     <button 
                       type="button"
                       onClick={() => handleCopy(paymentMethod === 'redotpay' ? '1320881144' : '1054805981')}
-                      className="text-gray-500 hover:text-orange-600 transition"
+                      className="text-gray-500 dark:text-gray-400 hover:text-orange-600 transition"
                       title="نسخ المعرف"
                     >
                       {copied ? <CheckCircle2 size={16} className="text-green-600" /> : <Copy size={16} />}
@@ -343,8 +343,8 @@ export default function MerchantWallet() {
               </div>
 
               {topupAmount > 0 && (
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                  <span className="text-gray-600 font-medium">الرصيد التقديري بالدينار:</span>
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                  <span className="text-gray-600 dark:text-gray-300 font-medium">الرصيد التقديري بالدينار:</span>
                   <span className="font-black text-xl text-[#4f46e5]">
                     {topupCurrency === 'USD' 
                       ? `${(topupAmount * exchangeRate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")} دج` 

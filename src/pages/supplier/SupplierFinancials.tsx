@@ -108,27 +108,27 @@ export default function SupplierFinancials() {
       ]}
     >
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800">التقارير المالية والمحفظة</h2>
-        <p className="text-gray-500 mt-1">تتبع أرباحك، العربون المدفوع، وسجل العمليات المالية الخاصة بك</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">التقارير المالية والمحفظة</h2>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">تتبع أرباحك، العربون المدفوع، وسجل العمليات المالية الخاصة بك</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Activity size={20} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">إجمالي المبيعات (قيمة الصفقات)</h3>
+            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">إجمالي المبيعات (قيمة الصفقات)</h3>
           </div>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{loading ? '...' : formatCurrency(stats.totalSales)}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{loading ? '...' : formatCurrency(stats.totalSales)}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-red-100">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-red-50 text-red-600 rounded-lg">
               <ArrowDownLeft size={20} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">عمولة المنصة المقتطعة</h3>
+            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">عمولة المنصة المقتطعة</h3>
           </div>
           <p className="text-3xl font-bold text-red-600 mt-2">{loading ? '...' : formatCurrency(stats.platformFees)}</p>
         </div>
@@ -141,26 +141,26 @@ export default function SupplierFinancials() {
           <Wallet size={120} className="absolute -left-8 -bottom-8 text-white opacity-10" />
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <ArrowUpRight size={20} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium">عروض قيد المراجعة</h3>
+            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">عروض قيد المراجعة</h3>
           </div>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{loading ? '...' : formatCurrency(stats.pending)}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{loading ? '...' : formatCurrency(stats.pending)}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800">سجل العمليات الناجحة</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">سجل العمليات الناجحة</h3>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-right whitespace-nowrap">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-sm">
+              <tr className="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 text-sm">
                 <th className="px-6 py-4 font-medium">التاريخ</th>
                 <th className="px-6 py-4 font-medium">البيان (الطلب)</th>
                 <th className="px-6 py-4 font-medium">التاجر</th>
@@ -173,9 +173,9 @@ export default function SupplierFinancials() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="py-8 text-center text-gray-500">جاري التحميل...</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td></tr>
               ) : transactions.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-gray-500">لا توجد عمليات مالية بعد.</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">لا توجد عمليات مالية بعد.</td></tr>
               ) : (
                 transactions.map((tx) => {
                   const advancePaid = (tx.price * (tx.advance_percentage || 0)) / 100;
@@ -184,9 +184,9 @@ export default function SupplierFinancials() {
                   const merchantData = Array.isArray(tx.custom_requests?.users) ? tx.custom_requests.users[0] : tx.custom_requests?.users;
                   const merchantName = merchantData?.name || merchantData?.company_name || 'تاجر غير معروف';
                   return (
-                    <tr key={tx.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 text-sm text-gray-500">{new Date(tx.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <tr key={tx.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 dark:bg-gray-900 transition">
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(tx.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                         {tx.custom_requests?.title}
                         {tx.custom_requests?.request_type === 'direct' ? (
                           <span className="mr-2 bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-normal">مباشر</span>
@@ -194,8 +194,8 @@ export default function SupplierFinancials() {
                           <span className="mr-2 bg-orange-50 text-orange-700 px-2 py-0.5 rounded text-xs font-normal">مناقصة</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{merchantName}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatCurrency(tx.price)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{merchantName}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{formatCurrency(tx.price)}</td>
                       <td className="px-6 py-4 text-sm font-bold text-red-500">{fee > 0 ? `-${formatCurrency(fee)}` : '0'}</td>
                       <td className="px-6 py-4 text-sm font-bold text-green-600">{formatCurrency(netAmount)}</td>
                       <td className="px-6 py-4 text-sm font-bold text-blue-600">{formatCurrency(advancePaid)}</td>

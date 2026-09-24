@@ -127,14 +127,14 @@ export default function AdminOrders() {
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 mb-6">
+        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
           <button
             onClick={() => { setActiveTab('custom'); setExpandedRequestId(null); }}
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
-              activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+              activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
             }`}
           >
             المناقصات (طلبات عامة)
@@ -142,7 +142,7 @@ export default function AdminOrders() {
           <button
             onClick={() => { setActiveTab('direct'); setExpandedRequestId(null); }}
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
-              activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+              activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
             }`}
           >
             الطلبات المباشرة
@@ -150,7 +150,7 @@ export default function AdminOrders() {
           <button
             onClick={() => { setActiveTab('manual'); setExpandedRequestId(null); }}
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
-              activeTab === 'manual' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+              activeTab === 'manual' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
             }`}
           >
             طلبات الشحن اليدوي
@@ -164,7 +164,7 @@ export default function AdminOrders() {
               placeholder="ابحث باسم الطلب أو التاجر..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
@@ -174,29 +174,29 @@ export default function AdminOrders() {
           {activeTab === 'custom' ? (
             <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 font-bold text-gray-700 w-12"></th>
-                  <th className="p-4 font-bold text-gray-700">عنوان المناقصة</th>
-                  <th className="p-4 font-bold text-gray-700">التاجر</th>
-                  <th className="p-4 font-bold text-gray-700">الكمية المطلوبة</th>
-                  <th className="p-4 font-bold text-gray-700">الحالة</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 w-12"></th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">عنوان المناقصة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الكمية المطلوبة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
                   </tr>
                 ) : filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">لم يتم العثور على أي مناقصات.</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على أي مناقصات.</td>
                   </tr>
                 ) : (
                   filteredRequests.map((req) => (
                     <React.Fragment key={req.id}>
                       <tr 
                         onClick={() => toggleExpand(req.id)}
-                        className={`hover:bg-gray-50 transition-colors cursor-pointer ${expandedRequestId === req.id ? 'bg-green-50/30' : ''}`}
+                        className={`hover:bg-gray-50 dark:bg-gray-900 transition-colors cursor-pointer ${expandedRequestId === req.id ? 'bg-green-50/30' : ''}`}
                       >
                         <td className="p-4 text-center">
                           {expandedRequestId === req.id ? (
@@ -207,23 +207,23 @@ export default function AdminOrders() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                              <Package size={20} className="text-gray-500" />
+                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                              <Package size={20} className="text-gray-500 dark:text-gray-400" />
                             </div>
                             <div>
-                              <p className="font-bold text-gray-800">{req.title}</p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="font-bold text-gray-800 dark:text-gray-100">{req.title}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {new Date(req.created_at).toLocaleDateString('ar-SA')}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <p className="font-bold text-gray-700">{req.merchant?.name || 'غير معروف'}</p>
-                          <p className="text-xs text-gray-500">{req.merchant?.company_name || '-'}</p>
+                          <p className="font-bold text-gray-700 dark:text-gray-200">{req.merchant?.name || 'غير معروف'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{req.merchant?.company_name || '-'}</p>
                         </td>
                         <td className="p-4">
-                          <span className="font-bold text-gray-700">{req.quantity} وحدة</span>
+                          <span className="font-bold text-gray-700 dark:text-gray-200">{req.quantity} وحدة</span>
                         </td>
                         <td className="p-4">
                           <div className="flex flex-col gap-2 items-start">
@@ -238,7 +238,7 @@ export default function AdminOrders() {
                                 مغلق
                               </span>
                             )}
-                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                               {req.supplier_bids?.length || 0} عروض
                             </span>
                           </div>
@@ -247,15 +247,15 @@ export default function AdminOrders() {
                       
                       {/* Expanded Bids Section */}
                       {expandedRequestId === req.id && (
-                        <tr className="bg-gray-50/50">
+                        <tr className="bg-gray-50 dark:bg-gray-900/50">
                           <td colSpan={5} className="p-0">
-                            <div className="p-6 border-t border-gray-100">
-                              <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <div className="p-6 border-t border-gray-100 dark:border-gray-700">
+                              <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
                                 تفاصيل العروض المقدمة
                               </h4>
                               
                               {(!req.supplier_bids || req.supplier_bids.length === 0) ? (
-                                <p className="text-sm text-gray-500 italic">لا توجد عروض مقدمة حتى الآن.</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 italic">لا توجد عروض مقدمة حتى الآن.</p>
                               ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                   {req.supplier_bids.map((bid: any) => (
@@ -264,17 +264,17 @@ export default function AdminOrders() {
                                       className={`p-4 rounded-xl border ${
                                         bid.status === 'accepted' 
                                           ? 'border-green-200 bg-green-50' 
-                                          : 'border-gray-200 bg-white'
+                                          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                                       }`}
                                     >
                                       <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-2">
-                                          <div className="bg-gray-100 p-1.5 rounded-lg">
-                                            <User size={16} className="text-gray-600" />
+                                          <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+                                            <User size={16} className="text-gray-600 dark:text-gray-300" />
                                           </div>
                                           <div>
-                                            <p className="font-bold text-sm text-gray-800">{bid.supplier?.name}</p>
-                                            <p className="text-xs text-gray-500">{bid.supplier?.company_name}</p>
+                                            <p className="font-bold text-sm text-gray-800 dark:text-gray-100">{bid.supplier?.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{bid.supplier?.company_name}</p>
                                           </div>
                                         </div>
                                         {bid.status === 'accepted' && (
@@ -289,9 +289,9 @@ export default function AdminOrders() {
                                       {(bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
                                         <div className="mt-4 bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm">
                                           <p className="font-bold text-orange-800 mb-2">تفاوض التاجر والمورد:</p>
-                                          <p className="text-gray-700">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong> (بنسبة عربون: <strong>{bid.advance_percentage}%</strong>)</p>
+                                          <p className="text-gray-700 dark:text-gray-200">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong> (بنسبة عربون: <strong>{bid.advance_percentage}%</strong>)</p>
                                           {bid.customer_reply && (
-                                            <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{bid.customer_reply}"</p>
+                                            <p className="text-gray-600 dark:text-gray-300 mt-2 bg-white dark:bg-gray-800 p-2 rounded border border-orange-100 italic">"{bid.customer_reply}"</p>
                                           )}
                                           {bid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
                                           {bid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
@@ -299,10 +299,10 @@ export default function AdminOrders() {
                                         </div>
                                       )}
 
-                                      <div className="mt-4 pt-3 border-t border-gray-100/50 flex justify-between items-end">
+                                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-end">
                                         <div>
-                                          <p className="text-xs text-gray-500 mb-1">السعر المعروض (بنسبة عربون {bid.advance_percentage}%):</p>
-                                          <p className={`font-bold ${bid.status === 'accepted' ? 'text-green-700' : 'text-gray-800'}`}>
+                                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر المعروض (بنسبة عربون {bid.advance_percentage}%):</p>
+                                          <p className={`font-bold ${bid.status === 'accepted' ? 'text-green-700' : 'text-gray-800 dark:text-gray-100'}`}>
                                             {formatCurrency(bid.price)}
                                           </p>
                                         </div>
@@ -333,22 +333,22 @@ export default function AdminOrders() {
           ) : activeTab === 'direct' ? (
             <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 font-bold text-gray-700">عنوان الطلب</th>
-                  <th className="p-4 font-bold text-gray-700">التاجر / المورد</th>
-                  <th className="p-4 font-bold text-gray-700">الإجمالي</th>
-                  <th className="p-4 font-bold text-gray-700">حالة العربون</th>
-                  <th className="p-4 font-bold text-gray-700">حالة المبلغ المتبقي</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">عنوان الطلب</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر / المورد</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الإجمالي</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">حالة العربون</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">حالة المبلغ المتبقي</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
                   </tr>
                 ) : filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">لم يتم العثور على طلبات مباشرة.</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على طلبات مباشرة.</td>
                   </tr>
                 ) : (
                   filteredRequests.map((req) => {
@@ -358,26 +358,26 @@ export default function AdminOrders() {
 
                     return (
                       <React.Fragment key={req.id}>
-                        <tr className="hover:bg-gray-50 transition-colors">
+                        <tr className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                <Package size={20} className="text-gray-500" />
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                <Package size={20} className="text-gray-500 dark:text-gray-400" />
                               </div>
                               <div>
-                                <p className="font-bold text-gray-800">{req.title}</p>
-                                <p className="text-xs text-gray-500 mt-1">الكمية: {req.quantity}</p>
+                                <p className="font-bold text-gray-800 dark:text-gray-100">{req.title}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">الكمية: {req.quantity}</p>
                               </div>
                             </div>
                           </td>
                           <td className="p-4">
                             <div className="flex flex-col gap-1">
-                              <span className="text-sm font-bold text-gray-800">التاجر: {req.merchant?.name || '-'}</span>
-                              <span className="text-sm text-gray-600">المورد: {directBid?.supplier?.name || '-'}</span>
+                              <span className="text-sm font-bold text-gray-800 dark:text-gray-100">التاجر: {req.merchant?.name || '-'}</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-300">المورد: {directBid?.supplier?.name || '-'}</span>
                             </div>
                           </td>
                           <td className="p-4">
-                            <span className="font-bold text-gray-700">{directBid ? formatCurrency(directBid.price) : '-'}</span>
+                            <span className="font-bold text-gray-700 dark:text-gray-200">{directBid ? formatCurrency(directBid.price) : '-'}</span>
                           </td>
                           <td className="p-4">
                             {advancePaid ? (
@@ -399,7 +399,7 @@ export default function AdminOrders() {
                                 مدفوع
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                                 <CreditCard size={14} />
                                 غير مدفوع
                               </span>
@@ -415,9 +415,9 @@ export default function AdminOrders() {
                                 </div>
                                 <div className="text-sm w-full">
                                   <p className="font-bold text-orange-800 mb-1">تفاوض التاجر والمورد:</p>
-                                  <p className="text-gray-700">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong> (بنسبة عربون: <strong>{directBid.advance_percentage}%</strong>)</p>
+                                  <p className="text-gray-700 dark:text-gray-200">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong> (بنسبة عربون: <strong>{directBid.advance_percentage}%</strong>)</p>
                                   {directBid.customer_reply && (
-                                    <p className="text-gray-600 mt-2 bg-white p-2 rounded border border-orange-100 italic">"{directBid.customer_reply}"</p>
+                                    <p className="text-gray-600 dark:text-gray-300 mt-2 bg-white dark:bg-gray-800 p-2 rounded border border-orange-100 italic">"{directBid.customer_reply}"</p>
                                   )}
                                   {directBid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
                                   {directBid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
@@ -436,35 +436,35 @@ export default function AdminOrders() {
           ) : (
             <table className="w-full text-right border-collapse whitespace-nowrap">
               <thead>
-                <tr className="bg-gray-50 border-y border-gray-100">
-                  <th className="p-4 font-bold text-gray-700">التاجر</th>
-                  <th className="p-4 font-bold text-gray-700">المبلغ / العملة</th>
-                  <th className="p-4 font-bold text-gray-700">رقم المعاملة (TxID)</th>
-                  <th className="p-4 font-bold text-gray-700">الحالة</th>
-                  <th className="p-4 font-bold text-gray-700 text-center">إجراءات</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المبلغ / العملة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">رقم المعاملة (TxID)</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">إجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
                   </tr>
                 ) : manualPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">لا توجد طلبات شحن يدوية.</td>
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لا توجد طلبات شحن يدوية.</td>
                   </tr>
                 ) : (
                   manualPayments.map((pmt) => (
-                    <tr key={pmt.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={pmt.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                       <td className="p-4">
-                        <p className="font-bold text-gray-800">{pmt.merchant?.name}</p>
-                        <p className="text-xs text-gray-500">{pmt.merchant?.company_name}</p>
+                        <p className="font-bold text-gray-800 dark:text-gray-100">{pmt.merchant?.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{pmt.merchant?.company_name}</p>
                       </td>
                       <td className="p-4">
-                        <span className="font-bold text-gray-900">{formatCurrency(pmt.amount)}</span>
-                        <p className="text-xs text-gray-500">{pmt.payment_method}</p>
+                        <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(pmt.amount)}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{pmt.payment_method}</p>
                       </td>
-                      <td className="p-4 font-mono text-sm text-gray-600">
+                      <td className="p-4 font-mono text-sm text-gray-600 dark:text-gray-300">
                         {pmt.transaction_id}
                       </td>
                       <td className="p-4">

@@ -51,13 +51,13 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#4f46e5] bg-opacity-10 mb-4 hover:bg-opacity-20 transition">
             <PackageSearch size={32} className="text-[#4f46e5]" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">تسجيل الدخول</h1>
-          <p className="text-gray-500 mt-2">مرحباً بعودتك إلى منصة جيبها-jiibha</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">تسجيل الدخول</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">مرحباً بعودتك إلى منصة جيبها-jiibha</p>
         </div>
 
         {errorMsg && (
@@ -68,7 +68,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">البريد الإلكتروني</label>
             <div className="relative">
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
@@ -77,7 +77,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm transition-colors bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm transition-colors bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 placeholder="أدخل بريدك الإلكتروني"
                 required
               />
@@ -85,7 +85,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">كلمة المرور</label>
             <div className="relative">
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
@@ -94,7 +94,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pr-10 pl-3 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm transition-colors bg-gray-50 focus:bg-white"
+                className="block w-full pr-10 pl-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm transition-colors bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
                 placeholder="أدخل كلمة المرور"
                 required
                 autoComplete="current-password"
@@ -111,7 +111,7 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-600">
+        <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-300">
           ليس لديك حساب بعد؟{' '}
           <Link to="/register" className="font-bold text-[#4f46e5] hover:underline">
             سجل الآن مجاناً

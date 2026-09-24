@@ -141,24 +141,24 @@ export default function AdminRequests() {
           </div>
           
           {calcAmount !== '' && Number(calcAmount) > 0 && (
-            <div className="bg-white p-5 rounded-xl border border-indigo-200 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-indigo-200 shadow-sm">
               {calcMode === 'rawToFinal' ? (() => {
                 const finalPricing = calculateFinalPrice(Number(calcAmount), calcQty, settings);
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">السعر الإجمالي الخام:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر الإجمالي الخام:</p>
                       <p className="font-bold">{formatCurrency(finalPricing.supplierTotal)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">نسبة المنصة المطبقة:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">نسبة المنصة المطبقة:</p>
                       <p className="font-bold text-orange-600">{(finalPricing.markupPercentage * 100).toFixed(1)}%</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">رسوم الطلب الثابتة:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رسوم الطلب الثابتة:</p>
                       <p className="font-bold">{formatCurrency(settings.orderFixedFee)}</p>
                     </div>
-                    <div className="md:col-span-3 pt-3 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-3 pt-3 border-t border-gray-100 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-green-50/50 p-3 rounded-lg border border-green-100 flex justify-between items-center">
                         <span className="font-bold text-green-900">ربح المنصة الإجمالي:</span>
                         <span className="text-lg font-black text-green-700">{formatCurrency(finalPricing.platformProfit)}</span>
@@ -176,18 +176,18 @@ export default function AdminRequests() {
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">السعر النهائي الإجمالي:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر النهائي الإجمالي:</p>
                       <p className="font-bold">{formatCurrency(Number(calcAmount) * calcQty)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">ربح المنصة الإجمالي (تقريبي):</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">ربح المنصة الإجمالي (تقريبي):</p>
                       <p className="font-bold text-orange-600">{formatCurrency(finalPricing.platformProfit)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">رسوم الطلب الثابتة المخصومة:</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رسوم الطلب الثابتة المخصومة:</p>
                       <p className="font-bold">{formatCurrency(settings.orderFixedFee)}</p>
                     </div>
-                    <div className="md:col-span-3 pt-3 border-t border-gray-100 flex justify-between items-center bg-green-50/50 p-3 rounded-lg border-green-100">
+                    <div className="md:col-span-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-green-50/50 p-3 rounded-lg border-green-100">
                       <span className="font-bold text-green-900">السعر الصافي (الخام) للمورد (للقطعة):</span>
                       <span className="text-xl font-black text-green-700">{formatCurrency(rawUnitPrice)}</span>
                     </div>
@@ -213,14 +213,14 @@ export default function AdminRequests() {
               <li>حتى 2 مليون دج: <strong>{settings.markupTier3Percentage}%</strong></li>
               <li>أكثر من 2 مليون دج: <strong>{settings.markupTier4Percentage}%</strong></li>
             </ul>
-            <div className="mt-3 p-3 bg-white border border-indigo-100 rounded-lg text-indigo-800 font-medium">
+            <div className="mt-3 p-3 bg-white dark:bg-gray-800 border border-indigo-100 rounded-lg text-indigo-800 font-medium">
               <span className="font-bold text-indigo-900">عملية الحساب العكسي (عند تفاوض التاجر):</span><br />
               عندما يقترح التاجر سعراً نهائياً (بالفائدة)، تقوم المنصة بخصم الرسوم الثابتة ({formatCurrency(settings.orderFixedFee)}) أولاً، ثم تقوم باختبار عكسي لتحديد شريحة الربح الأصلية التي ينتمي إليها المبلغ، ومن ثم تستخرج <strong>السعر الخام</strong> لتعرضه على المورد.
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         
         {/* Search */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -231,7 +231,7 @@ export default function AdminRequests() {
               placeholder="ابحث عن طلب أو اسم التاجر..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none transition-all"
+              className="w-full pl-4 pr-10 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent outline-none transition-all"
             />
           </div>
         </div>
@@ -239,25 +239,25 @@ export default function AdminRequests() {
         {/* Requests List */}
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center p-8 text-gray-500">جاري التحميل...</div>
+            <div className="text-center p-8 text-gray-500 dark:text-gray-400">جاري التحميل...</div>
           ) : filteredRequests.length === 0 ? (
-            <div className="text-center p-8 text-gray-500">لا توجد طلبات متاحة.</div>
+            <div className="text-center p-8 text-gray-500 dark:text-gray-400">لا توجد طلبات متاحة.</div>
           ) : (
             filteredRequests.map((req) => (
-              <div key={req.id} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+              <div key={req.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800">
                 <div 
-                  className="p-5 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="p-5 flex flex-col md:flex-row items-center justify-between cursor-pointer hover:bg-gray-50 dark:bg-gray-900 transition-colors"
                   onClick={() => toggleExpand(req.id)}
                 >
                   <div className="flex-1 w-full md:w-auto">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-lg text-gray-900">{req.title}</h3>
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">{req.title}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                         req.status === 'open' ? 'bg-green-50 text-green-700' :
                         req.status === 'in_progress' ? 'bg-blue-50 text-blue-700' :
                         req.status === 'completed' ? 'bg-purple-50 text-purple-700' :
                         req.status === 'cancelled' ? 'bg-red-50 text-red-700' :
-                        'bg-gray-100 text-gray-600'
+                        'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                       }`}>
                         {req.status === 'open' ? 'مفتوح للعروض' :
                          req.status === 'in_progress' ? 'قيد التنفيذ' :
@@ -265,7 +265,7 @@ export default function AdminRequests() {
                          req.status === 'cancelled' ? 'ملغاة' : 'مغلق'}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex items-center gap-1.5">
                         <User size={16} />
                         <span>{req.merchant?.name} ({req.merchant?.company_name})</span>
@@ -282,7 +282,7 @@ export default function AdminRequests() {
                   </div>
                   
                   <div className="mt-4 md:mt-0 flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-                    <div className="text-sm font-bold text-gray-500">
+                    <div className="text-sm font-bold text-gray-500 dark:text-gray-400">
                       {req.supplier_bids?.length || 0} عروض
                     </div>
                     {expandedRequestId === req.id ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
@@ -290,7 +290,7 @@ export default function AdminRequests() {
                 </div>
 
                 {expandedRequestId === req.id && (
-                  <div className="p-5 bg-gray-50 border-t border-gray-200">
+                  <div className="p-5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
                     
                     {req.status === 'cancelled' && (
                       <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-4">
@@ -298,11 +298,11 @@ export default function AdminRequests() {
                         {req.cancellation_reason && <p className="text-sm mt-2 font-normal">سبب الإلغاء: {req.cancellation_reason}</p>}
                       </div>
                     )}
-<p className="text-sm text-gray-700 mb-4 bg-white p-4 rounded-xl border border-gray-100">
+<p className="text-sm text-gray-700 dark:text-gray-200 mb-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
                       <strong>الوصف:</strong> {req.description}
                     </p>
 
-                    <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
                       <Package size={18} className="text-[#4f46e5]" />
                       عروض الموردين
                     </h4>
@@ -313,26 +313,26 @@ export default function AdminRequests() {
                           const { rawPrice, finalTotal, isNegotiated } = getBidFinalPrices(bid, req.quantity);
                           
                           return (
-                            <div key={bid.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between gap-4">
+                            <div key={bid.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row justify-between gap-4">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <User size={16} className="text-gray-400" />
-                                  <span className="font-bold text-gray-800">{bid.supplier?.name}</span>
-                                  <span className="text-xs text-gray-500">({bid.supplier?.company_name})</span>
+                                  <span className="font-bold text-gray-800 dark:text-gray-100">{bid.supplier?.name}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">({bid.supplier?.company_name})</span>
                                   
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold mr-auto ${
                                     bid.status === 'accepted' ? 'bg-green-100 text-green-800' :
                                     bid.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
                                   }`}>
                                     {bid.status === 'accepted' ? 'مقبول' : bid.status === 'rejected' ? 'مرفوض' : 'قيد الانتظار'}
                                   </span>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                                   <div>
-                                    <p className="text-xs text-gray-500 font-bold mb-1">السعر الخام (للمورد)</p>
-                                    <p className="font-bold text-lg text-gray-900">{formatCurrency(rawPrice)}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mb-1">السعر الخام (للمورد)</p>
+                                    <p className="font-bold text-lg text-gray-900 dark:text-white">{formatCurrency(rawPrice)}</p>
                                     {isNegotiated && (
                                       <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded ml-2 font-bold">
                                         سعر مقترح
@@ -346,18 +346,18 @@ export default function AdminRequests() {
                                 </div>
 
                                 {bid.negotiated_by && bid.negotiated_by !== 'none' && (
-                                  <div className="mt-3 pt-3 border-t border-gray-100">
+                                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                                     <div className="flex gap-2 items-start text-sm">
                                       <MessageSquare size={16} className="text-orange-500 shrink-0 mt-0.5" />
                                       <div>
                                         <p className="font-bold text-orange-800">حالة التفاوض:</p>
-                                        <p className="text-gray-600">
+                                        <p className="text-gray-600 dark:text-gray-300">
                                           {bid.negotiated_by === 'merchant' && 'التاجر اقترح سعراً جديداً وفي انتظار رد المورد'}
                                           {bid.negotiated_by === 'supplier_accepted' && 'المورد قَبِل السعر المقترح من التاجر'}
                                           {bid.negotiated_by === 'supplier_rejected' && 'المورد رفض السعر المقترح من التاجر'}
                                         </p>
                                         {bid.customer_reply && (
-                                          <p className="text-gray-500 mt-1 italic">"{bid.customer_reply}"</p>
+                                          <p className="text-gray-500 dark:text-gray-400 mt-1 italic">"{bid.customer_reply}"</p>
                                         )}
                                       </div>
                                     </div>
@@ -369,7 +369,7 @@ export default function AdminRequests() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 text-center p-4 bg-white rounded-xl border border-gray-100">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
                         لا توجد عروض لهذا الطلب بعد
                       </p>
                     )}

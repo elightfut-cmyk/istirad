@@ -71,7 +71,7 @@ export default function AdminComplaints() {
       case 'resolved':
         return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">محلولة</span>;
       case 'dismissed':
-        return <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">مرفوضة</span>;
+        return <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-full text-xs font-bold">مرفوضة</span>;
       default:
         return null;
     }
@@ -94,8 +94,8 @@ export default function AdminComplaints() {
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-6">قائمة الشكاوى الواردة</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">قائمة الشكاوى الواردة</h2>
 
         {loading ? (
           <div className="text-center py-8">جاري التحميل...</div>
@@ -103,25 +103,25 @@ export default function AdminComplaints() {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="p-4 font-bold text-gray-700">تاريخ الشكوى</th>
-                  <th className="p-4 font-bold text-gray-700">التاجر (الشركة)</th>
-                  <th className="p-4 font-bold text-gray-700">نوع الشكوى</th>
-                  <th className="p-4 font-bold text-gray-700">الحالة</th>
-                  <th className="p-4 font-bold text-gray-700">التفاصيل</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">تاريخ الشكوى</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر (الشركة)</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">نوع الشكوى</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التفاصيل</th>
                 </tr>
               </thead>
               <tbody>
                 {complaints.map((complaint) => (
-                  <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                    <td className="p-4 text-gray-600" dir="ltr">
+                  <tr key={complaint.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:bg-gray-900/50">
+                    <td className="p-4 text-gray-600 dark:text-gray-300" dir="ltr">
                       {new Date(complaint.created_at).toLocaleString('ar-DZ')}
                     </td>
-                    <td className="p-4 font-medium text-gray-900">
+                    <td className="p-4 font-medium text-gray-900 dark:text-white">
                       {complaint.users?.name} <br/>
-                      <span className="text-sm text-gray-500">{complaint.users?.company_name}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{complaint.users?.company_name}</span>
                     </td>
-                    <td className="p-4 text-gray-600">{complaint.complaint_type}</td>
+                    <td className="p-4 text-gray-600 dark:text-gray-300">{complaint.complaint_type}</td>
                     <td className="p-4">
                       {getStatusBadge(complaint.status)}
                     </td>
@@ -138,7 +138,7 @@ export default function AdminComplaints() {
                 ))}
                 {complaints.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-500">
+                    <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">
                       لا توجد شكاوى حالياً
                     </td>
                   </tr>
@@ -152,49 +152,49 @@ export default function AdminComplaints() {
       {/* Modal for viewing complaint details */}
       {selectedComplaint && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <AlertTriangle className="text-orange-500" />
                 تفاصيل الشكوى
               </h3>
-              <button onClick={() => setSelectedComplaint(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => setSelectedComplaint(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-300 transition-colors">
                 <XCircle size={24} />
               </button>
             </div>
             
             <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">التاجر</p>
-                  <p className="font-bold text-gray-900">{selectedComplaint.users?.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">التاجر</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{selectedComplaint.users?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">رقم الهاتف</p>
-                  <p className="font-bold text-gray-900" dir="ltr">{selectedComplaint.users?.phone}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">رقم الهاتف</p>
+                  <p className="font-bold text-gray-900 dark:text-white" dir="ltr">{selectedComplaint.users?.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">نوع الشكوى</p>
-                  <p className="font-bold text-gray-900">{selectedComplaint.complaint_type}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">نوع الشكوى</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{selectedComplaint.complaint_type}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">تاريخ الشكوى</p>
-                  <p className="font-bold text-gray-900" dir="ltr">{new Date(selectedComplaint.created_at).toLocaleString('ar-DZ')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">تاريخ الشكوى</p>
+                  <p className="font-bold text-gray-900 dark:text-white" dir="ltr">{new Date(selectedComplaint.created_at).toLocaleString('ar-DZ')}</p>
                 </div>
               </div>
               
               <div>
-                <p className="text-sm text-gray-500 mb-2">نص الرسالة/الشكوى:</p>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 text-gray-800 whitespace-pre-wrap leading-relaxed">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">نص الرسالة/الشكوى:</p>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
                   {selectedComplaint.message}
                 </div>
               </div>
               
               {selectedComplaint.status === 'pending' && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={() => handleUpdateStatus(selectedComplaint.id, 'dismissed')}
-                    className="px-6 py-2 rounded-xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2"
+                    className="px-6 py-2 rounded-xl font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 transition-colors flex items-center gap-2"
                   >
                     <XCircle size={18} />
                     رفض / إغلاق

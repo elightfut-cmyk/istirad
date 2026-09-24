@@ -217,12 +217,12 @@ export default function AdminDashboard() {
           { title: 'إجمالي المبيعات', value: loading ? '...' : formatCurrency(stats.totalSales), color: 'text-purple-600', bg: 'bg-purple-50', icon: <ShoppingBag size={24} className="text-purple-600" /> },
           { title: 'أرباح المنصة الصافية', value: loading ? '...' : formatCurrency(platformProfits), color: 'text-emerald-600', bg: 'bg-emerald-50', icon: <TrendingUp size={24} className="text-emerald-600" /> },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+          <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-4">
             <div className={`p-4 rounded-xl ${stat.bg}`}>
               {stat.icon}
             </div>
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">{stat.title}</h3>
+              <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{stat.title}</h3>
               <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
             </div>
           </div>
@@ -230,20 +230,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* Detailed User Statistics */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">إحصاءات المستخدمين التفصيلية</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-gray-100">إحصاءات المستخدمين التفصيلية</h2>
         
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex bg-gray-100 rounded-lg p-1 w-full md:w-max">
+          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full md:w-max">
             <button 
               onClick={() => { setSelectedRole('supplier'); setSelectedUserId(''); }}
-              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
             >
               الموردين
             </button>
             <button 
               onClick={() => { setSelectedRole('merchant'); setSelectedUserId(''); }}
-              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white text-[#4f46e5] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
             >
               التجار
             </button>
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
           <select 
             value={selectedUserId} 
             onChange={e => setSelectedUserId(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 text-sm"
+            className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 text-sm"
           >
             <option value="">-- اختر {selectedRole === 'supplier' ? 'المورد' : 'التاجر'} --</option>
             {users.filter(u => u.role === selectedRole).map(u => (
@@ -262,20 +262,20 @@ export default function AdminDashboard() {
         </div>
 
         {selectedUserId && detailedStats && (
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+            <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
               سجل {selectedRole === 'supplier' ? 'المورد' : 'التاجر'}: {users.find(u => u.id === selectedUserId)?.name}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {selectedRole === 'supplier' ? (
                 <>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">إجمالي المبيعات (الطلبات المقبولة)</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalSales || 0)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">إجمالي المبيعات (الطلبات المقبولة)</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(detailedStats.totalSales || 0)}</p>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
                     <p className="text-xl font-bold text-orange-600">{formatCurrency((detailedStats as any).totalDues || 0)}</p>
                     {(detailedStats as any).totalDues > 0 && (
                       <button 
@@ -290,16 +290,16 @@ export default function AdminDashboard() {
                 </>
               ) : (
                 <>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">إجمالي المشتريات (الطلبات المقبولة)</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(detailedStats.totalPurchases || 0)}</p>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">إجمالي المشتريات (الطلبات المقبولة)</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(detailedStats.totalPurchases || 0)}</p>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">رصيد المحفظة</p>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">رصيد المحفظة</p>
                     <p className="text-xl font-bold text-teal-600">{formatCurrency(detailedStats.walletBalance)}</p>
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-sm mb-1">نقاط الولاء</p>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">نقاط الولاء</p>
                     <p className="text-xl font-bold text-purple-600">{detailedStats.loyaltyPoints} نقطة</p>
                   </div>
                 </>
@@ -309,15 +309,15 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold mb-6 text-gray-800">الالتزامات المالية للمنصة (الديون)</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-gray-100">الالتزامات المالية للمنصة (الديون)</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-orange-50 p-6 rounded-2xl shadow-sm border border-orange-100 flex items-center gap-4">
             <div className="p-4 rounded-xl bg-orange-100">
               <ShoppingBag size={24} className="text-orange-600" />
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium">مستحقات الموردين</h3>
+              <h3 className="text-gray-600 dark:text-gray-300 text-sm font-medium">مستحقات الموردين</h3>
               <p className="text-2xl font-bold mt-1 text-orange-600">{loading ? '...' : formatCurrency(obligations.supplierDues)}</p>
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
               <Users size={24} className="text-teal-600" />
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium">أرصدة محافظ المستخدمين</h3>
+              <h3 className="text-gray-600 dark:text-gray-300 text-sm font-medium">أرصدة محافظ المستخدمين</h3>
               <p className="text-2xl font-bold mt-1 text-teal-600">{loading ? '...' : formatCurrency(obligations.walletDues)}</p>
             </div>
           </div>
@@ -335,15 +335,15 @@ export default function AdminDashboard() {
               <Users size={24} className="text-purple-600" />
             </div>
             <div>
-              <h3 className="text-gray-600 text-sm font-medium">قيمة نقاط الولاء (احتياطي)</h3>
+              <h3 className="text-gray-600 dark:text-gray-300 text-sm font-medium">قيمة نقاط الولاء (احتياطي)</h3>
               <p className="text-2xl font-bold mt-1 text-purple-600">{loading ? '...' : formatCurrency(obligations.pointsDues)}</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-gray-100">
           <Settings size={24} className="text-[#4f46e5]" />
           إعدادات المنصة
         </h2>

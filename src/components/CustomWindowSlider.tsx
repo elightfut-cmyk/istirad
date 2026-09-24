@@ -28,7 +28,7 @@ export default function CustomWindowSlider() {
   return (
     <div className="w-full relative z-10 px-4 sm:px-6 lg:px-0 font-['Tajawal']">
       <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
-      <div className="w-full lg:max-w-2xl mx-auto bg-white rounded-3xl p-4 sm:p-6 relative shadow-sm">
+      <div className="w-full lg:max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-3xl p-4 sm:p-6 relative shadow-sm">
         {/* Top Badge */}
         {customWindowTopBadge && (
           <div className="absolute -top-3 right-8 bg-indigo-50 text-[#4f46e5] border border-indigo-100 px-4 py-1 rounded-full text-sm font-bold shadow-sm">
@@ -39,9 +39,9 @@ export default function CustomWindowSlider() {
         {/* Section Header */}
         <div className="mb-8 mt-6 flex justify-between items-end">
           <div>
-            {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 mb-2">{customWindowTitle}</h2>}
+            {customWindowTitle && <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">{customWindowTitle}</h2>}
             {customWindowSubtitle && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {customWindowSubtitle}
               </p>
             )}
@@ -50,10 +50,10 @@ export default function CustomWindowSlider() {
           {/* Navigation Arrows */}
           {customWindowCards.length > 2 && (
             <div className="hidden md:flex gap-2">
-              <button onClick={() => scroll('prev')} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+              <button onClick={() => scroll('prev')} className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-600 dark:text-gray-300 transition-colors">
                 <ChevronRight size={20} />
               </button>
-              <button onClick={() => scroll('next')} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+              <button onClick={() => scroll('next')} className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-600 dark:text-gray-300 transition-colors">
                 <ChevronLeft size={20} />
               </button>
             </div>
@@ -105,10 +105,10 @@ export default function CustomWindowSlider() {
                 <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#9400d3,#ff0000)] animate-[spin_4s_linear_infinite] opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
                 
                 {/* Inner content wrapper */}
-                <div className="relative h-full w-full bg-white rounded-[14px] p-3 flex flex-col z-10">
+                <div className="relative h-full w-full bg-white dark:bg-gray-800 rounded-[14px] p-3 flex flex-col z-10">
                   {/* Image */}
                   {hasImage && (
-                    <div className="w-full h-40 sm:h-48 mb-4 overflow-hidden rounded-xl border border-gray-100 flex-shrink-0 relative group-hover:shadow-inner transition-shadow">
+                    <div className="w-full h-40 sm:h-48 mb-4 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700 flex-shrink-0 relative group-hover:shadow-inner transition-shadow">
                       <img 
                         src={card.imageUrl} 
                         alt={title || "Image"}
@@ -133,14 +133,14 @@ export default function CustomWindowSlider() {
 
                   {/* Title */}
                   {title && (
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 leading-snug line-clamp-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-snug line-clamp-2">
                       {title}
                     </h3>
                   )}
 
                   {/* Subtitle */}
                   {subtitle && (
-                    <p className="text-sm text-gray-500 mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-3 leading-relaxed">
                       {subtitle}
                     </p>
                   )}

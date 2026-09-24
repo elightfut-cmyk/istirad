@@ -299,8 +299,8 @@ export default function AdminSettings() {
     <div className="space-y-8">
       {/* Facebook Pixel */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">خدمات الطرف الثالث</h3>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">خدمات الطرف الثالث</h3>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           معرف فايسبوك بيكسل (Facebook Pixel ID)
         </label>
         <div className="flex gap-4 items-center">
@@ -310,18 +310,18 @@ export default function AdminSettings() {
             value={localSettings.facebookPixelId}
             onChange={handleChange}
             placeholder="مثال: 123456789012345 (يمكنك لصق كود البيكسل كاملاً وسنستخرج الرقم تلقائياً)"
-            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
           أدخل كود البيكسل لتتبع زوار الموقع والأحداث المهمة (مثل دفع العربون). اترك الحقل فارغاً لإلغاء التتبع.
         </p>
       </div>
 
       {/* Min Quantity */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات الطلبات المخصصة</h3>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">إعدادات الطلبات المخصصة</h3>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           الحد الأدنى لكمية الطلب المخصصة (Min Request Quantity)
         </label>
         <div className="flex gap-4 items-center">
@@ -331,18 +331,18 @@ export default function AdminSettings() {
             name="minQuantity"
             value={localSettings.minQuantity}
             onChange={handleChange}
-            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-48 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
           هذا الرقم سيظهر كتوجيه أولي للتجار عند فتحهم لطلب استيراد مخصص جديد.
         </p>
       </div>
 
       {/* Exchange Rate */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات التحويل (العملة)</h3>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">إعدادات التحويل (العملة)</h3>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           سعر الصرف (1 دولار كم يساوي بالدينار)
         </label>
         <div className="flex gap-4 items-center">
@@ -353,20 +353,20 @@ export default function AdminSettings() {
             name="exchangeRate"
             value={localSettings.exchangeRate}
             onChange={handleChange}
-            className="block w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-48 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
           ملاحظة مهمة: يجب عليك إضافة عمود `exchange_rate` في قاعدة البيانات (جدول `platform_settings`) لكي يتم حفظ هذا التعديل.
         </p>
       </div>
 
       {/* Platform Fees and Referrals */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">رسوم المنصة ونظام الإحالة</h3>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">رسوم المنصة ونظام الإحالة</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               رسوم الطلبية الثابتة (دج)
             </label>
             <input
@@ -376,11 +376,11 @@ export default function AdminSettings() {
               name="orderFixedFee"
               value={localSettings.orderFixedFee}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               نسبة الربح (أقل من 100 ألف دج) %
             </label>
             <input
@@ -391,11 +391,11 @@ export default function AdminSettings() {
               name="markupTier1Percentage"
               value={localSettings.markupTier1Percentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               نسبة الربح (أقل من 500 ألف دج) %
             </label>
             <input
@@ -406,11 +406,11 @@ export default function AdminSettings() {
               name="markupTier2Percentage"
               value={localSettings.markupTier2Percentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               نسبة الربح (أقل من 2 مليون دج) %
             </label>
             <input
@@ -421,11 +421,11 @@ export default function AdminSettings() {
               name="markupTier3Percentage"
               value={localSettings.markupTier3Percentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               نسبة الربح (أكثر من 2 مليون دج) %
             </label>
             <input
@@ -436,11 +436,11 @@ export default function AdminSettings() {
               name="markupTier4Percentage"
               value={localSettings.markupTier4Percentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               نسبة عمولة التاجر المُحيل (%)
             </label>
             <input
@@ -451,16 +451,16 @@ export default function AdminSettings() {
               name="referralCommissionPercentage"
               value={localSettings.referralCommissionPercentage}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
-            <p className="text-xs text-gray-500 mt-1">تؤخذ من ربح المنصة.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">تؤخذ من ربح المنصة.</p>
           </div>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-800 mb-4 mt-8 border-b pb-2">نظام نقاط الولاء</h3>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 mt-8 border-b pb-2">نظام نقاط الولاء</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               النقاط عن كل طلب
             </label>
             <input
@@ -469,12 +469,12 @@ export default function AdminSettings() {
               name="loyaltyPointsPerOrder"
               value={localSettings.loyaltyPointsPerOrder}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
-            <p className="text-xs text-gray-500 mt-1">النقاط الممنوحة عند اكتمال الطلب.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">النقاط الممنوحة عند اكتمال الطلب.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               قيمة النقطة (دج)
             </label>
             <input
@@ -484,12 +484,12 @@ export default function AdminSettings() {
               name="loyaltyPointsToDzdRatio"
               value={localSettings.loyaltyPointsToDzdRatio}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
-            <p className="text-xs text-gray-500 mt-1">قيمة النقطة الواحدة بالدينار.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">قيمة النقطة الواحدة بالدينار.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               الحد الأدنى للتحويل
             </label>
             <input
@@ -498,17 +498,17 @@ export default function AdminSettings() {
               name="loyaltyPointsMinConversion"
               value={localSettings.loyaltyPointsMinConversion}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
-            <p className="text-xs text-gray-500 mt-1">أقل عدد نقاط يمكن تحويله.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">أقل عدد نقاط يمكن تحويله.</p>
           </div>
         </div>
       </div>
 
       {/* Product Categories */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">تصنيفات المنتجات</h3>
-        <p className="text-gray-500 text-sm mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">تصنيفات المنتجات</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
           أضف أو احذف التصنيفات التي يمكن للموردين اختيارها لمنتجاتهم والتي تظهر كفلاتر في صفحة المنتجات.
         </p>
         <div className="flex gap-2 mb-4">
@@ -526,7 +526,7 @@ export default function AdminSettings() {
                 }
               }
             }}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
           <button
             onClick={() => {
@@ -542,8 +542,8 @@ export default function AdminSettings() {
         </div>
         <div className="flex flex-wrap gap-2">
           {localSettings.productCategories.map((cat, index) => (
-            <div key={index} className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
-              <span className="text-sm font-medium text-gray-700">{cat}</span>
+            <div key={index} className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{cat}</span>
               <button
                 onClick={() => setLocalSettings(prev => ({ ...prev, productCategories: prev.productCategories.filter(c => c !== cat) }))}
                 className="text-red-500 hover:text-red-700 font-bold"
@@ -561,8 +561,8 @@ export default function AdminSettings() {
 
       {/* Chargily */}
       <div className="mt-8">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات الدفع (Chargily)</h3>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">إعدادات الدفع (Chargily)</h3>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           مفتاح Live السري (Live Secret Key)
         </label>
         <div className="flex gap-4 items-center">
@@ -572,32 +572,32 @@ export default function AdminSettings() {
             placeholder="live_sk_..."
             value={localSettings.chargilyLiveKey || ''}
             onChange={handleChange}
-            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
           إذا وضعت مفتاحاً هنا، سيتم توجيه جميع المدفوعات للبيئة الحقيقية. اتركه فارغاً للعودة للوضع التجريبي (Test).
         </p>
       </div>
 
       {/* Landing Page Images */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 mt-8 border-b pb-2">صور واجهة الموقع (Landing Page)</h3>
-        <p className="text-gray-500 text-sm mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 mt-8 border-b pb-2">صور واجهة الموقع (Landing Page)</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
           قم بتغيير الصورتين اللتين تظهران بشكل متحرك في صفحة الهبوط.
         </p>
         <div className="space-y-6">
           {/* الصورة الأولى */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-100 pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-100 dark:border-gray-700 pb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الصورة الأولى (رفع)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">الصورة الأولى (رفع)</label>
               <div className="flex gap-2">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleHeroImageUpload(e, false)}
                   disabled={uploadingImage}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
+                  className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
                 />
               </div>
               {localSettings.heroImageUrl && (
@@ -605,14 +605,14 @@ export default function AdminSettings() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة الأولى مباشرة (URL)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">أو ضع رابط الصورة الأولى مباشرة (URL)</label>
               <input
                 type="text"
                 name="heroImageUrl"
                 placeholder="https://..."
                 value={localSettings.heroImageUrl || ''}
                 onChange={handleChange}
-                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
               />
             </div>
           </div>
@@ -620,14 +620,14 @@ export default function AdminSettings() {
           {/* الصورة الثانية */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الصورة الثانية (رفع)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">الصورة الثانية (رفع)</label>
               <div className="flex gap-2">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleHeroImageUpload(e, true)}
                   disabled={uploadingImage}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
+                  className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
                 />
               </div>
               {localSettings.heroImageUrl2 && (
@@ -635,14 +635,14 @@ export default function AdminSettings() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة الثانية مباشرة (URL)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">أو ضع رابط الصورة الثانية مباشرة (URL)</label>
               <input
                 type="text"
                 name="heroImageUrl2"
                 placeholder="https://..."
                 value={localSettings.heroImageUrl2 || ''}
                 onChange={handleChange}
-                className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+                className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
               />
             </div>
           </div>
@@ -651,76 +651,76 @@ export default function AdminSettings() {
 
       {/* Ad Banner */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">الإشهار (Ad Banner)</h3>
-        <p className="text-gray-500 text-sm mb-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">الإشهار (Ad Banner)</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
           سيظهر هذا الإشهار في أعلى شاشة التاجر والمورد إذا تم إدخال "العنوان الرئيسي" على الأقل.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">العنوان الرئيسي</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">العنوان الرئيسي</label>
             <input
               type="text"
               name="adTitle"
               placeholder="مثال: خصم خاص 20% على رسوم المنصة!"
               value={localSettings.adTitle}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">العنوان الفرعي (وصف قصير)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">العنوان الفرعي (وصف قصير)</label>
             <input
               type="text"
               name="adSubtitle"
               placeholder="مثال: صالح لمدة 3 أيام فقط للتجار الجدد."
               value={localSettings.adSubtitle}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">رابط الإشهار (عند الضغط عليه)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رابط الإشهار (عند الضغط عليه)</label>
             <input
               type="text"
               name="adLinkUrl"
               placeholder="https://..."
               value={localSettings.adLinkUrl}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">صورة الإشهار (رفع)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">صورة الإشهار (رفع)</label>
             <div className="flex gap-2">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
                 disabled={uploadingImage}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
+                className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#4f46e5] file:text-white hover:file:bg-[#4338ca] transition-colors"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">أو ضع رابط الصورة مباشرة (URL)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">أو ضع رابط الصورة مباشرة (URL)</label>
             <input
               type="text"
               name="adImageUrl"
               placeholder="https://..."
               value={localSettings.adImageUrl}
               onChange={handleChange}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">
-        <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
-          <h2 className="text-lg font-bold text-gray-800">شروط الاستخدام (TOS)</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-6">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center gap-3">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">شروط الاستخدام (TOS)</h2>
         </div>
         <div className="p-6">
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
             أدخل الشروط شرطاً شرطاً. ستظهر هذه الشروط للتجار كمستطيلات يجب الموافقة عليها كل على حدة.
           </p>
           <div className="flex gap-2 mb-4">
@@ -738,7 +738,7 @@ export default function AdminSettings() {
                   }
                 }
               }}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
             />
             <button
               onClick={() => {
@@ -754,7 +754,7 @@ export default function AdminSettings() {
           </div>
           <div className="space-y-3">
             {tosTerms.map((term, index) => (
-              <div key={index} className="flex items-start gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <div key={index} className="flex items-start gap-3 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                 <span className="bg-[#4f46e5] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   {index + 1}
                 </span>
@@ -786,8 +786,8 @@ export default function AdminSettings() {
       </div>
 
       <div className="mt-8">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">رقم خدمة العملاء (واتساب)</h3>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">رقم خدمة العملاء (واتساب)</h3>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
           رقم الواتساب للتواصل
         </label>
         <div className="flex gap-4 items-center">
@@ -797,61 +797,61 @@ export default function AdminSettings() {
             placeholder="مثال: +213XXXXXXXXX"
             value={localSettings.whatsappNumber || ''}
             onChange={handleChange}
-            className="block w-full max-w-lg px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+            className="block w-full max-w-lg px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
           سيظهر هذا الرقم في زر الواتساب العائم في صفحات الموقع.
         </p>
       </div>
 
       <div className="mt-8">
-        <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">إعدادات تذييل الصفحة (الفوتر)</h3>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">إعدادات تذييل الصفحة (الفوتر)</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">وصف المنصة</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">وصف المنصة</label>
             <textarea
               name="footerDescription"
               value={localSettings.footerDescription}
               onChange={(e) => handleChange(e as any)}
-              className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white"
+              className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
               rows={3}
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط فيسبوك</label>
-              <input type="text" name="footerFacebook" value={localSettings.footerFacebook} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رابط فيسبوك</label>
+              <input type="text" name="footerFacebook" value={localSettings.footerFacebook} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">رابط تويتر (X)</label>
-              <input type="text" name="footerTwitter" value={localSettings.footerTwitter} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">رابط تويتر (X)</label>
+              <input type="text" name="footerTwitter" value={localSettings.footerTwitter} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">رابط تلغرام</label>
-              <input type="text" name="footerTelegram" value={localSettings.footerTelegram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">رابط تلغرام</label>
+              <input type="text" name="footerTelegram" value={localSettings.footerTelegram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط انستغرام</label>
-              <input type="text" name="footerInstagram" value={localSettings.footerInstagram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رابط انستغرام</label>
+              <input type="text" name="footerInstagram" value={localSettings.footerInstagram} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط لينكد إن</label>
-              <input type="text" name="footerLinkedin" value={localSettings.footerLinkedin} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رابط لينكد إن</label>
+              <input type="text" name="footerLinkedin" value={localSettings.footerLinkedin} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
-              <input type="text" name="footerAddress" value={localSettings.footerAddress} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">العنوان</label>
+              <input type="text" name="footerAddress" value={localSettings.footerAddress} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-              <input type="text" name="footerPhone" value={localSettings.footerPhone} onChange={handleChange} dir="ltr" className="block w-full text-right px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">رقم الهاتف</label>
+              <input type="text" name="footerPhone" value={localSettings.footerPhone} onChange={handleChange} dir="ltr" className="block w-full text-right px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
-              <input type="email" name="footerEmail" value={localSettings.footerEmail} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 focus:bg-white" />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">البريد الإلكتروني</label>
+              <input type="email" name="footerEmail" value={localSettings.footerEmail} onChange={handleChange} className="block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800" />
             </div>
           </div>
         </div>

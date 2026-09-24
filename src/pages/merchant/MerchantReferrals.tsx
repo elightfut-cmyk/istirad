@@ -81,17 +81,17 @@ export default function MerchantReferrals() {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-[#4f46e5] text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white dark:bg-gray-800 opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <h3 className="text-green-100 text-sm font-medium">إجمالي الأرباح من الإحالات</h3>
           <p className="text-4xl font-black mt-2">{formatCurrency(stats.totalCommissions)}</p>
           <div className="mt-4 text-green-100 text-sm">تُضاف الأرباح مباشرة إلى محفظتك المالية</div>
         </div>
         
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">إجمالي المدعوين</h3>
-              <p className="text-4xl font-bold mt-2 text-gray-800">{stats.totalReferred}</p>
+              <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">إجمالي المدعوين</h3>
+              <p className="text-4xl font-bold mt-2 text-gray-800 dark:text-gray-100">{stats.totalReferred}</p>
             </div>
             <div className="bg-blue-50 p-4 rounded-xl text-blue-600">
               <Users size={32} />
@@ -100,14 +100,14 @@ export default function MerchantReferrals() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">رابط الدعوة الخاص بك</h2>
-        <p className="text-gray-500 text-sm mb-6">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">رابط الدعوة الخاص بك</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
           شارك هذا الرابط مع أشخاص آخرين لدعوتهم للتسجيل. ستحصل على مكافأة قدرها <strong>2000 دج</strong> لمرة واحدة عندما يقوم الشخص الذي دعوته بإتمام أول طلب له بنجاح. يمكنك دعوة عدد غير محدود من الأشخاص وكسب 2000 دج عن كل شخص!
         </p>
         
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-600 text-sm overflow-x-auto">
+          <div className="flex-1 flex items-center bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-600 dark:text-gray-300 text-sm overflow-x-auto">
             <LinkIcon size={16} className="mr-2 flex-shrink-0 text-gray-400" />
             {referralLink}
           </div>
@@ -132,10 +132,10 @@ export default function MerchantReferrals() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold text-gray-800 mb-6">سجل المدعوين</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6">سجل المدعوين</h2>
         {loading ? (
-          <div className="text-center py-12 text-gray-500">جاري تحميل السجل...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري تحميل السجل...</div>
         ) : referralsList.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <Users size={48} className="mx-auto mb-4 opacity-20" />
@@ -145,7 +145,7 @@ export default function MerchantReferrals() {
           <div className="overflow-x-auto">
             <table className="w-full text-right whitespace-nowrap">
               <thead>
-                <tr className="border-b border-gray-100 text-gray-500 text-sm">
+                <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm">
                   <th className="pb-4 font-medium">اسم المستخدم / المتجر</th>
                   <th className="pb-4 font-medium">النوع</th>
                   <th className="pb-4 font-medium">تاريخ التسجيل</th>
@@ -154,10 +154,10 @@ export default function MerchantReferrals() {
               </thead>
               <tbody>
                 {referralsList.map((refUser) => (
-                  <tr key={refUser.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                  <tr key={refUser.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                     <td className="py-4">
-                      <div className="font-bold text-gray-900">{refUser.name}</div>
-                      <div className="text-xs text-gray-500">{refUser.company_name}</div>
+                      <div className="font-bold text-gray-900 dark:text-white">{refUser.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{refUser.company_name}</div>
                     </td>
                     <td className="py-4">
                       <span className={`px-2 py-1 rounded-md text-xs font-bold ${
@@ -166,7 +166,7 @@ export default function MerchantReferrals() {
                         {refUser.role === 'merchant' ? 'تاجر' : 'مورد'}
                       </span>
                     </td>
-                    <td className="py-4 text-sm text-gray-600">
+                    <td className="py-4 text-sm text-gray-600 dark:text-gray-300">
                       {new Date(refUser.created_at).toLocaleDateString('ar-MA')}
                     </td>
                     <td className="py-4">

@@ -47,7 +47,7 @@ export default function CountdownCircle({ depositPaidAt, onCancel, cancelling = 
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gray-50 p-4 rounded-xl border border-orange-200 w-full mb-4">
+    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-orange-200 w-full mb-4">
       <div className="flex items-center gap-4 w-full">
         <div className="relative w-20 h-20 shrink-0">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
@@ -74,7 +74,7 @@ export default function CountdownCircle({ depositPaidAt, onCancel, cancelling = 
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {timeLeft && (
-              <span className="text-[10px] font-bold text-gray-700 mt-1 whitespace-nowrap" style={{ direction: 'ltr' }}>
+              <span className="text-[10px] font-bold text-gray-700 dark:text-gray-200 mt-1 whitespace-nowrap" style={{ direction: 'ltr' }}>
                 {timeLeft.hours.toString().padStart(2, '0')}:{timeLeft.minutes.toString().padStart(2, '0')}:{timeLeft.seconds.toString().padStart(2, '0')}
               </span>
             )}

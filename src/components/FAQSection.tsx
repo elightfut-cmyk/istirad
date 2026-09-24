@@ -36,20 +36,20 @@ export default function FAQSection() {
 
   return (
     <section className="w-full relative z-10 px-4 sm:px-6 lg:px-0">
-      <div className="w-full bg-white rounded-3xl p-6 sm:p-8 relative shadow-sm" id="faq">
+      <div className="w-full bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 relative shadow-sm" id="faq">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">الأسئلة الشائعة</h2>
-          <p className="text-lg text-gray-600">إليك بعض الإجابات على الأسئلة التي قد تراودك</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">الأسئلة الشائعة</h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300">إليك بعض الإجابات على الأسئلة التي قد تراودك</p>
         </div>
         
-        <div className="max-w-3xl mx-auto divide-y divide-gray-200">
+        <div className="max-w-3xl mx-auto divide-y divide-gray-200 dark:divide-gray-700">
           {faqs.map((faq, index) => (
             <div key={faq.id} className="py-6">
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="flex w-full items-center justify-between text-right focus:outline-none"
               >
-                <span className="text-lg font-medium text-gray-900">{faq.question}</span>
+                <span className="text-lg font-medium text-gray-900 dark:text-white">{faq.question}</span>
                 {openIndex === index ? (
                   <ChevronUp className="h-5 w-5 text-indigo-600 ml-2" />
                 ) : (
@@ -59,7 +59,7 @@ export default function FAQSection() {
               {openIndex === index && (
                 <div className="mt-4 pr-7">
                   <div 
-                    className="text-base text-gray-600" 
+                    className="text-base text-gray-600 dark:text-gray-300" 
                     dangerouslySetInnerHTML={{ __html: faq.answer }}
                   />
                 </div>

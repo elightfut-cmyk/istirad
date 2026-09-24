@@ -87,8 +87,8 @@ export default function SupplierDashboard() {
           { title: 'العروض المعلقة', value: stats.pending.toString(), color: 'text-orange-500' },
           { title: 'المنتجات النشطة', value: stats.products.toString(), color: 'text-blue-600' },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h3 className="text-gray-500 text-sm font-medium">{stat.title}</h3>
+          <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{stat.title}</h3>
             <p className={`text-3xl font-bold mt-2 ${stat.color}`}>
               {loading ? '...' : stat.value}
             </p>
@@ -141,24 +141,24 @@ export default function SupplierDashboard() {
         </div>
         
         {calcAmount !== '' && Number(calcAmount) > 0 && (
-          <div className="bg-white p-5 rounded-xl border border-indigo-200 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-indigo-200 shadow-sm">
             {calcMode === 'rawToFinal' ? (() => {
               const finalPricing = calculateFinalPrice(Number(calcAmount), calcQty, settings);
               return (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">السعر الإجمالي الخام:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر الإجمالي الخام:</p>
                     <p className="font-bold">{formatCurrency(finalPricing.supplierTotal)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">نسبة المنصة المطبقة:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">نسبة المنصة المطبقة:</p>
                     <p className="font-bold text-orange-600">{(finalPricing.markupPercentage * 100).toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">رسوم الطلب الثابتة:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رسوم الطلب الثابتة:</p>
                     <p className="font-bold">{formatCurrency(settings.orderFixedFee)}</p>
                   </div>
-                  <div className="md:col-span-3 pt-3 border-t border-gray-100 flex justify-between items-center bg-indigo-50/30 p-3 rounded-lg">
+                  <div className="md:col-span-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-indigo-50/30 p-3 rounded-lg">
                     <span className="font-bold text-indigo-900">السعر النهائي للتاجر (للقطعة):</span>
                     <span className="text-xl font-black text-[#4f46e5]">{formatCurrency(finalPricing.finalItemPrice)}</span>
                   </div>
@@ -170,18 +170,18 @@ export default function SupplierDashboard() {
               return (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">السعر النهائي الإجمالي:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر النهائي الإجمالي:</p>
                     <p className="font-bold">{formatCurrency(Number(calcAmount) * calcQty)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">ربح المنصة الإجمالي (تقريبي):</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">ربح المنصة الإجمالي (تقريبي):</p>
                     <p className="font-bold text-orange-600">{formatCurrency(finalPricing.platformProfit)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">رسوم الطلب الثابتة المخصومة:</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">رسوم الطلب الثابتة المخصومة:</p>
                     <p className="font-bold">{formatCurrency(settings.orderFixedFee)}</p>
                   </div>
-                  <div className="md:col-span-3 pt-3 border-t border-gray-100 flex justify-between items-center bg-green-50/50 p-3 rounded-lg border-green-100">
+                  <div className="md:col-span-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-green-50/50 p-3 rounded-lg border-green-100">
                     <span className="font-bold text-green-900">السعر الصافي (الخام) للمورد (للقطعة):</span>
                     <span className="text-xl font-black text-green-700">{formatCurrency(rawUnitPrice)}</span>
                   </div>
@@ -195,19 +195,19 @@ export default function SupplierDashboard() {
           <p className="font-bold text-indigo-900 mb-2">كيف يتم حساب الأسعار والفوائد؟</p>
           <p><strong>1. السعر الخام:</strong> هو السعر الصافي الذي تطلبه أنت كمورد (سعر القطعة الخام × الكمية).</p>
           <p><strong>2. السعر بالفائدة (للتاجر):</strong> السعر الخام + <strong>نسبة ربح المنصة</strong> + <strong>رسوم ثابتة ({formatCurrency(settings.orderFixedFee)})</strong>.</p>
-          <div className="mt-3 p-3 bg-white border border-indigo-100 rounded-lg text-indigo-800 font-medium">
+          <div className="mt-3 p-3 bg-white dark:bg-gray-800 border border-indigo-100 rounded-lg text-indigo-800 font-medium">
             <span className="font-bold text-indigo-900">عملية التفاوض:</span><br />
             عند تفاوض التاجر، يقوم النظام تلقائياً بالحساب العكسي ويعرض لك "السعر الخام" الصافي مباشرة. يمكنك استخدام الأداة أعلاه متى ما أردت محاكاة أسعار مختلفة بحرية لمعرفة الفوارق بين السعر الخام والسعر النهائي.
           </div>
         </div>
       </div>
       
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">أحدث الطلبات الواردة (الصفقات الناجحة)</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">أحدث الطلبات الواردة (الصفقات الناجحة)</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-right whitespace-nowrap">
             <thead>
-              <tr className="border-b border-gray-100 text-gray-500 text-sm">
+              <tr className="border-b border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm">
                 <th className="pb-3 font-medium">الطلب / السلعة</th>
                 <th className="pb-3 font-medium">التاجر</th>
                 <th className="pb-3 font-medium">إجمالي الصفقة</th>
@@ -219,9 +219,9 @@ export default function SupplierDashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="py-8 text-center text-gray-500">جاري التحميل...</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td></tr>
               ) : recentOrders.length === 0 ? (
-                <tr><td colSpan={7} className="py-8 text-center text-gray-500">لا توجد طلبات واردة بعد.</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-gray-500 dark:text-gray-400">لا توجد طلبات واردة بعد.</td></tr>
               ) : (
                 recentOrders.map((order) => {
                   const advancePaid = (order.price * (order.advance_percentage || 0)) / 100;
@@ -239,14 +239,14 @@ export default function SupplierDashboard() {
                       )}
                     </td>
                     <td className="py-4 text-sm font-medium">{merchantName}</td>
-                    <td className="py-4 text-sm text-gray-900 font-bold">{formatCurrency(order.price)}</td>
+                    <td className="py-4 text-sm text-gray-900 dark:text-white font-bold">{formatCurrency(order.price)}</td>
                     <td className="py-4 text-sm text-[#4f46e5] font-bold">{formatCurrency(advancePaid)}</td>
                     <td className="py-4 text-sm">
                       <span className={`font-bold ${order.is_fully_paid || order.shipping_status === 'delivered' ? 'text-green-600' : 'text-red-600'}`}>
                         {order.is_fully_paid || order.shipping_status === 'delivered' ? 'تم الدفع' : formatCurrency(remainingAmount)}
                       </span>
                     </td>
-                    <td className="py-4 text-sm text-gray-500">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
+                    <td className="py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</td>
                     <td className="py-4 text-sm">
                       <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-medium">
                         تم التأكيد والدفع

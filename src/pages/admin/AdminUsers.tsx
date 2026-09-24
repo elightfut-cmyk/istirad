@@ -153,7 +153,7 @@ export default function AdminUsers() {
         { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <div className="relative w-full md:w-96">
             <input
@@ -161,7 +161,7 @@ export default function AdminUsers() {
               placeholder="ابحث بالاسم، الإيميل، أو الشركة..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
@@ -170,7 +170,7 @@ export default function AdminUsers() {
             <select 
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+              className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
             >
               <option value="all">كل الأدوار</option>
               <option value="merchant">التجار</option>
@@ -182,31 +182,31 @@ export default function AdminUsers() {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-y border-gray-100">
-                <th className="p-4 font-bold text-gray-700">المستخدم</th>
-                <th className="p-4 font-bold text-gray-700">الشركة</th>
-                <th className="p-4 font-bold text-gray-700">الدور</th>
-                <th className="p-4 font-bold text-gray-700">الرصيد / النقاط</th>
-                <th className="p-4 font-bold text-gray-700">الحالة</th>
-                <th className="p-4 font-bold text-gray-700 text-center">الإجراءات</th>
+              <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المستخدم</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الشركة</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الدور</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الرصيد / النقاط</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">الإجراءات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                  <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">لم يتم العثور على مستخدمين.</td>
+                  <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على مستخدمين.</td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={u.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                     <td className="p-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-800">{u.name}</p>
+                          <p className="font-bold text-gray-800 dark:text-gray-100">{u.name}</p>
                           {u.verification_badge === 'blue' && (
                             <BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" />
                           )}
@@ -214,15 +214,15 @@ export default function AdminUsers() {
                             <BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" />
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">{u.email}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
                         <p className="text-xs text-gray-400">{u.phone}</p>
                       </div>
                     </td>
-                    <td className="p-4 text-gray-600">{u.company_name || '-'}</td>
+                    <td className="p-4 text-gray-600 dark:text-gray-300">{u.company_name || '-'}</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                         u.role === 'merchant' ? 'bg-blue-50 text-blue-700' : 
-                        u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-700'
+                        u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
                       }`}>
                         {u.role === 'merchant' ? 'تاجر' : u.role === 'supplier' ? 'مورد' : 'أدمن'}
                       </span>

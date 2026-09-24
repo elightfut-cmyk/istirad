@@ -121,7 +121,7 @@ export default function AdminCoupons() {
         { label: 'الإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex justify-between items-center mb-6">
           <div className="relative w-full md:w-96">
             <input
@@ -129,7 +129,7 @@ export default function AdminCoupons() {
               placeholder="ابحث بالكود أو اسم المشهر..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
@@ -150,35 +150,35 @@ export default function AdminCoupons() {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-y border-gray-100">
-                <th className="p-4 font-bold text-gray-700">الكود</th>
-                <th className="p-4 font-bold text-gray-700">المشهر / المسوق</th>
-                <th className="p-4 font-bold text-gray-700">الخصم (من العمولة)</th>
-                <th className="p-4 font-bold text-gray-700">مرات الاستخدام</th>
-                <th className="p-4 font-bold text-gray-700">الحالة</th>
-                <th className="p-4 font-bold text-gray-700 text-center">الإجراءات</th>
+              <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الكود</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المشهر / المسوق</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الخصم (من العمولة)</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">مرات الاستخدام</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">الإجراءات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">جاري التحميل...</td>
+                  <td colSpan={6} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
                 </tr>
               ) : filteredCoupons.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">لا توجد كوبونات</td>
+                  <td colSpan={6} className="p-8 text-center text-gray-500 dark:text-gray-400">لا توجد كوبونات</td>
                 </tr>
               ) : (
                 filteredCoupons.map((coupon) => (
-                  <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={coupon.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                     <td className="p-4">
                       <span className="font-bold text-[#4f46e5] bg-indigo-50 px-3 py-1 rounded-lg tracking-wider">
                         {coupon.code}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-700">{coupon.advertiser_name || '-'}</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-200">{coupon.advertiser_name || '-'}</td>
                     <td className="p-4 font-bold text-green-600">{coupon.discount_percentage}%</td>
-                    <td className="p-4 font-bold text-gray-700">{coupon.usage_count} مرات</td>
+                    <td className="p-4 font-bold text-gray-700 dark:text-gray-200">{coupon.usage_count} مرات</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                         coupon.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
@@ -229,22 +229,22 @@ export default function AdminCoupons() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">{editingCoupon ? 'تعديل الكوبون' : 'إضافة كوبون جديد'}</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{editingCoupon ? 'تعديل الكوبون' : 'إضافة كوبون جديد'}</h2>
             <form onSubmit={handleSaveCoupon} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">كود الكوبون</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">كود الكوبون</label>
                 <input
                   type="text"
                   required
                   value={formData.code}
                   onChange={e => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:outline-none uppercase"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:outline-none uppercase"
                   placeholder="مثال: JIIBHA2026"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">نسبة الخصم (من عمولة المنصة) %</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">نسبة الخصم (من عمولة المنصة) %</label>
                 <input
                   type="number"
                   required
@@ -252,16 +252,16 @@ export default function AdminCoupons() {
                   max="100"
                   value={formData.discount_percentage}
                   onChange={e => setFormData({ ...formData, discount_percentage: parseFloat(e.target.value) })}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:outline-none"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المشهر / المسوق (اختياري)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">اسم المشهر / المسوق (اختياري)</label>
                 <input
                   type="text"
                   value={formData.advertiser_name}
                   onChange={e => setFormData({ ...formData, advertiser_name: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#4f46e5] focus:outline-none"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:outline-none"
                   placeholder="مثال: أحمد للتسويق"
                 />
               </div>
@@ -270,7 +270,7 @@ export default function AdminCoupons() {
                 <button type="submit" className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition">
                   حفظ
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="px-6 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                <button type="button" onClick={() => setShowModal(false)} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
                   إلغاء
                 </button>
               </div>

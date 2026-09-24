@@ -226,12 +226,12 @@ export default function SupplierOrders() {
   const renderOrderList = (list: any[]) => {
     if (list.length === 0) {
       return (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShoppingBag size={40} className="text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">لا توجد طلبات واردة</h3>
-          <p className="text-gray-500 max-w-md mx-auto">
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-2">لا توجد طلبات واردة</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
             بمجرد قيام التجار بشراء منتجاتك وتأكيد عروضك، ستظهر طلباتهم هنا للمراجعة والمعالجة.
           </p>
         </div>
@@ -245,28 +245,28 @@ export default function SupplierOrders() {
       const remaining = order.price - advancePaid;
 
       return (
-        <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+        <div key={order.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
           <div className="flex flex-col md:flex-row">
-            <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100 flex flex-col">
+            <div className="p-6 md:w-2/3 border-b md:border-b-0 md:border-l border-gray-100 dark:border-gray-700 flex flex-col">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-bold text-xl text-gray-900 mb-2">{req?.title?.replace('طلب مباشر: ', '')}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">{req?.description}</p>
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-2">{req?.title?.replace('طلب مباشر: ', '')}</h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">{req?.description}</p>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1 ${order.status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
                 {order.status === 'pending' ? <><Clock size={14} /> بانتظار العربون</> : <><CheckCircle2 size={14} /> مؤكد (تم دفع العربون)</>}
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-sm mt-auto bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div className="flex flex-wrap items-center gap-4 text-sm mt-auto bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
               <div>
-                <span className="block text-gray-500 text-xs mb-1">الكمية المطلوبة</span>
-                <span className="font-bold text-gray-900">{req?.quantity} وحدة</span>
+                <span className="block text-gray-500 dark:text-gray-400 text-xs mb-1">الكمية المطلوبة</span>
+                <span className="font-bold text-gray-900 dark:text-white">{req?.quantity} وحدة</span>
               </div>
               <div className="w-px h-8 bg-gray-200 hidden md:block"></div>
               <div>
-                <span className="block text-gray-500 text-xs mb-1">تاريخ الطلب</span>
-                <span className="font-bold text-gray-900">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                <span className="block text-gray-500 dark:text-gray-400 text-xs mb-1">تاريخ الطلب</span>
+                <span className="font-bold text-gray-900 dark:text-white">{new Date(order.created_at).toLocaleString('en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}</span>
               </div>
 
               <div className="flex gap-2 ml-auto">
@@ -284,12 +284,12 @@ export default function SupplierOrders() {
             </div>
           </div>
 
-          <div className="p-6 md:w-1/3 bg-gray-50 flex flex-col justify-center">
-            <h4 className="font-bold text-gray-800 mb-4 border-b pb-2">تفاصيل الدفع</h4>
+          <div className="p-6 md:w-1/3 bg-gray-50 dark:bg-gray-900 flex flex-col justify-center">
+            <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">تفاصيل الدفع</h4>
 
-            <div className="bg-white p-3 rounded-xl border border-gray-100 mb-4">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 mb-4">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-500">إجمالي الصفقة:</span>
+                <span className="text-gray-500 dark:text-gray-400">إجمالي الصفقة:</span>
                 <span className="font-bold">{formatCurrency(order.price)}</span>
               </div>
               <div className="flex justify-between text-sm mb-2">
@@ -297,14 +297,14 @@ export default function SupplierOrders() {
                 <span className="font-bold text-green-600">{formatCurrency(advancePaid)}</span>
               </div>
               <div className="flex justify-between text-sm pt-2 border-t border-gray-50">
-                <span className="text-gray-500">المبلغ المتبقي:</span>
+                <span className="text-gray-500 dark:text-gray-400">المبلغ المتبقي:</span>
                 <span className={`font-bold ${order.is_fully_paid ? 'text-green-600' : 'text-orange-600'}`}>
                   {order.is_fully_paid ? 'تم دفع المبلغ كاملا' : formatCurrency(remaining)}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 border-t border-gray-100 pt-4 flex flex-col gap-2">
+            <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4 flex flex-col gap-2">
               {(() => {
                 const now = new Date();
                 const lastReminder = order.last_reminder_at ? new Date(order.last_reminder_at) : null;
@@ -344,7 +344,7 @@ export default function SupplierOrders() {
             </div>
 
             {order.status === 'accepted' && order.deposit_paid_at && (
-              <div className="mt-4 border-t border-gray-100 pt-4">
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                 <CountdownCircle
                   depositPaidAt={order.deposit_paid_at}
                   onCancel={() => handleCancelDealWithRefund(order.id)}
@@ -354,9 +354,9 @@ export default function SupplierOrders() {
             )}
 
             {order.status === 'accepted' && (
-              <div className="mt-4 border-t border-gray-100 pt-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">تحديث حالة الشحن والتوصيل (انقر لتحديث الحالة)</label>
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">تحديث حالة الشحن والتوصيل (انقر لتحديث الحالة)</label>
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                   <OrderProgressBar
                     bidId={order.id}
                     currentStatus={order.shipping_status || (order.custom_requests?.request_type === 'direct' ? 'processing' : 'pending_in_china')}
@@ -369,7 +369,7 @@ export default function SupplierOrders() {
             )}
 
             {order.shipping_status === 'delivered' && (
-              <div className="mt-4 border-t border-gray-100 pt-4">
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                 <button
                   onClick={() => handleHideOrder(order.id)}
                   className="w-full bg-red-50 text-red-600 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition border border-red-200"
@@ -383,20 +383,20 @@ export default function SupplierOrders() {
           </div>
           
           {/* Footer for Merchant Details */}
-          <div className="bg-blue-50/30 border-t border-gray-100 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
-            <div className="flex items-center gap-2 text-gray-800">
+          <div className="bg-blue-50/30 border-t border-gray-100 dark:border-gray-700 p-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-wrap">
+            <div className="flex items-center gap-2 text-gray-800 dark:text-gray-100">
               <Store size={18} className="text-[#4f46e5]" />
               <span className="font-bold text-sm">{merchant?.company_name}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <User size={18} className="text-gray-400" />
               <span className="text-sm font-medium">{merchant?.name}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <MapPin size={18} className="text-gray-400" />
               <span className="text-sm font-medium">{merchant?.address || 'غير متوفر'}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <Phone size={18} className="text-gray-400" />
               <span className="text-sm font-medium" dir="ltr">{merchant?.phone || 'غير متوفر'}</span>
             </div>
@@ -418,19 +418,19 @@ export default function SupplierOrders() {
       ]}
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">الطلبات الواردة</h2>
-        <p className="text-gray-500 mt-1">تتبع وإدارة طلبات الشراء المؤكدة من التجار (الصفقات الناجحة)</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">الطلبات الواردة</h2>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">تتبع وإدارة طلبات الشراء المؤكدة من التجار (الصفقات الناجحة)</p>
       </div>
 
       <div className="relative">
         {user?.status === 'pending' && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200">
-            <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md mx-4">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl text-center max-w-md mx-4">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ShoppingBag size={32} className="text-orange-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">حسابك قيد المراجعة</h3>
-              <p className="text-gray-500">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">حسابك قيد المراجعة</h3>
+              <p className="text-gray-500 dark:text-gray-400">
                 لا يمكنك الاطلاع على الطلبات أو إدارتها حتى يتم مراجعة حسابك وقبوله من قِبل الإدارة.
               </p>
             </div>
@@ -438,17 +438,17 @@ export default function SupplierOrders() {
         )}
         <div className={`${user?.status === 'pending' ? 'pointer-events-none select-none opacity-50 blur-sm' : ''}`}>
 
-          <div className="flex border-b border-gray-200 mb-6">
+          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
             <button
               onClick={() => setActiveTab('direct')}
-              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
                 }`}
             >
               الطلبات المباشرة الواردة
             </button>
             <button
               onClick={() => setActiveTab('custom')}
-              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 hover:text-gray-700'
+              className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
                 }`}
             >
               مناقصاتي الرابحة
@@ -457,7 +457,7 @@ export default function SupplierOrders() {
 
           <div className="space-y-6">
             {loading ? (
-              <div className="text-center py-12 text-gray-500">جاري التحميل...</div>
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">جاري التحميل...</div>
             ) : activeTab === 'direct' ? (
               renderOrderList(directOrders)
             ) : (

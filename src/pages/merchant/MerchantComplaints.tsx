@@ -81,26 +81,26 @@ export default function MerchantComplaints() {
       ]}
     >
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="bg-orange-50 p-6 border-b border-orange-100 flex items-center gap-4">
             <div className="w-12 h-12 bg-orange-100 text-orange-500 rounded-xl flex items-center justify-center">
               <AlertTriangle size={28} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-gray-900">تقديم شكوى أو استفسار</h2>
-              <p className="text-gray-600 mt-1">نحن هنا لمساعدتك. يرجى تزويدنا بالتفاصيل لنتمكن من حل المشكلة في أسرع وقت.</p>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-white">تقديم شكوى أو استفسار</h2>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">نحن هنا لمساعدتك. يرجى تزويدنا بالتفاصيل لنتمكن من حل المشكلة في أسرع وقت.</p>
             </div>
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">
                 نوع الشكوى / الموضوع
               </label>
               <select
                 value={complaintType}
                 onChange={(e) => setComplaintType(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-colors"
                 required
               >
                 <option value="تأخر الطلب">تأخر الطلب</option>
@@ -113,13 +113,13 @@ export default function MerchantComplaints() {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">
                 التفاصيل
               </label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full h-40 px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-colors resize-none"
+                className="w-full h-40 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-colors resize-none"
                 placeholder="يرجى كتابة كافة التفاصيل المتعلقة بمشكلتك ليتسنى لنا مساعدتك بشكل أفضل..."
                 required
               />

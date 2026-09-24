@@ -35,7 +35,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full relative z-10 px-4 sm:px-6 lg:px-0">
-      <div className="w-full bg-white rounded-t-3xl sm:rounded-3xl border border-gray-100 shadow-sm pt-16 pb-8 px-8">
+      <div className="w-full bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm pt-16 pb-8 px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand & About */}
           <div className="col-span-1 md:col-span-1">
@@ -46,33 +46,33 @@ export default function Footer() {
               <span className="text-2xl font-black text-[#4f46e5]">جيبها-jiibha</span>
             </Link>
             {settings.footerDescription && (
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 {settings.footerDescription}
               </p>
             )}
             <div className="flex items-center gap-4">
               {settings.footerFacebook && (
-                <a href={settings.footerFacebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                <a href={settings.footerFacebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Facebook size={20} />
                 </a>
               )}
               {settings.footerTwitter && (
-                <a href={settings.footerTwitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                <a href={settings.footerTwitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Twitter size={20} />
                 </a>
               )}
               {settings.footerTelegram && (
-                <a href={settings.footerTelegram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                <a href={settings.footerTelegram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Send size={18} className="mr-1 mt-0.5" />
                 </a>
               )}
               {settings.footerInstagram && (
-                <a href={settings.footerInstagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                <a href={settings.footerInstagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Instagram size={20} />
                 </a>
               )}
               {settings.footerLinkedin && (
-                <a href={settings.footerLinkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-[#4f46e5] hover:text-white transition-colors">
+                <a href={settings.footerLinkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[#4f46e5] hover:text-white transition-colors">
                   <Linkedin size={20} />
                 </a>
               )}
@@ -81,25 +81,25 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-6 relative inline-block">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 relative inline-block">
               روابط سريعة
               <span className="absolute -bottom-2 right-0 w-1/2 h-1 bg-[#4f46e5] rounded-full"></span>
             </h3>
             <ul className="space-y-4">
               <li>
-                <Link to="/" className="text-gray-600 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
+                <Link to="/" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                   الرئيسية
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="text-gray-600 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
+                <Link to="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                   تسجيل الدخول
                 </Link>
               </li>
               <li>
-                <Link to="/register" className="text-gray-600 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
+                <Link to="/register" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                   انضم إلينا
                 </Link>
@@ -109,14 +109,14 @@ export default function Footer() {
 
           {/* Dynamic Pages */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-6 relative inline-block">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 relative inline-block">
               معلومات تهمك
               <span className="absolute -bottom-2 right-0 w-1/2 h-1 bg-[#4f46e5] rounded-full"></span>
             </h3>
             <ul className="space-y-4">
               {pages.map((page) => (
                 <li key={page.id}>
-                  <Link to={`/page/${page.slug}`} className="text-gray-600 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
+                  <Link to={`/page/${page.slug}`} className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] transition-colors flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
                     {page.title}
                   </Link>
@@ -127,25 +127,25 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-6 relative inline-block">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 relative inline-block">
               تواصل معنا
               <span className="absolute -bottom-2 right-0 w-1/2 h-1 bg-[#4f46e5] rounded-full"></span>
             </h3>
             <ul className="space-y-4">
               {settings.footerAddress && (
-                <li className="flex items-start gap-3 text-gray-600">
+                <li className="flex items-start gap-3 text-gray-600 dark:text-gray-300">
                   <MapPin size={20} className="text-[#4f46e5] shrink-0 mt-0.5" />
                   <span>{settings.footerAddress}</span>
                 </li>
               )}
               {settings.footerPhone && (
-                <li className="flex items-center gap-3 text-gray-600">
+                <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Phone size={20} className="text-[#4f46e5] shrink-0" />
                   <span dir="ltr">{settings.footerPhone}</span>
                 </li>
               )}
               {settings.footerEmail && (
-                <li className="flex items-center gap-3 text-gray-600">
+                <li className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                   <Mail size={20} className="text-[#4f46e5] shrink-0" />
                   <span>{settings.footerEmail}</span>
                 </li>
@@ -155,11 +155,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-sm">
+        <div className="pt-8 border-t border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             جميع الحقوق محفوظة &copy; {new Date().getFullYear()} منصة جيبها.
           </p>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
             <span>صنع بكل حب في الجزائر</span>
           </div>
         </div>

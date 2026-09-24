@@ -111,15 +111,41 @@ export default function AdminAlibabaSearch() {
       const lensData = await lensResponse.json();
       
       let pUrl = '';
-      if (Array.isArray(lensData) && lensData.length > 0) {
-        pUrl = lensData[0].productUrl;
-      } else if (lensData && lensData.data && Array.isArray(lensData.data) && lensData.data.length > 0) {
-        pUrl = lensData.data[0].productUrl;
-      } else {
-        throw new Error('لم يتم العثور على منتجات مشابهة لهذه الصورة.');
+      
+      // Aggressive extraction of items from various possible API response structures
+      let items = [];
+      if (Array.isArray(lensData)) {
+        items = lensData;
+      } else if (lensData.data && Array.isArray(lensData.data)) {
+        items = lensData.data;
+      } else if (lensData.data && Array.isArray(lensData.data.items)) {
+        items = lensData.data.items;
+      } else if (lensData.items && Array.isArray(lensData.items)) {
+        items = lensData.items;
+      } else if (lensData.result && Array.isArray(lensData.result)) {
+        items = lensData.result;
+      } else if (lensData.result && Array.isArray(lensData.result.items)) {
+        items = lensData.result.items;
       }
 
-      if (!pUrl) throw new Error('حدث خطأ في استخراج رابط المنتج.');
+      if (items.length > 0) {
+        // Try to find the first item that has a productUrl or itemUrl or url
+        const match = items.find(i => i.productUrl || i.itemUrl || i.url);
+        if (match) {
+          pUrl = match.productUrl || match.itemUrl || match.url;
+        } else {
+          // If no url field is explicitly found, just take the first item if it's a string, or throw
+          if (typeof items[0] === 'string') pUrl = items[0];
+        }
+      }
+
+      if (!pUrl) {
+        console.error("Lens API Response:", lensData);
+        if (lensData.message) {
+          throw new Error(`رد الخادم: ${lensData.message}`);
+        }
+        throw new Error('لم يتم العثور على منتجات مشابهة لهذه الصورة أو أن صيغة الرد غير معروفة.');
+      }
 
       // 3. Fetch Product Details
       setLoadingStep('تم العثور على المنتج! جاري جلب التفاصيل الدقيقة...');

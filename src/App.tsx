@@ -25,6 +25,7 @@ import MerchantWallet from './pages/merchant/MerchantWallet';
 import MerchantReferrals from './pages/merchant/MerchantReferrals';
 import MerchantWishlist from './pages/merchant/MerchantWishlist';
 import MerchantComplaints from './pages/merchant/MerchantComplaints';
+import MerchantSmartSearch from './pages/merchant/MerchantSmartSearch';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import SupplierRequests from './pages/supplier/SupplierRequests';
 import SupplierProducts from './pages/supplier/SupplierProducts';
@@ -152,6 +153,12 @@ function App() {
           <Route path="/merchant/marketplace" element={
             <ProtectedRoute allowedRoles={['merchant']}>
               <Marketplace />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/merchant/smart-search" element={
+            <ProtectedRoute allowedRoles={['merchant']}>
+              <MerchantSmartSearch />
             </ProtectedRoute>
           } />
           

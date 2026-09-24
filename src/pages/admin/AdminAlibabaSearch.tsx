@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, ShoppingCart, Loader } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, ExternalLink, Loader } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
 
 export default function AdminAlibabaSearch() {
-  const { formatCurrency } = useSettingsStore();
-  const [imageUrl, setImageUrl] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
   const [product, setProduct] = useState<any>(null);

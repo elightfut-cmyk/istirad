@@ -40,6 +40,8 @@ interface SettingsState {
   adImageUrl: string | null;
   adLinkUrl: string | null;
   chargilyLiveKey: string | null;
+  shippingPricePerKilo: number;
+  bidWindowExchangeRate: number;
   heroImageUrl: string | null;
   heroImageUrl2: string | null;
   referralCommissionPercentage: number;
@@ -93,6 +95,8 @@ export const useSettingsStore = create<SettingsState>()(
       adImageUrl: null,
       adLinkUrl: null,
       chargilyLiveKey: null,
+      shippingPricePerKilo: 10,
+      bidWindowExchangeRate: 135,
       heroImageUrl: null,
       heroImageUrl2: null,
       referralCommissionPercentage: 0,
@@ -160,6 +164,8 @@ export const useSettingsStore = create<SettingsState>()(
               adImageUrl: data.ad_image_url,
               adLinkUrl: data.ad_link_url,
               chargilyLiveKey: data.chargily_live_key,
+              shippingPricePerKilo: data.shipping_price_per_kilo ?? 10,
+              bidWindowExchangeRate: data.bid_window_exchange_rate ?? 135,
               heroImageUrl: data.hero_image_url || null,
               heroImageUrl2: data.hero_image_url_2 || null,
               referralCommissionPercentage: data.referral_commission_percentage || 0,

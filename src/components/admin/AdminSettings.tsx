@@ -34,6 +34,8 @@ export default function AdminSettings() {
     markupTier3Percentage: settingsStore.markupTier3Percentage || 5,
     markupTier4Percentage: settingsStore.markupTier4Percentage || 3,
     orderFixedFee: settingsStore.orderFixedFee || 2000,
+    shippingPricePerKilo: settingsStore.shippingPricePerKilo || 10,
+    bidWindowExchangeRate: settingsStore.bidWindowExchangeRate || 135,
     loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
     loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
     loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
@@ -107,6 +109,8 @@ export default function AdminSettings() {
       markupTier3Percentage: settingsStore.markupTier3Percentage || 5,
       markupTier4Percentage: settingsStore.markupTier4Percentage || 3,
       orderFixedFee: settingsStore.orderFixedFee || 2000,
+      shippingPricePerKilo: settingsStore.shippingPricePerKilo || 10,
+      bidWindowExchangeRate: settingsStore.bidWindowExchangeRate || 135,
       loyaltyPointsPerOrder: settingsStore.loyaltyPointsPerOrder || 50,
       loyaltyPointsToDzdRatio: settingsStore.loyaltyPointsToDzdRatio || 10,
       loyaltyPointsMinConversion: settingsStore.loyaltyPointsMinConversion || 500,
@@ -132,7 +136,8 @@ export default function AdminSettings() {
       youtubePlaylistUrl: settingsStore.youtubePlaylistUrl || '',
       youtubePlaylistActive: settingsStore.youtubePlaylistActive ?? false,
     });
-  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.markupTier1Percentage, settingsStore.markupTier2Percentage, settingsStore.markupTier3Percentage, settingsStore.markupTier4Percentage, settingsStore.orderFixedFee, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.facebookPixelId]);
+  }, [settingsStore.minQuantity, settingsStore.exchangeRate, settingsStore.adTitle, settingsStore.adSubtitle, settingsStore.adImageUrl, settingsStore.adLinkUrl, settingsStore.chargilyLiveKey, settingsStore.heroImageUrl, settingsStore.heroImageUrl2, settingsStore.referralCommissionPercentage, settingsStore.profitFixedAmount, settingsStore.profitPercentage, settingsStore.markupTier1Percentage, settingsStore.markupTier2Percentage, settingsStore.markupTier3Percentage, settingsStore.markupTier4Percentage, settingsStore.orderFixedFee, settingsStore.shippingPricePerKilo, settingsStore.bidWindowExchangeRate, settingsStore.loyaltyPointsPerOrder, settingsStore.loyaltyPointsToDzdRatio, settingsStore.loyaltyPointsMinConversion, settingsStore.productCategories, settingsStore.whatsappNumber, settingsStore.footerDescription, settingsStore.footerFacebook, settingsStore.footerTwitter, settingsStore.footerTelegram, settingsStore.footerInstagram, settingsStore.footerLinkedin, settingsStore.footerAddress, settingsStore.footerPhone, settingsStore.footerEmail, settingsStore.customWindowCards, settingsStore.customWindowActive, settingsStore.customWindowTopBadge, settingsStore.customWindowTitle, settingsStore.customWindowSubtitle, settingsStore.newsTickerItems, settingsStore.newsTickerActive, settingsStore.newsTickerTitle, settingsStore.youtubePlaylistUrl, settingsStore.youtubePlaylistActive, settingsStore.facebookPixelId]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -251,6 +256,8 @@ export default function AdminSettings() {
           markup_tier3_percentage: parseFloat(localSettings.markupTier3Percentage.toString()) || 0,
           markup_tier4_percentage: parseFloat(localSettings.markupTier4Percentage.toString()) || 0,
           order_fixed_fee: parseFloat(localSettings.orderFixedFee.toString()) || 0,
+          shipping_price_per_kilo: parseFloat(localSettings.shippingPricePerKilo?.toString()) || 10,
+          bid_window_exchange_rate: parseFloat(localSettings.bidWindowExchangeRate?.toString()) || 135,
           loyalty_points_per_order: parseInt(localSettings.loyaltyPointsPerOrder.toString()) || 0,
           loyalty_points_to_dzd_ratio: parseFloat(localSettings.loyaltyPointsToDzdRatio.toString()) || 0,
           loyalty_points_min_conversion: parseInt(localSettings.loyaltyPointsMinConversion.toString()) || 0,
@@ -335,9 +342,39 @@ export default function AdminSettings() {
             className="block w-48 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
           />
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-6">
           هذا الرقم سيظهر كتوجيه أولي للتجار عند فتحهم لطلب استيراد مخصص جديد.
         </p>
+
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 mt-4">
+          ثمن شحن الكيلوغرام (لتقدير سعر المناقصة) - بالدولار
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            name="shippingPricePerKilo"
+            value={localSettings.shippingPricePerKilo}
+            onChange={handleChange}
+            className="block w-48 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
+          />
+        </div>
+
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2 mt-4">
+          قيمة الدينار بالدولار (لنافذة المناقصة فقط)
+        </label>
+        <div className="flex gap-4 items-center">
+          <input
+            type="number"
+            min="1"
+            step="0.01"
+            name="bidWindowExchangeRate"
+            value={localSettings.bidWindowExchangeRate}
+            onChange={handleChange}
+            className="block w-48 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
+          />
+        </div>
       </div>
 
       {/* Exchange Rate */}

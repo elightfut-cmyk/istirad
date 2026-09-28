@@ -92,7 +92,7 @@ export default function AdminRequests() {
         { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
-        { label: 'الإشعارات (تلغرام)', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+        { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
       ]}
     >
       <div className="space-y-6">

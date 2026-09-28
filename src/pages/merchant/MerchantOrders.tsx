@@ -279,23 +279,34 @@ export default function MerchantOrders() {
   const confirmDeleteRequest = async () => {
     if (!deletingRequestId || !deleteReason.trim()) return;
     try {
-      const { error } = await supabase.from('custom_requests').update({
-        status: 'cancelled',
-        cancellation_reason: deleteReason.trim()
-      }).eq('id', deletingRequestId);
+      const { error } = await supabase.from('custom_requests').delete().eq('id', deletingRequestId);
       if (error) throw error;
       
       const req = requests.find(r => r.id === deletingRequestId);
       if (req) {
-        sendNotification('all_admins', 'إلغاء مناقصة', `قام التاجر بإلغاء المناقصة: ${req.title} لسبب: ${deleteReason.trim()}`, 'error');
+        // Notify Admins
+        sendNotification('all_admins', 'حذف مناقصة', `قام التاجر بحذف المناقصة: ${req.title} لسبب: ${deleteReason.trim()}`, 'error');
+        
+        // Notify Bidders
         if (req.supplier_bids && req.supplier_bids.length > 0) {
           req.supplier_bids.forEach((bid: any) => {
-            sendNotification(bid.supplier_id, 'إلغاء مناقصة', `قام التاجر بإلغاء المناقصة: ${req.title}. السبب: ${deleteReason.trim()}`, 'error');
+            sendNotification(bid.supplier_id, 'حذف مناقصة', `قام التاجر بحذف المناقصة: ${req.title}. السبب: ${deleteReason.trim()}`, 'error');
+          });
+        }
+        
+        // Notify Interested Suppliers (الباحثين عن المنتج)
+        if (req.supplier_interests && req.supplier_interests.length > 0) {
+          req.supplier_interests.forEach((interest: any) => {
+            // Avoid double notification if they also placed a bid
+            const hasBid = req.supplier_bids?.some((b: any) => b.supplier_id === interest.supplier_id);
+            if (!hasBid) {
+              sendNotification(interest.supplier_id, 'حذف مناقصة مهتم بها', `قام التاجر بحذف المناقصة: ${req.title}. السبب: ${deleteReason.trim()}`, 'error');
+            }
           });
         }
       }
 
-      setRequests(requests.map(r => r.id === deletingRequestId ? { ...r, status: 'cancelled', cancellation_reason: deleteReason.trim() } : r));
+      setRequests(requests.filter(r => r.id !== deletingRequestId));
       setDeleteModalOpen(false);
       setDeletingRequestId(null);
       toast.success('تم حذف الطلب بنجاح');

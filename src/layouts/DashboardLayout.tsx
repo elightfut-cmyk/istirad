@@ -6,6 +6,7 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
+import DashboardAlertModal from '../components/DashboardAlertModal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -242,6 +243,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         </div>
       </nav>
       <WhatsAppButton />
+      <DashboardAlertModal />
     </div>
   );
 }

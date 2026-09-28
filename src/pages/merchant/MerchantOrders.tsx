@@ -1317,17 +1317,17 @@ export default function MerchantOrders() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-indigo-50/50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 mb-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">الوزن التقريبي للقطعة (بالغرام) - اختياري</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">الوزن التقريبي للقطعة (بالغرام)</label>
                   <input 
-                    type="number" min="0" value={formData.approx_weight_grams || ''} onChange={e => setFormData({...formData, approx_weight_grams: parseFloat(e.target.value) || 0})}
+                    type="number" required min="0.1" step="any" value={formData.approx_weight_grams || ''} onChange={e => setFormData({...formData, approx_weight_grams: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-white dark:bg-gray-900"
                     placeholder="مثال: 500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">متوسط السعر في الصين (بالدولار) - اختياري</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">متوسط السعر في الصين (بالدولار)</label>
                   <input 
-                    type="number" min="0" step="0.01" value={formData.avg_price_china || ''} onChange={e => setFormData({...formData, avg_price_china: parseFloat(e.target.value) || 0})}
+                    type="number" required min="0.01" step="0.01" value={formData.avg_price_china || ''} onChange={e => setFormData({...formData, avg_price_china: parseFloat(e.target.value) || 0})}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-white dark:bg-gray-900"
                     placeholder="مثال: 5.50"
                   />
@@ -1336,7 +1336,14 @@ export default function MerchantOrders() {
               
               {(formData.approx_weight_grams > 0 || formData.avg_price_china > 0) && (
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800 mb-4">
-                  <p className="text-sm font-bold text-green-800 dark:text-green-300 mb-2">الثمن التقريبي الكلي للقطعة الواحدة (شامل الشحن التقريبي):</p>
+                  <p className="text-sm font-bold text-green-800 dark:text-green-300 mb-2">
+                    {formData.approx_weight_grams > 0 && formData.avg_price_china > 0 
+                      ? 'الثمن التقريبي الكلي للقطعة الواحدة (شامل الشحن التقريبي):'
+                      : (formData.approx_weight_grams > 0 
+                          ? 'هذا هو ثمن الشحن التقريبي للقطعة فقط:'
+                          : 'الثمن التقريبي للقطعة الواحدة (بدون الشحن):')
+                    }
+                  </p>
                   <div className="flex gap-6 items-center flex-wrap">
                     <span className="text-lg font-black text-green-700 dark:text-green-400">
                       ${((formData.avg_price_china || 0) + ((formData.approx_weight_grams || 0) / 1000) * shippingPricePerKilo).toFixed(2)}
@@ -1346,13 +1353,13 @@ export default function MerchantOrders() {
                     </span>
                   </div>
                   <p className="text-xs text-green-600 dark:text-green-500 mt-2 leading-relaxed">
-                    * هذا مجرد تقدير أولي بناءً على ثمن الشحن ({shippingPricePerKilo}$/كغ) وسعر الصرف التقديري ({bidWindowExchangeRate} دج/دولار). السعر النهائي سيكون الذي سيعرضه الموردون.
+                    * هذا مجرد تقدير أولي بناءً على ثمن الشحن وسعر الصرف التقديري. السعر النهائي سيكون الذي سيعرضه الموردون.
                   </p>
                 </div>
               )}
 
               <div className="pt-4 flex gap-4">
-                <button type="submit" disabled={creating} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
+                <button type="submit" disabled={creating || !formData.approx_weight_grams || !formData.avg_price_china} className="flex-1 bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition disabled:opacity-50">
                   {creating ? 'جاري الحفظ...' : (editingRequestId ? 'حفظ التعديلات' : 'نشر الطلب للموردين')}
                 </button>
                 <button type="button" onClick={closeModal} className="px-6 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 py-3 rounded-xl font-bold hover:bg-gray-200 transition">

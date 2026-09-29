@@ -159,7 +159,7 @@ export default function MerchantOrders() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id,
+          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china,
           supplier_bids (
             id, request_id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
             supplier:users(name, company_name, phone, verification_badge)
@@ -779,6 +779,24 @@ export default function MerchantOrders() {
                           <span className="text-gray-500 dark:text-gray-400">الكمية:</span>
                           <span className="font-bold">{req.quantity}</span>
                         </div>
+                        {req.approx_weight_grams > 0 && (
+                          <>
+                            <div className="w-px h-6 bg-gray-200"></div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 dark:text-gray-400">وزن القطعة التقريبي:</span>
+                              <span className="font-bold">{req.approx_weight_grams} غ</span>
+                            </div>
+                          </>
+                        )}
+                        {req.avg_price_china > 0 && (
+                          <>
+                            <div className="w-px h-6 bg-gray-200"></div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 dark:text-gray-400">ثمن القطعة التقريبي:</span>
+                              <span className="font-bold">${req.avg_price_china}</span>
+                            </div>
+                          </>
+                        )}
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">المورد:</span>
@@ -956,6 +974,17 @@ export default function MerchantOrders() {
                     )}
                     <div className="flex flex-wrap items-center gap-4 text-sm">
                       <span className="font-bold text-[#4f46e5] bg-green-50 px-2 py-1 rounded">الكمية: {req.quantity} وحدة</span>
+                      {req.approx_weight_grams > 0 && (
+                        <span className="font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">وزن القطعة التقريبي: {req.approx_weight_grams}غ</span>
+                      )}
+                      {req.avg_price_china > 0 && (
+                        <span className="font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">ثمن القطعة التقريبي: ${req.avg_price_china}</span>
+                      )}
+                      {(req.approx_weight_grams > 0 || req.avg_price_china > 0) && (
+                        <span className="font-bold text-green-700 bg-green-50 px-2 py-1 rounded" title="شامل تكلفة الشحن التقريبية للقطعة">
+                          السعر الإجمالي التقريبي: {(((req.avg_price_china || 0) + ((req.approx_weight_grams || 0) / 1000) * shippingPricePerKilo) * bidWindowExchangeRate).toFixed(2)} دج
+                        </span>
+                      )}
                       {(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
                         <div className="flex flex-wrap gap-2">
                           {req.supplier_bids?.length > 0 && (

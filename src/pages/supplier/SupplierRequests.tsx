@@ -16,7 +16,7 @@ export default function SupplierRequests() {
     markupTier2Percentage,
     markupTier3Percentage,
     markupTier4Percentage,
-    orderFixedFee
+    orderFixedFee, shippingPricePerKilo, bidWindowExchangeRate
   } = useSettingsStore();
   
   const profitSettings = {
@@ -49,7 +49,7 @@ export default function SupplierRequests() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id,
+          id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
           merchant:users!merchant_id(name, company_name, phone, address),
           supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply, supplier:users!supplier_id(name, company_name)),
           supplier_interests (supplier_id)
@@ -273,6 +273,17 @@ export default function SupplierRequests() {
 
                   <div className="flex flex-wrap items-center gap-4 text-sm mt-4">
                     <span className="font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">الكمية المطلوبة: {req.quantity} وحدة</span>
+                    {req.approx_weight_grams > 0 && (
+                      <span className="font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">الوزن التقريبي: {req.approx_weight_grams}غ</span>
+                    )}
+                    {req.avg_price_china > 0 && (
+                      <span className="font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">سعر الصين: ${req.avg_price_china}</span>
+                    )}
+                    {(req.approx_weight_grams > 0 || req.avg_price_china > 0) && (
+                      <span className="font-bold text-green-700 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200" title="شامل تكلفة الشحن التقريبية للقطعة">
+                        السعر التقريبي: {(((req.avg_price_china || 0) + ((req.approx_weight_grams || 0) / 1000) * shippingPricePerKilo) * bidWindowExchangeRate).toFixed(2)} دج
+                      </span>
+                    )}
                     
                     {req.product_link && (
                       <a href={req.product_link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition">

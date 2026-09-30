@@ -23,16 +23,18 @@ import {
   Lightbulb, 
   Search,
   ExternalLink,
-  ShieldAlert
-, Video } from 'lucide-react';
+  ShieldAlert,
+  Share2,
+  Video } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { dashboardAlertService, DashboardAlert } from '../../services/dashboardAlertService';
 import DashboardAlertModal from '../../components/DashboardAlertModal';
+import SocialLinksAdminTab from '../../components/admin/SocialLinksAdminTab';
 import toast from 'react-hot-toast';
 
 export default function AdminNotifications() {
-  const [activeTab, setActiveTab] = useState<'popup' | 'telegram'>('popup');
+  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'telegram'>('popup');
 
   // Popup Alert States
   const [currentAlert, setCurrentAlert] = useState<DashboardAlert | null>(null);
@@ -395,6 +397,18 @@ export default function AdminNotifications() {
           {currentAlert?.isActive && (
             <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping mr-1"></span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('socialLinks')}
+          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
+            activeTab === 'socialLinks'
+              ? 'bg-[#4f46e5] text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <Share2 size={20} />
+          <span>نافذة الاشتراك (تواصل)</span>
         </button>
 
         <button
@@ -777,7 +791,12 @@ export default function AdminNotifications() {
         </div>
       )}
 
-      {/* TAB 2: TELEGRAM BROADCAST */}
+      {/* TAB 2: SOCIAL LINKS ALERT */}
+      {activeTab === 'socialLinks' && (
+        <SocialLinksAdminTab />
+      )}
+
+      {/* TAB 3: TELEGRAM BROADCAST */}
       {activeTab === 'telegram' && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">

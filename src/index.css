@@ -26,3 +26,7 @@ body {
 .animate-shine {
   animation: shine 1s ease-in-out;
 }
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}

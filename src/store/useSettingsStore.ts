@@ -137,9 +137,9 @@ export const useSettingsStore = create<SettingsState>()(
       youtubePlaylistUrl: '',
       youtubePlaylistActive: false,
       facebookPixelId: null,
-      mainVideoTitle: 'فيديو تعريفي',
+      mainVideoTitle: '',
       mainVideoUrl: '',
-      mainVideoDescription: 'شاهد هذا الفيديو لتتعرف أكثر على خدماتنا',
+      mainVideoDescription: '',
       mainVideoActive: false,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
@@ -211,9 +211,9 @@ export const useSettingsStore = create<SettingsState>()(
               youtubePlaylistUrl: data.youtube_playlist_url || '',
               youtubePlaylistActive: data.youtube_playlist_active ?? false,
               facebookPixelId: data.facebook_pixel_id || null,
-              mainVideoTitle: data.main_video_title || 'فيديو تعريفي',
+              mainVideoTitle: data.main_video_title || '',
               mainVideoUrl: data.main_video_url || '',
-              mainVideoDescription: data.main_video_description || 'شاهد هذا الفيديو لتتعرف أكثر على خدماتنا',
+              mainVideoDescription: data.main_video_description || '',
               mainVideoActive: data.main_video_active ?? false,
             });
           }

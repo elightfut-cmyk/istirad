@@ -93,6 +93,7 @@ export default function AdminRequests() {
         { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+        { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
       <div className="space-y-6">

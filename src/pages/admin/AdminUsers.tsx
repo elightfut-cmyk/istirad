@@ -151,6 +151,7 @@ export default function AdminUsers() {
         { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+        { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">

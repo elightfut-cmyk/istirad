@@ -78,6 +78,10 @@ interface SettingsState {
   youtubePlaylistUrl: string;
   youtubePlaylistActive: boolean;
   facebookPixelId: string | null;
+  mainVideoTitle: string;
+  mainVideoUrl: string;
+  mainVideoDescription: string;
+  mainVideoActive: boolean;
   toggleCurrency: () => void;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amountInUSD: number) => string;
@@ -133,6 +137,10 @@ export const useSettingsStore = create<SettingsState>()(
       youtubePlaylistUrl: '',
       youtubePlaylistActive: false,
       facebookPixelId: null,
+      mainVideoTitle: 'فيديو تعريفي',
+      mainVideoUrl: '',
+      mainVideoDescription: 'شاهد هذا الفيديو لتتعرف أكثر على خدماتنا',
+      mainVideoActive: false,
       toggleCurrency: () => set((state) => ({ currency: state.currency === 'USD' ? 'DZD' : 'USD' })),
       setCurrency: (currency) => set({ currency }),
       formatCurrency: (amount: number) => {
@@ -203,6 +211,10 @@ export const useSettingsStore = create<SettingsState>()(
               youtubePlaylistUrl: data.youtube_playlist_url || '',
               youtubePlaylistActive: data.youtube_playlist_active ?? false,
               facebookPixelId: data.facebook_pixel_id || null,
+              mainVideoTitle: data.main_video_title || 'فيديو تعريفي',
+              mainVideoUrl: data.main_video_url || '',
+              mainVideoDescription: data.main_video_description || 'شاهد هذا الفيديو لتتعرف أكثر على خدماتنا',
+              mainVideoActive: data.main_video_active ?? false,
             });
           }
         } catch (error) {

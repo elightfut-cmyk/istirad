@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, Loader2, CheckCircle2, Edit3 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, Loader2, CheckCircle2, Edit3 , Video } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminSmartImport() {
@@ -147,6 +147,7 @@ export default function AdminSmartImport() {
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
         { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
+        { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
       <div className="max-w-4xl mx-auto space-y-6">

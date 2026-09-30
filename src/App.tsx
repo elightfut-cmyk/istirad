@@ -19,6 +19,7 @@ import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminSuggestions from './pages/admin/AdminSuggestions';
 import AdminSmartImport from './pages/admin/AdminSmartImport';
 import AdminAlibabaSearch from './pages/admin/AdminAlibabaSearch';
+import AdminMainVideo from './pages/admin/AdminMainVideo';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import Marketplace from './pages/merchant/Marketplace';
 import MerchantOrders from './pages/merchant/MerchantOrders';
@@ -147,6 +148,12 @@ function App() {
           <Route path="/admin/alibaba-search" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminAlibabaSearch />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/main-video" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminMainVideo />
             </ProtectedRoute>
           } />
           

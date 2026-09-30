@@ -9,6 +9,7 @@ import Footer from '../../components/Footer';
 import CustomWindowSlider from '../../components/CustomWindowSlider';
 import NewsTicker from '../../components/NewsTicker';
 import YoutubePlayer from '../../components/YoutubePlayer';
+import MainVideoSection from '../../components/MainVideoSection';
 
 export default function LandingPage() {
   const { user } = useAuthStore();
@@ -59,6 +60,9 @@ export default function LandingPage() {
 
       <NewsTicker />
       <CustomWindowSlider />
+
+      {/* Main Video Section */}
+      <MainVideoSection />
 
       {/* Hero Section */}
       <section className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm overflow-hidden relative p-8">

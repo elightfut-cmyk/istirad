@@ -24,7 +24,7 @@ import {
   Search,
   ExternalLink,
   ShieldAlert
-} from 'lucide-react';
+, Video } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { dashboardAlertService, DashboardAlert } from '../../services/dashboardAlertService';
@@ -369,6 +369,7 @@ export default function AdminNotifications() {
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
         { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
+        { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
       {/* Live Preview Modal Overlay */}

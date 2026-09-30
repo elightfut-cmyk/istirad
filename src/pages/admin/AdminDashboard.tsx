@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket , Package , Lightbulb , Search } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket , Package , Lightbulb , Search , Video } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -209,6 +209,7 @@ export default function AdminDashboard() {
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
         { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
         { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
+        { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

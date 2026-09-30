@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { socialLinksAlertService, SocialLinksAlert } from '../services/socialLinksAlertService';
-import { X, Send, Facebook, Check, Sparkles } from 'lucide-react';
+import { X, Send, Facebook, Sparkles } from 'lucide-react';
 
 interface SocialLinksModalProps {
   previewAlert?: SocialLinksAlert | null;
@@ -12,7 +12,6 @@ export default function SocialLinksModal({ previewAlert, onClosePreview }: Socia
   const { user } = useAuthStore();
   const [alert, setAlert] = useState<SocialLinksAlert | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
@@ -63,14 +62,12 @@ export default function SocialLinksModal({ previewAlert, onClosePreview }: Socia
       return;
     }
 
-    setIsClosing(true);
     setAnimateIn(false);
     setTimeout(() => {
       if (alert && user) {
         socialLinksAlertService.markAlertAsSeen(alert.id, user.id);
       }
       setIsOpen(false);
-      setIsClosing(false);
     }, 300);
   };
 

@@ -27,7 +27,7 @@ export default function MainVideoSection() {
   };
 
   return (
-    <section className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm overflow-hidden relative p-8">
+    <section className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden relative p-3 sm:p-6 md:p-8">
       <div className="w-full max-w-4xl mx-auto text-center relative z-10">
         {mainVideoTitle && (
           <h2 className="text-3xl lg:text-4xl font-black mb-8 text-gray-900 dark:text-white relative inline-block">
@@ -36,7 +36,7 @@ export default function MainVideoSection() {
           </h2>
         )}
         
-        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl aspect-video border-4 border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 mb-6">
+        <div className="relative w-full overflow-hidden rounded-xl md:rounded-2xl shadow-xl aspect-video border-2 md:border-4 border-gray-100 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 mb-4 md:mb-6">
           <iframe
             className="absolute top-0 left-0 w-full h-full"
             src={getEmbedUrl(mainVideoUrl)}
@@ -48,7 +48,7 @@ export default function MainVideoSection() {
         </div>
         
         {mainVideoDescription && (
-          <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700">
+          <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-4 md:p-6 rounded-xl md:rounded-2xl border border-gray-100 dark:border-gray-700">
             {mainVideoDescription}
           </p>
         )}

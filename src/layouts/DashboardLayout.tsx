@@ -7,10 +7,13 @@ import { useLanguageStore } from '../store/useLanguageStore';
 import { arabicToKeyMap } from '../translations';
 import LanguageToggle from '../components/LanguageToggle';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon, Vote } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
 import DashboardAlertModal from '../components/DashboardAlertModal';
 import SocialLinksModal from '../components/SocialLinksModal';
+import UserPollModal from '../components/UserPollModal';
+import { pollService } from '../services/pollService';
+
 interface DashboardLayoutProps {
   children: ReactNode;
   title: string;
@@ -27,6 +30,37 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Modals sequence state (First Alert -> 10s delay -> Social Links)
+  const [canShowSocialLinks, setCanShowSocialLinks] = useState(false);
+  const [isPollOpen, setIsPollOpen] = useState(false);
+  const [hasActivePoll, setHasActivePoll] = useState(false);
+  const socialTimerRef = useRef<any>(null);
+
+  // Check if active poll exists for topbar indicator
+  useEffect(() => {
+    if (user && (user.role === 'merchant' || user.role === 'supplier')) {
+      pollService.getPoll().then((p) => {
+        if (p && p.isActive && (p.targetRole === 'all' || p.targetRole === user.role)) {
+          setHasActivePoll(true);
+        }
+      });
+    }
+  }, [user]);
+
+  // Start 10-second countdown for social links modal
+  const handleStartSocialCountdown = () => {
+    if (socialTimerRef.current) clearTimeout(socialTimerRef.current);
+    socialTimerRef.current = setTimeout(() => {
+      setCanShowSocialLinks(true);
+    }, 10000); // exactly 10s after first alert
+  };
+
+  useEffect(() => {
+    return () => {
+      if (socialTimerRef.current) clearTimeout(socialTimerRef.current);
+    };
+  }, []);
 
   const translateLabel = (text: string) => {
     const key = arabicToKeyMap[text];
@@ -105,6 +139,18 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           </div>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
+            {user && (user.role === 'merchant' || user.role === 'supplier') && hasActivePoll && (
+              <button
+                onClick={() => setIsPollOpen(true)}
+                className="relative bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 hover:from-indigo-100 hover:to-purple-100 text-[#4f46e5] dark:text-indigo-300 font-bold px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-all flex items-center gap-1.5 text-xs sm:text-sm border border-indigo-200/80 dark:border-indigo-800 shadow-xs"
+                title={t('nav.poll_title')}
+              >
+                <Vote size={16} className="text-[#4f46e5] dark:text-indigo-400" />
+                <span className="hidden sm:inline">{t('nav.poll')}</span>
+                <span className="w-2 h-2 rounded-full bg-[#4f46e5] animate-ping"></span>
+              </button>
+            )}
+
             <LanguageToggle />
 
             <button
@@ -252,8 +298,19 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         </div>
       </nav>
       <WhatsAppButton />
-      <DashboardAlertModal />
-      <SocialLinksModal />
+      <DashboardAlertModal 
+        onAlertOpened={() => {
+          if (socialTimerRef.current) clearTimeout(socialTimerRef.current);
+          setCanShowSocialLinks(false);
+        }}
+        onAlertClosed={handleStartSocialCountdown}
+        onAlertNotShown={handleStartSocialCountdown}
+      />
+      <SocialLinksModal canShow={canShowSocialLinks} />
+      <UserPollModal 
+        isOpenControlled={isPollOpen} 
+        onCloseControlled={() => setIsPollOpen(false)} 
+      />
     </div>
   );
 }

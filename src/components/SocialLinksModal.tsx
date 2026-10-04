@@ -6,9 +6,10 @@ import { X, Send, Facebook, Sparkles } from 'lucide-react';
 interface SocialLinksModalProps {
   previewAlert?: SocialLinksAlert | null;
   onClosePreview?: () => void;
+  canShow?: boolean;
 }
 
-export default function SocialLinksModal({ previewAlert, onClosePreview }: SocialLinksModalProps) {
+export default function SocialLinksModal({ previewAlert, onClosePreview, canShow = false }: SocialLinksModalProps) {
   const { user } = useAuthStore();
   const [alert, setAlert] = useState<SocialLinksAlert | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +20,10 @@ export default function SocialLinksModal({ previewAlert, onClosePreview }: Socia
       setAlert(previewAlert);
       setIsOpen(true);
       setTimeout(() => setAnimateIn(true), 50);
+      return;
+    }
+
+    if (!canShow) {
       return;
     }
 
@@ -39,18 +44,14 @@ export default function SocialLinksModal({ previewAlert, onClosePreview }: Socia
 
       const seen = socialLinksAlertService.hasUserSeenAlert(activeAlert.id, user.id);
       if (!seen) {
-        const timer = setTimeout(() => {
-          setAlert(activeAlert);
-          setIsOpen(true);
-          // slight delay for the mount before triggering the approach animation
-          setTimeout(() => setAnimateIn(true), 50);
-        }, 1000); // 1s after dashboard load
-        return () => clearTimeout(timer);
+        setAlert(activeAlert);
+        setIsOpen(true);
+        setTimeout(() => setAnimateIn(true), 50);
       }
     };
 
     checkAlert();
-  }, [user, previewAlert]);
+  }, [user, previewAlert, canShow]);
 
   const handleClose = () => {
     if (previewAlert) {

@@ -31,10 +31,12 @@ import { supabase } from '../../lib/supabase';
 import { dashboardAlertService, DashboardAlert } from '../../services/dashboardAlertService';
 import DashboardAlertModal from '../../components/DashboardAlertModal';
 import SocialLinksAdminTab from '../../components/admin/SocialLinksAdminTab';
+import PollAdminTab from '../../components/admin/PollAdminTab';
 import toast from 'react-hot-toast';
+import { Vote } from 'lucide-react';
 
 export default function AdminNotifications() {
-  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'telegram'>('popup');
+  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram'>('popup');
 
   // Popup Alert States
   const [currentAlert, setCurrentAlert] = useState<DashboardAlert | null>(null);
@@ -409,6 +411,18 @@ export default function AdminNotifications() {
         >
           <Share2 size={20} />
           <span>نافذة الاشتراك (تواصل)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('poll')}
+          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
+            activeTab === 'poll'
+              ? 'bg-[#4f46e5] text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <Vote size={20} />
+          <span>سبر الآراء (Polls)</span>
         </button>
 
         <button
@@ -796,7 +810,12 @@ export default function AdminNotifications() {
         <SocialLinksAdminTab />
       )}
 
-      {/* TAB 3: TELEGRAM BROADCAST */}
+      {/* TAB 3: USER POLLS */}
+      {activeTab === 'poll' && (
+        <PollAdminTab />
+      )}
+
+      {/* TAB 4: TELEGRAM BROADCAST */}
       {activeTab === 'telegram' && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">

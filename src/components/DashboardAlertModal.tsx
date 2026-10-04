@@ -17,9 +17,18 @@ import { useNavigate } from 'react-router-dom';
 interface DashboardAlertModalProps {
   previewAlert?: DashboardAlert | null;
   onClosePreview?: () => void;
+  onAlertOpened?: () => void;
+  onAlertClosed?: () => void;
+  onAlertNotShown?: () => void;
 }
 
-export default function DashboardAlertModal({ previewAlert, onClosePreview }: DashboardAlertModalProps) {
+export default function DashboardAlertModal({ 
+  previewAlert, 
+  onClosePreview,
+  onAlertOpened,
+  onAlertClosed,
+  onAlertNotShown
+}: DashboardAlertModalProps) {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [alert, setAlert] = useState<DashboardAlert | null>(null);
@@ -38,16 +47,19 @@ export default function DashboardAlertModal({ previewAlert, onClosePreview }: Da
     const checkAlert = async () => {
       // Only show to merchants and suppliers (not admins on their own dashboard)
       if (!user || (user.role !== 'merchant' && user.role !== 'supplier')) {
+        onAlertNotShown?.();
         return;
       }
 
       const activeAlert = await dashboardAlertService.getAlert();
       if (!activeAlert || !activeAlert.isActive) {
+        onAlertNotShown?.();
         return;
       }
 
       // Check target audience
       if (activeAlert.targetRole !== 'all' && activeAlert.targetRole !== user.role) {
+        onAlertNotShown?.();
         return;
       }
 
@@ -58,8 +70,11 @@ export default function DashboardAlertModal({ previewAlert, onClosePreview }: Da
         const timer = setTimeout(() => {
           setAlert(activeAlert);
           setIsOpen(true);
+          onAlertOpened?.();
         }, 400);
         return () => clearTimeout(timer);
+      } else {
+        onAlertNotShown?.();
       }
     };
 
@@ -80,6 +95,7 @@ export default function DashboardAlertModal({ previewAlert, onClosePreview }: Da
       }
       setIsOpen(false);
       setIsClosing(false);
+      onAlertClosed?.();
     }, 200);
   };
 

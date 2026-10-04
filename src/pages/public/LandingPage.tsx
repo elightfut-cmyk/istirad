@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import LanguageToggle from '../../components/LanguageToggle';
 import WhatsAppButton from '../../components/WhatsAppButton';
 import FAQSection from '../../components/FAQSection';
 import Footer from '../../components/Footer';
@@ -14,6 +16,7 @@ import MainVideoSection from '../../components/MainVideoSection';
 export default function LandingPage() {
   const { user } = useAuthStore();
   const settingsStore = useSettingsStore();
+  const { t } = useLanguageStore();
   
   const img1 = settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
   const img2 = settingsStore.heroImageUrl2 || "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"; // Default second image
@@ -37,20 +40,21 @@ export default function LandingPage() {
             <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
               <PackageSearch size={24} />
             </div>
-            <span className="text-2xl font-black text-[#4f46e5]"><span className="hidden sm:inline">جيبها-</span>jiibha</span>
+            <span className="text-2xl font-black text-[#4f46e5]">{t('brand.name')}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LanguageToggle />
             {user ? (
-              <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm">
-                لوحة التحكم
+              <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
+                {t('nav.dashboard')}
               </Link>
             ) : (
               <>
-                <Link to="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] font-medium transition-colors hidden sm:block">
-                  تسجيل الدخول
+                <Link to="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] font-medium transition-colors hidden sm:block text-sm sm:text-base">
+                  {t('nav.login')}
                 </Link>
-                <Link to="/register" className="bg-[#4f46e5] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm">
-                  ابدأ الآن
+                <Link to="/register" className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
+                  {t('nav.register')}
                 </Link>
               </>
             )}
@@ -79,14 +83,14 @@ export default function LandingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4f46e5] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-[#4f46e5]"></span>
               </span>
-              المنصة الأولى للربط التجاري B2B
+              {t('landing.b2b_badge')}
             </div>
             <h1 className="text-5xl lg:text-7xl font-black leading-tight text-gray-900 dark:text-white mb-6">
-              استورد منتجاتك <br />
-              <span className="text-[#4f46e5]">بكل سهولة وأمان</span>
+              {t('landing.hero_title_1')} <br />
+              <span className="text-[#4f46e5]">{t('landing.hero_title_2')}</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg lg:mb-0">
-              اطلب ملايين المنتجات الموجودة في المتاجر الصينية لتجدها أمام بيتك بلا عناء، ابحث، اطلب، وانطلق بتجارتك نحو القمة
+              {t('landing.hero_subtitle')}
             </p>
           </div>
 
@@ -98,7 +102,7 @@ export default function LandingPage() {
             <div className="relative w-full h-full rounded-[3rem] shadow-2xl border-8 border-white overflow-hidden bg-gray-100 dark:bg-gray-800 z-10">
               {/* Image 1 */}
               <img 
-                src={img1}
+                src={img1} 
                 alt="Slide 1" 
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
                   activeIndex === 0 
@@ -109,7 +113,7 @@ export default function LandingPage() {
               
               {/* Image 2 */}
               <img 
-                src={img2}
+                src={img2} 
                 alt="Slide 2" 
                 className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
                   activeIndex === 1 
@@ -125,7 +129,7 @@ export default function LandingPage() {
                 <Store size={28} className="text-orange-500" />
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-bold">نمو المبيعات</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-bold">{t('landing.sales_growth')}</p>
                 <p className="text-2xl font-black text-gray-900 dark:text-white">+124%</p>
               </div>
             </div>
@@ -136,17 +140,17 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               {user ? (
                 <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#4338ca] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
-                  الذهاب للوحة التحكم
-                  <ArrowLeft size={20} />
+                  {t('landing.cta_dashboard')}
+                  <ArrowLeft size={20} className="rtl:rotate-0 ltr:rotate-180" />
                 </Link>
               ) : (
                 <>
                   <Link to="/register" className="bg-[#4f46e5] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#4338ca] transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2">
-                    سجل كتاجر أو مورد
-                    <ArrowLeft size={20} />
+                    {t('landing.cta_register')}
+                    <ArrowLeft size={20} className="rtl:rotate-0 ltr:rotate-180" />
                   </Link>
                   <Link to="/login" className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-2 border-gray-200 dark:border-gray-700 px-8 py-4 rounded-xl font-bold text-lg hover:border-[#4f46e5] hover:text-[#4f46e5] transition-all flex items-center justify-center">
-                    لدي حساب بالفعل
+                    {t('landing.cta_have_account')}
                   </Link>
                 </>
               )}
@@ -155,15 +159,15 @@ export default function LandingPage() {
             <div className="mt-12 flex flex-wrap justify-center lg:justify-start items-center gap-6 text-gray-500 dark:text-gray-400 text-sm font-medium">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={20} className="text-indigo-500" />
-                <span>موردين معتمدين</span>
+                <span>{t('landing.verified_suppliers')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Globe size={20} className="text-blue-500" />
-                <span>شحن عالمي</span>
+                <span>{t('landing.global_shipping')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <TrendingUp size={20} className="text-purple-500" />
-                <span>أسعار تنافسية</span>
+                <span>{t('landing.competitive_prices')}</span>
               </div>
             </div>
           </div>

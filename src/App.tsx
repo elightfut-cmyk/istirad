@@ -36,10 +36,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
+import { useLanguageStore } from './store/useLanguageStore';
+
 function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
+  const { language } = useLanguageStore();
 
   useEffect(() => {
     checkSession();
@@ -53,6 +56,11 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [language]);
 
   if (isLoading) {
     return (

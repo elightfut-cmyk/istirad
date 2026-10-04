@@ -3,6 +3,9 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useThemeStore } from '../store/useThemeStore';
+import { useLanguageStore } from '../store/useLanguageStore';
+import { arabicToKeyMap } from '../translations';
+import LanguageToggle from '../components/LanguageToggle';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
@@ -19,10 +22,16 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const { currency, toggleCurrency, adTitle, adSubtitle, adImageUrl, adLinkUrl } = useSettingsStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead, deleteNotification } = useNotificationStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { t } = useLanguageStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  const translateLabel = (text: string) => {
+    const key = arabicToKeyMap[text];
+    return key ? t(key) : text;
+  };
 
   useEffect(() => {
     if (user) {
@@ -50,8 +59,8 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col hidden md:flex transition-colors">
         <div className="p-6 text-center border-b border-gray-100 dark:border-gray-700">
-          <Link to="/" className="text-2xl font-bold text-[#4f46e5] dark:text-indigo-400 hover:opacity-80 transition-opacity inline-block">جيبها-jiibha</Link>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user?.role === 'admin' ? 'الإدارة' : user?.role === 'merchant' ? 'تاجر' : 'مورد'}</p>
+          <Link to="/" className="text-2xl font-bold text-[#4f46e5] dark:text-indigo-400 hover:opacity-80 transition-opacity inline-block">{t('brand.name')}</Link>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user?.role === 'admin' ? t('role.admin') : user?.role === 'merchant' ? t('role.merchant') : t('role.supplier')}</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {sidebarLinks.map((link) => {
@@ -64,12 +73,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                   e.preventDefault();
                   navigate(link.href);
                 }}
-                className={`flex items-center space-x-3 space-x-reverse px-4 py-3 rounded-xl transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive ? 'bg-[#4f46e5] text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 {link.icon}
-                <span className="font-medium">{link.label}</span>
+                <span className="font-medium">{translateLabel(link.label)}</span>
               </a>
             );
           })}
@@ -77,10 +86,10 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         <div className="p-4 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 space-x-reverse px-4 py-3 w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
           >
             <LogOut size={20} />
-            <span className="font-medium">تسجيل الخروج</span>
+            <span className="font-medium">{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
@@ -94,31 +103,31 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               <Package size={28} />
             </Link>
           </div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{title}</h1>
-          <div className="flex items-center gap-3 sm:gap-4">
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageToggle />
 
             <button
               onClick={toggleTheme}
-              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-yellow-400 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
-              title="تغيير المظهر (ليلي / نهاري)"
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-yellow-400 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base border border-gray-200/60 dark:border-gray-600 shadow-xs"
+              title={t('nav.theme_toggle')}
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
 
             <button
               onClick={toggleCurrency}
-              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-[#4f46e5] dark:text-indigo-400 font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
-              title="تغيير العملة (دولار / دينار)"
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-[#4f46e5] dark:text-indigo-400 font-bold px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base border border-gray-200/60 dark:border-gray-600 shadow-xs"
+              title={t('nav.currency_toggle')}
             >
               <DollarSign size={16} />
               <span>{currency === 'USD' ? 'USD' : 'DZD'}</span>
             </button>
             
-            <Link to="/profile" className="hidden md:flex items-center space-x-2 space-x-reverse hover:opacity-80 transition-opacity" title="الملف الشخصي">
+            <Link to="/profile" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity" title={t('nav.profile')}>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden md:inline">{user?.name}</span>
-              <UserCircle size={28} className="text-gray-400 dark:text-gray-500 dark:text-gray-400 hover:text-[#4f46e5] dark:hover:text-indigo-400 transition-colors" />
+              <UserCircle size={28} className="text-gray-400 dark:text-gray-500 hover:text-[#4f46e5] dark:hover:text-indigo-400 transition-colors" />
             </Link>
-
 
             <div className="relative" ref={notificationRef}>
               <button 
@@ -129,7 +138,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                   }
                 }}
                 className={`relative p-2 rounded-full transition-colors ${unreadCount > 0 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                title="التنبيهات"
+                title={t('nav.notifications')}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
@@ -142,12 +151,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               {isNotificationsOpen && (
                 <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800 dark:text-white">التنبيهات</h3>
+                    <h3 className="font-bold text-gray-800 dark:text-white">{t('nav.notifications')}</h3>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
                       <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-                        لا توجد تنبيهات حالياً
+                        {t('nav.no_notifications')}
                       </div>
                     ) : (
                       notifications.map(notif => (
@@ -163,7 +172,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                               deleteNotification(notif.id);
                             }}
                             className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 dark:bg-red-900/30 p-1 rounded-md"
-                            title="حذف التنبيه"
+                            title={t('nav.delete_notification')}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -191,7 +200,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 </div>
                 {adLinkUrl && (
                   <a href={adLinkUrl} target="_blank" rel="noopener noreferrer" className="px-6 py-3 bg-white dark:bg-gray-800 text-blue-700 rounded-xl font-bold shadow-sm hover:bg-gray-50 dark:bg-gray-900 transition-colors whitespace-nowrap text-sm mt-4 md:mt-0">
-                    اضغط هنا للمزيد
+                    {t('landing.ad_more')}
                   </a>
                 )}
               </div>
@@ -227,7 +236,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 <div className={`mb-1 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                   {link.icon}
                 </div>
-                <span className="text-[10px] font-medium whitespace-nowrap">{link.label}</span>
+                <span className="text-[10px] font-medium whitespace-nowrap">{translateLabel(link.label)}</span>
               </Link>
             );
           })}
@@ -238,7 +247,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             <div className="mb-1 transition-transform duration-200">
               <LogOut size={20} />
             </div>
-            <span className="text-[10px] font-medium whitespace-nowrap">خروج</span>
+            <span className="text-[10px] font-medium whitespace-nowrap">{t('nav.logout')}</span>
           </button>
         </div>
       </nav>

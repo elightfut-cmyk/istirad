@@ -7,6 +7,8 @@ import LandingPage from './pages/public/LandingPage';
 import PageViewer from './pages/public/PageViewer';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ResetPassword from './pages/auth/ResetPassword';
+import { supabase } from './lib/supabase';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCoupons from './pages/admin/AdminCoupons';
@@ -36,13 +38,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
-import { useLanguageStore } from './store/useLanguageStore';
-
 function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
-  const { language } = useLanguageStore();
 
   useEffect(() => {
     checkSession();
@@ -58,9 +57,30 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, [language]);
+    document.documentElement.lang = 'ar';
+    document.documentElement.dir = 'rtl';
+  }, []);
+
+  useEffect(() => {
+    // If user enters with recovery hash and isn't on reset-password
+    if (window.location.hash && window.location.hash.includes('type=recovery')) {
+      if (window.location.pathname !== '/reset-password') {
+        window.location.href = `/reset-password${window.location.hash}`;
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        if (window.location.pathname !== '/reset-password') {
+          window.location.href = `/reset-password${window.location.hash}`;
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -80,6 +100,7 @@ function App() {
           <Route path="/page/:slug" element={<PageViewer />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route path="/profile" element={
             <ProtectedRoute allowedRoles={['admin', 'merchant', 'supplier']}>

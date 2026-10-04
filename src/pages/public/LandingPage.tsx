@@ -4,7 +4,7 @@ import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
-import LanguageToggle from '../../components/LanguageToggle';
+
 import WhatsAppButton from '../../components/WhatsAppButton';
 import FAQSection from '../../components/FAQSection';
 import Footer from '../../components/Footer';
@@ -43,7 +43,6 @@ export default function LandingPage() {
             <span className="text-2xl font-black text-[#4f46e5]">{t('brand.name')}</span>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
-            <LanguageToggle />
             {user ? (
               <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
                 {t('nav.dashboard')}

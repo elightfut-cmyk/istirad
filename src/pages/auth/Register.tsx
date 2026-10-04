@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { PackageSearch, Mail, Lock, User, Phone, MapPin, Building2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { PackageSearch, Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Role } from '../../store/useAuthStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
-import LanguageToggle from '../../components/LanguageToggle';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get('ref');
 
-  const { t, language } = useLanguageStore();
+  const { t } = useLanguageStore();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -102,10 +101,9 @@ export default function Register() {
     <div className="min-h-screen bg-[#f5f5f0] dark:bg-[#121212] flex flex-col items-center justify-center p-4 py-12 transition-colors">
       <div className="w-full max-w-xl mb-4 flex justify-between items-center px-1">
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition">
-          {language === 'ar' ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+          <ArrowRight size={16} />
           <span>{t('nav.home')}</span>
         </Link>
-        <LanguageToggle />
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-xl border border-gray-100 dark:border-gray-700">

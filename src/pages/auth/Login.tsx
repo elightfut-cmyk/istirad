@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useAuthStore, User } from '../../store/useAuthStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
-import LanguageToggle from '../../components/LanguageToggle';
 import { useNavigate, Link } from 'react-router-dom';
-import { PackageSearch, Mail, Lock, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { PackageSearch, Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function Login() {
@@ -20,7 +19,7 @@ export default function Login() {
   const [forgotError, setForgotError] = useState('');
   
   const { setUser } = useAuthStore();
-  const { t, language } = useLanguageStore();
+  const { t } = useLanguageStore();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -66,8 +65,12 @@ export default function Login() {
     setForgotLoading(true);
 
     try {
+      const redirectUrl = window.location.origin.includes('localhost')
+        ? `${window.location.origin}/reset-password`
+        : 'https://jiibha.com/reset-password';
+
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: redirectUrl,
       });
 
       if (error) throw error;
@@ -83,10 +86,9 @@ export default function Login() {
     <div className="min-h-screen bg-[#f5f5f0] dark:bg-[#121212] flex flex-col items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md mb-4 flex justify-between items-center px-1">
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition">
-          {language === 'ar' ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+          <ArrowRight size={16} />
           <span>{t('nav.home')}</span>
         </Link>
-        <LanguageToggle />
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 dark:border-gray-700">

@@ -4,8 +4,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { useLanguageStore } from '../store/useLanguageStore';
-import { arabicToKeyMap } from '../translations';
-import LanguageToggle from '../components/LanguageToggle';
+
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon, Vote } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
@@ -62,10 +61,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
     };
   }, []);
 
-  const translateLabel = (text: string) => {
-    const key = arabicToKeyMap[text];
-    return key ? t(key) : text;
-  };
+  const translateLabel = (text: string) => text;
 
   useEffect(() => {
     if (user) {
@@ -151,7 +147,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               </button>
             )}
 
-            <LanguageToggle />
+
 
             <button
               onClick={toggleTheme}

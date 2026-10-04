@@ -11,24 +11,15 @@ interface LanguageState {
 
 export const useLanguageStore = create<LanguageState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       language: 'ar',
-      setLanguage: (language: Language) => {
-        set({ language });
-        document.documentElement.lang = language;
-        document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+      setLanguage: () => {
+        set({ language: 'ar' });
+        document.documentElement.lang = 'ar';
+        document.documentElement.dir = 'rtl';
       },
-      toggleLanguage: () => {
-        const nextLang: Language = get().language === 'ar' ? 'en' : 'ar';
-        get().setLanguage(nextLang);
-      },
+      toggleLanguage: () => {},
       t: (key: TranslationKey | string, fallback?: string) => {
-        const lang = get().language;
-        const dict = translations[lang] as Record<string, string>;
-        if (dict && dict[key]) {
-          return dict[key];
-        }
-        // Fallback to Arabic dict if not found in current language
         const arDict = translations['ar'] as Record<string, string>;
         if (arDict && arDict[key]) {
           return arDict[key];

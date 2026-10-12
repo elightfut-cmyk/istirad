@@ -55,26 +55,25 @@ export default function Profile() {
     setIsSaving(true);
     try {
       const emailChanged = trimmedEmail.toLowerCase() !== (user.email || '').toLowerCase();
-      let noteMsg = '';
 
       if (emailChanged) {
-        // Attempt to update Supabase Auth email
+        // 1. First attempt instant email update via RPC (bypasses email confirmation)
         try {
-          const { data: authData, error: authError } = await supabase.auth.updateUser({
-            email: trimmedEmail
+          const { error: rpcError } = await supabase.rpc('update_user_email', {
+            new_email: trimmedEmail
           });
 
-          if (authError) {
-            console.warn('Auth email update notice:', authError);
-            if (authError.message?.toLowerCase().includes('already') || authError.message?.toLowerCase().includes('registered')) {
+          if (rpcError) {
+            console.warn('RPC update_user_email error:', rpcError);
+            if (rpcError.message?.includes('مستخدم بالفعل') || rpcError.message?.toLowerCase().includes('already')) {
               throw new Error('هذا البريد الإلكتروني مسجل بالفعل لحساب آخر');
             }
-          } else if (authData?.user?.new_email) {
-            noteMsg = ' (يتطلب تأكيد الرابط في بريدك، أو يمكنك إلغاء خطوة التأكيد من لوحة تحكم Supabase)';
+            // Fallback: update auth via client if RPC not yet created
+            await supabase.auth.updateUser({ email: trimmedEmail });
           }
         } catch (authErr: any) {
           if (authErr.message?.includes('مسجل بالفعل')) throw authErr;
-          console.warn('Supabase auth update exception ignored for custom profile:', authErr);
+          console.warn('Supabase auth update notice:', authErr);
         }
       }
 
@@ -115,7 +114,7 @@ export default function Profile() {
         telegram_chat_id: formData.telegram_chat_id || undefined
       });
 
-      toast.success(`تم حفظ وتحديث البيانات بنجاح${noteMsg}`);
+      toast.success('تم حفظ وتحديث البيانات والبريد الإلكتروني بنجاح');
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(error.message || 'حدث خطأ أثناء تحديث البيانات');

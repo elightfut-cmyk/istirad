@@ -14,7 +14,9 @@ function apiDevPlugin(env: Record<string, string>): any {
             try {
               const parsed = JSON.parse(body || '{}');
               const { to, subject, html, text, from } = parsed;
-              const defaultKey = Buffer.from('cmVfOW9IRGtoUUdfRE5LY1lOM0VuakdaaHRNcGtvZkUxRDJF', 'base64').toString('utf-8');
+              const defaultKey = (globalThis as any).Buffer 
+                ? (globalThis as any).Buffer.from('cmVfOW9IRGtoUUdfRE5LY1lOM0VuakdaaHRNcGtvZkUxRDJF', 'base64').toString('utf-8') 
+                : atob('cmVfOW9IRGtoUUdfRE5LY1lOM0VuakdaaHRNcGtvZkUxRDJF');
               const apiKey = env.RESEND_API_KEY || env.VITE_RESEND_API_KEY || (globalThis as any).process?.env?.RESEND_API_KEY || defaultKey;
               const sender = from || 'منصة جيبها <notifications@jiibha.com>';
               const recipients = Array.isArray(to) ? to : [to];

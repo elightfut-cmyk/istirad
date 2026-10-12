@@ -98,6 +98,7 @@ const formatNumber = (num: number) => {
  */
 export async function sendEmail(payload: EmailPayload): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
+    console.log('[Resend Email] Sending email to:', payload.to, 'Subject:', payload.subject);
     const res = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
@@ -109,10 +110,11 @@ export async function sendEmail(payload: EmailPayload): Promise<{ success: boole
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      console.warn('Failed to send email:', data.error || res.statusText);
+      console.error('[Resend Email Error]:', data.error || res.statusText, data);
       return { success: false, error: data.error || 'Failed to send email' };
     }
 
+    console.log('[Resend Email Success]:', data);
     return { success: true, id: data.id };
   } catch (err: any) {
     console.error('Network or server error sending email:', err);
@@ -136,7 +138,8 @@ async function resolveMerchantInfo(merchantId: string, email?: string, name?: st
       .single();
 
     if (error || !data) {
-      console.warn('Could not find merchant email for id:', merchantId, error);
+      console.warn('[Resend Email] Could not find merchant email for id:', merchantId, error?.message);
+      console.warn('[Resend Email Notice]: Please execute fix_merchant_email_and_rls.sql in Supabase SQL Editor to allow reading merchant info.');
       return { email: null, name: name || 'التاجر العزيز' };
     }
 

@@ -60,7 +60,7 @@ export default function Profile() {
       if (emailChanged) {
         // Attempt to update Supabase Auth email
         try {
-          const { error: authError } = await supabase.auth.updateUser({
+          const { data: authData, error: authError } = await supabase.auth.updateUser({
             email: trimmedEmail
           });
 
@@ -69,8 +69,8 @@ export default function Profile() {
             if (authError.message?.toLowerCase().includes('already') || authError.message?.toLowerCase().includes('registered')) {
               throw new Error('هذا البريد الإلكتروني مسجل بالفعل لحساب آخر');
             }
-          } else {
-            noteMsg = ' (يرجى تفقد بريدك لتأكيد التغيير إذا طُلب ذلك)';
+          } else if (authData?.user?.new_email) {
+            noteMsg = ' (يتطلب تأكيد الرابط في بريدك، أو يمكنك إلغاء خطوة التأكيد من لوحة تحكم Supabase)';
           }
         } catch (authErr: any) {
           if (authErr.message?.includes('مسجل بالفعل')) throw authErr;

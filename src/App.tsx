@@ -36,7 +36,7 @@ import SupplierOrders from './pages/supplier/SupplierOrders';
 import SupplierFinancials from './pages/supplier/SupplierFinancials';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
 function App() {
   const { checkSession, isLoading } = useAuthStore();
@@ -62,6 +62,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // If URL has otp_expired or access_denied hash from email change link
+    if (window.location.hash && (window.location.hash.includes('otp_expired') || window.location.hash.includes('error_code='))) {
+      toast.error('رابط التأكيد منتهي الصلاحية أو تم استهلاكه. يُرجى إلغاء تفعيل "Confirm email change" في Supabase لتحديث البريد فوراً بدون روابط.');
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
     // If user enters with recovery hash and isn't on reset-password
     if (window.location.hash && window.location.hash.includes('type=recovery')) {
       if (window.location.pathname !== '/reset-password') {

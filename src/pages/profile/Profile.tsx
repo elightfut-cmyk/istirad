@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserCircle, MapPin, Phone, Mail, Building, ShieldCheck, Check, MessageSquare } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import DashboardLayout from '../../layouts/DashboardLayout';
@@ -12,11 +12,25 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     phone: user?.phone || '',
     address: user?.address || '',
     company_name: user?.company_name || '',
     telegram_chat_id: user?.telegram_chat_id || ''
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        company_name: user.company_name || '',
+        telegram_chat_id: user.telegram_chat_id || ''
+      });
+    }
+  }, [user]);
 
   const defaultDashboardLink = user?.role === 'admin' 
     ? '/admin' 
@@ -26,12 +40,50 @@ export default function Profile() {
 
   const handleSave = async () => {
     if (!user) return;
+    const trimmedEmail = formData.email.trim();
+    if (!trimmedEmail) {
+      toast.error('البريد الإلكتروني مطلوب');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      toast.error('صيغة البريد الإلكتروني غير صحيحة');
+      return;
+    }
+
     setIsSaving(true);
     try {
+      const emailChanged = trimmedEmail.toLowerCase() !== (user.email || '').toLowerCase();
+      let noteMsg = '';
+
+      if (emailChanged) {
+        // Attempt to update Supabase Auth email
+        try {
+          const { error: authError } = await supabase.auth.updateUser({
+            email: trimmedEmail
+          });
+
+          if (authError) {
+            console.warn('Auth email update notice:', authError);
+            if (authError.message?.toLowerCase().includes('already') || authError.message?.toLowerCase().includes('registered')) {
+              throw new Error('هذا البريد الإلكتروني مسجل بالفعل لحساب آخر');
+            }
+          } else {
+            noteMsg = ' (يرجى تفقد بريدك لتأكيد التغيير إذا طُلب ذلك)';
+          }
+        } catch (authErr: any) {
+          if (authErr.message?.includes('مسجل بالفعل')) throw authErr;
+          console.warn('Supabase auth update exception ignored for custom profile:', authErr);
+        }
+      }
+
+      // Update profile in users table
       const { error } = await supabase
         .from('users')
         .update({
           name: formData.name,
+          email: trimmedEmail,
           phone: formData.phone,
           address: formData.address,
           company_name: formData.company_name,
@@ -41,18 +93,32 @@ export default function Profile() {
 
       if (error) throw error;
 
+      // Update backup merchant_email on custom_requests
+      if (emailChanged && user.role === 'merchant') {
+        try {
+          await supabase
+            .from('custom_requests')
+            .update({ merchant_email: trimmedEmail })
+            .eq('merchant_id', user.id);
+        } catch (e) {
+          // ignore if column not available
+        }
+      }
+
       setUser({
         ...user,
         name: formData.name,
+        email: trimmedEmail,
         phone: formData.phone,
         address: formData.address,
         company_name: formData.company_name,
         telegram_chat_id: formData.telegram_chat_id || undefined
       });
-      
-    } catch (error) {
+
+      toast.success(`تم حفظ وتحديث البيانات بنجاح${noteMsg}`);
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('حدث خطأ أثناء تحديث البيانات');
+      toast.error(error.message || 'حدث خطأ أثناء تحديث البيانات');
     } finally {
       setIsSaving(false);
     }
@@ -136,8 +202,16 @@ export default function Profile() {
                   <Mail size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">البريد الإلكتروني</p>
-                  <p className="text-gray-900 dark:text-white font-semibold" dir="ltr">{user?.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">البريد الإلكتروني (لتلقي إشعارات المناقصات والعروض)</p>
+                  <input 
+                    type="email" 
+                    value={formData.email} 
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="name@example.com"
+                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] focus:border-transparent text-left font-mono"
+                    dir="ltr"
+                  />
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">تصلك إلى هذا البريد إشعارات تنبيهات عروض الأسعار والردود على المناقصات</p>
                 </div>
               </div>
 

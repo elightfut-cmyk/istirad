@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- تحديث سياسات الأمان (RLS) في Supabase
--- لتمكين إرسال الإشعارات البريدية وعرض بيانات التاجر للموردين
+-- لتمكين إرسال الإشعارات البريدية وعرض بيانات التاجر للموردين وتعديل الإيميل
 -- يرجى تشغيل هذا الكود في Supabase Dashboard -> SQL Editor
 -- ==============================================================================
 
@@ -22,3 +22,12 @@ USING (true);
 
 -- 3. إضافة عمود merchant_email كنسخة احتياطية في جدول المناقصات (custom_requests)
 ALTER TABLE public.custom_requests ADD COLUMN IF NOT EXISTS merchant_email TEXT;
+
+-- 4. السماح لكل مستخدم بتحديث بياناته وإيميله في جدول users
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+CREATE POLICY "Users can update own profile"
+ON public.users
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);

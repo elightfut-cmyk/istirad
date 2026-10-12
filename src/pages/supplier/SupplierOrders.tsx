@@ -9,6 +9,7 @@ import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
 import OrderProgressBar from '../../components/OrderProgressBar';
 import CountdownCircle from '../../components/CountdownCircle';
+import { notifyMerchantShippingUpdate, notifyMerchantPaymentReminder } from '../../services/emailService';
 
 export default function SupplierOrders() {
   const { user } = useAuthStore();
@@ -103,6 +104,14 @@ export default function SupplierOrders() {
       if (order && order.custom_requests?.merchant_id) {
         const statusText = status === 'shipped' ? 'قيد الشحن' : status === 'delivered' ? 'مُسلّمة' : 'قيد التجهيز';
         sendNotification(order.custom_requests.merchant_id, 'تحديث حالة الشحن', `قام المورد ${user?.company_name} بتحديث حالة شحن طلبك إلى: ${statusText}`, 'info');
+
+        // Send Email to Merchant via Resend
+        notifyMerchantShippingUpdate({
+          merchantId: order.custom_requests.merchant_id,
+          supplierName: user?.company_name || user?.name || 'المورد',
+          tenderTitle: order.custom_requests.title || 'الطلب',
+          statusText,
+        }).catch(err => console.error('Error sending shipping update email:', err));
       }
     } catch (error) {
       console.error('Error updating shipping status:', error);
@@ -120,6 +129,14 @@ export default function SupplierOrders() {
       if (req?.merchant_id) {
         const typeDesc = bid.status === 'pending' ? 'دفع العربون' : 'دفع المبلغ المتبقي';
         sendNotification(req.merchant_id, 'تنبيه بالدفع', `يرجى ${typeDesc} للطلب: ${req.title}`, 'warning');
+
+        // Send Email to Merchant via Resend
+        notifyMerchantPaymentReminder({
+          merchantId: req.merchant_id,
+          supplierName: user?.company_name || user?.name || 'المورد',
+          tenderTitle: req.title || 'الطلب',
+          typeDesc,
+        }).catch(err => console.error('Error sending payment reminder email:', err));
       }
       toast.success('تم إرسال التنبيه بنجاح');
     } catch (error) {

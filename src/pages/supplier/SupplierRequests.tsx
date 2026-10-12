@@ -7,6 +7,13 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
 import { calculateFinalPrice } from '../../utils/profitCalculator';
+import {
+  notifyMerchantNewBid,
+  notifyMerchantBidUpdated,
+  notifyMerchantPriceAccepted,
+  notifyMerchantPriceRejected,
+  notifyMerchantSupplierInterest,
+} from '../../services/emailService';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
@@ -50,7 +57,7 @@ export default function SupplierRequests() {
         .from('custom_requests')
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
-          merchant:users!merchant_id(name, company_name, phone, address),
+          merchant:users!merchant_id(name, company_name, phone, address, email),
           supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply, supplier:users!supplier_id(name, company_name)),
           supplier_interests (supplier_id)
         `)
@@ -91,6 +98,21 @@ export default function SupplierRequests() {
 
         if (error) throw error;
         sendNotification(biddingRequest.merchant_id, 'تعديل عرض سعر', `قام ${user.name} بتعديل عرضه على مناقصتك: ${biddingRequest.title}`, 'info');
+
+        // Send Email to Merchant via Resend
+        notifyMerchantBidUpdated({
+          merchantId: biddingRequest.merchant_id,
+          merchantEmail: biddingRequest.merchant?.email,
+          merchantName: biddingRequest.merchant?.company_name || biddingRequest.merchant?.name,
+          supplierName: user.company_name || user.name,
+          tenderTitle: biddingRequest.title,
+          quantity,
+          itemPrice: calculation.finalItemPrice,
+          totalPrice: calculatedPriceTotal,
+          advancePercentage: bidForm.advance_percentage,
+          notes: bidForm.notes,
+        }).catch(err => console.error('Error sending bid update email:', err));
+
       } else {
         const { error } = await supabase.from('supplier_bids').insert({
           request_id: biddingRequest.id,
@@ -106,6 +128,22 @@ export default function SupplierRequests() {
 
         if (error) throw error;
         sendNotification(biddingRequest.merchant_id, 'عرض سعر جديد', `تلقيت عرضاً جديداً من ${user.name} على مناقصتك: ${biddingRequest.title}`, 'info');
+
+        // Send Email to Merchant via Resend
+        const advanceAmount = (calculatedPriceTotal * bidForm.advance_percentage) / 100;
+        notifyMerchantNewBid({
+          merchantId: biddingRequest.merchant_id,
+          merchantEmail: biddingRequest.merchant?.email,
+          merchantName: biddingRequest.merchant?.company_name || biddingRequest.merchant?.name,
+          supplierName: user.company_name || user.name,
+          tenderTitle: biddingRequest.title,
+          quantity,
+          itemPrice: calculation.finalItemPrice,
+          totalPrice: calculatedPriceTotal,
+          advancePercentage: bidForm.advance_percentage,
+          advanceAmount,
+          notes: bidForm.notes,
+        }).catch(err => console.error('Error sending new bid email:', err));
       }
       
       await fetchRequests();
@@ -119,8 +157,10 @@ export default function SupplierRequests() {
     }
   };
 
-  const handleAcceptProposedPrice = async (bid: any, reqQuantity: number, merchantId: string) => {
+  const handleAcceptProposedPrice = async (bid: any, req: any) => {
     try {
+      const reqQuantity = req.quantity || 1;
+      const merchantId = req.merchant_id;
       const newPriceTotal = bid.negotiated_price * reqQuantity;
       const { error } = await supabase.from('supplier_bids').update({
         price: newPriceTotal,
@@ -133,6 +173,20 @@ export default function SupplierRequests() {
       
       if (error) throw error;
       sendNotification(merchantId, 'تم قبول السعر المقترح', `وافق المورد ${user?.company_name || ''} على السعر المقترح، يرجى دفع العربون.`, 'success');
+
+      // Send Email to Merchant via Resend
+      notifyMerchantPriceAccepted({
+        merchantId,
+        merchantEmail: req.merchant?.email,
+        merchantName: req.merchant?.company_name || req.merchant?.name,
+        supplierName: user?.company_name || user?.name || 'المورد',
+        tenderTitle: req.title,
+        quantity: reqQuantity,
+        agreedPricePerItem: bid.negotiated_price,
+        agreedTotal: newPriceTotal,
+        advancePercentage: bid.advance_percentage || 20,
+      }).catch(err => console.error('Error sending price accept email:', err));
+
       toast.success('تم قبول السعر وتحديث العرض بنجاح');
       fetchRequests();
     } catch (error) {
@@ -140,15 +194,27 @@ export default function SupplierRequests() {
     }
   };
 
-  const handleRejectProposedPrice = async (bidId: string, merchantId: string) => {
+  const handleRejectProposedPrice = async (bidId: string, req: any) => {
     if (!window.confirm('هل أنت متأكد من رفض السعر المقترح؟ سيتم إبلاغ التاجر برفضك وسيكون أمامه خيار قبول عرضك الأول أو رفضه نهائياً.')) return;
     try {
+      const merchantId = req.merchant_id;
       const { error } = await supabase.from('supplier_bids').update({
         negotiated_by: 'supplier_rejected'
       }).eq('id', bidId);
       
       if (error) throw error;
       sendNotification(merchantId, 'رفض المورد للسعر المقترح', `رفض المورد السعر المقترح وتم إعادة العرض لخياره الأول.`, 'info');
+
+      // Send Email to Merchant via Resend
+      notifyMerchantPriceRejected({
+        merchantId,
+        merchantEmail: req.merchant?.email,
+        merchantName: req.merchant?.company_name || req.merchant?.name,
+        supplierName: user?.company_name || user?.name || 'المورد',
+        tenderTitle: req.title,
+        quantity: req.quantity || 1,
+      }).catch(err => console.error('Error sending price reject email:', err));
+
       toast.success('تم رفض السعر المقترح');
       fetchRequests();
     } catch (error) {
@@ -156,8 +222,9 @@ export default function SupplierRequests() {
     }
   };
 
-  const handleIndicateInterest = async (requestId: string) => {
+  const handleIndicateInterest = async (req: any) => {
     if (!user) return;
+    const requestId = req.id;
     try {
       const { error } = await supabase.from('supplier_interests').insert({
         request_id: requestId,
@@ -171,6 +238,19 @@ export default function SupplierRequests() {
         }
       } else {
         toast.success('تم إعلام التاجر بأنك تبحث عن عرض مناسب لطلبه.');
+
+        // Notify merchant in-app
+        sendNotification(req.merchant_id, 'مورد مهتم بمناقصتك', `قام المورد ${user.company_name || user.name} بإبداء اهتمامه بمناقصتك: ${req.title} وجاري البحث عن أفضل عرض.`, 'info');
+
+        // Send Email to Merchant via Resend
+        notifyMerchantSupplierInterest({
+          merchantId: req.merchant_id,
+          merchantEmail: req.merchant?.email,
+          merchantName: req.merchant?.company_name || req.merchant?.name,
+          supplierName: user.company_name || user.name,
+          tenderTitle: req.title,
+          quantity: req.quantity || 1,
+        }).catch(err => console.error('Error sending supplier interest email:', err));
       }
       fetchRequests();
     } catch (error) {
@@ -344,13 +424,13 @@ export default function SupplierRequests() {
                           )}
                           <div className="flex gap-2">
                             <button 
-                              onClick={() => handleAcceptProposedPrice(myBid, req.quantity || 1, req.merchant_id)}
+                              onClick={() => handleAcceptProposedPrice(myBid, req)}
                               className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
                             >
                               قبول السعر المقترح
                             </button>
                             <button 
-                              onClick={() => handleRejectProposedPrice(myBid.id, req.merchant_id)}
+                              onClick={() => handleRejectProposedPrice(myBid.id, req)}
                               className="flex-1 bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-100 transition"
                             >
                               رفض العرض
@@ -410,7 +490,7 @@ export default function SupplierRequests() {
                           </button>
                           {!req.supplier_interests?.some((i: any) => i.supplier_id === user?.id) ? (
                             <button 
-                              onClick={() => handleIndicateInterest(req.id)}
+                              onClick={() => handleIndicateInterest(req)}
                               className="w-full bg-orange-50 text-orange-600 border border-orange-200 py-3 rounded-xl font-bold hover:bg-orange-100 transition shadow-sm"
                             >
                               جاري البحث عن المنتج والسعر (إعلام التاجر)

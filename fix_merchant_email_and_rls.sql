@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- تحديث سياسات الأمان ودالة تغيير الإيميل الفوري في Supabase
--- لتفعيل تغيير الإيميل فورياً بدون روابط تأكيد وبدون الحاجة لرسائل OTP
+-- لتفعيل تغيير الإيميل فورياً وبدون الحاجة لرسائل OTP أو تأكيد
 -- يرجى تشغيل هذا الكود في Supabase Dashboard -> SQL Editor
 -- ==============================================================================
 
@@ -32,25 +32,27 @@ TO authenticated
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
 
--- 5. مزامنة أي حسابات تم تغيير إيميلها سابقاً في جدول public.users إلى auth.users لتفعيل الدخول فوراً
+-- 5. مزامنة أي حسابات تم تغيير إيميلها في public.users إلى auth.users فوراً لتفعيل الدخول بها
 UPDATE auth.users u
 SET 
   email = lower(trim(p.email)),
   email_confirmed_at = COALESCE(u.email_confirmed_at, now()),
   raw_user_meta_data = COALESCE(u.raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('email', lower(trim(p.email))),
+  email_change = '',
+  email_change_token_new = '',
   updated_at = now()
 FROM public.users p
 WHERE u.id = p.id AND (u.email IS DISTINCT FROM lower(trim(p.email)));
 
+-- 6. تحديث بيانات الهوية في auth.identities لتتطابق مع الإيميل الجديد
 UPDATE auth.identities i
 SET 
   identity_data = jsonb_set(COALESCE(i.identity_data, '{}'::jsonb), '{email}', to_jsonb(lower(trim(p.email)))),
-  provider_id = CASE WHEN i.provider_id LIKE '%@%' THEN lower(trim(p.email)) ELSE i.provider_id END,
   updated_at = now()
 FROM public.users p
-WHERE i.user_id = p.id AND i.provider = 'email' AND (i.identity_data->>'email' IS DISTINCT FROM lower(trim(p.email)) OR (i.provider_id LIKE '%@%' AND i.provider_id != lower(trim(p.email))));
+WHERE i.user_id = p.id AND i.provider = 'email' AND (i.identity_data->>'email' IS DISTINCT FROM lower(trim(p.email)));
 
--- 6. دالة تغيير الإيميل الفوري (Instant Email Update) بدون الحاجة لأي رابط تأكيد
+-- 7. دالة تغيير الإيميل الفوري (Instant Email Update) بدون الحاجة لأي رابط تأكيد
 CREATE OR REPLACE FUNCTION public.update_user_email(new_email TEXT)
 RETURNS void
 LANGUAGE plpgsql
@@ -74,12 +76,14 @@ BEGIN
     RAISE EXCEPTION 'البريد الإلكتروني مستخدم بالفعل لحساب آخر';
   END IF;
 
-  -- تحديث auth.users فورياً وتأكيده دون انتظار أي رابط
+  -- تحديث auth.users فورياً وتأكيده ومسح حالة الانتظار
   UPDATE auth.users
   SET 
     email = formatted_email,
     email_confirmed_at = COALESCE(email_confirmed_at, now()),
     raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('email', formatted_email),
+    email_change = '',
+    email_change_token_new = '',
     updated_at = now()
   WHERE id = calling_user_id;
 
@@ -87,7 +91,6 @@ BEGIN
   UPDATE auth.identities
   SET 
     identity_data = jsonb_set(COALESCE(identity_data, '{}'::jsonb), '{email}', to_jsonb(formatted_email)),
-    provider_id = CASE WHEN provider_id LIKE '%@%' THEN formatted_email ELSE provider_id END,
     updated_at = now()
   WHERE user_id = calling_user_id AND provider = 'email';
 

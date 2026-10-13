@@ -38,10 +38,31 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
+import { Capacitor } from '@capacitor/core';
+import OneSignal from 'onesignal-cordova-plugin';
+
 function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
+
+  useEffect(() => {
+    // OneSignal Native Push Initialization for Android
+    const isNative = (Capacitor as any).isNative || (typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform());
+    if (isNative) {
+      try {
+        const oneSignalInstance = (window as any).plugins?.OneSignal || OneSignal;
+        if (oneSignalInstance && typeof oneSignalInstance.initialize === 'function') {
+          oneSignalInstance.initialize('daeaef49-9125-4ef2-8950-6c0428063f09');
+          if (oneSignalInstance.Notifications?.requestPermission) {
+            oneSignalInstance.Notifications.requestPermission(true);
+          }
+        }
+      } catch (err) {
+        console.error('OneSignal init error:', err);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     checkSession();

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { sendPushNotification } from '../services/pushNotificationService';
 
 export interface Notification {
   id: string;
@@ -100,6 +101,19 @@ export const sendNotification = async (userId: string, title: string, message: s
            type
          }));
          await supabase.from('notifications').insert(inserts);
+
+         // Dispatch push notification to all target mobile users via OneSignal API
+         try {
+           const targetIds = targetUsers.map(u => String(u.id));
+           await sendPushNotification({
+             userIds: targetIds,
+             title,
+             message,
+             data: { type }
+           });
+         } catch (pushErr) {
+           console.error('OneSignal Push Error (all users):', pushErr);
+         }
        }
        return;
     }
@@ -110,6 +124,18 @@ export const sendNotification = async (userId: string, title: string, message: s
       message,
       type
     });
+
+    // Dispatch push notification to target user's mobile via OneSignal API
+    try {
+      await sendPushNotification({
+        userIds: [String(userId)],
+        title,
+        message,
+        data: { type }
+      });
+    } catch (pushErr) {
+      console.error('OneSignal Push Error:', pushErr);
+    }
   } catch (error) {
     console.error('Error sending notification:', error);
   }

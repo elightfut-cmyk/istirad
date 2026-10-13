@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp } from 'lucide-react';
+import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp, Smartphone } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
@@ -43,6 +43,15 @@ export default function LandingPage() {
             <span className="text-2xl font-black text-[#4f46e5]">{t('brand.name')}</span>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
+            <a
+              href="/jibha-app.apk"
+              download="jibha-app.apk"
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold transition-all shadow-sm hover:shadow-md text-xs sm:text-sm border border-emerald-500/20 active:scale-95"
+              title="تحميل تطبيق جيبها للأندرويد"
+            >
+              <Smartphone size={18} />
+              <span>حمل التطبيق</span>
+            </a>
             {user ? (
               <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
                 {t('nav.dashboard')}

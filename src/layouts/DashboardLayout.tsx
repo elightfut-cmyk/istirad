@@ -6,7 +6,7 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useLanguageStore } from '../store/useLanguageStore';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon, Vote } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon, Vote, Smartphone } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
 import DashboardAlertModal from '../components/DashboardAlertModal';
 import SocialLinksModal from '../components/SocialLinksModal';
@@ -135,6 +135,15 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           </div>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="/jibha-app.apk"
+              download="jibha-app.apk"
+              className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
+              title="تحميل تطبيق جيبها للأندرويد"
+            >
+              <Smartphone size={15} />
+              <span>حمل التطبيق</span>
+            </a>
             {user && (user.role === 'merchant' || user.role === 'supplier') && hasActivePoll && (
               <button
                 onClick={() => setIsPollOpen(true)}

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { loginOneSignalUser, logoutOneSignalUser } from '../lib/onesignal';
 
 export type Role = 'admin' | 'merchant' | 'supplier' | null;
 
@@ -35,7 +36,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
+  setUser: (user) => {
+    set({ user, isAuthenticated: !!user, isLoading: false });
+    if (user?.id) {
+      loginOneSignalUser(user.id);
+    }
+  },
   checkSession: async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -53,6 +59,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (profile) {
         set({ user: profile as User, isAuthenticated: true, isLoading: false });
+        loginOneSignalUser(profile.id);
       } else {
         set({ user: null, isAuthenticated: false, isLoading: false });
       }
@@ -63,6 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: async () => {
     await supabase.auth.signOut();
+    logoutOneSignalUser();
     set({ user: null, isAuthenticated: false });
   },
 }));

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1002472294791",
+    "project_id": "jiibha",
+    "storage_bucket": "jiibha.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1002472294791:android:2899822f0d32c9d3412b22",
+        "android_client_info": {
+          "package_name": "com.jiibha.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_LdCjaXZGwGFF2y9SN2D4g9J6RTsFsDg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

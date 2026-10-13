@@ -29,7 +29,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No user IDs provided' });
     }
 
-    const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ') ? apiKey : `Basic ${apiKey}`;
+    const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
+      ? apiKey
+      : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
 
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',

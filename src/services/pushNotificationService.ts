@@ -26,7 +26,9 @@ export const sendPushNotification = async ({
 
     // 1. If client has API key configured, call OneSignal REST API directly
     if (apiKey) {
-      const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ') ? apiKey : `Basic ${apiKey}`;
+      const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
+        ? apiKey
+        : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
       const payload = {
         app_id: ONESIGNAL_APP_ID,
         include_aliases: {

@@ -47,6 +47,60 @@ function apiDevPlugin(env: Record<string, string>): any {
           });
           return;
         }
+
+        if (req.url === '/api/send-push' && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk: any) => { body += chunk; });
+          req.on('end', async () => {
+            try {
+              const parsed = JSON.parse(body || '{}');
+              const { userIds, title, message, data } = parsed;
+              const apiKey = env.ONESIGNAL_REST_API_KEY || env.VITE_ONESIGNAL_REST_API_KEY;
+              const appId = env.ONESIGNAL_APP_ID || env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+
+              if (!apiKey) {
+                res.setHeader('Content-Type', 'application/json');
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'ONESIGNAL_REST_API_KEY is not configured' }));
+                return;
+              }
+
+              const rawIds = Array.isArray(userIds) ? userIds : [userIds];
+              const externalIds = rawIds.filter(Boolean).map(String);
+
+              const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ') ? apiKey : `Basic ${apiKey}`;
+
+              const oneSignalRes = await fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json; charset=utf-8',
+                  'Authorization': authHeader
+                },
+                body: JSON.stringify({
+                  app_id: appId,
+                  include_aliases: { external_id: externalIds },
+                  include_external_user_ids: externalIds,
+                  channel_for_external_user_ids: 'push',
+                  target_channel: 'push',
+                  headings: { en: title, ar: title },
+                  contents: { en: message, ar: message },
+                  data: data || {}
+                })
+              });
+
+              const resData = await oneSignalRes.json();
+              res.setHeader('Content-Type', 'application/json');
+              res.statusCode = oneSignalRes.status;
+              res.end(JSON.stringify(resData));
+            } catch (err: any) {
+              res.setHeader('Content-Type', 'application/json');
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          return;
+        }
+
         next();
       });
     }

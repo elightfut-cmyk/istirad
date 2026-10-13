@@ -4,8 +4,7 @@ import { useLanguageStore } from '../../store/useLanguageStore';
 import { useNavigate, Link } from 'react-router-dom';
 import { PackageSearch, Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { Capacitor } from '@capacitor/core';
-import OneSignal from 'onesignal-cordova-plugin';
+import { loginOneSignalUser } from '../../lib/onesignal';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -49,17 +48,7 @@ export default function Login() {
 
         if (profile) {
           setUser(profile as User);
-          try {
-            const isNative = (Capacitor as any).isNative || (typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform());
-            if (isNative) {
-              const oneSignalInstance = (window as any).plugins?.OneSignal || OneSignal;
-              if (oneSignalInstance && typeof oneSignalInstance.login === 'function') {
-                oneSignalInstance.login(String(profile.id));
-              }
-            }
-          } catch (e) {
-            console.error('OneSignal login error:', e);
-          }
+          loginOneSignalUser(profile.id);
           navigate(`/${profile.role}`);
         }
       }

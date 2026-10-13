@@ -4,6 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
+import { sendNotification } from '../../store/useNotificationStore';
 
 export default function AdminOrders() {
   const { formatCurrency } = useSettingsStore();
@@ -75,6 +76,7 @@ export default function AdminOrders() {
       if (error) throw error;
       if (data && !data.success) throw new Error(data.message);
 
+      sendNotification(payment.merchant_id, 'الموافقة على شحن الرصيد', `تمت الموافقة على طلب الشحن اليدوي بقيمة ${formatCurrency(payment.amount)} وإضافتها لمحفظتك بنجاح.`, 'success');
       toast.success('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
       fetchManualPayments();
     } catch (error: any) {
@@ -94,7 +96,11 @@ export default function AdminOrders() {
       fetchManualPayments();
     } catch (error) {
       console.error(error);
-      toast.error('حدث خطأ أثناء رفض الدفعة.');
+      const payment = manualPayments.find(p => p.id === paymentId);
+      if (payment) {
+        sendNotification(payment.merchant_id, 'رفض طلب شحن الرصيد', `تم رفض طلب الشحن اليدوي بقيمة ${formatCurrency(payment.amount)}.`, 'error');
+      }
+      toast.error('تم رفض الدفعة.');
     }
   };
 

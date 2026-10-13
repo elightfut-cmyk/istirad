@@ -33,10 +33,19 @@ import DashboardAlertModal from '../../components/DashboardAlertModal';
 import SocialLinksAdminTab from '../../components/admin/SocialLinksAdminTab';
 import PollAdminTab from '../../components/admin/PollAdminTab';
 import toast from 'react-hot-toast';
+import { sendPushNotification } from '../../services/pushNotificationService';
+import { Smartphone } from 'lucide-react';
 import { Vote } from 'lucide-react';
 
 export default function AdminNotifications() {
-  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram'>('popup');
+  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push'>('popup');
+
+  // Push Broadcast States
+  const [pushTitle, setPushTitle] = useState('');
+  const [pushMessage, setPushMessage] = useState('');
+  const [pushTarget, setPushTarget] = useState<'all' | 'merchant' | 'supplier'>('all');
+  const [pushType, setPushType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
+  const [sendingPush, setSendingPush] = useState(false);
 
   // Popup Alert States
   const [currentAlert, setCurrentAlert] = useState<DashboardAlert | null>(null);
@@ -259,6 +268,48 @@ export default function AdminNotifications() {
   };
 
   // Telegram Send Handler
+
+  const handleSendBroadcastPush = async () => {
+    if (!pushTitle.trim() || !pushMessage.trim()) {
+      toast.error('يرجى كتابة العنوان ونص الإشعار');
+      return;
+    }
+    setSendingPush(true);
+    try {
+      let query = supabase.from('users').select('id');
+      if (pushTarget === 'merchant') query = query.eq('role', 'merchant');
+      else if (pushTarget === 'supplier') query = query.eq('role', 'supplier');
+      const { data: users, error } = await query;
+      if (error) throw error;
+      if (users && users.length > 0) {
+        const inserts = users.map((u: any) => ({
+          user_id: u.id,
+          title: pushTitle.trim(),
+          message: pushMessage.trim(),
+          type: pushType
+        }));
+        await supabase.from('notifications').insert(inserts);
+        const userIds = users.map((u: any) => String(u.id));
+        await sendPushNotification({
+          userIds,
+          title: pushTitle.trim(),
+          message: pushMessage.trim(),
+          data: { type: pushType }
+        });
+        toast.success(`تم إرسال الإشعار بنجاح إلى ${users.length} مستخدم (جرس + هاتف)!`);
+        setPushTitle('');
+        setPushMessage('');
+      } else {
+        toast.error('لم يتم العثور على مستخدمين في هذه الفئة');
+      }
+    } catch (err: any) {
+      console.error('Error sending broadcast push:', err);
+      toast.error('حدث خطأ أثناء إرسال الإشعار: ' + (err.message || ''));
+    } finally {
+      setSendingPush(false);
+    }
+  };
+
   const handleSendTelegram = async () => {
     if (!telegramMessage.trim()) {
       toast.error('الرجاء كتابة رسالة أولاً.');
@@ -813,6 +864,134 @@ export default function AdminNotifications() {
       {/* TAB 3: USER POLLS */}
       {activeTab === 'poll' && (
         <PollAdminTab />
+      )}
+
+      
+      {/* TAB 5: BROADCAST PUSH NOTIFICATION */}
+      {activeTab === 'push' && (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+            <Smartphone className="text-[#4f46e5]" />
+            إرسال إشعار مباشر لتطبيق الهاتف والجرس (Push Notification)
+          </h2>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">الفئة المستهدفة</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushTarget" 
+                    value="all" 
+                    checked={pushTarget === 'all'} 
+                    onChange={() => setPushTarget('all')}
+                    className="w-4 h-4 text-[#4f46e5] focus:ring-[#4f46e5]"
+                  />
+                  <span>جميع المستخدمين</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushTarget" 
+                    value="merchant" 
+                    checked={pushTarget === 'merchant'} 
+                    onChange={() => setPushTarget('merchant')}
+                    className="w-4 h-4 text-[#4f46e5] focus:ring-[#4f46e5]"
+                  />
+                  <span>التجار فقط</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushTarget" 
+                    value="supplier" 
+                    checked={pushTarget === 'supplier'} 
+                    onChange={() => setPushTarget('supplier')}
+                    className="w-4 h-4 text-[#4f46e5] focus:ring-[#4f46e5]"
+                  />
+                  <span>الموردون فقط</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">نوع الإشعار</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushType" 
+                    value="info" 
+                    checked={pushType === 'info'} 
+                    onChange={() => setPushType('info')}
+                    className="w-4 h-4 text-blue-600"
+                  />
+                  <span>معلوماتي (أزرق)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushType" 
+                    value="success" 
+                    checked={pushType === 'success'} 
+                    onChange={() => setPushType('success')}
+                    className="w-4 h-4 text-green-600"
+                  />
+                  <span>نجاح (أخضر)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushType" 
+                    value="warning" 
+                    checked={pushType === 'warning'} 
+                    onChange={() => setPushType('warning')}
+                    className="w-4 h-4 text-yellow-600"
+                  />
+                  <span>تنبيه (أصفر)</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">عنوان الإشعار</label>
+              <input
+                type="text"
+                value={pushTitle}
+                onChange={(e) => setPushTitle(e.target.value)}
+                placeholder="مثال: خصومات حصرية على الشحن..."
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">نص الإشعار</label>
+              <textarea
+                rows={4}
+                value={pushMessage}
+                onChange={(e) => setPushMessage(e.target.value)}
+                placeholder="اكتب نص الإشعار الذي سيظهر على شاشة الهاتف وفي جرس التنبيهات..."
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] resize-none bg-gray-50 dark:bg-gray-900 focus:bg-white dark:bg-gray-800"
+              />
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={handleSendBroadcastPush}
+                disabled={sendingPush || !pushTitle.trim() || !pushMessage.trim()}
+                className="flex items-center gap-2 px-8 py-3 bg-[#4f46e5] text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              >
+                {sendingPush ? 'جاري الإرسال لهواتف المستخدمين...' : (
+                  <>
+                    <Smartphone size={18} />
+                    إرسال الإشعار الفوري (الهاتف + الجرس)
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* TAB 4: TELEGRAM BROADCAST */}

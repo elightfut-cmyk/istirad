@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { LayoutDashboard, ShoppingBag, Wallet, Gift, Heart, AlertTriangle, Send  } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { sendNotification } from '../../store/useNotificationStore';
 
 export default function MerchantComplaints() {
   const { user } = useAuthStore();
@@ -56,6 +57,12 @@ export default function MerchantComplaints() {
         console.warn('Telegram Bot Token not configured.');
       }
 
+      sendNotification(
+        'all_admins',
+        'شكوى جديدة',
+        `قام التاجر ${user?.name || ''} بتقديم شكوى جديدة: ${complaintType}`,
+        'warning'
+      );
       toast.success('تم إرسال الشكوى بنجاح وسيتم مراجعتها في أقرب وقت');
       setMessage('');
       setComplaintType('تأخر الطلب');

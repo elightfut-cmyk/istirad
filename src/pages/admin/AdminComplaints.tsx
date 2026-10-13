@@ -3,6 +3,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle , Package , Lightbulb , Search , Video } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { sendNotification } from '../../store/useNotificationStore';
 
 interface Complaint {
   id: string;
@@ -55,6 +56,15 @@ export default function AdminComplaints() {
         .eq('id', id);
         
       if (error) throw error;
+      const statusText = newStatus === 'resolved' ? 'تمت معالجتها' : 'تم إغلاقها';
+      if (selectedComplaint && selectedComplaint.merchant_id) {
+        sendNotification(
+          selectedComplaint.merchant_id,
+          'تحديث حالة الشكوى',
+          `تم تحديث حالة شكواك: ${statusText}.`,
+          newStatus === 'resolved' ? 'success' : 'info'
+        );
+      }
       toast.success('تم تحديث حالة الشكوى بنجاح');
       setSelectedComplaint(null);
       fetchComplaints();

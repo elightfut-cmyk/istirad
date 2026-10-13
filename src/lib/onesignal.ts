@@ -61,12 +61,27 @@ export const initOneSignal = (): void => {
         oneSignalInstance.initialize(ONESIGNAL_APP_ID);
         console.log('✅ OneSignal initialized successfully for app ID:', ONESIGNAL_APP_ID);
 
+        // Ensure device is opted into push
+        if (oneSignalInstance.User?.pushSubscription?.optIn) {
+          oneSignalInstance.User.pushSubscription.optIn();
+        }
+
         // Prompt user for push notifications permission on Android 13+
         if (oneSignalInstance.Notifications?.requestPermission) {
           oneSignalInstance.Notifications.requestPermission(true).then((granted: boolean) => {
             console.log('Push notification permission granted:', granted);
           }).catch((permErr: any) => {
             console.warn('Permission request error:', permErr);
+          });
+        }
+
+        // Handle foreground notifications
+        if (oneSignalInstance.Notifications?.addEventListener) {
+          oneSignalInstance.Notifications.addEventListener('foregroundWillDisplay', (event: any) => {
+            console.log('Push notification received in foreground:', event);
+          });
+          oneSignalInstance.Notifications.addEventListener('click', (event: any) => {
+            console.log('Push notification clicked:', event);
           });
         }
 

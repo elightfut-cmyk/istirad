@@ -118,12 +118,22 @@ export const sendNotification = async (userId: string, title: string, message: s
        return;
     }
 
-    await supabase.from('notifications').insert({
+    const { error: insertErr } = await supabase.from('notifications').insert({
       user_id: userId,
       title,
       message,
       type
     });
+
+    if (insertErr) {
+      console.warn('Direct notification insert failed (trying RPC):', insertErr);
+      await supabase.rpc('send_user_notification', {
+        p_user_id: userId,
+        p_title: title,
+        p_message: message,
+        p_type: type
+      });
+    }
 
     // Dispatch push notification to target user's mobile via OneSignal API
     try {

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import CustomWindowSlider from '../../components/CustomWindowSlider';
 import NewsTicker from '../../components/NewsTicker';
 import YoutubePlayer from '../../components/YoutubePlayer';
+import NotificationStatusBanner from '../../components/NotificationStatusBanner';
 
 export default function MerchantDashboard() {
   const { user } = useAuthStore();
@@ -74,6 +75,10 @@ export default function MerchantDashboard() {
     >
       <div className="mb-6 -mx-8 -mt-8">
         <NewsTicker />
+      </div>
+
+      <div className="mb-6">
+        <NotificationStatusBanner />
       </div>
 
       <div className="mb-8">

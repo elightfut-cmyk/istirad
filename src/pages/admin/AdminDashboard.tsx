@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { calculateFinalPrice } from '../../utils/profitCalculator';
 import AdminSettings from '../../components/admin/AdminSettings';
 import toast from 'react-hot-toast';
+import NotificationStatusBanner from '../../components/NotificationStatusBanner';
 
 export default function AdminDashboard() {
   const { formatCurrency } = useSettingsStore();
@@ -212,6 +213,10 @@ export default function AdminDashboard() {
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
+      <div className="mb-6">
+        <NotificationStatusBanner />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[
           { title: 'إجمالي التجار', value: loading ? '...' : stats.totalMerchants.toString(), color: 'text-blue-600', bg: 'bg-blue-50', icon: <Users size={24} className="text-blue-600" /> },

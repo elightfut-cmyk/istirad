@@ -36,6 +36,7 @@ import toast from 'react-hot-toast';
 import { sendPushNotification } from '../../services/pushNotificationService';
 import { Smartphone } from 'lucide-react';
 import { Vote } from 'lucide-react';
+import NotificationDiagnosticsModal from '../../components/NotificationDiagnosticsModal';
 
 export default function AdminNotifications() {
   const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push'>('popup');
@@ -46,6 +47,7 @@ export default function AdminNotifications() {
   const [pushTarget, setPushTarget] = useState<'all' | 'merchant' | 'supplier'>('all');
   const [pushType, setPushType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
   const [sendingPush, setSendingPush] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   // Popup Alert States
   const [currentAlert, setCurrentAlert] = useState<DashboardAlert | null>(null);
@@ -294,7 +296,8 @@ export default function AdminNotifications() {
           userIds,
           title: pushTitle.trim(),
           message: pushMessage.trim(),
-          data: { type: pushType }
+          data: { type: pushType },
+          sendToAll: pushTarget === 'all'
         });
         toast.success(`تم إرسال الإشعار بنجاح إلى ${users.length} مستخدم (جرس + هاتف)!`);
         setPushTitle('');
@@ -976,7 +979,7 @@ export default function AdminNotifications() {
               />
             </div>
 
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
               <button
                 onClick={handleSendBroadcastPush}
                 disabled={sendingPush || !pushTitle.trim() || !pushMessage.trim()}
@@ -988,6 +991,15 @@ export default function AdminNotifications() {
                     إرسال الإشعار الفوري (الهاتف + الجرس)
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDiagnostics(true)}
+                className="flex items-center gap-2 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition border border-indigo-200 dark:border-indigo-800 text-sm"
+              >
+                <Bell size={16} />
+                <span>فحص إشعارات الهاتف وحل المشاكل</span>
               </button>
             </div>
           </div>
@@ -1081,6 +1093,12 @@ export default function AdminNotifications() {
           </div>
         </div>
       )}
+
+      {/* Diagnostics Modal */}
+      <NotificationDiagnosticsModal
+        isOpen={showDiagnostics}
+        onClose={() => setShowDiagnostics(false)}
+      />
     </DashboardLayout>
   );
 }

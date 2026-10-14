@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { UserCircle, MapPin, Phone, Mail, Building, ShieldCheck, Check, MessageSquare } from 'lucide-react';
+import { UserCircle, MapPin, Phone, Mail, Building, ShieldCheck, Check, MessageSquare, Bell } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { LayoutDashboard } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import NotificationDiagnosticsModal from '../../components/NotificationDiagnosticsModal';
 
 export default function Profile() {
   const { user, setUser } = useAuthStore();
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -258,6 +260,32 @@ export default function Profile() {
                   />
                 </div>
               </div>
+
+              {/* Mobile Push Notifications Diagnostics */}
+              <div className="flex items-start gap-4 md:col-span-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+                  <Bell size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800 dark:text-gray-100">إشعارات الهاتف وتنبيهات التطبيق (Push Notifications)</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                        فحص حالة استقبال التنبيهات على هاتفك، وتجربة إرسال إشعار فوري للتأكد من وصوله بنجاح
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDiagnostics(true)}
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+                    >
+                      <Bell size={14} />
+                      <span>فحص وتجربة الإشعارات</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
             
             {/* Actions */}
@@ -274,6 +302,12 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Diagnostics Modal */}
+      <NotificationDiagnosticsModal
+        isOpen={showDiagnostics}
+        onClose={() => setShowDiagnostics(false)}
+      />
     </DashboardLayout>
   );
 }

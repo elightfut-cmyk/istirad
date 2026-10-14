@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { calculateFinalPrice, calculateSupplierPriceFromFinal } from '../../utils/profitCalculator';
+import NotificationStatusBanner from '../../components/NotificationStatusBanner';
 
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
@@ -81,6 +82,10 @@ export default function SupplierDashboard() {
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
       ]}
     >
+      <div className="mb-6">
+        <NotificationStatusBanner />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[
           { title: 'إجمالي المبيعات', value: formatCurrency(stats.sales), color: 'text-[#4f46e5]' },

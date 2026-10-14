@@ -11,6 +11,7 @@ import WhatsAppButton from '../components/WhatsAppButton';
 import DashboardAlertModal from '../components/DashboardAlertModal';
 import SocialLinksModal from '../components/SocialLinksModal';
 import UserPollModal from '../components/UserPollModal';
+import NotificationDiagnosticsModal from '../components/NotificationDiagnosticsModal';
 import { pollService } from '../services/pollService';
 
 interface DashboardLayoutProps {
@@ -28,6 +29,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const navigate = useNavigate();
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Modals sequence state (First Alert -> 10s delay -> Social Links)
@@ -203,6 +205,17 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800 dark:text-white">{t('nav.notifications')}</h3>
+                    <button
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        setShowDiagnosticsModal(true);
+                      }}
+                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-lg border border-indigo-200/50 dark:border-indigo-800 transition"
+                      title="فحص وصول إشعارات الهاتف وتجربتها فوراً"
+                    >
+                      <Smartphone size={13} />
+                      <span>فحص الإشعارات</span>
+                    </button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -315,6 +328,10 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       <UserPollModal 
         isOpenControlled={isPollOpen} 
         onCloseControlled={() => setIsPollOpen(false)} 
+      />
+      <NotificationDiagnosticsModal
+        isOpen={showDiagnosticsModal}
+        onClose={() => setShowDiagnosticsModal(false)}
       />
     </div>
   );

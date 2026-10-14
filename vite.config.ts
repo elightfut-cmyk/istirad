@@ -55,7 +55,7 @@ function apiDevPlugin(env: Record<string, string>): any {
             try {
               const parsed = JSON.parse(body || '{}');
               const { userIds, title, message, data } = parsed;
-              const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JoMnZqbWlpdGV0dXlwdmZuMzJob2xyM3l4aGV0Mm9ia25tbHk3ZjRleHF0bm5yZWtvYzZtbnlqamQ3c3BhMnQ0YmFkaGFmdDY2MzVuN2E=';
+              const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjY3FicjdiaDJ2am1paXRldHV5cHZmbjMyaG9scjN5eGhldDJvYmtubWx5N2Y0ZXhxdG5ucmVrb2M2bW55ampkN3NwYTJ0NGJhZGhhZnQ2NjM1bjdh';
               const fallbackKey = Buffer.from(ENCODED_REST_KEY, 'base64').toString('utf8');
               const apiKey = env.ONESIGNAL_REST_API_KEY || env.VITE_ONESIGNAL_REST_API_KEY || fallbackKey;
               const appId = env.ONESIGNAL_APP_ID || env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
@@ -82,6 +82,9 @@ function apiDevPlugin(env: Record<string, string>): any {
                 },
                 body: JSON.stringify({
                   app_id: appId,
+                  android_channel_id: 'jibha_channel',
+                  priority: 10,
+                  android_accent_color: 'FF4F46E5',
                   include_aliases: { external_id: externalIds },
                   include_external_user_ids: externalIds,
                   channel_for_external_user_ids: 'push',

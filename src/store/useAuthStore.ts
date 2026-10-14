@@ -44,18 +44,33 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   checkSession: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const getSessionWithTimeout = async () => {
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 1500)
+        );
+        return Promise.race([supabase.auth.getSession(), timeoutPromise]);
+      };
+
+      const { data: { session } } = await getSessionWithTimeout();
       if (!session) {
         set({ user: null, isAuthenticated: false, isLoading: false });
         return;
       }
 
-      // Fetch user profile from the custom users table
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      // Fetch user profile from the custom users table with timeout
+      const getProfileWithTimeout = async () => {
+        const timeoutPromise = new Promise<{ data: null }>((resolve) =>
+          setTimeout(() => resolve({ data: null }), 1500)
+        );
+        const profilePromise = supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        return Promise.race([profilePromise, timeoutPromise]);
+      };
+
+      const { data: profile } = await getProfileWithTimeout();
 
       if (profile) {
         set({ user: profile as User, isAuthenticated: true, isLoading: false });

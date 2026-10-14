@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
-import OneSignal from 'onesignal-cordova-plugin';
+import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
+import { sendPushNotificationDetailed, PushSendResult } from '../services/pushNotificationService';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
@@ -17,130 +18,277 @@ export const isNativePlatform = (): boolean => {
   }
 };
 
-let pendingUserId: string | null = null;
-
 /**
- * Ensures Cordova and native plugins are completely ready before executing native calls.
+ * Detects if the current device is a Xiaomi / Redmi / POCO device.
  */
-const runWhenReady = (fn: () => void) => {
-  if (typeof window === 'undefined') return;
-
-  if ((window as any).cordova && (window as any).plugins?.OneSignal) {
-    fn();
-  } else {
-    let executed = false;
-    const executeOnce = () => {
-      if (executed) return;
-      executed = true;
-      fn();
-    };
-
-    document.addEventListener('deviceready', executeOnce, { once: true });
-
-    // Fallback in case deviceready already fired before listener was attached
-    setTimeout(() => {
-      if ((window as any).cordova || (window as any).plugins?.OneSignal) {
-        executeOnce();
-      }
-    }, 1500);
-  }
+export const isXiaomiDevice = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = (navigator.userAgent || '').toLowerCase();
+  return ua.includes('redmi') || ua.includes('xiaomi') || ua.includes('poco') || ua.includes('miui');
 };
 
 /**
- * Initializes OneSignal push notifications if running natively.
+ * Opens native Android App Settings using the Javascript interface exposed by MainActivity.
  */
-export const initOneSignal = (): void => {
+export const openNativeAppSettings = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openAppSettings) {
+      (window as any).NativeDeviceBridge.openAppSettings();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke NativeDeviceBridge.openAppSettings:', err);
+  }
+  return false;
+};
+
+/**
+ * Opens native Android Notification Settings using the Javascript interface exposed by MainActivity.
+ */
+export const openNativeNotificationSettings = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openNotificationSettings) {
+      (window as any).NativeDeviceBridge.openNotificationSettings();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke NativeDeviceBridge.openNotificationSettings:', err);
+  }
+  return false;
+};
+
+let isInitialized = false;
+let pendingUserId: string | null = null;
+
+export interface NotificationDiagnosticData {
+  isNative: boolean;
+  isInitialized: boolean;
+  hasPermission: boolean;
+  canRequestPermission: boolean;
+  subscriptionId: string | null;
+  pushToken: string | null;
+  optedIn: boolean;
+  externalId: string | null;
+  onesignalId: string | null;
+  isXiaomi: boolean;
+  error?: string;
+}
+
+/**
+ * Initializes OneSignal push notifications if running natively on Android or iOS.
+ */
+export const initOneSignal = async (): Promise<void> => {
   if (!isNativePlatform()) {
+    console.log('ℹ️ Running in web browser - native push initialization skipped.');
     return;
   }
 
-  runWhenReady(() => {
+  if (isInitialized) {
+    return;
+  }
+
+  try {
+    console.log('🚀 Initializing OneSignal Capacitor Plugin for App ID:', ONESIGNAL_APP_ID);
+    
+    // Enable debug logging for troubleshooting
     try {
-      const oneSignalInstance = (window as any).plugins?.OneSignal || OneSignal;
-      if (oneSignalInstance && typeof oneSignalInstance.initialize === 'function') {
-        oneSignalInstance.initialize(ONESIGNAL_APP_ID);
-        console.log('✅ OneSignal initialized successfully for app ID:', ONESIGNAL_APP_ID);
+      OneSignal.Debug.setLogLevel(LogLevel.Warn);
+    } catch {}
 
-        // Ensure device is opted into push
-        if (oneSignalInstance.User?.pushSubscription?.optIn) {
-          oneSignalInstance.User.pushSubscription.optIn();
-        }
+    // 1. Initialize OneSignal native SDK
+    await OneSignal.initialize(ONESIGNAL_APP_ID);
+    isInitialized = true;
+    console.log('✅ OneSignal initialized successfully.');
 
-        // Prompt user for push notifications permission on Android 13+
-        if (oneSignalInstance.Notifications?.requestPermission) {
-          oneSignalInstance.Notifications.requestPermission(true).then((granted: boolean) => {
-            console.log('Push notification permission granted:', granted);
-          }).catch((permErr: any) => {
-            console.warn('Permission request error:', permErr);
-          });
-        }
-
-        // Handle foreground notifications
-        if (oneSignalInstance.Notifications?.addEventListener) {
-          oneSignalInstance.Notifications.addEventListener('foregroundWillDisplay', (event: any) => {
-            console.log('Push notification received in foreground:', event);
-          });
-          oneSignalInstance.Notifications.addEventListener('click', (event: any) => {
-            console.log('Push notification clicked:', event);
-          });
-        }
-
-        // If user ID was queued before initialization, log in now
-        if (pendingUserId) {
-          oneSignalInstance.login(pendingUserId);
-          console.log('✅ Flushed pending OneSignal login for external ID:', pendingUserId);
-          pendingUserId = null;
-        }
-      }
-    } catch (error) {
-      console.error('Error initializing OneSignal:', error);
+    // 2. Opt in to push subscription
+    try {
+      await OneSignal.User.pushSubscription.optIn();
+    } catch (optErr) {
+      console.warn('OneSignal optIn warning:', optErr);
     }
-  });
+
+    // 3. Request push notification permission on Android 13+ (POST_NOTIFICATIONS)
+    try {
+      const hasPerm = await OneSignal.Notifications.hasPermission();
+      if (!hasPerm) {
+        const granted = await OneSignal.Notifications.requestPermission(true);
+        console.log('🔔 OneSignal permission request result:', granted);
+      } else {
+        console.log('🔔 OneSignal notifications already permitted.');
+      }
+    } catch (permErr) {
+      console.warn('OneSignal permission check/request warning:', permErr);
+    }
+
+    // 4. Register Foreground Notification Listener
+    try {
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        console.log('🔔 Push notification received in foreground:', event.getNotification());
+      });
+
+      OneSignal.Notifications.addEventListener('click', (event) => {
+        console.log('👉 Push notification clicked:', event);
+      });
+    } catch (listenerErr) {
+      console.warn('OneSignal event listener warning:', listenerErr);
+    }
+
+    // 5. If user ID was pending before initialization, bind now
+    if (pendingUserId) {
+      const idToLogin = pendingUserId;
+      pendingUserId = null;
+      await loginOneSignalUser(idToLogin);
+    }
+  } catch (error: any) {
+    console.error('❌ Failed to initialize OneSignal Capacitor Plugin:', error);
+  }
 };
 
 /**
  * Associates user ID with OneSignal External ID when user logs in or starts session.
  */
-export const loginOneSignalUser = (userId: string | number): void => {
-  if (!isNativePlatform() || !userId) {
-    return;
-  }
+export const loginOneSignalUser = async (userId: string | number): Promise<void> => {
+  if (!userId) return;
 
   const idStr = String(userId);
 
-  runWhenReady(() => {
-    try {
-      const oneSignalInstance = (window as any).plugins?.OneSignal || OneSignal;
-      if (oneSignalInstance && typeof oneSignalInstance.login === 'function') {
-        oneSignalInstance.login(idStr);
-        console.log('✅ OneSignal user logged in with External ID:', idStr);
-      } else {
-        pendingUserId = idStr;
-      }
-    } catch (error) {
-      console.error('Error logging in to OneSignal:', error);
-      pendingUserId = idStr;
-    }
-  });
+  if (!isNativePlatform()) {
+    return;
+  }
+
+  if (!isInitialized) {
+    pendingUserId = idStr;
+    await initOneSignal();
+    return;
+  }
+
+  try {
+    console.log('🔐 Linking user to OneSignal with External ID:', idStr);
+    await OneSignal.login(idStr);
+    await OneSignal.User.pushSubscription.optIn();
+    console.log('✅ OneSignal user successfully logged in with External ID:', idStr);
+  } catch (error) {
+    console.error('❌ Error logging in user to OneSignal:', error);
+    pendingUserId = idStr;
+  }
 };
 
 /**
  * Clears OneSignal user state on logout.
  */
-export const logoutOneSignalUser = (): void => {
-  if (!isNativePlatform()) {
-    return;
+export const logoutOneSignalUser = async (): Promise<void> => {
+  if (!isNativePlatform() || !isInitialized) return;
+
+  try {
+    await OneSignal.logout();
+    console.log('👋 OneSignal user logged out.');
+  } catch (error) {
+    console.error('Error logging out from OneSignal:', error);
+  }
+};
+
+/**
+ * Comprehensive diagnostic function to test notification capability and status.
+ */
+export const getNotificationDiagnostics = async (): Promise<NotificationDiagnosticData> => {
+  const isNative = isNativePlatform();
+  const isXiaomi = isXiaomiDevice();
+
+  if (!isNative) {
+    return {
+      isNative: false,
+      isInitialized: false,
+      hasPermission: false,
+      canRequestPermission: false,
+      subscriptionId: null,
+      pushToken: null,
+      optedIn: false,
+      externalId: null,
+      onesignalId: null,
+      isXiaomi,
+      error: 'التطبيق يعمل داخل المتصفح (Web)، إشعارات الهاتف التلقائية تعمل داخل تطبيق الأندرويد المثبت.'
+    };
   }
 
-  runWhenReady(() => {
-    try {
-      const oneSignalInstance = (window as any).plugins?.OneSignal || OneSignal;
-      if (oneSignalInstance && typeof oneSignalInstance.logout === 'function') {
-        oneSignalInstance.logout();
-        console.log('OneSignal user logged out');
-      }
-    } catch (error) {
-      console.error('Error logging out from OneSignal:', error);
+  try {
+    if (!isInitialized) {
+      await initOneSignal();
+    }
+
+    const [
+      hasPermission,
+      canRequest,
+      subId,
+      pushToken,
+      optedIn,
+      externalId,
+      onesignalId
+    ] = await Promise.all([
+      OneSignal.Notifications.hasPermission().catch(() => false),
+      OneSignal.Notifications.canRequestPermission().catch(() => false),
+      OneSignal.User.pushSubscription.getIdAsync().catch(() => null),
+      OneSignal.User.pushSubscription.getTokenAsync().catch(() => null),
+      OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false),
+      OneSignal.User.getExternalId().catch(() => null),
+      OneSignal.User.getOnesignalId().catch(() => null),
+    ]);
+
+    return {
+      isNative: true,
+      isInitialized,
+      hasPermission,
+      canRequestPermission: canRequest,
+      subscriptionId: subId,
+      pushToken,
+      optedIn,
+      externalId,
+      onesignalId,
+      isXiaomi
+    };
+  } catch (err: any) {
+    return {
+      isNative: true,
+      isInitialized,
+      hasPermission: false,
+      canRequestPermission: false,
+      subscriptionId: null,
+      pushToken: null,
+      optedIn: false,
+      externalId: null,
+      onesignalId: null,
+      isXiaomi,
+      error: err?.message || String(err)
+    };
+  }
+};
+
+/**
+ * Re-prompts the user for notification permissions and opts into push.
+ */
+export const requestPushPermissionAgain = async (): Promise<boolean> => {
+  if (!isNativePlatform()) return false;
+  try {
+    await initOneSignal();
+    const granted = await OneSignal.Notifications.requestPermission(true);
+    await OneSignal.User.pushSubscription.optIn();
+    return granted;
+  } catch (error) {
+    console.error('Error requesting permission again:', error);
+    return false;
+  }
+};
+
+/**
+ * Sends a live test push notification to the current user's device.
+ */
+export const sendTestPushToSelf = async (userId: string): Promise<PushSendResult> => {
+  return sendPushNotificationDetailed({
+    userIds: [userId],
+    title: '🔔 إشعار تجريبي ناجح من جيبها',
+    message: 'تهانينا! خدمة الإشعارات وتنبيهات الهاتف تعمل الآن بشكل سليم وسريع على جهازك.',
+    data: {
+      type: 'test_push',
+      sentAt: new Date().toISOString()
     }
   });
 };

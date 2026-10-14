@@ -13,8 +13,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userIds, title, message, data } = req.body || {};
-    const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JoMnZqbWlpdGV0dXlwdmZuMzJob2xyM3l4aGV0Mm9ia25tbHk3ZjRleHF0bm5yZWtvYzZtbnlqamQ3c3BhMnQ0YmFkaGFmdDY2MzVuN2E=';
+    const { userIds, title, message, data, sendToAll } = req.body || {};
+    const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjY3FicjdiaDJ2am1paXRldHV5cHZmbjMyaG9scjN5eGhldDJvYmtubWx5N2Y0ZXhxdG5ucmVrb2M2bW55ampkN3NwYTJ0NGJhZGhhZnQ2NjM1bjdh';
     const fallbackKey = Buffer.from(ENCODED_REST_KEY, 'base64').toString('utf8');
     const apiKey = process.env.ONESIGNAL_REST_API_KEY || process.env.VITE_ONESIGNAL_REST_API_KEY || fallbackKey;
     const appId = process.env.ONESIGNAL_APP_ID || process.env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const rawIds = Array.isArray(userIds) ? userIds : [userIds];
     const externalIds = rawIds.filter(Boolean).map(id => String(id));
 
-    if (externalIds.length === 0) {
+    if (!sendToAll && externalIds.length === 0) {
       return res.status(400).json({ error: 'No user IDs provided' });
     }
 
@@ -35,33 +35,42 @@ export default async function handler(req, res) {
       ? apiKey
       : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
 
+    const payload = {
+      app_id: appId,
+      priority: 10,
+      android_channel_id: 'jibha_channel',
+      android_accent_color: 'FF4F46E5',
+      android_sound: 'default',
+      android_visibility: 1,
+      headings: {
+        en: title,
+        ar: title
+      },
+      contents: {
+        en: message,
+        ar: message
+      },
+      data: data || {}
+    };
+
+    if (sendToAll) {
+      payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
+    } else {
+      payload.include_aliases = {
+        external_id: externalIds
+      };
+      payload.include_external_user_ids = externalIds;
+      payload.channel_for_external_user_ids = 'push';
+      payload.target_channel = 'push';
+    }
+
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': authHeader
       },
-      body: JSON.stringify({
-        app_id: appId,
-        include_aliases: {
-          external_id: externalIds
-        },
-        include_external_user_ids: externalIds,
-        channel_for_external_user_ids: 'push',
-        target_channel: 'push',
-        priority: 10,
-        android_accent_color: 'FF4F46E5',
-        android_sound: 'default',
-        headings: {
-          en: title,
-          ar: title
-        },
-        contents: {
-          en: message,
-          ar: message
-        },
-        data: data || {}
-      })
+      body: JSON.stringify(payload)
     });
 
     const resData = await response.json();

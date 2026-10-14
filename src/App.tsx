@@ -46,8 +46,23 @@ function App() {
   const { theme } = useThemeStore();
 
   useEffect(() => {
-    // OneSignal Native Push Initialization for Android (guarded by deviceready and isNative)
-    initOneSignal();
+    // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)
+    const initTimer = setTimeout(() => {
+      initOneSignal();
+    }, 600);
+
+    // Safety fallback: Ensure splash/loading screen dismisses even on slow mobile networks
+    const fallbackTimer = setTimeout(() => {
+      const state = useAuthStore.getState();
+      if (state.isLoading) {
+        useAuthStore.setState({ isLoading: false });
+      }
+    }, 1500);
+
+    return () => {
+      clearTimeout(initTimer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   useEffect(() => {

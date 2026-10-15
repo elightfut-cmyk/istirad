@@ -13,10 +13,13 @@ import NewsTicker from '../../components/NewsTicker';
 import YoutubePlayer from '../../components/YoutubePlayer';
 import MainVideoSection from '../../components/MainVideoSection';
 
+import { isNativePlatform } from '../../lib/onesignal';
+
 export default function LandingPage() {
   const { user } = useAuthStore();
   const settingsStore = useSettingsStore();
   const { t } = useLanguageStore();
+  const isNative = isNativePlatform();
   
   const img1 = settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
   const img2 = settingsStore.heroImageUrl2 || "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"; // Default second image
@@ -34,37 +37,52 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-[#1a1a1a] font-['Tajawal'] flex flex-col items-center pb-12">
       <div className="w-full max-w-5xl flex flex-col gap-6 relative px-4 sm:px-6 lg:px-0">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 rounded-b-3xl sm:rounded-3xl shadow-sm sticky top-0 sm:top-4 z-50 overflow-hidden">
-        <div className="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
-              <PackageSearch size={24} />
+      <header className="bg-white dark:bg-gray-800 rounded-b-2xl sm:rounded-3xl shadow-sm sticky top-0 sm:top-4 z-50 overflow-hidden border-b sm:border border-gray-100 dark:border-gray-700/60">
+        <div className="w-full px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 hover:opacity-90 transition-opacity">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
+              <PackageSearch size={20} className="sm:w-6 sm:h-6" />
             </div>
-            <span className="text-2xl font-black text-[#4f46e5]">{t('brand.name')}</span>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-4">
-            <a
-              href="/jibha-app.apk"
-              download="jibha-app.apk"
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold transition-all shadow-sm hover:shadow-md text-xs sm:text-sm border border-emerald-500/20 active:scale-95"
-              title="تحميل تطبيق جيبها للأندرويد"
-            >
-              <Smartphone size={18} />
-              <span>حمل التطبيق</span>
-            </a>
+            <span className="text-lg sm:text-2xl font-black text-[#4f46e5] tracking-tight">{t('brand.name')}</span>
+          </Link>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {!isNative && (
+              <a
+                href="/jibha-app.apk"
+                download="jibha-app.apk"
+                className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold transition-all shadow-xs hover:shadow-sm text-xs sm:text-sm border border-emerald-500/20 active:scale-95 whitespace-nowrap"
+                title="تحميل تطبيق جيبها للأندرويد"
+              >
+                <Smartphone size={15} className="sm:w-4 sm:h-4 text-emerald-100 shrink-0" />
+                <span>حمل التطبيق</span>
+              </a>
+            )}
+
             {user ? (
-              <Link to={`/${user.role}`} className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
+              <Link
+                to={`/${user.role}`}
+                className="flex items-center justify-center bg-[#4f46e5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-all shadow-xs text-xs sm:text-sm whitespace-nowrap active:scale-95"
+              >
                 {t('nav.dashboard')}
               </Link>
             ) : (
-              <>
-                <Link to="/login" className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] font-medium transition-colors hidden sm:block text-sm sm:text-base">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link
+                  to="/login"
+                  className="text-gray-600 dark:text-gray-300 hover:text-[#4f46e5] font-medium transition-colors hidden sm:block text-xs sm:text-sm px-2 py-2"
+                >
                   {t('nav.login')}
                 </Link>
-                <Link to="/register" className="bg-[#4f46e5] text-white px-5 sm:px-6 py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-colors shadow-sm text-sm sm:text-base">
+                <Link
+                  to="/register"
+                  className="flex items-center justify-center bg-[#4f46e5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-all shadow-xs text-xs sm:text-sm whitespace-nowrap active:scale-95"
+                >
                   {t('nav.register')}
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

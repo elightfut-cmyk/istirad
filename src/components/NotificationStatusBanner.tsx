@@ -21,8 +21,8 @@ export default function NotificationStatusBanner() {
     localStorage.setItem('dismissed_notification_banner_v1', 'true');
   };
 
-  // If dismissed or not relevant, we can hide, but still keep it visible if running inside Android native app for easy access
-  if (isDismissed && !isNative) return null;
+  // Only display inside the native mobile app, never on the website
+  if (!isNative || isDismissed) return null;
 
   return (
     <>

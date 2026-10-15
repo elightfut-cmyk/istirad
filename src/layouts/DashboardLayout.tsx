@@ -13,6 +13,7 @@ import SocialLinksModal from '../components/SocialLinksModal';
 import UserPollModal from '../components/UserPollModal';
 import NotificationDiagnosticsModal from '../components/NotificationDiagnosticsModal';
 import { pollService } from '../services/pollService';
+import { isNativePlatform } from '../lib/onesignal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const isNative = isNativePlatform();
 
   // Modals sequence state (First Alert -> 10s delay -> Social Links)
   const [canShowSocialLinks, setCanShowSocialLinks] = useState(false);
@@ -137,15 +139,17 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           </div>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="/jibha-app.apk"
-              download="jibha-app.apk"
-              className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
-              title="تحميل تطبيق جيبها للأندرويد"
-            >
-              <Smartphone size={15} />
-              <span>حمل التطبيق</span>
-            </a>
+            {!isNative && (
+              <a
+                href="/jibha-app.apk"
+                download="jibha-app.apk"
+                className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
+                title="تحميل تطبيق جيبها للأندرويد"
+              >
+                <Smartphone size={15} />
+                <span>حمل التطبيق</span>
+              </a>
+            )}
             {user && (user.role === 'merchant' || user.role === 'supplier') && hasActivePoll && (
               <button
                 onClick={() => setIsPollOpen(true)}
@@ -205,17 +209,19 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800 dark:text-white">{t('nav.notifications')}</h3>
-                    <button
-                      onClick={() => {
-                        setIsNotificationsOpen(false);
-                        setShowDiagnosticsModal(true);
-                      }}
-                      className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-lg border border-indigo-200/50 dark:border-indigo-800 transition"
-                      title="فحص وصول إشعارات الهاتف وتجربتها فوراً"
-                    >
-                      <Smartphone size={13} />
-                      <span>فحص الإشعارات</span>
-                    </button>
+                    {isNative && (
+                      <button
+                        onClick={() => {
+                          setIsNotificationsOpen(false);
+                          setShowDiagnosticsModal(true);
+                        }}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-lg border border-indigo-200/50 dark:border-indigo-800 transition"
+                        title="فحص وصول إشعارات الهاتف وتجربتها فوراً"
+                      >
+                        <Smartphone size={13} />
+                        <span>فحص الإشعارات</span>
+                      </button>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -329,10 +335,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         isOpenControlled={isPollOpen} 
         onCloseControlled={() => setIsPollOpen(false)} 
       />
-      <NotificationDiagnosticsModal
-        isOpen={showDiagnosticsModal}
-        onClose={() => setShowDiagnosticsModal(false)}
-      />
+      {isNative && (
+        <NotificationDiagnosticsModal
+          isOpen={showDiagnosticsModal}
+          onClose={() => setShowDiagnosticsModal(false)}
+        />
+      )}
     </div>
   );
 }

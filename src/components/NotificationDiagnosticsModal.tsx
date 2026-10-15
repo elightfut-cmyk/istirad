@@ -55,7 +55,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isNativePlatform()) return null;
 
   const handleRequestPermission = async () => {
     try {

@@ -82,7 +82,7 @@ function apiDevPlugin(env: Record<string, string>): any {
                 },
                 body: JSON.stringify({
                   app_id: appId,
-                  android_channel_id: 'jibha_channel',
+                  existing_android_channel_id: 'jibha_channel',
                   priority: 10,
                   android_accent_color: 'FF4F46E5',
                   include_aliases: { external_id: externalIds },

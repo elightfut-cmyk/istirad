@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     const payload = {
       app_id: appId,
       priority: 10,
-      android_channel_id: 'jibha_channel',
+      existing_android_channel_id: 'jibha_channel',
       android_accent_color: 'FF4F46E5',
       android_sound: 'default',
       android_visibility: 1,

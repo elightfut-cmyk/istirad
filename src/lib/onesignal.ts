@@ -5,17 +5,38 @@ import { sendPushNotificationDetailed, PushSendResult } from '../services/pushNo
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
 /**
- * Checks if current environment is a native mobile app (Capacitor native).
+ * Checks if current environment is a native mobile app (Capacitor native / Android APK).
  */
 export const isNativePlatform = (): boolean => {
+  if (typeof window === 'undefined') return false;
   try {
-    return Boolean(
-      (Capacitor as any).isNative ||
-      (typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform())
-    );
+    // 1. Injected Javascript Interface from MainActivity.java
+    if ((window as any).NativeDeviceBridge !== undefined) return true;
+
+    // 2. Window Capacitor object
+    if ((window as any).Capacitor?.isNativePlatform?.()) return true;
+    const plat = (window as any).Capacitor?.getPlatform?.();
+    if (plat === 'android' || plat === 'ios') return true;
+
+    // 3. Imported Capacitor module
+    if (typeof Capacitor !== 'undefined') {
+      if (typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()) return true;
+      if (typeof Capacitor.getPlatform === 'function' && Capacitor.getPlatform() !== 'web') return true;
+      if ((Capacitor as any).isNative) return true;
+    }
+
+    // 4. Capacitor URL scheme on Android
+    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') return true;
+    if ((window.location.hostname === 'localhost' || window.location.origin.includes('localhost')) && /android/i.test(navigator.userAgent || '')) return true;
+
+    // 5. Android WebView User Agent check
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (ua.includes('wv') && ua.includes('android')) return true;
+    if (ua.includes('capacitor')) return true;
   } catch {
     return false;
   }
+  return false;
 };
 
 /**

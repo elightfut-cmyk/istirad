@@ -6,10 +6,11 @@ import NotificationDiagnosticsModal from './NotificationDiagnosticsModal';
 export default function NotificationStatusBanner() {
   const [showModal, setShowModal] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const isNative = isNativePlatform();
+  const [isNative, setIsNative] = useState(() => isNativePlatform());
   const isXiaomi = isXiaomiDevice();
 
   useEffect(() => {
+    setIsNative(isNativePlatform());
     const dismissed = localStorage.getItem('dismissed_notification_banner_v1');
     if (dismissed === 'true') {
       setIsDismissed(true);

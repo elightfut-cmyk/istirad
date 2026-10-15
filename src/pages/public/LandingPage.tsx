@@ -19,7 +19,11 @@ export default function LandingPage() {
   const { user } = useAuthStore();
   const settingsStore = useSettingsStore();
   const { t } = useLanguageStore();
-  const isNative = isNativePlatform();
+  const [isNative, setIsNative] = useState(() => isNativePlatform());
+
+  useEffect(() => {
+    setIsNative(isNativePlatform());
+  }, []);
   
   const img1 = settingsStore.heroImageUrl || "https://images.unsplash.com/photo-1556761175-5973dc0f32d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
   const img2 = settingsStore.heroImageUrl2 || "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"; // Default second image

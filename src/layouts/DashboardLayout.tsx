@@ -32,7 +32,11 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
-  const isNative = isNativePlatform();
+  const [isNative, setIsNative] = useState(() => isNativePlatform());
+
+  useEffect(() => {
+    setIsNative(isNativePlatform());
+  }, []);
 
   // Modals sequence state (First Alert -> 10s delay -> Social Links)
   const [canShowSocialLinks, setCanShowSocialLinks] = useState(false);

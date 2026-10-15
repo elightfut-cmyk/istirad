@@ -98,18 +98,20 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
         });
         toast.success('تم إرسال إشعار تجريبي لهاتفك بنجاح!');
       } else {
+        const errorText = res.error || 'تعذر إرسال الإشعار التجريبي';
         setTestResult({
           success: false,
-          message: res.error || 'تعذر إرسال الإشعار التجريبي. تحقق من اتصال الإنترنت وربط الهاتف.'
+          message: errorText
         });
-        toast.error('فشل إرسال الإشعار التجريبي');
+        toast.error(errorText);
       }
     } catch (err: any) {
+      const errorText = err?.message || 'خطأ غير متوقع أثناء الإرسال';
       setTestResult({
         success: false,
-        message: err?.message || 'خطأ غير متوقع'
+        message: errorText
       });
-      toast.error('حدث خطأ أثناء الإرسال');
+      toast.error(errorText);
     } finally {
       setSendingTest(false);
     }

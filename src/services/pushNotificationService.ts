@@ -1,6 +1,6 @@
 const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
-// Correct base64 encoded OneSignal REST API key (os_v2_app_3lvo6smrevhpfckqnqccqbr...)
-const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjY3FicjdiaDJ2am1paXRldHV5cHZmbjMyaG9scjN5eGhldDJvYmtubWx5N2Y0ZXhxdG5ucmVrb2M2bW55ampkN3NwYTJ0NGJhZGhhZnQ2NjM1bjdh';
+// Valid base64 encoded OneSignal App REST API key
+const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JnemozY3k2ZHFpdTVybTd6djdnN2s2aGRxYjVyYW1xc2M3em03bzd4cmdoemNzbXdzemJmdXRwZ25zZXZkeDNwd3ltbXl5YXlub2h2dnk=';
 
 const getResolvedApiKey = (): string => {
   if (import.meta.env.VITE_ONESIGNAL_REST_API_KEY) {
@@ -34,23 +34,37 @@ export interface PushSendResult {
   raw?: any;
 }
 
+export const extractOneSignalError = (resJson: any, status?: number): string => {
+  if (status === 401 || (resJson && JSON.stringify(resJson).includes('Access denied'))) {
+    return 'مفتاح OneSignal غير مصرح به أو تم إلغاؤه (401 Unauthorized)';
+  }
+  if (resJson && resJson.errors) {
+    if (Array.isArray(resJson.errors)) {
+      return resJson.errors.join(', ');
+    }
+    if (typeof resJson.errors === 'string') {
+      return resJson.errors;
+    }
+    return JSON.stringify(resJson.errors);
+  }
+  if (resJson && resJson.error) {
+    return typeof resJson.error === 'string' ? resJson.error : JSON.stringify(resJson.error);
+  }
+  return status ? `رمز الاستجابة: ${status}` : 'خطأ غير معروف في خادم الإشعارات';
+};
+
 /**
  * Sends a native push notification to target users or broadcast via OneSignal REST API.
+ * Throws an Error with 'فشل الإرسال: [سبب الخطأ]' if OneSignal returns an error.
  */
-export const sendPushNotification = async ({
-  userIds = [],
-  subscriptionIds = [],
-  title,
-  message,
-  data = {},
-  sendToAll = false
-}: PushNotificationPayload): Promise<boolean> => {
-  const res = await sendPushNotificationDetailed({ userIds, subscriptionIds, title, message, data, sendToAll });
+export const sendPushNotification = async (payload: PushNotificationPayload): Promise<boolean> => {
+  const res = await sendPushNotificationDetailed(payload);
   return res.success;
 };
 
 /**
- * Detailed push send function that returns full status and error diagnostics.
+ * Detailed push send function that directly validates the response from OneSignal.
+ * Throws an Error if OneSignal responds with 401 or errors array, and returns PushSendResult on success.
  */
 export const sendPushNotificationDetailed = async ({
   userIds = [],
@@ -60,191 +74,173 @@ export const sendPushNotificationDetailed = async ({
   data = {},
   sendToAll = false
 }: PushNotificationPayload): Promise<PushSendResult> => {
-  try {
-    const rawIds = Array.isArray(userIds) ? userIds : [userIds];
-    const externalIds = rawIds.filter(Boolean).map(id => String(id)).filter(id => id !== 'all');
-    const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
-    const validSubIds = rawSubIds.filter(Boolean).map(id => String(id));
+  const rawIds = Array.isArray(userIds) ? userIds : [userIds];
+  const externalIds = rawIds.filter(Boolean).map(id => String(id)).filter(id => id !== 'all');
+  const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
+  const validSubIds = rawSubIds.filter(Boolean).map(id => String(id));
 
-    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
-      return { success: false, error: 'لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه' };
+  if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
+    const errorMsg = 'فشل الإرسال: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  const apiKey = getResolvedApiKey();
+
+  if (!apiKey) {
+    const errorMsg = 'فشل الإرسال: مفتاح VITE_ONESIGNAL_REST_API_KEY غير متوفر في الإعدادات';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
+    ? apiKey
+    : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
+
+  const payload: Record<string, any> = {
+    app_id: ONESIGNAL_APP_ID,
+    priority: 10,
+    existing_android_channel_id: 'jibha_channel',
+    android_accent_color: 'FF4F46E5',
+    android_sound: 'default',
+    android_visibility: 1, // Visible on lock screen
+    headings: {
+      en: title,
+      ar: title
+    },
+    contents: {
+      en: message,
+      ar: message
+    },
+    data: {
+      ...data,
+      timestamp: Date.now()
     }
+  };
 
-    const apiKey = getResolvedApiKey();
-
-    if (!apiKey) {
-      console.warn('⚠️ OneSignal push notification could not be dispatched: VITE_ONESIGNAL_REST_API_KEY is not configured.');
-      return { success: false, error: 'مفتاح OneSignal REST API غير متوفر' };
+  if (sendToAll) {
+    payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
+  } else {
+    if (validSubIds.length > 0) {
+      payload.include_subscription_ids = validSubIds;
     }
-
-    const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
-      ? apiKey
-      : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
-
-    const payload: Record<string, any> = {
-      app_id: ONESIGNAL_APP_ID,
-      priority: 10,
-      existing_android_channel_id: 'jibha_channel',
-      android_accent_color: 'FF4F46E5',
-      android_sound: 'default',
-      android_visibility: 1, // Visible on lock screen
-      headings: {
-        en: title,
-        ar: title
-      },
-      contents: {
-        en: message,
-        ar: message
-      },
-      data: {
-        ...data,
-        timestamp: Date.now()
-      }
-    };
-
-    if (sendToAll) {
-      // Send to all subscribed devices
-      payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
-    } else {
-      if (validSubIds.length > 0) {
-        payload.include_subscription_ids = validSubIds;
-      }
-      if (externalIds.length > 0) {
-        payload.include_aliases = {
-          external_id: externalIds
-        };
-        payload.include_external_user_ids = externalIds;
-        payload.channel_for_external_user_ids = 'push';
-      }
-      payload.target_channel = 'push';
+    if (externalIds.length > 0) {
+      payload.include_aliases = {
+        external_id: externalIds
+      };
+      payload.include_external_user_ids = externalIds;
+      payload.channel_for_external_user_ids = 'push';
     }
+    payload.target_channel = 'push';
+  }
 
-    // 1. Direct call to OneSignal (try modern api.onesignal.com and legacy fallback)
-    const onesignalEndpoints = [
-      'https://api.onesignal.com/notifications',
-      'https://onesignal.com/api/v1/notifications'
-    ];
+  // 1. Direct call to OneSignal (try modern api.onesignal.com then legacy endpoint)
+  const onesignalEndpoints = [
+    'https://api.onesignal.com/notifications',
+    'https://onesignal.com/api/v1/notifications'
+  ];
 
-    let lastDirectError = '';
+  let lastDirectError = '';
 
-    for (const endpoint of onesignalEndpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': authHeader
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const resJson = await response.json().catch(() => null);
-
-        if (response.ok && resJson && !resJson.errors) {
-          const recipients = typeof resJson.recipients === 'number' ? resJson.recipients : 0;
-          if (recipients === 0) {
-            return {
-              success: false,
-              recipients: 0,
-              error: 'وصل الإشعار إلى OneSignal ولكن لم يتم تسليمه لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول من داخل تطبيق الأندرويد المثبت على الهاتف ومنح صلاحية الإشعارات.',
-              raw: resJson
-            };
-          }
-          return {
-            success: true,
-            recipients,
-            message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
-            raw: resJson
-          };
-        }
-
-        if (response.status === 401 || (resJson && JSON.stringify(resJson).includes('Access denied'))) {
-          return {
-            success: false,
-            error: 'مفتاح OneSignal REST API غير صالح أو تم إلغاؤه (401 Unauthorized). يرجى تحديث المفتاح في لوحة التحكم.',
-            raw: resJson
-          };
-        }
-
-        if (resJson && resJson.errors) {
-          let errorMsg = '';
-          const rawErrorsStr = JSON.stringify(resJson.errors);
-          if (
-            rawErrorsStr.includes('invalid_aliases') ||
-            rawErrorsStr.includes('not subscribed') ||
-            rawErrorsStr.includes('invalid_external_user_ids')
-          ) {
-            errorMsg = 'جهازك غير مسجل بعد في خدمة الإشعارات أو تم حظر الإشعارات من إعدادات النظام. يرجى الضغط على زر (إعدادات الإشعارات) وتفعيل الإشعارات للتطبيق ثم إعادة المحاولة.';
-          } else if (Array.isArray(resJson.errors)) {
-            errorMsg = resJson.errors.join(', ');
-          } else {
-            errorMsg = JSON.stringify(resJson.errors);
-          }
-          console.warn('OneSignal direct API response error:', response.status, errorMsg);
-          return {
-            success: false,
-            error: errorMsg,
-            raw: resJson
-          };
-        }
-      } catch (directErr: any) {
-        lastDirectError = directErr?.message || String(directErr);
-        console.warn(`OneSignal direct fetch failed on ${endpoint}:`, directErr);
-      }
-    }
-
-    // 2. Try proxy endpoint /api/send-push (only if direct call encountered a network/CORS error)
+  for (const endpoint of onesignalEndpoints) {
     try {
-      const apiResponse = await fetch('/api/send-push', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': authHeader
         },
-        body: JSON.stringify({
-          userIds: externalIds,
-          subscriptionIds: validSubIds,
-          sendToAll,
-          title,
-          message,
-          data
-        })
+        body: JSON.stringify(payload)
       });
 
-      // Verify contentType is JSON, not HTML SPA fallback
-      const contentType = apiResponse.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
+      const resJson = await response.json().catch(() => null);
+
+      // Check if OneSignal returned an error
+      if (!response.ok || (resJson && resJson.errors)) {
+        const errorReason = extractOneSignalError(resJson, response.status);
+        const errorMsg = `فشل الإرسال: ${errorReason}`;
+        console.error(errorMsg, { status: response.status, raw: resJson });
+        throw new Error(errorMsg);
+      }
+
+      // Check if OneSignal accepted the request
+      if (response.ok && resJson && !resJson.errors) {
+        const recipients = typeof resJson.recipients === 'number' ? resJson.recipients : (resJson.id ? 1 : 0);
+        if (recipients === 0) {
+          const errorMsg = 'فشل الإرسال: لم يتم تسليم الإشعار لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول ومنح إذن الإشعارات من داخل التطبيق.';
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
         return {
-          success: false,
-          error: lastDirectError
-            ? `تعذر الاتصال المباشر بخدمة الإشعارات (${lastDirectError})`
-            : 'خادم الإشعارات الوسيط غير متاح حالياً.'
+          success: true,
+          recipients,
+          message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+          raw: resJson
         };
       }
-
-      const proxyData = await apiResponse.json().catch(() => null);
-      if (apiResponse.ok && proxyData && !proxyData.errors && !proxyData.error) {
-        const recipients = typeof proxyData.recipients === 'number' ? proxyData.recipients : (proxyData.id ? 1 : 0);
-        if (recipients === 0) {
-          return {
-            success: false,
-            recipients: 0,
-            error: 'وصل الطلب إلى الخادم ولكن لم يتم تسليمه لأي هاتف (0 مستلمين). تأكد من فتح التطبيق على الهاتف ومنح الإذن.',
-            raw: proxyData
-          };
-        }
-        return { success: true, recipients, message: 'تم الإرسال عبر الخادم بنجاح', raw: proxyData };
+    } catch (directErr: any) {
+      // If error was thrown by us (e.g. from OneSignal response), bubble it up immediately
+      if (directErr?.message && directErr.message.startsWith('فشل الإرسال:')) {
+        throw directErr;
       }
-
-      const errText = proxyData?.error || (proxyData?.errors ? JSON.stringify(proxyData.errors) : 'فشل الإرسال عبر الخادم');
-      return { success: false, error: errText, raw: proxyData };
-    } catch (proxyErr: any) {
-      return {
-        success: false,
-        error: lastDirectError || proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات'
-      };
+      lastDirectError = directErr?.message || String(directErr);
+      console.warn(`Direct fetch to ${endpoint} failed (likely CORS in browser):`, directErr);
     }
-  } catch (error: any) {
-    console.error('OneSignal Push Send Error:', error);
-    return { success: false, error: error?.message || 'خطأ غير متوقع أثناء إرسال الإشعار' };
+  }
+
+  // 2. Proxy endpoint /api/send-push (fallback if direct browser request was blocked by CORS)
+  try {
+    const apiResponse = await fetch('/api/send-push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userIds: externalIds,
+        subscriptionIds: validSubIds,
+        sendToAll,
+        title,
+        message,
+        data
+      })
+    });
+
+    const contentType = apiResponse.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const errorMsg = `فشل الإرسال: خادم الإشعارات الوسيط غير متاح (${lastDirectError || apiResponse.statusText})`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    const proxyData = await apiResponse.json().catch(() => null);
+
+    // If OneSignal responded with error through the proxy
+    if (!apiResponse.ok || (proxyData && proxyData.errors) || proxyData?.error) {
+      const errorReason = extractOneSignalError(proxyData, apiResponse.status);
+      const errorMsg = `فشل الإرسال: ${errorReason}`;
+      console.error(errorMsg, { status: apiResponse.status, raw: proxyData });
+      throw new Error(errorMsg);
+    }
+
+    const recipients = typeof proxyData.recipients === 'number' ? proxyData.recipients : (proxyData.id ? 1 : 0);
+    if (recipients === 0) {
+      const errorMsg = 'فشل الإرسال: لم يتم تسليم الإشعار لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول ومنح إذن الإشعارات من داخل التطبيق.';
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    return {
+      success: true,
+      recipients,
+      message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+      raw: proxyData
+    };
+  } catch (proxyErr: any) {
+    if (proxyErr?.message && proxyErr.message.startsWith('فشل الإرسال:')) {
+      throw proxyErr;
+    }
+    const finalErrorMsg = `فشل الإرسال: ${lastDirectError || proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات'}`;
+    console.error(finalErrorMsg);
+    throw new Error(finalErrorMsg);
   }
 };

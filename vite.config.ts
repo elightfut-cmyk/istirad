@@ -54,8 +54,8 @@ function apiDevPlugin(env: Record<string, string>): any {
           req.on('end', async () => {
             try {
               const parsed = JSON.parse(body || '{}');
-              const { userIds, title, message, data } = parsed;
-              const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjY3FicjdiaDJ2am1paXRldHV5cHZmbjMyaG9scjN5eGhldDJvYmtubWx5N2Y0ZXhxdG5ucmVrb2M2bW55ampkN3NwYTJ0NGJhZGhhZnQ2NjM1bjdh';
+              const { userIds, subscriptionIds, title, message, data, sendToAll } = parsed;
+              const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JnemozY3k2ZHFpdTVybTd6djdnN2s2aGRxYjVyYW1xc2M3em03bzd4cmdoemNzbXdzemJmdXRwZ25zZXZkeDNwd3ltbXl5YXlub2h2dnk=';
               const fallbackKey = Buffer.from(ENCODED_REST_KEY, 'base64').toString('utf8');
               const apiKey = env.ONESIGNAL_REST_API_KEY || env.VITE_ONESIGNAL_REST_API_KEY || fallbackKey;
               const appId = env.ONESIGNAL_APP_ID || env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
@@ -68,34 +68,62 @@ function apiDevPlugin(env: Record<string, string>): any {
               }
 
               const rawIds = Array.isArray(userIds) ? userIds : [userIds];
-              const externalIds = rawIds.filter(Boolean).map(String);
+              const externalIds = rawIds.filter(Boolean).map(String).filter(id => id !== 'all');
+              const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
+              const validSubIds = rawSubIds.filter(Boolean).map(String);
 
               const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
                 ? apiKey
                 : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
 
-              const oneSignalRes = await fetch('https://onesignal.com/api/v1/notifications', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json; charset=utf-8',
-                  'Authorization': authHeader
-                },
-                body: JSON.stringify({
-                  app_id: appId,
-                  existing_android_channel_id: 'jibha_channel',
-                  priority: 10,
-                  android_accent_color: 'FF4F46E5',
-                  include_aliases: { external_id: externalIds },
-                  include_external_user_ids: externalIds,
-                  channel_for_external_user_ids: 'push',
-                  target_channel: 'push',
-                  headings: { en: title, ar: title },
-                  contents: { en: message, ar: message },
-                  data: data || {}
-                })
-              });
+              const payload: Record<string, any> = {
+                app_id: appId,
+                existing_android_channel_id: 'jibha_channel',
+                priority: 10,
+                android_accent_color: 'FF4F46E5',
+                headings: { en: title, ar: title },
+                contents: { en: message, ar: message },
+                data: data || {}
+              };
 
-              const resData = await oneSignalRes.json();
+              if (sendToAll) {
+                payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
+              } else {
+                if (validSubIds.length > 0) {
+                  payload.include_subscription_ids = validSubIds;
+                }
+                if (externalIds.length > 0) {
+                  payload.include_aliases = { external_id: externalIds };
+                  payload.include_external_user_ids = externalIds;
+                  payload.channel_for_external_user_ids = 'push';
+                }
+                payload.target_channel = 'push';
+              }
+
+              let oneSignalRes: any;
+              let resData: any;
+              try {
+                oneSignalRes = await fetch('https://api.onesignal.com/notifications', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Authorization': authHeader
+                  },
+                  body: JSON.stringify(payload)
+                });
+                resData = await oneSignalRes.json();
+              } catch {
+                oneSignalRes = await fetch('https://onesignal.com/api/v1/notifications', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Authorization': authHeader
+                  },
+                  body: JSON.stringify(payload)
+                });
+                resData = await oneSignalRes.json();
+              }
+
               res.setHeader('Content-Type', 'application/json');
               res.statusCode = oneSignalRes.status;
               res.end(JSON.stringify(resData));

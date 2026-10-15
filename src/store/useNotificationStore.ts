@@ -16,9 +16,12 @@ interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
   fetchNotifications: (userId: string) => Promise<void>;
+  subscribeToNotifications: (userId: string) => () => void;
   markAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
 }
+
+let activeChannel: any = null;
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
@@ -42,6 +45,83 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       set({ notifications: data as Notification[], unreadCount });
     } catch (error) {
       console.error('Error fetching notifications:', error);
+    }
+  },
+
+  subscribeToNotifications: (userId: string) => {
+    if (!userId) return () => {};
+
+    // Remove existing subscription if any
+    if (activeChannel) {
+      try {
+        supabase.removeChannel(activeChannel);
+      } catch {}
+      activeChannel = null;
+    }
+
+    try {
+      const channel = supabase
+        .channel(`user-notifications-${userId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            const newNotif = payload.new as Notification;
+            if (!newNotif) return;
+
+            set((state) => {
+              const exists = state.notifications.some(n => n.id === newNotif.id);
+              if (exists) return state;
+
+              return {
+                notifications: [newNotif, ...state.notifications],
+                unreadCount: state.unreadCount + (newNotif.is_read ? 0 : 1)
+              };
+            });
+
+            // Trigger global refresh for any open pages (orders, bids, requests)
+            try {
+              window.dispatchEvent(new CustomEvent('refresh_data'));
+            } catch {}
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            const updated = payload.new as Notification;
+            if (!updated) return;
+            set((state) => {
+              const updatedList = state.notifications.map(n => n.id === updated.id ? updated : n);
+              return {
+                notifications: updatedList,
+                unreadCount: updatedList.filter(n => !n.is_read).length
+              };
+            });
+          }
+        )
+        .subscribe();
+
+      activeChannel = channel;
+
+      return () => {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      };
+    } catch (err) {
+      console.warn('Realtime subscription error:', err);
+      return () => {};
     }
   },
 
@@ -75,7 +155,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const notifToDelete = notifications.find(n => n.id === id);
       
       // Optimistic update
-      set({
+      set({ 
         notifications: notifications.filter(n => n.id !== id),
         unreadCount: notifToDelete && !notifToDelete.is_read ? unreadCount - 1 : unreadCount
       });

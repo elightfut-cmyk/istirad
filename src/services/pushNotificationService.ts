@@ -119,54 +119,81 @@ export const sendPushNotificationDetailed = async ({
       payload.target_channel = 'push';
     }
 
-    // 1. Direct call to OneSignal
-    try {
-      const response = await fetch('https://onesignal.com/api/v1/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': authHeader
-        },
-        body: JSON.stringify(payload)
-      });
+    // 1. Direct call to OneSignal (try modern api.onesignal.com and legacy fallback)
+    const onesignalEndpoints = [
+      'https://api.onesignal.com/notifications',
+      'https://onesignal.com/api/v1/notifications'
+    ];
 
-      const resJson = await response.json().catch(() => null);
+    let lastDirectError = '';
 
-      if (response.ok && resJson && !resJson.errors) {
-        return {
-          success: true,
-          recipients: resJson.recipients || 1,
-          message: 'تم إرسال الإشعار بنجاح',
-          raw: resJson
-        };
-      }
+    for (const endpoint of onesignalEndpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': authHeader
+          },
+          body: JSON.stringify(payload)
+        });
 
-      if (resJson && resJson.errors) {
-        let errorMsg = '';
-        const rawErrorsStr = JSON.stringify(resJson.errors);
-        if (
-          rawErrorsStr.includes('invalid_aliases') ||
-          rawErrorsStr.includes('not subscribed') ||
-          rawErrorsStr.includes('invalid_external_user_ids')
-        ) {
-          errorMsg = 'جهازك غير مسجل بعد في خدمة الإشعارات أو تم حظر الإشعارات من إعدادات النظام. يرجى الضغط على زر (إعدادات الإشعارات) وتفعيل الإشعارات للتطبيق ثم إعادة المحاولة.';
-        } else if (Array.isArray(resJson.errors)) {
-          errorMsg = resJson.errors.join(', ');
-        } else {
-          errorMsg = JSON.stringify(resJson.errors);
+        const resJson = await response.json().catch(() => null);
+
+        if (response.ok && resJson && !resJson.errors) {
+          const recipients = typeof resJson.recipients === 'number' ? resJson.recipients : 0;
+          if (recipients === 0) {
+            return {
+              success: false,
+              recipients: 0,
+              error: 'وصل الإشعار إلى OneSignal ولكن لم يتم تسليمه لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول من داخل تطبيق الأندرويد المثبت على الهاتف ومنح صلاحية الإشعارات.',
+              raw: resJson
+            };
+          }
+          return {
+            success: true,
+            recipients,
+            message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+            raw: resJson
+          };
         }
-        console.warn('OneSignal direct API response error:', response.status, errorMsg);
-        return {
-          success: false,
-          error: errorMsg,
-          raw: resJson
-        };
+
+        if (response.status === 401 || (resJson && JSON.stringify(resJson).includes('Access denied'))) {
+          return {
+            success: false,
+            error: 'مفتاح OneSignal REST API غير صالح أو تم إلغاؤه (401 Unauthorized). يرجى تحديث المفتاح في لوحة التحكم.',
+            raw: resJson
+          };
+        }
+
+        if (resJson && resJson.errors) {
+          let errorMsg = '';
+          const rawErrorsStr = JSON.stringify(resJson.errors);
+          if (
+            rawErrorsStr.includes('invalid_aliases') ||
+            rawErrorsStr.includes('not subscribed') ||
+            rawErrorsStr.includes('invalid_external_user_ids')
+          ) {
+            errorMsg = 'جهازك غير مسجل بعد في خدمة الإشعارات أو تم حظر الإشعارات من إعدادات النظام. يرجى الضغط على زر (إعدادات الإشعارات) وتفعيل الإشعارات للتطبيق ثم إعادة المحاولة.';
+          } else if (Array.isArray(resJson.errors)) {
+            errorMsg = resJson.errors.join(', ');
+          } else {
+            errorMsg = JSON.stringify(resJson.errors);
+          }
+          console.warn('OneSignal direct API response error:', response.status, errorMsg);
+          return {
+            success: false,
+            error: errorMsg,
+            raw: resJson
+          };
+        }
+      } catch (directErr: any) {
+        lastDirectError = directErr?.message || String(directErr);
+        console.warn(`OneSignal direct fetch failed on ${endpoint}:`, directErr);
       }
-    } catch (directErr: any) {
-      console.warn('OneSignal direct fetch failed, trying proxy:', directErr);
     }
 
-    // 2. Try proxy endpoint /api/send-push
+    // 2. Try proxy endpoint /api/send-push (only if direct call encountered a network/CORS error)
     try {
       const apiResponse = await fetch('/api/send-push', {
         method: 'POST',
@@ -175,6 +202,7 @@ export const sendPushNotificationDetailed = async ({
         },
         body: JSON.stringify({
           userIds: externalIds,
+          subscriptionIds: validSubIds,
           sendToAll,
           title,
           message,
@@ -182,13 +210,38 @@ export const sendPushNotificationDetailed = async ({
         })
       });
 
-      const proxyData = await apiResponse.json().catch(() => null);
-      if (apiResponse.ok) {
-        return { success: true, message: 'تم الإرسال عبر الخادم', raw: proxyData };
+      // Verify contentType is JSON, not HTML SPA fallback
+      const contentType = apiResponse.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return {
+          success: false,
+          error: lastDirectError
+            ? `تعذر الاتصال المباشر بخدمة الإشعارات (${lastDirectError})`
+            : 'خادم الإشعارات الوسيط غير متاح حالياً.'
+        };
       }
-      return { success: false, error: proxyData?.error || 'فشل الإرسال عبر الخادم', raw: proxyData };
+
+      const proxyData = await apiResponse.json().catch(() => null);
+      if (apiResponse.ok && proxyData && !proxyData.errors && !proxyData.error) {
+        const recipients = typeof proxyData.recipients === 'number' ? proxyData.recipients : (proxyData.id ? 1 : 0);
+        if (recipients === 0) {
+          return {
+            success: false,
+            recipients: 0,
+            error: 'وصل الطلب إلى الخادم ولكن لم يتم تسليمه لأي هاتف (0 مستلمين). تأكد من فتح التطبيق على الهاتف ومنح الإذن.',
+            raw: proxyData
+          };
+        }
+        return { success: true, recipients, message: 'تم الإرسال عبر الخادم بنجاح', raw: proxyData };
+      }
+
+      const errText = proxyData?.error || (proxyData?.errors ? JSON.stringify(proxyData.errors) : 'فشل الإرسال عبر الخادم');
+      return { success: false, error: errText, raw: proxyData };
     } catch (proxyErr: any) {
-      return { success: false, error: proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات' };
+      return {
+        success: false,
+        error: lastDirectError || proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات'
+      };
     }
   } catch (error: any) {
     console.error('OneSignal Push Send Error:', error);

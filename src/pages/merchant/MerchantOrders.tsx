@@ -130,6 +130,31 @@ export default function MerchantOrders() {
       fetchWalletBalance();
     }
     
+    let bidsChannel: any = null;
+    if (user?.id) {
+      try {
+        bidsChannel = supabase
+          .channel(`merchant-bids-realtime-${user.id}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'supplier_bids' },
+            () => {
+              fetchRequests();
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'custom_requests', filter: `merchant_id=eq.${user.id}` },
+            () => {
+              fetchRequests();
+            }
+          )
+          .subscribe();
+      } catch (realtimeErr) {
+        console.warn('Realtime bids subscription warning:', realtimeErr);
+      }
+    }
+    
     const handleRefresh = () => {
       if (user) {
         fetchRequests();
@@ -137,7 +162,14 @@ export default function MerchantOrders() {
       }
     };
     window.addEventListener('refresh_data', handleRefresh);
-    return () => window.removeEventListener('refresh_data', handleRefresh);
+    return () => {
+      window.removeEventListener('refresh_data', handleRefresh);
+      if (bidsChannel) {
+        try {
+          supabase.removeChannel(bidsChannel);
+        } catch {}
+      }
+    };
   }, [user]);
 
   const fetchWalletBalance = async () => {

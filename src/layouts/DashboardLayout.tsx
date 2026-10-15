@@ -24,7 +24,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, title, sidebarLinks }: DashboardLayoutProps) {
   const { user, logout } = useAuthStore();
   const { currency, toggleCurrency, adTitle, adSubtitle, adImageUrl, adLinkUrl } = useSettingsStore();
-  const { notifications, unreadCount, fetchNotifications, markAsRead, deleteNotification } = useNotificationStore();
+  const { notifications, unreadCount, fetchNotifications, subscribeToNotifications, markAsRead, deleteNotification } = useNotificationStore();
   const { theme, toggleTheme } = useThemeStore();
   const { t } = useLanguageStore();
   const navigate = useNavigate();
@@ -72,10 +72,14 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const translateLabel = (text: string) => text;
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchNotifications(user.id);
+      const unsubscribe = subscribeToNotifications(user.id);
+      return () => {
+        unsubscribe();
+      };
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

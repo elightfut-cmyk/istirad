@@ -71,16 +71,30 @@ export default async function handler(req, res) {
       payload.target_channel = 'push';
     }
 
-    const response = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': authHeader
-      },
-      body: JSON.stringify(payload)
-    });
+    let response;
+    let resData;
+    try {
+      response = await fetch('https://api.onesignal.com/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': authHeader
+        },
+        body: JSON.stringify(payload)
+      });
+      resData = await response.json();
+    } catch {
+      response = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': authHeader
+        },
+        body: JSON.stringify(payload)
+      });
+      resData = await response.json();
+    }
 
-    const resData = await response.json();
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(response.status).json(resData);
   } catch (error) {

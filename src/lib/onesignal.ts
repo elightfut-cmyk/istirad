@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
+import toast from 'react-hot-toast';
 import { sendPushNotificationDetailed, PushSendResult } from '../services/pushNotificationService';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
@@ -144,7 +145,37 @@ export const initOneSignal = async (): Promise<void> => {
     // 4. Register Foreground Notification Listener
     try {
       OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-        console.log('🔔 Push notification received in foreground:', event.getNotification());
+        const notif = event.getNotification();
+        console.log('🔔 Push notification received in foreground:', notif);
+
+        // Force native system tray / notification banner to display
+        try {
+          notif?.display?.();
+        } catch (dispErr) {
+          console.warn('OneSignal notification.display error:', dispErr);
+        }
+
+        // Also display immediate in-app toast alert
+        try {
+          const title = notif?.title || 'إشعار جديد من جيبها';
+          const body = notif?.body || '';
+          toast(
+            `${title}${body ? `\n${body}` : ''}`,
+            {
+              icon: '🔔',
+              duration: 6000,
+              position: 'top-center',
+              style: {
+                background: '#1e293b',
+                color: '#fff',
+                fontWeight: 'bold',
+                padding: '12px 18px',
+                borderRadius: '16px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
+              }
+            }
+          );
+        } catch {}
       });
 
       OneSignal.Notifications.addEventListener('click', (event) => {

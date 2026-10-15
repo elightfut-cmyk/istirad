@@ -19,6 +19,7 @@ const getResolvedApiKey = (): string => {
 
 export interface PushNotificationPayload {
   userIds?: string | string[];
+  subscriptionIds?: string | string[];
   title: string;
   message: string;
   data?: Record<string, any>;
@@ -38,12 +39,13 @@ export interface PushSendResult {
  */
 export const sendPushNotification = async ({
   userIds = [],
+  subscriptionIds = [],
   title,
   message,
   data = {},
   sendToAll = false
 }: PushNotificationPayload): Promise<boolean> => {
-  const res = await sendPushNotificationDetailed({ userIds, title, message, data, sendToAll });
+  const res = await sendPushNotificationDetailed({ userIds, subscriptionIds, title, message, data, sendToAll });
   return res.success;
 };
 
@@ -52,6 +54,7 @@ export const sendPushNotification = async ({
  */
 export const sendPushNotificationDetailed = async ({
   userIds = [],
+  subscriptionIds = [],
   title,
   message,
   data = {},
@@ -60,9 +63,11 @@ export const sendPushNotificationDetailed = async ({
   try {
     const rawIds = Array.isArray(userIds) ? userIds : [userIds];
     const externalIds = rawIds.filter(Boolean).map(id => String(id)).filter(id => id !== 'all');
+    const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
+    const validSubIds = rawSubIds.filter(Boolean).map(id => String(id));
 
-    if (!sendToAll && externalIds.length === 0) {
-      return { success: false, error: 'لم يتم تحديد أي مستخدم لإرسال الإشعار إليه' };
+    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
+      return { success: false, error: 'لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه' };
     }
 
     const apiKey = getResolvedApiKey();
@@ -101,11 +106,16 @@ export const sendPushNotificationDetailed = async ({
       // Send to all subscribed devices
       payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
     } else {
-      payload.include_aliases = {
-        external_id: externalIds
-      };
-      payload.include_external_user_ids = externalIds;
-      payload.channel_for_external_user_ids = 'push';
+      if (validSubIds.length > 0) {
+        payload.include_subscription_ids = validSubIds;
+      }
+      if (externalIds.length > 0) {
+        payload.include_aliases = {
+          external_id: externalIds
+        };
+        payload.include_external_user_ids = externalIds;
+        payload.channel_for_external_user_ids = 'push';
+      }
       payload.target_channel = 'push';
     }
 
@@ -132,9 +142,19 @@ export const sendPushNotificationDetailed = async ({
       }
 
       if (resJson && resJson.errors) {
-        const errorMsg = Array.isArray(resJson.errors)
-          ? resJson.errors.join(', ')
-          : JSON.stringify(resJson.errors);
+        let errorMsg = '';
+        const rawErrorsStr = JSON.stringify(resJson.errors);
+        if (
+          rawErrorsStr.includes('invalid_aliases') ||
+          rawErrorsStr.includes('not subscribed') ||
+          rawErrorsStr.includes('invalid_external_user_ids')
+        ) {
+          errorMsg = 'جهازك غير مسجل بعد في خدمة الإشعارات أو تم حظر الإشعارات من إعدادات النظام. يرجى الضغط على زر (إعدادات الإشعارات) وتفعيل الإشعارات للتطبيق ثم إعادة المحاولة.';
+        } else if (Array.isArray(resJson.errors)) {
+          errorMsg = resJson.errors.join(', ');
+        } else {
+          errorMsg = JSON.stringify(resJson.errors);
+        }
         console.warn('OneSignal direct API response error:', response.status, errorMsg);
         return {
           success: false,

@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userIds, title, message, data, sendToAll } = req.body || {};
+    const { userIds, subscriptionIds, title, message, data, sendToAll } = req.body || {};
     const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjY3FicjdiaDJ2am1paXRldHV5cHZmbjMyaG9scjN5eGhldDJvYmtubWx5N2Y0ZXhxdG5ucmVrb2M2bW55ampkN3NwYTJ0NGJhZGhhZnQ2NjM1bjdh';
     const fallbackKey = Buffer.from(ENCODED_REST_KEY, 'base64').toString('utf8');
     const apiKey = process.env.ONESIGNAL_REST_API_KEY || process.env.VITE_ONESIGNAL_REST_API_KEY || fallbackKey;
@@ -26,9 +26,11 @@ export default async function handler(req, res) {
 
     const rawIds = Array.isArray(userIds) ? userIds : [userIds];
     const externalIds = rawIds.filter(Boolean).map(id => String(id));
+    const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
+    const validSubIds = rawSubIds.filter(Boolean).map(id => String(id));
 
-    if (!sendToAll && externalIds.length === 0) {
-      return res.status(400).json({ error: 'No user IDs provided' });
+    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
+      return res.status(400).json({ error: 'No user or subscription IDs provided' });
     }
 
     const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
@@ -56,11 +58,16 @@ export default async function handler(req, res) {
     if (sendToAll) {
       payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
     } else {
-      payload.include_aliases = {
-        external_id: externalIds
-      };
-      payload.include_external_user_ids = externalIds;
-      payload.channel_for_external_user_ids = 'push';
+      if (validSubIds.length > 0) {
+        payload.include_subscription_ids = validSubIds;
+      }
+      if (externalIds.length > 0) {
+        payload.include_aliases = {
+          external_id: externalIds
+        };
+        payload.include_external_user_ids = externalIds;
+        payload.channel_for_external_user_ids = 'push';
+      }
       payload.target_channel = 'push';
     }
 

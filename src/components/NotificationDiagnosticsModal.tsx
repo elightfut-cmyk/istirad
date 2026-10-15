@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { 
   isNativePlatform,
+  loginOneSignalUser,
   getNotificationDiagnostics, 
   requestPushPermissionAgain, 
   sendTestPushToSelf,
@@ -52,9 +53,12 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
 
   useEffect(() => {
     if (isOpen) {
+      if (user?.id) {
+        loginOneSignalUser(user.id).catch(() => {});
+      }
       runDiagnostics();
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   if (!isOpen || !isNativePlatform()) return null;
 
@@ -80,7 +84,13 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
     setSendingTest(true);
     setTestResult(null);
     try {
-      const res = await sendTestPushToSelf(user.id);
+      if (isNativePlatform()) {
+        try {
+          await loginOneSignalUser(user.id);
+        } catch {}
+      }
+
+      const res = await sendTestPushToSelf(user.id, data?.subscriptionId);
       if (res.success) {
         setTestResult({
           success: true,
@@ -92,7 +102,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
           success: false,
           message: res.error || 'تعذر إرسال الإشعار التجريبي. تحقق من اتصال الإنترنت وربط الهاتف.'
         });
-        toast.error('فشل إرسال الإشعار التجريبي: ' + (res.error || ''));
+        toast.error('فشل إرسال الإشعار التجريبي');
       }
     } catch (err: any) {
       setTestResult({

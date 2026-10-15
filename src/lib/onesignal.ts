@@ -302,9 +302,10 @@ export const requestPushPermissionAgain = async (): Promise<boolean> => {
 /**
  * Sends a live test push notification to the current user's device.
  */
-export const sendTestPushToSelf = async (userId: string): Promise<PushSendResult> => {
+export const sendTestPushToSelf = async (userId: string, subscriptionId?: string | null): Promise<PushSendResult> => {
   return sendPushNotificationDetailed({
     userIds: [userId],
+    subscriptionIds: subscriptionId ? [subscriptionId] : undefined,
     title: '🔔 إشعار تجريبي ناجح من جيبها',
     message: 'تهانينا! خدمة الإشعارات وتنبيهات الهاتف تعمل الآن بشكل سليم وسريع على جهازك.',
     data: {

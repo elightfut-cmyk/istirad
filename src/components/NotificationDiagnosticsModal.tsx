@@ -14,6 +14,7 @@ import {
   Info
 } from 'lucide-react';
 import { 
+  isNativePlatform,
   getNotificationDiagnostics, 
   requestPushPermissionAgain, 
   sendTestPushToSelf,

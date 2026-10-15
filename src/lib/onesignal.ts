@@ -335,8 +335,8 @@ export const requestPushPermissionAgain = async (): Promise<boolean> => {
  */
 export const sendTestPushToSelf = async (userId: string, subscriptionId?: string | null): Promise<PushSendResult> => {
   return sendPushNotificationDetailed({
-    userIds: [userId],
     subscriptionIds: subscriptionId ? [subscriptionId] : undefined,
+    userIds: subscriptionId ? undefined : [userId],
     title: '🔔 إشعار تجريبي ناجح من جيبها',
     message: 'تهانينا! خدمة الإشعارات وتنبيهات الهاتف تعمل الآن بشكل سليم وسريع على جهازك.',
     data: {

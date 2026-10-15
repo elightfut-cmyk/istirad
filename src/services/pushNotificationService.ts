@@ -39,6 +39,12 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
     return 'مفتاح OneSignal غير مصرح به أو تم إلغاؤه (401 Unauthorized)';
   }
   if (resJson && resJson.errors) {
+    if (resJson.errors.invalid_aliases) {
+      return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات (invalid_aliases). يرجى فتح التطبيق وتسجيل الدخول أولاً.';
+    }
+    if (resJson.errors.invalid_player_ids) {
+      return 'معرف الاشتراك بالجهاز غير صالح أو تم إلغاؤه (invalid_player_ids).';
+    }
     if (Array.isArray(resJson.errors)) {
       return resJson.errors.join(', ');
     }
@@ -75,9 +81,9 @@ export const sendPushNotificationDetailed = async ({
   sendToAll = false
 }: PushNotificationPayload): Promise<PushSendResult> => {
   const rawIds = Array.isArray(userIds) ? userIds : [userIds];
-  const externalIds = rawIds.filter(Boolean).map(id => String(id)).filter(id => id !== 'all');
+  const externalIds = Array.from(new Set(rawIds.filter(Boolean).map(String).filter(id => id !== 'all')));
   const rawSubIds = Array.isArray(subscriptionIds) ? subscriptionIds : (subscriptionIds ? [subscriptionIds] : []);
-  const validSubIds = rawSubIds.filter(Boolean).map(id => String(id));
+  const validSubIds = Array.from(new Set(rawSubIds.filter(Boolean).map(String)));
 
   if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
     const errorMsg = 'فشل الإرسال: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه';
@@ -123,15 +129,12 @@ export const sendPushNotificationDetailed = async ({
   } else {
     if (validSubIds.length > 0) {
       payload.include_subscription_ids = validSubIds;
-    }
-    if (externalIds.length > 0) {
+    } else if (externalIds.length > 0) {
       payload.include_aliases = {
         external_id: externalIds
       };
-      payload.include_external_user_ids = externalIds;
-      payload.channel_for_external_user_ids = 'push';
+      payload.target_channel = 'push';
     }
-    payload.target_channel = 'push';
   }
 
   // 1. Direct call to OneSignal (try modern api.onesignal.com then legacy endpoint)
@@ -155,8 +158,11 @@ export const sendPushNotificationDetailed = async ({
 
       const resJson = await response.json().catch(() => null);
 
-      // Check if OneSignal returned an error
-      if (!response.ok || (resJson && resJson.errors)) {
+      const hasValidId = Boolean(resJson?.id && String(resJson.id).trim() !== '');
+      const recipients = typeof resJson?.recipients === 'number' ? resJson.recipients : (hasValidId ? 1 : 0);
+
+      // Check if OneSignal returned an error or failed to create a notification
+      if (!response.ok || !hasValidId || recipients === 0) {
         const errorReason = extractOneSignalError(resJson, response.status);
         const errorMsg = `فشل الإرسال: ${errorReason}`;
         console.error(errorMsg, { status: response.status, raw: resJson });
@@ -164,20 +170,12 @@ export const sendPushNotificationDetailed = async ({
       }
 
       // Check if OneSignal accepted the request
-      if (response.ok && resJson && !resJson.errors) {
-        const recipients = typeof resJson.recipients === 'number' ? resJson.recipients : (resJson.id ? 1 : 0);
-        if (recipients === 0) {
-          const errorMsg = 'فشل الإرسال: لم يتم تسليم الإشعار لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول ومنح إذن الإشعارات من داخل التطبيق.';
-          console.error(errorMsg);
-          throw new Error(errorMsg);
-        }
-        return {
-          success: true,
-          recipients,
-          message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
-          raw: resJson
-        };
-      }
+      return {
+        success: true,
+        recipients,
+        message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+        raw: resJson
+      };
     } catch (directErr: any) {
       // If error was thrown by us (e.g. from OneSignal response), bubble it up immediately
       if (directErr?.message && directErr.message.startsWith('فشل الإرسال:')) {
@@ -214,25 +212,21 @@ export const sendPushNotificationDetailed = async ({
 
     const proxyData = await apiResponse.json().catch(() => null);
 
-    // If OneSignal responded with error through the proxy
-    if (!apiResponse.ok || (proxyData && proxyData.errors) || proxyData?.error) {
+    const hasValidProxyId = Boolean(proxyData?.id && String(proxyData.id).trim() !== '');
+    const proxyRecipients = typeof proxyData?.recipients === 'number' ? proxyData.recipients : (hasValidProxyId ? 1 : 0);
+
+    // If OneSignal responded with error through the proxy or no notification was created
+    if (!apiResponse.ok || !hasValidProxyId || proxyRecipients === 0 || proxyData?.error) {
       const errorReason = extractOneSignalError(proxyData, apiResponse.status);
       const errorMsg = `فشل الإرسال: ${errorReason}`;
       console.error(errorMsg, { status: apiResponse.status, raw: proxyData });
       throw new Error(errorMsg);
     }
 
-    const recipients = typeof proxyData.recipients === 'number' ? proxyData.recipients : (proxyData.id ? 1 : 0);
-    if (recipients === 0) {
-      const errorMsg = 'فشل الإرسال: لم يتم تسليم الإشعار لأي جهاز (0 مستلمين). يرجى التأكد من تسجيل الدخول ومنح إذن الإشعارات من داخل التطبيق.';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-
     return {
       success: true,
-      recipients,
-      message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+      recipients: proxyRecipients,
+      message: `تم إرسال الإشعار بنجاح إلى ${proxyRecipients} جهاز`,
       raw: proxyData
     };
   } catch (proxyErr: any) {

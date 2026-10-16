@@ -40,7 +40,7 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
   }
   if (resJson && resJson.errors) {
     if (resJson.errors.invalid_aliases) {
-      return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات (invalid_aliases). يرجى فتح التطبيق وتسجيل الدخول أولاً.';
+      return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات. يرجى فتح التطبيق على هاتفك والضغط على زر "تفعيل" في نافذة فحص الإشعارات ثم الانتظار 3 ثوانٍ.';
     }
     if (resJson.errors.invalid_player_ids) {
       return 'معرف الاشتراك بالجهاز غير صالح أو تم إلغاؤه (invalid_player_ids).';
@@ -161,8 +161,9 @@ export const sendPushNotificationDetailed = async ({
       const hasValidId = Boolean(resJson?.id && String(resJson.id).trim() !== '');
       const recipients = typeof resJson?.recipients === 'number' ? resJson.recipients : (hasValidId ? 1 : 0);
 
-      // Check if OneSignal returned an error or failed to create a notification
-      if (!response.ok || !hasValidId || recipients === 0) {
+      // Check if OneSignal returned a fatal error
+      const isTestPush = data?.type === 'test_push';
+      if (!response.ok || !hasValidId || (recipients === 0 && isTestPush)) {
         const errorReason = extractOneSignalError(resJson, response.status);
         const errorMsg = `فشل الإرسال: ${errorReason}`;
         console.error(errorMsg, { status: response.status, raw: resJson });
@@ -173,7 +174,9 @@ export const sendPushNotificationDetailed = async ({
       return {
         success: true,
         recipients,
-        message: `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`,
+        message: recipients > 0 
+          ? `تم إرسال الإشعار بنجاح إلى ${recipients} جهاز`
+          : 'تم تسجيل الإشعار بنجاح (لا توجد هواتف مشتركة لهذه الفئة حالياً)',
         raw: resJson
       };
     } catch (directErr: any) {
@@ -215,8 +218,9 @@ export const sendPushNotificationDetailed = async ({
     const hasValidProxyId = Boolean(proxyData?.id && String(proxyData.id).trim() !== '');
     const proxyRecipients = typeof proxyData?.recipients === 'number' ? proxyData.recipients : (hasValidProxyId ? 1 : 0);
 
+    const isTestPush = data?.type === 'test_push';
     // If OneSignal responded with error through the proxy or no notification was created
-    if (!apiResponse.ok || !hasValidProxyId || proxyRecipients === 0 || proxyData?.error) {
+    if (!apiResponse.ok || !hasValidProxyId || (proxyRecipients === 0 && isTestPush) || proxyData?.error) {
       const errorReason = extractOneSignalError(proxyData, apiResponse.status);
       const errorMsg = `فشل الإرسال: ${errorReason}`;
       console.error(errorMsg, { status: apiResponse.status, raw: proxyData });
@@ -226,7 +230,9 @@ export const sendPushNotificationDetailed = async ({
     return {
       success: true,
       recipients: proxyRecipients,
-      message: `تم إرسال الإشعار بنجاح إلى ${proxyRecipients} جهاز`,
+      message: proxyRecipients > 0 
+        ? `تم إرسال الإشعار بنجاح إلى ${proxyRecipients} جهاز`
+        : 'تم تسجيل الإشعار بنجاح (لا توجد هواتف مشتركة لهذه الفئة حالياً)',
       raw: proxyData
     };
   } catch (proxyErr: any) {

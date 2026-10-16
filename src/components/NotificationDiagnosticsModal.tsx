@@ -127,6 +127,8 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
         });
         toast.error(errorText);
       }
+      // Re-run diagnostics to refresh live data
+      runDiagnostics();
     } catch (err: any) {
       const errorText = err?.message || 'خطأ غير متوقع أثناء الإرسال';
       setTestResult({
@@ -134,6 +136,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
         message: errorText
       });
       toast.error(errorText);
+      runDiagnostics();
     } finally {
       setSendingTest(false);
     }

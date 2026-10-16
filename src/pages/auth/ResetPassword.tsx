@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PackageSearch, Lock, CheckCircle2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Lock, CheckCircle2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -88,8 +88,8 @@ export default function ResetPassword() {
 
       <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100 dark:border-gray-700">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#4f46e5]/10 dark:bg-[#4f46e5]/20 mb-4 hover:opacity-80 transition">
-            <PackageSearch size={32} className="text-[#4f46e5] dark:text-indigo-400" />
+          <Link to="/" className="inline-block mb-4 hover:opacity-90 transition">
+            <img src="/header-logo.png" alt="JIIBHA" className="h-10 mx-auto object-contain dark:brightness-110" />
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">تعيين كلمة مرور جديدة</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">

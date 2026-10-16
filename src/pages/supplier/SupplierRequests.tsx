@@ -14,9 +14,11 @@ import {
   notifyMerchantPriceRejected,
   notifyMerchantSupplierInterest,
 } from '../../services/emailService';
+import TenderAppPromptModal from '../../components/TenderAppPromptModal';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
+  const [showTenderAppPrompt, setShowTenderAppPrompt] = useState(true);
   const { 
     formatCurrency,
     markupTier1Percentage,
@@ -651,6 +653,12 @@ export default function SupplierRequests() {
           </div>
         </div>
       )}
+
+      {/* Tender App Download Modal */}
+      <TenderAppPromptModal
+        isOpen={showTenderAppPrompt}
+        onClose={() => setShowTenderAppPrompt(false)}
+      />
       </div>
     </DashboardLayout>
   );

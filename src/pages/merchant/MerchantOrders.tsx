@@ -17,9 +17,11 @@ import InvoiceDocument from '../../components/InvoiceDocument';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import { trackCustomFacebookEvent } from '../../components/FacebookPixel';
+import TenderAppPromptModal from '../../components/TenderAppPromptModal';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
+  const [showTenderAppPrompt, setShowTenderAppPrompt] = useState(false);
   const { formatCurrency, minQuantity, exchangeRate, markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee, shippingPricePerKilo, bidWindowExchangeRate } = useSettingsStore();
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
@@ -739,7 +741,7 @@ export default function MerchantOrders() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">إدارة الطلبات</h2>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowTenderAppPrompt(true)}
           className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition"
         >
           <Plus size={20} />
@@ -1278,6 +1280,16 @@ export default function MerchantOrders() {
           )
         )}
       </div>
+
+      {/* Tender App Download Modal */}
+      <TenderAppPromptModal
+        isOpen={showTenderAppPrompt}
+        onClose={() => setShowTenderAppPrompt(false)}
+        onProceed={() => {
+          setShowTenderAppPrompt(false);
+          setShowModal(true);
+        }}
+      />
 
       {/* Modal for Creating Request */}
       {showModal && (

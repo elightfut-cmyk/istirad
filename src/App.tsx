@@ -39,6 +39,8 @@ import Profile from './pages/profile/Profile';
 import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
 import { initOneSignal } from './lib/onesignal';
+import AppSplashScreen from './components/AppSplashScreen';
+import ForceUpdateModal from './components/ForceUpdateModal';
 
 function App() {
   const { checkSession, isLoading } = useAuthStore();
@@ -111,16 +113,13 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#f5f5f0] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#4f46e5] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <AppSplashScreen minDurationMs={1200} />;
   }
 
   return (
     <Router>
       <FacebookPixel />
+      <ForceUpdateModal />
       <Toaster position="top-center" toastOptions={{ duration: 4000, style: { fontFamily: 'Tajawal', padding: '16px', borderRadius: '12px' } }} />
       <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] dark:bg-[#121212] dark:text-gray-100 transition-colors">
         <Routes>

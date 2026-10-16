@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { Store, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Send } from 'lucide-react';
 
 interface Page {
   id: string;
@@ -39,11 +39,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand & About */}
           <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white">
-                <Store size={24} />
-              </div>
-              <span className="text-2xl font-black text-[#4f46e5]">جيبها-jiibha</span>
+            <Link to="/" className="inline-block mb-6 hover:opacity-90 transition-opacity">
+              <img src="/header-logo.png" alt="JIIBHA" className="h-9 object-contain dark:brightness-110" />
             </Link>
             {settings.footerDescription && (
               <p className="text-gray-600 dark:text-gray-300 mb-6">

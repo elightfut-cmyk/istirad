@@ -37,9 +37,12 @@ import { sendPushNotification } from '../../services/pushNotificationService';
 import { Smartphone } from 'lucide-react';
 import { Vote } from 'lucide-react';
 import NotificationDiagnosticsModal from '../../components/NotificationDiagnosticsModal';
+import { Download } from 'lucide-react';
+import AppUpdateAdminTab from '../../components/admin/AppUpdateAdminTab';
+import TenderAppPromptAdminTab from '../../components/admin/TenderAppPromptAdminTab';
 
 export default function AdminNotifications() {
-  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push'>('popup');
+  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push' | 'appUpdate' | 'tenderAppModal'>('popup');
 
   // Push Broadcast States
   const [pushTitle, setPushTitle] = useState('');
@@ -481,14 +484,38 @@ export default function AdminNotifications() {
 
         <button
           onClick={() => setActiveTab('telegram')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
             activeTab === 'telegram'
               ? 'bg-[#4f46e5] text-white shadow-md'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
           }`}
         >
-          <Send size={18} />
-          <span>إشعارات تلغرام التسويقية</span>
+          <Send size={16} />
+          <span>إشعارات تلغرام</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('appUpdate')}
+          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            activeTab === 'appUpdate'
+              ? 'bg-[#4f46e5] text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <Download size={16} />
+          <span>تحديث التطبيق (إجباري)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('tenderAppModal')}
+          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+            activeTab === 'tenderAppModal'
+              ? 'bg-[#4f46e5] text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <Smartphone size={16} />
+          <span>تنبيه مناقصات (تطبيق)</span>
         </button>
       </div>
 
@@ -1093,6 +1120,12 @@ export default function AdminNotifications() {
           </div>
         </div>
       )}
+
+      {/* TAB 5: APP FORCE UPDATE */}
+      {activeTab === 'appUpdate' && <AppUpdateAdminTab />}
+
+      {/* TAB 6: TENDER APP PROMPT */}
+      {activeTab === 'tenderAppModal' && <TenderAppPromptAdminTab />}
 
       {/* Diagnostics Modal */}
       <NotificationDiagnosticsModal

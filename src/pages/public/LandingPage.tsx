@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PackageSearch, Store, ArrowLeft, ShieldCheck, Globe, TrendingUp, Smartphone } from 'lucide-react';
+import { Store, ArrowLeft, ShieldCheck, Globe, TrendingUp, Smartphone } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
@@ -43,12 +43,9 @@ export default function LandingPage() {
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 rounded-b-2xl sm:rounded-3xl shadow-sm sticky top-0 sm:top-4 z-50 overflow-hidden border-b sm:border border-gray-100 dark:border-gray-700/60">
         <div className="w-full px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
-          {/* Brand */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 hover:opacity-90 transition-opacity">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#4f46e5] rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs">
-              <PackageSearch size={20} className="sm:w-6 sm:h-6" />
-            </div>
-            <span className="text-lg sm:text-2xl font-black text-[#4f46e5] tracking-tight">{t('brand.name')}</span>
+          {/* Brand Logo */}
+          <Link to="/" className="flex items-center shrink-0 hover:opacity-90 transition-opacity py-1">
+            <img src="/header-logo.png" alt="JIIBHA" className="h-9 sm:h-11 object-contain dark:brightness-110" />
           </Link>
 
           {/* Action Buttons */}

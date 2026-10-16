@@ -6,7 +6,7 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useLanguageStore } from '../store/useLanguageStore';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2, Package, Sun, Moon, Vote, Smartphone } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Sun, Moon, Vote, Smartphone } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
 import DashboardAlertModal from '../components/DashboardAlertModal';
 import SocialLinksModal from '../components/SocialLinksModal';
@@ -100,9 +100,13 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
     <div className="flex h-screen bg-[#f5f5f0] dark:bg-[#121212] transition-colors">
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col hidden md:flex transition-colors">
-        <div className="p-6 text-center border-b border-gray-100 dark:border-gray-700">
-          <Link to="/" className="text-2xl font-bold text-[#4f46e5] dark:text-indigo-400 hover:opacity-80 transition-opacity inline-block">{t('brand.name')}</Link>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{user?.role === 'admin' ? t('role.admin') : user?.role === 'merchant' ? t('role.merchant') : t('role.supplier')}</p>
+        <div className="p-5 text-center border-b border-gray-100 dark:border-gray-700">
+          <Link to="/" className="inline-block hover:opacity-85 transition-opacity py-1">
+            <img src="/header-logo.png" alt="JIIBHA" className="h-8 mx-auto object-contain dark:brightness-110" />
+          </Link>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium bg-gray-50 dark:bg-gray-750 py-1 px-3 rounded-full inline-block border border-gray-100 dark:border-gray-700">
+            {user?.role === 'admin' ? t('role.admin') : user?.role === 'merchant' ? t('role.merchant') : t('role.supplier')}
+          </p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {sidebarLinks.map((link) => {
@@ -141,8 +145,8 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         {/* Topbar */}
         <header className="h-16 bg-white dark:bg-gray-800 shadow-sm flex items-center justify-between px-6 transition-colors">
           <div className="flex items-center md:hidden">
-            <Link to="/" className="text-[#4f46e5] dark:text-indigo-400 mr-4 hover:opacity-80 transition-opacity">
-              <Package size={28} />
+            <Link to="/" className="mr-3 hover:opacity-85 transition-opacity">
+              <img src="/header-logo.png" alt="JIIBHA" className="h-7 object-contain dark:brightness-110" />
             </Link>
           </div>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>

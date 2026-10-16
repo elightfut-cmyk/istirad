@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useSettingsStore } from './store/useSettingsStore';
@@ -46,6 +46,7 @@ function App() {
   const { checkSession, isLoading } = useAuthStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)
@@ -59,7 +60,7 @@ function App() {
       if (state.isLoading) {
         useAuthStore.setState({ isLoading: false });
       }
-    }, 1500);
+    }, 4000);
 
     return () => {
       clearTimeout(initTimer);
@@ -118,8 +119,8 @@ function App() {
     };
   }, []);
 
-  if (isLoading) {
-    return <AppSplashScreen minDurationMs={3200} />;
+  if (showSplash) {
+    return <AppSplashScreen minDurationMs={2600} onFinish={() => setShowSplash(false)} />;
   }
 
   return (

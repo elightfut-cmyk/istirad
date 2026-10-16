@@ -26,15 +26,11 @@
   </head>
   <body>
     <div id="root">
-      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #071638 0%, #030a1a 100%);">
-        <img src="/app-logo.png" alt="JIIBHA" style="width: 84px; height: 84px; object-fit: contain; margin-bottom: 24px; filter: drop-shadow(0 0 20px rgba(212,175,55,0.4)); animation: pulseLogo 2s ease-in-out infinite;" />
-        <div style="width: 44px; height: 44px; border: 3px solid rgba(212,175,55,0.25); border-top-color: #f3e5ab; border-radius: 50%; animation: spin 0.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite; box-shadow: 0 0 15px rgba(212,175,55,0.3);"></div>
-        <p style="color: #f3e5ab; font-size: 14px; margin-top: 16px; font-weight: 600; letter-spacing: 0.5px; opacity: 0.9;">يرجى الانتظار...</p>
+      <div style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background-color: #040c1e; overflow: hidden; margin: 0; padding: 0;">
+        <div style="position: relative; width: 100%; height: 100%; max-width: 448px; margin: 0 auto; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          <img src="/splash-screen.png" alt="Jiibha" style="width: 100%; height: 100%; object-fit: cover; display: block; user-select: none;" />
+        </div>
       </div>
-      <style>
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulseLogo { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(212,175,55,0.4)); } 50% { transform: scale(1.04); filter: drop-shadow(0 0 35px rgba(212,175,55,0.7)); } }
-      </style>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

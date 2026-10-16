@@ -40,7 +40,7 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
   }
   if (resJson && resJson.errors) {
     if (resJson.errors.invalid_aliases) {
-      return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات. يرجى فتح التطبيق على هاتفك والضغط على زر "تفعيل" في نافذة فحص الإشعارات ثم الانتظار 3 ثوانٍ.';
+      return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات. يرجى فتح التطبيق على هاتفك والضغط على زر "تحديث الرمز" في نافذة فحص الإشعارات ثم الانتظار 3 ثوانٍ.';
     }
     if (resJson.errors.invalid_player_ids) {
       return 'معرف الاشتراك بالجهاز غير صالح أو تم إلغاؤه (invalid_player_ids).';

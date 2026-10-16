@@ -69,6 +69,53 @@ public class MainActivity extends BridgeActivity {
                         e.printStackTrace();
                     }
                 }
+
+                @JavascriptInterface
+                public String getPushSubscriptionId() {
+                    try {
+                        return com.onesignal.OneSignal.getUser().getPushSubscription().getId();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                }
+
+                @JavascriptInterface
+                public String getPushSubscriptionToken() {
+                    try {
+                        return com.onesignal.OneSignal.getUser().getPushSubscription().getToken();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                }
+
+                @JavascriptInterface
+                public boolean getPushSubscriptionOptedIn() {
+                    try {
+                        return com.onesignal.OneSignal.getUser().getPushSubscription().getOptedIn();
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+
+                @JavascriptInterface
+                public void forceOptInPush() {
+                    try {
+                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @JavascriptInterface
+                public void loginOneSignal(String externalId) {
+                    try {
+                        if (externalId != null && !externalId.trim().isEmpty()) {
+                            com.onesignal.OneSignal.login(externalId);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }, "NativeDeviceBridge");
         }
     }

@@ -219,25 +219,31 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
               {/* Push Subscription */}
               <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${data?.optedIn ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    data?.isFullyConnected 
+                      ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' 
+                      : (data?.hasPermission ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400')
+                  }`}>
                     <Bell size={20} />
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-400">الاشتراك الفوري</div>
                     <div className="text-xs font-black text-gray-800 dark:text-gray-200">
-                      {data?.optedIn ? 'متصل بالخدمة ✅' : 'غير مشترك ⚠️'}
+                      {data?.isFullyConnected 
+                        ? 'متصل بالخدمة ✅' 
+                        : (data?.hasPermission ? 'قيد التسجيل والربط ⏳' : 'غير مشترك ⚠️')}
                     </div>
                   </div>
                 </div>
-                {!data?.optedIn && (
+                {!data?.isFullyConnected && (
                   <button
                     onClick={handleForceOptIn}
                     disabled={activatingOptIn}
                     className="px-2.5 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition active:scale-95 shadow-sm flex items-center gap-1 shrink-0"
-                    title="الضغط لتفعيل الاشتراك وربط الهاتف فوراً"
+                    title="الضغط لتفعيل الاشتراك وتحديث الرمز فوراً"
                   >
-                    {activatingOptIn ? <RefreshCw size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                    <span>تفعيل</span>
+                    {activatingOptIn ? <RefreshCw size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                    <span>تحديث الرمز</span>
                   </button>
                 )}
               </div>
@@ -255,6 +261,22 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                 </div>
               </div>
 
+            </div>
+
+            {/* Technical Diagnostics Info */}
+            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-800 text-xs space-y-1.5 font-mono">
+              <div className="flex items-center justify-between text-gray-600 dark:text-gray-300">
+                <span className="font-sans font-medium text-gray-500">معرف الجهاز (Subscription ID):</span>
+                <span className={data?.subscriptionId ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-600 dark:text-amber-400 font-sans'}>
+                  {data?.subscriptionId ? `${data.subscriptionId.slice(0, 14)}...` : 'جاري الاستلام من OneSignal ⏳'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-gray-600 dark:text-gray-300">
+                <span className="font-sans font-medium text-gray-500">رمز Google FCM:</span>
+                <span className={data?.isRegisteredWithFCM ? 'text-emerald-600 dark:text-emerald-400 font-sans font-bold' : 'text-amber-600 dark:text-amber-400 font-sans'}>
+                  {data?.isRegisteredWithFCM ? 'متصل ومسجل بنجاح ✅' : 'جاري المزامنة مع Google Play ⏳'}
+                </span>
+              </div>
             </div>
 
             {/* Test Push Result Alert */}
@@ -325,14 +347,14 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
 
             {/* Quick Action Buttons */}
             <div className="flex flex-col gap-2 pt-2">
-              {!data?.optedIn && (
+              {!data?.isFullyConnected && (
                 <button
                   onClick={handleForceOptIn}
                   disabled={activatingOptIn}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
                 >
                   {activatingOptIn ? <RefreshCw size={16} className="animate-spin" /> : <Bell size={16} />}
-                  <span>تفعيل الاشتراك الفوري الآن</span>
+                  <span>تفعيل الاشتراك وتحديث رمز الجهاز الآن</span>
                 </button>
               )}
 

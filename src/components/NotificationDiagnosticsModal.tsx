@@ -18,6 +18,7 @@ import {
   loginOneSignalUser,
   getNotificationDiagnostics, 
   requestPushPermissionAgain, 
+  forcePushSubscriptionOptIn,
   sendTestPushToSelf,
   openNativeAppSettings,
   openNativeNotificationSettings,
@@ -36,7 +37,28 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<NotificationDiagnosticData | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
+  const [activatingOptIn, setActivatingOptIn] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleForceOptIn = async () => {
+    setActivatingOptIn(true);
+    try {
+      if (user?.id) {
+        await loginOneSignalUser(user.id);
+      }
+      const ok = await forcePushSubscriptionOptIn();
+      if (ok) {
+        toast.success('تم تفعيل الاشتراك الفوري بنجاح!');
+      } else {
+        toast.error('تعذر تفعيل الاشتراك، تأكد من اتصال الإنترنت وإذن الإشعارات');
+      }
+      await runDiagnostics();
+    } catch (e: any) {
+      toast.error('حدث خطأ أثناء التفعيل: ' + (e?.message || ''));
+    } finally {
+      setActivatingOptIn(false);
+    }
+  };
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -192,16 +214,29 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
               </div>
 
               {/* Push Subscription */}
-              <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${data?.optedIn ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'}`}>
-                  <Bell size={20} />
-                </div>
-                <div>
-                  <div className="text-[11px] text-gray-400">الاشتراك الفوري</div>
-                  <div className="text-xs font-black text-gray-800 dark:text-gray-200">
-                    {data?.optedIn ? 'متصل بالخدمة ✅' : 'غير مشترك ⚠️'}
+              <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${data?.optedIn ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'}`}>
+                    <Bell size={20} />
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-gray-400">الاشتراك الفوري</div>
+                    <div className="text-xs font-black text-gray-800 dark:text-gray-200">
+                      {data?.optedIn ? 'متصل بالخدمة ✅' : 'غير مشترك ⚠️'}
+                    </div>
                   </div>
                 </div>
+                {!data?.optedIn && (
+                  <button
+                    onClick={handleForceOptIn}
+                    disabled={activatingOptIn}
+                    className="px-2.5 py-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition active:scale-95 shadow-sm flex items-center gap-1 shrink-0"
+                    title="الضغط لتفعيل الاشتراك وربط الهاتف فوراً"
+                  >
+                    {activatingOptIn ? <RefreshCw size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                    <span>تفعيل</span>
+                  </button>
+                )}
               </div>
 
               {/* Account Link */}
@@ -286,43 +321,56 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
-                onClick={handleSendTestPush}
-                disabled={sendingTest}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition disabled:opacity-50 active:scale-98"
-              >
-                {sendingTest ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
-                <span>إرسال إشعار تجريبي لهاتفي</span>
-              </button>
-
-              {!data?.hasPermission && (
+            <div className="flex flex-col gap-2 pt-2">
+              {!data?.optedIn && (
                 <button
-                  onClick={handleRequestPermission}
-                  className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
+                  onClick={handleForceOptIn}
+                  disabled={activatingOptIn}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
                 >
-                  <Bell size={16} />
-                  <span>طلب الإذن</span>
+                  {activatingOptIn ? <RefreshCw size={16} className="animate-spin" /> : <Bell size={16} />}
+                  <span>تفعيل الاشتراك الفوري الآن</span>
                 </button>
               )}
 
-              <button
-                onClick={handleOpenNotificationSettings}
-                className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm transition active:scale-98"
-                title="فتح إعدادات الإشعارات في الهاتف مباشرة"
-              >
-                <Sliders size={16} />
-                <span>إعدادات الإشعارات</span>
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={handleSendTestPush}
+                  disabled={sendingTest}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition disabled:opacity-50 active:scale-98"
+                >
+                  {sendingTest ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+                  <span>إرسال إشعار تجريبي لهاتفي</span>
+                </button>
 
-              <button
-                onClick={handleOpenSettings}
-                className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm transition active:scale-98"
-                title="فتح إعدادات التطبيق الكاملة في الهاتف مباشرة"
-              >
-                <Settings size={16} />
-                <span>إعدادات التطبيق</span>
-              </button>
+                {!data?.hasPermission && (
+                  <button
+                    onClick={handleRequestPermission}
+                    className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
+                  >
+                    <Bell size={16} />
+                    <span>طلب الإذن</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={handleOpenNotificationSettings}
+                  className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm transition active:scale-98"
+                  title="فتح إعدادات الإشعارات في الهاتف مباشرة"
+                >
+                  <Sliders size={16} />
+                  <span>إعدادات الإشعارات</span>
+                </button>
+
+                <button
+                  onClick={handleOpenSettings}
+                  className="flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm transition active:scale-98"
+                  title="فتح إعدادات التطبيق الكاملة في الهاتف مباشرة"
+                >
+                  <Settings size={16} />
+                  <span>إعدادات التطبيق</span>
+                </button>
+              </div>
             </div>
 
             {/* Recheck Button & Channel info */}

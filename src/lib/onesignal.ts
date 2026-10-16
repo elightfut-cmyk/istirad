@@ -122,24 +122,41 @@ export const initOneSignal = async (): Promise<void> => {
     isInitialized = true;
     console.log('✅ OneSignal initialized successfully.');
 
-    // 2. Opt in to push subscription
-    try {
-      await OneSignal.User.pushSubscription.optIn();
-    } catch (optErr) {
-      console.warn('OneSignal optIn warning:', optErr);
-    }
-
-    // 3. Request push notification permission on Android 13+ (POST_NOTIFICATIONS)
+    // 2. Request push notification permission and then immediately opt-in
     try {
       const hasPerm = await OneSignal.Notifications.hasPermission();
       if (!hasPerm) {
+        console.log('🔔 Requesting OneSignal notification permission from user...');
         const granted = await OneSignal.Notifications.requestPermission(true);
         console.log('🔔 OneSignal permission request result:', granted);
+        if (granted) {
+          await OneSignal.User.pushSubscription.optIn();
+        }
       } else {
-        console.log('🔔 OneSignal notifications already permitted.');
+        console.log('🔔 OneSignal notifications already permitted. Opting in to push subscription...');
+        await OneSignal.User.pushSubscription.optIn();
       }
     } catch (permErr) {
       console.warn('OneSignal permission check/request warning:', permErr);
+      try {
+        await OneSignal.User.pushSubscription.optIn();
+      } catch {}
+    }
+
+    // 3. Register Subscription State Change Listener for auto-sync
+    try {
+      OneSignal.User.pushSubscription.addEventListener('change', async (event: any) => {
+        console.log('🔔 OneSignal push subscription state changed:', event);
+        if (event?.current?.optedIn === false) {
+          const perm = await OneSignal.Notifications.hasPermission().catch(() => false);
+          if (perm) {
+            console.log('🔄 Permission granted but optedIn is false, opting in automatically...');
+            await OneSignal.User.pushSubscription.optIn().catch(() => {});
+          }
+        }
+      });
+    } catch (subErr) {
+      console.warn('Could not register pushSubscription change listener:', subErr);
     }
 
     // 4. Register Foreground Notification Listener
@@ -267,7 +284,7 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       await initOneSignal();
     }
 
-    const [
+    let [
       hasPermission,
       canRequest,
       subId,
@@ -284,6 +301,20 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       OneSignal.User.getExternalId().catch(() => null),
       OneSignal.User.getOnesignalId().catch(() => null),
     ]);
+
+    // Auto-healing: If permission is granted by Android, but OneSignal subscription is not yet opted in, opt in now!
+    if (hasPermission && !optedIn) {
+      try {
+        console.log('🔄 Auto-healing: hasPermission is true but optedIn is false. Triggering pushSubscription.optIn()...');
+        await OneSignal.User.pushSubscription.optIn();
+        await new Promise(r => setTimeout(r, 200));
+        optedIn = await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
+        subId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => subId);
+        pushToken = await OneSignal.User.pushSubscription.getTokenAsync().catch(() => pushToken);
+      } catch (healErr) {
+        console.warn('Auto-healing optIn error:', healErr);
+      }
+    }
 
     return {
       isNative: true,
@@ -311,6 +342,25 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       isXiaomi,
       error: err?.message || String(err)
     };
+  }
+};
+
+/**
+ * Manually forces opt-in to push subscription and re-registers device.
+ */
+export const forcePushSubscriptionOptIn = async (): Promise<boolean> => {
+  if (!isNativePlatform()) return false;
+  try {
+    await initOneSignal();
+    const hasPerm = await OneSignal.Notifications.hasPermission().catch(() => false);
+    if (!hasPerm) {
+      await OneSignal.Notifications.requestPermission(true);
+    }
+    await OneSignal.User.pushSubscription.optIn();
+    return true;
+  } catch (error) {
+    console.error('Error forcing push subscription optIn:', error);
+    return false;
   }
 };
 

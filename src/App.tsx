@@ -86,6 +86,12 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!isLoading) {
+      initOneSignal();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
     // If URL has otp_expired or access_denied hash from email change link
     if (window.location.hash && (window.location.hash.includes('otp_expired') || window.location.hash.includes('error_code='))) {
       toast.error('رابط التأكيد منتهي الصلاحية أو تم استهلاكه. يُرجى إلغاء تفعيل "Confirm email change" في Supabase لتحديث البريد فوراً بدون روابط.');

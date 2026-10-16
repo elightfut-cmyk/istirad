@@ -45,19 +45,23 @@ export default function LandingPage() {
         <div className="w-full px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center shrink-0 hover:opacity-90 transition-opacity py-1">
-            <img src="/header-logo.png" alt="JIIBHA" className="h-9 sm:h-11 object-contain dark:brightness-110" />
+            <img 
+              src="/header-logo.png" 
+              alt="JIIBHA" 
+              className="h-7 sm:h-9 max-h-10 w-auto max-w-[125px] sm:max-w-[180px] object-contain dark:brightness-125 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.1)]" 
+            />
           </Link>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             {!isNative && (
               <a
-                href="/jibha-app.apk"
-                download="jibha-app.apk"
-                className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold transition-all shadow-xs hover:shadow-sm text-xs sm:text-sm border border-emerald-500/20 active:scale-95 whitespace-nowrap"
+                href="/jiibha-app.apk"
+                download="jiibha-app.apk"
+                className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-xl font-bold transition-all shadow-xs hover:shadow-sm text-xs sm:text-sm border border-emerald-500/20 active:scale-95 whitespace-nowrap shrink-0"
                 title="تحميل تطبيق جيبها للأندرويد"
               >
-                <Smartphone size={15} className="sm:w-4 sm:h-4 text-emerald-100 shrink-0" />
+                <Smartphone size={14} className="sm:w-4 sm:h-4 text-emerald-100 shrink-0" />
                 <span>حمل التطبيق</span>
               </a>
             )}
@@ -65,7 +69,7 @@ export default function LandingPage() {
             {user ? (
               <Link
                 to={`/${user.role}`}
-                className="flex items-center justify-center bg-[#4f46e5] text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold hover:bg-[#4338ca] transition-all shadow-xs text-xs sm:text-sm whitespace-nowrap active:scale-95"
+                className="flex items-center justify-center bg-[#4f46e5] text-white px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold hover:bg-[#4338ca] transition-all shadow-xs text-xs sm:text-sm whitespace-nowrap active:scale-95 shrink-0"
               >
                 {t('nav.dashboard')}
               </Link>

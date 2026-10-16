@@ -17,10 +17,10 @@ const POLICY_TYPE = 'APP_FORCE_UPDATE';
 export const defaultUpdateConfig: AppUpdateConfig = {
   id: 'app_update_default',
   isActive: false,
-  version: '1.1.0',
+  version: '1.2.0',
   title: 'تحديث جديد متوفر لتطبيق جيبها',
   message: 'تم إطلاق تحديث جديد ومهم لتطبيق جيبها يتضمن تحسينات أساسية على سرعة التصفح، واستقبال التنبيهات الفورية وإصلاحات استقرار. يُرجى تحميل وتثبيت التحديث لمواصلة الاستخدام بأفضل أداء.',
-  apkUrl: '/jibha-app.apk',
+  apkUrl: '/jiibha-app.apk',
   isForced: true,
   showOnWebForTesting: false,
   updatedAt: new Date().toISOString(),

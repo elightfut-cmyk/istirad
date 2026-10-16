@@ -113,7 +113,7 @@ function App() {
   }, []);
 
   if (isLoading) {
-    return <AppSplashScreen minDurationMs={1200} />;
+    return <AppSplashScreen minDurationMs={3200} />;
   }
 
   return (

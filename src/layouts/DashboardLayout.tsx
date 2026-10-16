@@ -102,7 +102,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
       <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col hidden md:flex transition-colors">
         <div className="p-5 text-center border-b border-gray-100 dark:border-gray-700">
           <Link to="/" className="inline-block hover:opacity-85 transition-opacity py-1">
-            <img src="/header-logo.png" alt="JIIBHA" className="h-8 mx-auto object-contain dark:brightness-110" />
+            <img src="/header-logo.png" alt="JIIBHA" className="h-8 mx-auto object-contain dark:brightness-125 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.1)]" />
           </Link>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium bg-gray-50 dark:bg-gray-750 py-1 px-3 rounded-full inline-block border border-gray-100 dark:border-gray-700">
             {user?.role === 'admin' ? t('role.admin') : user?.role === 'merchant' ? t('role.merchant') : t('role.supplier')}
@@ -146,16 +146,16 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         <header className="h-16 bg-white dark:bg-gray-800 shadow-sm flex items-center justify-between px-6 transition-colors">
           <div className="flex items-center md:hidden">
             <Link to="/" className="mr-3 hover:opacity-85 transition-opacity">
-              <img src="/header-logo.png" alt="JIIBHA" className="h-7 object-contain dark:brightness-110" />
+              <img src="/header-logo.png" alt="JIIBHA" className="h-6 sm:h-7 object-contain dark:brightness-125 dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.1)]" />
             </Link>
           </div>
           <h1 className="text-xl font-bold text-gray-800 dark:text-white hidden md:block">{translateLabel(title)}</h1>
           <div className="flex items-center gap-2 sm:gap-3">
             {!isNative && (
               <a
-                href="/jibha-app.apk"
-                download="jibha-app.apk"
-                className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs"
+                href="/jiibha-app.apk"
+                download="jiibha-app.apk"
+                className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs whitespace-nowrap shrink-0"
                 title="تحميل تطبيق جيبها للأندرويد"
               >
                 <Smartphone size={15} />

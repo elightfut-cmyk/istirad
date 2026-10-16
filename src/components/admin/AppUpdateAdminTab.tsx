@@ -157,7 +157,7 @@ export default function AppUpdateAdminTab() {
               required
               value={config.apkUrl}
               onChange={(e) => setConfig({ ...config, apkUrl: e.target.value })}
-              placeholder="مثال: /jibha-app.apk أو رابط مباشر"
+              placeholder="مثال: /jiibha-app.apk أو رابط مباشر"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm focus:outline-none focus:border-indigo-500"
             />
           </div>

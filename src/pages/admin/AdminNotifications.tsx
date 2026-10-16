@@ -441,82 +441,84 @@ export default function AdminNotifications() {
         />
       )}
 
-      {/* Main Tabs Header */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-8 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm">
-        <button
-          onClick={() => setActiveTab('popup')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
-            activeTab === 'popup'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Bell size={20} />
-          <span>نافذة التنبيه المنبثقة (Popup Alert)</span>
-          {currentAlert?.isActive && (
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping mr-1"></span>
-          )}
-        </button>
+      {/* Main Tabs Header (Scrollable on Mobile) */}
+      <div className="relative mb-8">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth p-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/60 touch-pan-x">
+          <button
+            onClick={() => setActiveTab('popup')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'popup'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Bell size={17} className="shrink-0" />
+            <span>نافذة التنبيه (Popup Alert)</span>
+            {currentAlert?.isActive && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-0.5 shrink-0"></span>
+            )}
+          </button>
 
-        <button
-          onClick={() => setActiveTab('socialLinks')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
-            activeTab === 'socialLinks'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Share2 size={20} />
-          <span>نافذة الاشتراك (تواصل)</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('socialLinks')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'socialLinks'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Share2 size={17} className="shrink-0" />
+            <span>نافذة الاشتراك (تواصل)</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('poll')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all ${
-            activeTab === 'poll'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Vote size={20} />
-          <span>سبر الآراء (Polls)</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('poll')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'poll'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Vote size={17} className="shrink-0" />
+            <span>سبر الآراء (Polls)</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('telegram')}
-          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
-            activeTab === 'telegram'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Send size={16} />
-          <span>إشعارات تلغرام</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('telegram')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'telegram'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Send size={17} className="shrink-0" />
+            <span>إشعارات تلغرام</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('appUpdate')}
-          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
-            activeTab === 'appUpdate'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Download size={16} />
-          <span>تحديث التطبيق (إجباري)</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('appUpdate')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'appUpdate'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Download size={17} className="shrink-0" />
+            <span>تحديث التطبيق (إجباري)</span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('tenderAppModal')}
-          className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
-            activeTab === 'tenderAppModal'
-              ? 'bg-[#4f46e5] text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <Smartphone size={16} />
-          <span>تنبيه مناقصات (تطبيق)</span>
-        </button>
+          <button
+            onClick={() => setActiveTab('tenderAppModal')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'tenderAppModal'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Smartphone size={17} className="shrink-0" />
+            <span>تنبيه مناقصات (تطبيق)</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: POPUP MODAL ALERT */}

@@ -20,7 +20,7 @@ export const defaultTenderPromptConfig: TenderAppPromptConfig = {
   title: 'حمّل التطبيق لتصلك تنبيهات المناقصات فوراً!',
   message: 'عند قيامك بطرح مناقصة جديدة أو تقديم عروض أسعار، من الضروري تثبيت تطبيق جيبها على هاتفك لتلقي تنبيهات وإشعارات فورية على شاشة هاتفك بمجرد ورود أي عرض أو رد جديد.',
   buttonText: 'تحميل وتثبيت التطبيق الآن',
-  apkUrl: '/jibha-app.apk',
+  apkUrl: '/jiibha-app.apk',
   versionToken: 'v1',
   updatedAt: new Date().toISOString(),
 };

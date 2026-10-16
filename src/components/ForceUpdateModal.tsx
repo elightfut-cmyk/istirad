@@ -46,7 +46,7 @@ export default function ForceUpdateModal({ previewConfig, onClosePreview }: Forc
 
   const handleDownloadAndInstall = () => {
     setDownloading(true);
-    const downloadUrl = config.apkUrl || '/jibha-app.apk';
+    const downloadUrl = config.apkUrl || '/jiibha-app.apk';
 
     try {
       if ((window as any).Capacitor?.isNativePlatform?.()) {
@@ -55,7 +55,7 @@ export default function ForceUpdateModal({ previewConfig, onClosePreview }: Forc
       } else {
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = 'jibha-app.apk';
+        link.download = 'jiibha-app.apk';
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
@@ -94,15 +94,15 @@ export default function ForceUpdateModal({ previewConfig, onClosePreview }: Forc
           <div className="absolute -bottom-10 -left-6 w-36 h-36 rounded-full bg-yellow-400/20 blur-xl"></div>
 
           <div className="relative z-10 flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg shadow-indigo-900/30">
-              <Download size={28} className="animate-bounce" />
+            <div className="w-14 h-14 rounded-2xl bg-[#061e47] border border-amber-400/40 p-1 flex items-center justify-center shadow-lg shadow-black/20 shrink-0">
+              <img src="/app-logo.png" alt="Jiibha Logo" className="w-full h-full object-contain filter drop-shadow" />
             </div>
             <div>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-gray-950 shadow-sm">
                 <Sparkles size={11} />
                 {config.isForced ? 'تحديث إجباري جديد' : 'تحديث متوفر'}
               </span>
-              <p className="text-white/80 text-xs mt-1 font-medium">الإصدار v{config.version || '1.1.0'}</p>
+              <p className="text-white/90 text-xs mt-1 font-bold">تطبيق جيبها (Jiibha) v{config.version || '1.2.0'}</p>
             </div>
           </div>
 

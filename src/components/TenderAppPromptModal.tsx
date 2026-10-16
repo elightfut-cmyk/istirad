@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { tenderAppPromptService, TenderAppPromptConfig } from '../services/tenderAppPromptService';
 import { isNativePlatform } from '../lib/onesignal';
-import { Smartphone, Bell, CheckCircle2, Download, ArrowLeft, X } from 'lucide-react';
+import { Bell, CheckCircle2, Download, ArrowLeft, X } from 'lucide-react';
 
 interface TenderAppPromptModalProps {
   isOpen?: boolean;
@@ -87,10 +87,10 @@ export default function TenderAppPromptModal({
       tenderAppPromptService.markPromptAsSeen(config.versionToken || 'v1');
     }
 
-    const downloadUrl = config.apkUrl || '/jibha-app.apk';
+    const downloadUrl = config.apkUrl || '/jiibha-app.apk';
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = 'jibha-app.apk';
+    link.download = 'jiibha-app.apk';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -115,15 +115,15 @@ export default function TenderAppPromptModal({
           <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-lg"></div>
 
           <div className="relative z-10 flex items-center gap-3">
-            <div className="w-13 h-13 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-md">
-              <Smartphone size={28} className="animate-pulse" />
+            <div className="w-14 h-14 rounded-2xl bg-[#061e47] border border-amber-400/40 p-1 flex items-center justify-center shadow-lg shadow-black/20 shrink-0">
+              <img src="/app-logo.png" alt="Jiibha App" className="w-full h-full object-contain filter drop-shadow" />
             </div>
             <div>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-emerald-800 shadow-xs">
                 <Bell size={11} className="text-emerald-600" />
                 تنبيهات فورية للمناقصات
               </span>
-              <p className="text-white/90 text-xs mt-1 font-medium">تطبيق جيبها الرسمي للأندرويد</p>
+              <p className="text-white/95 text-xs mt-1 font-bold">تطبيق جيبها الرسمي (Jiibha)</p>
             </div>
           </div>
 

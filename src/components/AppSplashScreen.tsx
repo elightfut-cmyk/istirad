@@ -5,7 +5,7 @@ interface AppSplashScreenProps {
   minDurationMs?: number;
 }
 
-export default function AppSplashScreen({ onFinish, minDurationMs = 1200 }: AppSplashScreenProps) {
+export default function AppSplashScreen({ onFinish, minDurationMs = 3200 }: AppSplashScreenProps) {
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {

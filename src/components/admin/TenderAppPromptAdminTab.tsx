@@ -173,7 +173,7 @@ export default function TenderAppPromptAdminTab() {
             required
             value={config.apkUrl}
             onChange={(e) => setConfig({ ...config, apkUrl: e.target.value })}
-            placeholder="مثال: /jibha-app.apk"
+            placeholder="مثال: /jiibha-app.apk"
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm focus:outline-none focus:border-emerald-500"
           />
         </div>

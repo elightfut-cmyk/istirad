@@ -1,0 +1,22 @@
+{
+  "short_name": "Jiibha",
+  "name": "جيبها - Jiibha",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-logo.png",
+      "sizes": "192x192 512x512 1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#040c1e",
+  "theme_color": "#040c1e",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -1,3 +1,5 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
+
 const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 // Valid base64 encoded OneSignal App REST API key
 const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JnemozY3k2ZHFpdTVybTd6djdnN2s2aGRxYjVyYW1xc2M3em03bzd4cmdoemNzbXdzemJmdXRwZ25zZXZkeDNwd3ltbXl5YXlub2h2dnk=';
@@ -58,6 +60,72 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
   }
   return status ? `رمز الاستجابة: ${status}` : 'خطأ غير معروف في خادم الإشعارات';
 };
+
+/**
+ * Direct HTTP dispatcher for OneSignal:
+ * 1. NativeDeviceBridge (native Android HttpURLConnection - 0% CORS)
+ * 2. CapacitorHttp (Capacitor native HTTP - 0% CORS)
+ * 3. Browser fetch (for web)
+ */
+async function dispatchOneSignalNotification(
+  endpoint: string,
+  authHeader: string,
+  payload: Record<string, any>
+): Promise<{ status: number; data: any }> {
+  // Strategy 1: Native Android Bridge (Zero CORS, synchronous native Java HttpURLConnection)
+  if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.sendPushDirect) {
+    try {
+      const rawRes = (window as any).NativeDeviceBridge.sendPushDirect(endpoint, authHeader, JSON.stringify(payload));
+      if (rawRes) {
+        const parsed = typeof rawRes === 'string' ? JSON.parse(rawRes) : rawRes;
+        let bodyData = parsed.body;
+        if (typeof bodyData === 'string') {
+          try {
+            bodyData = JSON.parse(bodyData);
+          } catch {}
+        }
+        if (parsed.status) {
+          return { status: Number(parsed.status), data: bodyData };
+        }
+      }
+    } catch (e) {
+      console.warn('NativeDeviceBridge.sendPushDirect warning:', e);
+    }
+  }
+
+  // Strategy 2: CapacitorHttp (Native Capacitor HTTP plugin for Android/iOS)
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const capRes = await CapacitorHttp.post({
+        url: endpoint,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': authHeader
+        },
+        data: payload
+      });
+      let capData = capRes.data;
+      if (typeof capData === 'string') {
+        try { capData = JSON.parse(capData); } catch {}
+      }
+      return { status: capRes.status, data: capData };
+    } catch (e) {
+      console.warn('CapacitorHttp.post warning:', e);
+    }
+  }
+
+  // Strategy 3: Standard browser fetch
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Authorization': authHeader
+    },
+    body: JSON.stringify(payload)
+  });
+  const resJson = await response.json().catch(() => null);
+  return { status: response.status, data: resJson };
+}
 
 /**
  * Sends a native push notification to target users or broadcast via OneSignal REST API.
@@ -137,7 +205,7 @@ export const sendPushNotificationDetailed = async ({
     }
   }
 
-  // 1. Direct call to OneSignal (try modern api.onesignal.com then legacy endpoint)
+  // 1. Direct call to OneSignal (via Native Android Bridge, CapacitorHttp, or direct fetch)
   const onesignalEndpoints = [
     'https://api.onesignal.com/notifications',
     'https://onesignal.com/api/v1/notifications'
@@ -147,26 +215,18 @@ export const sendPushNotificationDetailed = async ({
 
   for (const endpoint of onesignalEndpoints) {
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': authHeader
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const resJson = await response.json().catch(() => null);
+      const { status, data: resJson } = await dispatchOneSignalNotification(endpoint, authHeader, payload);
 
       const hasValidId = Boolean(resJson?.id && String(resJson.id).trim() !== '');
       const recipients = typeof resJson?.recipients === 'number' ? resJson.recipients : (hasValidId ? 1 : 0);
 
       // Check if OneSignal returned a fatal error
       const isTestPush = data?.type === 'test_push';
-      if (!response.ok || !hasValidId || (recipients === 0 && isTestPush)) {
-        const errorReason = extractOneSignalError(resJson, response.status);
+      const isOk = status >= 200 && status < 300;
+      if (!isOk || !hasValidId || (recipients === 0 && isTestPush)) {
+        const errorReason = extractOneSignalError(resJson, status);
         const errorMsg = `فشل الإرسال: ${errorReason}`;
-        console.error(errorMsg, { status: response.status, raw: resJson });
+        console.error(errorMsg, { status, raw: resJson });
         throw new Error(errorMsg);
       }
 
@@ -185,62 +245,69 @@ export const sendPushNotificationDetailed = async ({
         throw directErr;
       }
       lastDirectError = directErr?.message || String(directErr);
-      console.warn(`Direct fetch to ${endpoint} failed (likely CORS in browser):`, directErr);
+      console.warn(`Direct dispatch to ${endpoint} failed:`, directErr);
     }
   }
 
-  // 2. Proxy endpoint /api/send-push (fallback if direct browser request was blocked by CORS)
-  try {
-    const apiResponse = await fetch('/api/send-push', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userIds: externalIds,
-        subscriptionIds: validSubIds,
-        sendToAll,
-        title,
-        message,
-        data
-      })
-    });
+  // 2. Proxy endpoint /api/send-push (fallback ONLY in web browser, NEVER on native Android)
+  if (!Capacitor.isNativePlatform()) {
+    try {
+      const apiResponse = await fetch('/api/send-push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userIds: externalIds,
+          subscriptionIds: validSubIds,
+          sendToAll,
+          title,
+          message,
+          data
+        })
+      });
 
-    const contentType = apiResponse.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const errorMsg = `فشل الإرسال: خادم الإشعارات الوسيط غير متاح (${lastDirectError || apiResponse.statusText})`;
-      console.error(errorMsg);
-      throw new Error(errorMsg);
+      const contentType = apiResponse.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const errorMsg = `فشل الإرسال: خادم الإشعارات الوسيط غير متاح (${lastDirectError || apiResponse.statusText})`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      const proxyData = await apiResponse.json().catch(() => null);
+
+      const hasValidProxyId = Boolean(proxyData?.id && String(proxyData.id).trim() !== '');
+      const proxyRecipients = typeof proxyData?.recipients === 'number' ? proxyData.recipients : (hasValidProxyId ? 1 : 0);
+
+      const isTestPush = data?.type === 'test_push';
+      // If OneSignal responded with error through the proxy or no notification was created
+      if (!apiResponse.ok || !hasValidProxyId || (proxyRecipients === 0 && isTestPush) || proxyData?.error) {
+        const errorReason = extractOneSignalError(proxyData, apiResponse.status);
+        const errorMsg = `فشل الإرسال: ${errorReason}`;
+        console.error(errorMsg, { status: apiResponse.status, raw: proxyData });
+        throw new Error(errorMsg);
+      }
+
+      return {
+        success: true,
+        recipients: proxyRecipients,
+        message: proxyRecipients > 0 
+          ? `تم إرسال الإشعار بنجاح إلى ${proxyRecipients} جهاز`
+          : 'تم تسجيل الإشعار بنجاح (لا توجد هواتف مشتركة لهذه الفئة حالياً)',
+        raw: proxyData
+      };
+    } catch (proxyErr: any) {
+      if (proxyErr?.message && proxyErr.message.startsWith('فشل الإرسال:')) {
+        throw proxyErr;
+      }
+      const finalErrorMsg = `فشل الإرسال: ${lastDirectError || proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات'}`;
+      console.error(finalErrorMsg);
+      throw new Error(finalErrorMsg);
     }
-
-    const proxyData = await apiResponse.json().catch(() => null);
-
-    const hasValidProxyId = Boolean(proxyData?.id && String(proxyData.id).trim() !== '');
-    const proxyRecipients = typeof proxyData?.recipients === 'number' ? proxyData.recipients : (hasValidProxyId ? 1 : 0);
-
-    const isTestPush = data?.type === 'test_push';
-    // If OneSignal responded with error through the proxy or no notification was created
-    if (!apiResponse.ok || !hasValidProxyId || (proxyRecipients === 0 && isTestPush) || proxyData?.error) {
-      const errorReason = extractOneSignalError(proxyData, apiResponse.status);
-      const errorMsg = `فشل الإرسال: ${errorReason}`;
-      console.error(errorMsg, { status: apiResponse.status, raw: proxyData });
-      throw new Error(errorMsg);
-    }
-
-    return {
-      success: true,
-      recipients: proxyRecipients,
-      message: proxyRecipients > 0 
-        ? `تم إرسال الإشعار بنجاح إلى ${proxyRecipients} جهاز`
-        : 'تم تسجيل الإشعار بنجاح (لا توجد هواتف مشتركة لهذه الفئة حالياً)',
-      raw: proxyData
-    };
-  } catch (proxyErr: any) {
-    if (proxyErr?.message && proxyErr.message.startsWith('فشل الإرسال:')) {
-      throw proxyErr;
-    }
-    const finalErrorMsg = `فشل الإرسال: ${lastDirectError || proxyErr?.message || 'تعذر الوصول إلى خدمة الإشعارات'}`;
-    console.error(finalErrorMsg);
-    throw new Error(finalErrorMsg);
   }
+
+  // If on native platform and all direct dispatches failed:
+  const nativeFinalError = `فشل الإرسال: تعذر إرسال الإشعار إلى خادم OneSignal (${lastDirectError || 'انقطاع الاتصال بالإنترنت'})`;
+  console.error(nativeFinalError);
+  throw new Error(nativeFinalError);
 };

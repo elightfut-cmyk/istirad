@@ -5,6 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Jiibha',
   webDir: 'dist',
   plugins: {
+    CapacitorHttp: {
+      enabled: true
+    },
     SplashScreen: {
       launchShowDuration: 1000,
       launchAutoHide: true,

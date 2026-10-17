@@ -168,6 +168,54 @@ public class MainActivity extends BridgeActivity {
                         e.printStackTrace();
                     }
                 }
+
+                @JavascriptInterface
+                public String sendPushDirect(String urlStr, String authHeader, String jsonBody) {
+                    try {
+                        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+                        java.util.concurrent.Future<String> future = executor.submit(() -> {
+                            java.net.HttpURLConnection conn = null;
+                            try {
+                                java.net.URL url = new java.net.URL(urlStr);
+                                conn = (java.net.HttpURLConnection) url.openConnection();
+                                conn.setRequestMethod("POST");
+                                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                                conn.setRequestProperty("Authorization", authHeader);
+                                conn.setDoOutput(true);
+                                conn.setConnectTimeout(15000);
+                                conn.setReadTimeout(15000);
+
+                                byte[] input = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                                try (java.io.OutputStream os = conn.getOutputStream()) {
+                                    os.write(input, 0, input.length);
+                                }
+
+                                int code = conn.getResponseCode();
+                                java.io.InputStream is = (code >= 200 && code < 400) ? conn.getInputStream() : conn.getErrorStream();
+                                String responseBody = "";
+                                if (is != null) {
+                                    java.util.Scanner s = new java.util.Scanner(is, "UTF-8").useDelimiter("\\A");
+                                    responseBody = s.hasNext() ? s.next() : "";
+                                    is.close();
+                                }
+
+                                org.json.JSONObject res = new org.json.JSONObject();
+                                res.put("status", code);
+                                res.put("body", responseBody);
+                                return res.toString();
+                            } finally {
+                                if (conn != null) {
+                                    conn.disconnect();
+                                }
+                            }
+                        });
+                        String res = future.get(20, java.util.concurrent.TimeUnit.SECONDS);
+                        executor.shutdown();
+                        return res;
+                    } catch (Exception e) {
+                        return "{\"status\":500,\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "error") + "\"}";
+                    }
+                }
             }, "NativeDeviceBridge");
         }
     }

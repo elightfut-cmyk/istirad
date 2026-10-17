@@ -110,6 +110,93 @@ export const openXiaomiBatterySaver = (): boolean => {
 };
 
 /**
+ * Opens system-wide battery optimization settings (Samsung, Pixel, Motorola, etc.).
+ */
+export const openUniversalBatterySettings = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openUniversalBatterySettings) {
+      (window as any).NativeDeviceBridge.openUniversalBatterySettings();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openUniversalBatterySettings:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
+ * Opens Huawei / Honor app launch management settings.
+ */
+export const openHuaweiLaunchSettings = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openHuaweiAppLaunch) {
+      (window as any).NativeDeviceBridge.openHuaweiAppLaunch();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openHuaweiAppLaunch:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
+ * Opens Oppo / Realme / OnePlus auto-launch settings.
+ */
+export const openOppoLaunchSettings = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openOppoAutoStart) {
+      (window as any).NativeDeviceBridge.openOppoAutoStart();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openOppoAutoStart:', err);
+  }
+  return openNativeAppSettings();
+};
+
+export type DeviceBrand = 'samsung' | 'xiaomi' | 'huawei' | 'oppo' | 'vivo' | 'general';
+
+export interface DeviceBrandDetails {
+  brand: DeviceBrand;
+  manufacturer: string;
+  model: string;
+  androidVersion: number;
+}
+
+export const getDeviceBrandDetails = (): DeviceBrandDetails => {
+  let manufacturer = '';
+  let model = '';
+  let androidVersion = 0;
+
+  if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge) {
+    const bridge = (window as any).NativeDeviceBridge;
+    try {
+      if (bridge.getDeviceManufacturer) manufacturer = String(bridge.getDeviceManufacturer() || '').toLowerCase();
+      if (bridge.getDeviceModel) model = String(bridge.getDeviceModel() || '');
+      if (bridge.getAndroidVersion) androidVersion = Number(bridge.getAndroidVersion() || 0);
+    } catch {}
+  }
+
+  if (!manufacturer && typeof navigator !== 'undefined') {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (ua.includes('samsung') || ua.includes('sm-')) manufacturer = 'samsung';
+    else if (ua.includes('xiaomi') || ua.includes('redmi') || ua.includes('poco') || ua.includes('miui')) manufacturer = 'xiaomi';
+    else if (ua.includes('huawei') || ua.includes('honor')) manufacturer = 'huawei';
+    else if (ua.includes('oppo') || ua.includes('realme') || ua.includes('oneplus')) manufacturer = 'oppo';
+    else if (ua.includes('vivo') || ua.includes('iqoo')) manufacturer = 'vivo';
+  }
+
+  let brand: DeviceBrand = 'general';
+  if (manufacturer.includes('samsung')) brand = 'samsung';
+  else if (manufacturer.includes('xiaomi') || manufacturer.includes('redmi') || manufacturer.includes('poco')) brand = 'xiaomi';
+  else if (manufacturer.includes('huawei') || manufacturer.includes('honor')) brand = 'huawei';
+  else if (manufacturer.includes('oppo') || manufacturer.includes('realme') || manufacturer.includes('oneplus')) brand = 'oppo';
+  else if (manufacturer.includes('vivo') || manufacturer.includes('iqoo')) brand = 'vivo';
+
+  return { brand, manufacturer, model, androidVersion };
+};
+
+/**
  * Directly asks native Firebase Messaging to sync FCM token with Google Play Services.
  */
 export const syncNativeFcmToken = (): void => {
@@ -220,6 +307,7 @@ export interface NotificationDiagnosticData {
   externalId: string | null;
   onesignalId: string | null;
   isXiaomi: boolean;
+  brandDetails?: DeviceBrandDetails;
   error?: string;
 }
 
@@ -549,7 +637,8 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       isFullyConnected,
       externalId,
       onesignalId,
-      isXiaomi
+      isXiaomi,
+      brandDetails: getDeviceBrandDetails()
     };
   } catch (err: any) {
     const nativeSubId = getNativePushSubscriptionId();
@@ -569,6 +658,7 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       externalId: localStorage.getItem('onesignal_external_id'),
       onesignalId: null,
       isXiaomi,
+      brandDetails: getDeviceBrandDetails(),
       error: err?.message || String(err)
     };
   }

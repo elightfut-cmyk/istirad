@@ -25,6 +25,9 @@ import {
   openNativeNotificationSettings,
   openXiaomiAutostart,
   openXiaomiBatterySaver,
+  openUniversalBatterySettings,
+  openHuaweiLaunchSettings,
+  openOppoLaunchSettings,
   NotificationDiagnosticData 
 } from '../lib/onesignal';
 import { useAuthStore } from '../store/useAuthStore';
@@ -367,70 +370,239 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
               )}
             </div>
 
-            {/* Crucial Instructions for Xiaomi / Redmi / POCO users */}
-            <div className="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">
-              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-sm mb-2">
-                <ShieldAlert size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>إعدادات حاسمة لأجهزة شاومي وريدمي (Xiaomi / Redmi / POCO):</span>
-              </div>
-              <p className="text-xs text-amber-900/80 dark:text-amber-200/90 leading-relaxed mb-3">
-                نظام HyperOS / MIUI يمنع ظهور الإشعارات أو التنبيهات في الخلفية تلقائياً. اضغط على أي بند بالأسفل لفتحه وضبطه فوراً:
-              </p>
-              
-              <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-                <div 
-                  onClick={handleOpenSettings}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span className="font-bold">عرض النوافذ المنبثقة أثناء التشغيل في الخلفية:</span>
-                  </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                    اضغط للضبط ⚙️
-                  </span>
-                </div>
+            {/* Multi-Brand Smart Background & Battery Optimization Guidance */}
+            {(() => {
+              const brand = data?.brandDetails?.brand || (data?.isXiaomi ? 'xiaomi' : 'general');
+              const brandName = data?.brandDetails?.manufacturer ? data.brandDetails.manufacturer.toUpperCase() : '';
 
-                <div 
-                  onClick={handleOpenNotificationSettings}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span className="font-bold">العرض على شاشة القفل (Show on Lock screen):</span>
+              if (brand === 'samsung') {
+                return (
+                  <div className="p-4 rounded-2xl bg-blue-50/90 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50">
+                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-bold text-sm mb-2">
+                      <ShieldAlert size={18} className="shrink-0 text-blue-600 dark:text-blue-400" />
+                      <span>إعدادات حاسمة لهواتف سامسونج (Samsung Galaxy):</span>
+                    </div>
+                    <p className="text-xs text-blue-900/80 dark:text-blue-200/90 leading-relaxed mb-3">
+                      نظام One UI قد يضع التطبيق في وضع السكون (Sleeping Apps) بعد فترة. اضغط بالأسفل لضبطه فوراً:
+                    </p>
+                    <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div 
+                        onClick={handleOpenSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-blue-100 dark:border-blue-900/40 cursor-pointer hover:bg-blue-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                          <span className="font-bold">البطارية: اختر "غير مقيد" (Unrestricted):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          فتح ضبط البطارية ⚡
+                        </span>
+                      </div>
+                      <div 
+                        onClick={handleOpenNotificationSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-blue-100 dark:border-blue-900/40 cursor-pointer hover:bg-blue-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="font-bold">شاشة القفل وموجز الإشعارات:</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                          السماح بالظهور 🔔
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                    اضغط للضبط ⚙️
-                  </span>
-                </div>
+                );
+              }
 
-                <div 
-                  onClick={openXiaomiAutostart}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-indigo-100/40 active:scale-98 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                    <span className="font-bold">التشغيل التلقائي (Autostart):</span>
+              if (brand === 'oppo') {
+                return (
+                  <div className="p-4 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50">
+                    <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm mb-2">
+                      <ShieldAlert size={18} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span>إعدادات حاسمة لأجهزة أوبو وريلمي (Oppo / Realme / OnePlus):</span>
+                    </div>
+                    <p className="text-xs text-emerald-900/80 dark:text-emerald-200/90 leading-relaxed mb-3">
+                      واجهة ColorOS تتطلب تمكين التشغيل التلقائي في الخلفية لضمان وصول التنبيهات:
+                    </p>
+                    <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div 
+                        onClick={openOppoLaunchSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-emerald-100 dark:border-emerald-900/40 cursor-pointer hover:bg-emerald-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="font-bold">التشغيل التلقائي في الخلفية (Auto-launch):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                          فتح الإعداد 🚀
+                        </span>
+                      </div>
+                      <div 
+                        onClick={handleOpenSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-emerald-100 dark:border-emerald-900/40 cursor-pointer hover:bg-emerald-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                          <span className="font-bold">نشاط الخلفية: السماح بنشاط الخلفية دائماً:</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          ضبط البطارية ⚡
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                    فتح الإعداد 🚀
-                  </span>
-                </div>
+                );
+              }
 
-                <div 
-                  onClick={openXiaomiBatterySaver}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-blue-100/40 active:scale-98 transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    <span className="font-bold">موفر البطارية (Battery Saver):</span>
+              if (brand === 'huawei') {
+                return (
+                  <div className="p-4 rounded-2xl bg-red-50/90 dark:bg-red-950/30 border border-red-200/80 dark:border-red-800/50">
+                    <div className="flex items-center gap-2 text-red-800 dark:text-red-300 font-bold text-sm mb-2">
+                      <ShieldAlert size={18} className="shrink-0 text-red-600 dark:text-red-400" />
+                      <span>إعدادات حاسمة لأجهزة هواوي وهونر (Huawei / Honor):</span>
+                    </div>
+                    <p className="text-xs text-red-900/80 dark:text-red-200/90 leading-relaxed mb-3">
+                      واجهة EMUI تتطلب إدارة تشغيل التطبيق يدوياً لضمان عدم إيقافه:
+                    </p>
+                    <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div 
+                        onClick={openHuaweiLaunchSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-red-100 dark:border-red-900/40 cursor-pointer hover:bg-red-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span className="font-bold">تشغيل التطبيقات (App Launch): اختر إدارة يدوية:</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                          فتح الإعداد 🚀
+                        </span>
+                      </div>
+                      <div 
+                        onClick={handleOpenNotificationSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-red-100 dark:border-red-900/40 cursor-pointer hover:bg-red-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                          <span className="font-bold">شاشة القفل والرايات المنبثقة (Banners):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          ضبط الإشعارات 🔔
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    ضبط "لا توجد قيود" ⚡
-                  </span>
+                );
+              }
+
+              // Default: Xiaomi / Redmi / POCO
+              if (brand === 'xiaomi') {
+                return (
+                  <div className="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-sm mb-2">
+                      <ShieldAlert size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span>إعدادات حاسمة لأجهزة شاومي وريدمي (Xiaomi / Redmi / POCO):</span>
+                    </div>
+                    <p className="text-xs text-amber-900/80 dark:text-amber-200/90 leading-relaxed mb-3">
+                      نظام HyperOS / MIUI يمنع ظهور الإشعارات أو التنبيهات في الخلفية تلقائياً. اضغط على أي بند بالأسفل لفتحه وضبطه فوراً:
+                    </p>
+                    
+                    <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                      <div 
+                        onClick={handleOpenSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span className="font-bold">عرض النوافذ المنبثقة أثناء التشغيل في الخلفية:</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                          اضغط للضبط ⚙️
+                        </span>
+                      </div>
+
+                      <div 
+                        onClick={handleOpenNotificationSettings}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                          <span className="font-bold">العرض على شاشة القفل (Show on Lock screen):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                          اضغط للضبط ⚙️
+                        </span>
+                      </div>
+
+                      <div 
+                        onClick={openXiaomiAutostart}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-indigo-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          <span className="font-bold">التشغيل التلقائي (Autostart):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                          فتح الإعداد 🚀
+                        </span>
+                      </div>
+
+                      <div 
+                        onClick={openXiaomiBatterySaver}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-blue-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                          <span className="font-bold">موفر البطارية (Battery Saver):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          ضبط "لا توجد قيود" ⚡
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // General Android / Google Pixel / Motorola / etc.
+              return (
+                <div className="p-4 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/50">
+                  <div className="flex items-center gap-2 text-indigo-800 dark:text-indigo-300 font-bold text-sm mb-2">
+                    <ShieldAlert size={18} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
+                    <span>إعدادات تحسين وصول التنبيهات ({brandName || 'Android'}):</span>
+                  </div>
+                  <p className="text-xs text-indigo-900/80 dark:text-indigo-200/90 leading-relaxed mb-3">
+                    لضمان وصول التنبيهات فوراً حتى عند قفل الشاشة أو في وضع السكون:
+                  </p>
+                  <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
+                    <div 
+                      onClick={openUniversalBatterySettings}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-indigo-100 dark:border-indigo-900/40 cursor-pointer hover:bg-indigo-100/40 active:scale-98 transition"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span className="font-bold">استثناء التطبيق من موفر البطارية (Unrestricted):</span>
+                      </div>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                        ضبط الاستثناء ⚡
+                      </span>
+                    </div>
+                    <div 
+                      onClick={handleOpenNotificationSettings}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-indigo-100 dark:border-indigo-900/40 cursor-pointer hover:bg-indigo-100/40 active:scale-98 transition"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="font-bold">أذونات الإشعارات وشاشة القفل:</span>
+                      </div>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                        فتح الإعدادات 🔔
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Quick Action Buttons */}
             <div className="flex flex-col gap-2 pt-2">

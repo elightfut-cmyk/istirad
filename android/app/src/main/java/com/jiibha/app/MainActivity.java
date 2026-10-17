@@ -125,6 +125,62 @@ public class MainActivity extends BridgeActivity {
                 }
 
                 @JavascriptInterface
+                public String getDeviceManufacturer() {
+                    return Build.MANUFACTURER != null ? Build.MANUFACTURER : "unknown";
+                }
+
+                @JavascriptInterface
+                public String getDeviceModel() {
+                    return Build.MODEL != null ? Build.MODEL : "unknown";
+                }
+
+                @JavascriptInterface
+                public int getAndroidVersion() {
+                    return Build.VERSION.SDK_INT;
+                }
+
+                @JavascriptInterface
+                public void openUniversalBatterySettings() {
+                    try {
+                        Intent intent = new Intent();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                        } else {
+                            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                        }
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
+                public void openHuaweiAppLaunch() {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
+                public void openOppoAutoStart() {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
                 public void openAutostartSettings() {
                     try {
                         Intent intent = new Intent();

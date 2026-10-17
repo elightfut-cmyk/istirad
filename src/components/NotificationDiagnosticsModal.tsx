@@ -23,6 +23,8 @@ import {
   sendTestPushToSelf,
   openNativeAppSettings,
   openNativeNotificationSettings,
+  openXiaomiAutostart,
+  openXiaomiBatterySaver,
   NotificationDiagnosticData 
 } from '../lib/onesignal';
 import { useAuthStore } from '../store/useAuthStore';
@@ -250,7 +252,9 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                     <div className="text-xs font-black text-gray-800 dark:text-gray-200">
                       {data?.isFullyConnected 
                         ? 'متصل بالخدمة ✅' 
-                        : (data?.hasPermission ? 'قيد التسجيل والربط ⏳' : 'غير مشترك ⚠️')}
+                        : (data?.hasPermission 
+                            ? (data?.isRegisteredWithFCM ? 'قيد التسجيل والربط ⏳' : 'جاري المزامنة مع Google Play ⏳') 
+                            : 'غير مشترك ⚠️')}
                     </div>
                   </div>
                 </div>
@@ -370,47 +374,59 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                 <span>إعدادات حاسمة لأجهزة شاومي وريدمي (Xiaomi / Redmi / POCO):</span>
               </div>
               <p className="text-xs text-amber-900/80 dark:text-amber-200/90 leading-relaxed mb-3">
-                نظام MIUI يمنع ظهور الإشعارات العائمة أو التنبيهات والتطبيق مغلق تلقائياً. لحل المشكلة فوراً اضبط التالي من إعدادات الهاتف:
+                نظام HyperOS / MIUI يمنع ظهور الإشعارات أو التنبيهات في الخلفية تلقائياً. اضغط على أي بند بالأسفل لفتحه وضبطه فوراً:
               </p>
               
               <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40">
+                <div 
+                  onClick={handleOpenSettings}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
+                >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
                     <span className="font-bold">عرض النوافذ المنبثقة أثناء التشغيل في الخلفية:</span>
                   </div>
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                    غيّره إلى أخضر ✔️
+                    اضغط للضبط ⚙️
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40">
+                <div 
+                  onClick={handleOpenNotificationSettings}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
+                >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-500"></span>
                     <span className="font-bold">العرض على شاشة القفل (Show on Lock screen):</span>
                   </div>
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                    غيّره إلى أخضر ✔️
+                    اضغط للضبط ⚙️
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40">
+                <div 
+                  onClick={openXiaomiAutostart}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-indigo-100/40 active:scale-98 transition"
+                >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                     <span className="font-bold">التشغيل التلقائي (Autostart):</span>
                   </div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-                    تفعيل ✅
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                    فتح الإعداد 🚀
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40">
+                <div 
+                  onClick={openXiaomiBatterySaver}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-blue-100/40 active:scale-98 transition"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                     <span className="font-bold">موفر البطارية (Battery Saver):</span>
                   </div>
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    اختر "لا توجد قيود"
+                    ضبط "لا توجد قيود" ⚡
                   </span>
                 </div>
               </div>
@@ -425,7 +441,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md transition active:scale-98"
                 >
                   {activatingOptIn ? <RefreshCw size={16} className="animate-spin" /> : <Bell size={16} />}
-                  <span>تفعيل الاشتراك وتحديث رمز الجهاز الآن</span>
+                  <span>{data?.isRegisteredWithFCM ? 'تحديث ومزامنة الرمز الآن' : 'تفعيل ومزامنة رمز Google Play (FCM) الآن'}</span>
                 </button>
               )}
 

@@ -2,22 +2,76 @@ package com.jiibha.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import com.getcapacitor.BridgeActivity;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends BridgeActivity {
     public static final String NOTIFICATION_CHANNEL_ID = "jibha_channel";
+    private static final String TAG = "JiibhaMain";
+    public static volatile String cachedFcmToken = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createNotificationChannel();
         registerNativeInterface();
+        checkAndRequestPushPermissions();
+        syncFcmToken();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        syncFcmToken();
+    }
+
+    private void checkAndRequestPushPermissions() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                } catch (Exception ignored) {}
+                syncFcmToken();
+            }
+        }
+    }
+
+    public void syncFcmToken() {
+        try {
+            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    String token = task.getResult();
+                    cachedFcmToken = token;
+                    Log.d(TAG, "Native FCM token obtained: " + token);
+                    try {
+                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                    } catch (Exception ignored) {}
+                } else {
+                    Log.w(TAG, "Failed to get FCM token natively: ", task.getException());
+                }
+            });
+        } catch (Exception e) {
+            Log.w(TAG, "FirebaseMessaging exception: " + e.getMessage());
+        }
     }
 
     private void createNotificationChannel() {
@@ -71,6 +125,37 @@ public class MainActivity extends BridgeActivity {
                 }
 
                 @JavascriptInterface
+                public void openAutostartSettings() {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
+                public void openBatterySettings() {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.miui.powerkeeper", "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"));
+                        intent.putExtra("package_name", getPackageName());
+                        intent.putExtra("package_label", getResources().getString(R.string.app_name));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
+                public void syncFcmTokenDirect() {
+                    runOnUiThread(() -> syncFcmToken());
+                }
+
+                @JavascriptInterface
                 public String getPushSubscriptionId() {
                     try {
                         return com.onesignal.OneSignal.getUser().getPushSubscription().getId();
@@ -82,10 +167,13 @@ public class MainActivity extends BridgeActivity {
                 @JavascriptInterface
                 public String getPushSubscriptionToken() {
                     try {
-                        return com.onesignal.OneSignal.getUser().getPushSubscription().getToken();
-                    } catch (Exception e) {
-                        return "";
-                    }
+                        String token = com.onesignal.OneSignal.getUser().getPushSubscription().getToken();
+                        if (token != null && !token.trim().isEmpty()) {
+                            cachedFcmToken = token.trim();
+                            return token.trim();
+                        }
+                    } catch (Exception ignored) {}
+                    return cachedFcmToken != null ? cachedFcmToken : "";
                 }
 
                 @JavascriptInterface

@@ -16,6 +16,9 @@ public class MainApplication extends Application {
             Log.d(TAG, "Initializing OneSignal native SDK from MainApplication...");
             OneSignal.getDebug().setLogLevel(LogLevel.WARN);
             OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+            try {
+                OneSignal.getUser().getPushSubscription().optIn();
+            } catch (Exception ignored) {}
             Log.d(TAG, "OneSignal native SDK initialized successfully in MainApplication.");
         } catch (Exception e) {
             Log.e(TAG, "Error initializing OneSignal in MainApplication", e);

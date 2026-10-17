@@ -80,6 +80,47 @@ export const openNativeNotificationSettings = (): boolean => {
 };
 
 /**
+ * Opens Xiaomi/Redmi Autostart settings directly.
+ */
+export const openXiaomiAutostart = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openAutostartSettings) {
+      (window as any).NativeDeviceBridge.openAutostartSettings();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openAutostartSettings:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
+ * Opens Xiaomi/Redmi Battery Saver settings directly.
+ */
+export const openXiaomiBatterySaver = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openBatterySettings) {
+      (window as any).NativeDeviceBridge.openBatterySettings();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openBatterySettings:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
+ * Directly asks native Firebase Messaging to sync FCM token with Google Play Services.
+ */
+export const syncNativeFcmToken = (): void => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.syncFcmTokenDirect) {
+      (window as any).NativeDeviceBridge.syncFcmTokenDirect();
+    }
+  } catch {}
+};
+
+/**
  * Native bridge helpers directly querying Android Java OneSignal instance via NativeDeviceBridge
  */
 export const getNativePushSubscriptionId = (): string | null => {
@@ -464,10 +505,11 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       localStorage.setItem('onesignal_subscription_id', subId);
     }
 
-    // Auto-healing: If permission is granted by Android, but OneSignal subscription is not yet fully registered, trigger optIn
+    // Auto-healing: If permission is granted by Android, but OneSignal subscription is not yet fully registered, trigger optIn & FCM sync
     if (hasPermission && (!optedIn || !subId || !pushToken)) {
       try {
         console.log('🔄 Auto-healing: hasPermission is true, ensuring optIn and registration...');
+        syncNativeFcmToken();
         requestNativePushPermission();
         forceNativeOptIn();
         if (externalId) {
@@ -492,7 +534,8 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
     }
 
     const isRegisteredWithFCM = Boolean(pushToken && pushToken.trim() !== '');
-    const isFullyConnected = Boolean(hasPermission && ((subId && subId.trim() !== '') || (externalId && optedIn)));
+    // Crucial: Only truly connected if permission is granted AND FCM token is registered with Google Play AND subscribed
+    const isFullyConnected = Boolean(hasPermission && isRegisteredWithFCM && ((subId && subId.trim() !== '') || (externalId && optedIn)));
 
     return {
       isNative: true,
@@ -512,6 +555,7 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
     const nativeSubId = getNativePushSubscriptionId();
     const nativeToken = getNativePushSubscriptionToken();
     const subId = nativeSubId || localStorage.getItem('onesignal_subscription_id') || null;
+    const hasFcm = Boolean(nativeToken && nativeToken.trim() !== '');
     return {
       isNative: true,
       isInitialized: false,
@@ -520,8 +564,8 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
       subscriptionId: subId,
       pushToken: nativeToken,
       optedIn: false,
-      isRegisteredWithFCM: Boolean(nativeToken && nativeToken.trim() !== ''),
-      isFullyConnected: Boolean(subId),
+      isRegisteredWithFCM: hasFcm,
+      isFullyConnected: Boolean(subId && hasFcm),
       externalId: localStorage.getItem('onesignal_external_id'),
       onesignalId: null,
       isXiaomi,
@@ -539,6 +583,7 @@ export const forcePushSubscriptionOptIn = async (userId?: string): Promise<boole
     const currentUserId = userId || localStorage.getItem('onesignal_external_id');
     
     // 1. Native bridge triggers
+    syncNativeFcmToken();
     requestNativePushPermission();
     forceNativeOptIn();
     if (currentUserId) {
@@ -561,12 +606,16 @@ export const forcePushSubscriptionOptIn = async (userId?: string): Promise<boole
       await OneSignal.User.addAlias('external_id', currentUserId).catch(() => {});
     }
 
-    // 4. Poll for up to 6 iterations (3 seconds total)
-    for (let i = 0; i < 6; i++) {
+    // 4. Poll for up to 10 iterations (5 seconds total) for both subId and FCM token
+    for (let i = 0; i < 10; i++) {
       await new Promise(r => setTimeout(r, 500));
+      syncNativeFcmToken();
       const subId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
+      const token = (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null)) || getNativePushSubscriptionToken();
       if (subId && subId.trim() !== '') {
         localStorage.setItem('onesignal_subscription_id', subId.trim());
+      }
+      if (subId && token && token.trim() !== '') {
         return true;
       }
     }
@@ -635,6 +684,20 @@ export const sendTestPushToSelf = async (userId: string, subscriptionId?: string
         localStorage.setItem('onesignal_subscription_id', resolvedSubId);
       }
     } catch {}
+  }
+
+  // Pre-validate FCM token on native Android
+  if (isNativePlatform()) {
+    let currentToken = getNativePushSubscriptionToken() || (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null));
+    if (!currentToken) {
+      syncNativeFcmToken();
+      forceNativeOptIn();
+      await new Promise(r => setTimeout(r, 1000));
+      currentToken = getNativePushSubscriptionToken() || (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null));
+    }
+    if (!currentToken) {
+      throw new Error('فشل الإرسال: الهاتف بانتظار استلام رمز Google FCM. اضغط على زر "تحديث الرمز" وتأكد من قبول إذن الإشعارات للهاتف ثم أعد المحاولة بعد ثوانٍ.');
+    }
   }
 
   // 3. Payload configuration

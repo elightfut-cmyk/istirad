@@ -46,11 +46,11 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
       if (user?.id) {
         await loginOneSignalUser(user.id);
       }
-      const ok = await forcePushSubscriptionOptIn();
+      const ok = await forcePushSubscriptionOptIn(user?.id);
       if (ok) {
-        toast.success('تم تفعيل الاشتراك الفوري بنجاح!');
+        toast.success('تم تحديث ومزامنة خدمة الإشعارات بنجاح!');
       } else {
-        toast.error('تعذر تفعيل الاشتراك، تأكد من اتصال الإنترنت وإذن الإشعارات');
+        toast.error('يرجى التأكد من تشغيل إذن الإشعارات من إعدادات الهاتف وإعادة المحاولة.');
       }
       await runDiagnostics();
     } catch (e: any) {

@@ -119,6 +119,42 @@ export const forceNativeOptIn = (): void => {
   } catch {}
 };
 
+export const requestNativePushPermission = (): void => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.requestPushPermission) {
+      (window as any).NativeDeviceBridge.requestPushPermission();
+    }
+  } catch {}
+};
+
+export const getNativeOnesignalId = (): string | null => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getOnesignalId) {
+      const id = (window as any).NativeDeviceBridge.getOnesignalId();
+      if (id && String(id).trim() !== '') return String(id).trim();
+    }
+  } catch {}
+  return null;
+};
+
+export const getNativeExternalId = (): string | null => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getExternalId) {
+      const id = (window as any).NativeDeviceBridge.getExternalId();
+      if (id && String(id).trim() !== '') return String(id).trim();
+    }
+  } catch {}
+  return null;
+};
+
+export const resetAndReOptInNative = (userId: string | number): void => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.resetAndReOptIn) {
+      (window as any).NativeDeviceBridge.resetAndReOptIn(String(userId));
+    }
+  } catch {}
+};
+
 export const loginNativeOneSignal = (userId: string | number): void => {
   try {
     if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.loginOneSignal) {
@@ -421,7 +457,8 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
     subId = subId || nativeSubId || localStorage.getItem('onesignal_subscription_id') || null;
     pushToken = pushToken || nativeToken || null;
     optedIn = optedIn || nativeOptedIn;
-    externalId = externalId || localStorage.getItem('onesignal_external_id') || null;
+    externalId = externalId || getNativeExternalId() || localStorage.getItem('onesignal_external_id') || null;
+    onesignalId = onesignalId || getNativeOnesignalId() || null;
 
     if (subId) {
       localStorage.setItem('onesignal_subscription_id', subId);
@@ -431,10 +468,14 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
     if (hasPermission && (!optedIn || !subId || !pushToken)) {
       try {
         console.log('🔄 Auto-healing: hasPermission is true, ensuring optIn and registration...');
+        requestNativePushPermission();
         forceNativeOptIn();
+        if (externalId) {
+          resetAndReOptInNative(externalId);
+          loginNativeOneSignal(externalId);
+        }
         await OneSignal.User.pushSubscription.optIn().catch(() => {});
         if (externalId) {
-          loginNativeOneSignal(externalId);
           await OneSignal.login(externalId).catch(() => {});
         }
         await new Promise(r => setTimeout(r, 400));
@@ -451,7 +492,7 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
     }
 
     const isRegisteredWithFCM = Boolean(pushToken && pushToken.trim() !== '');
-    const isFullyConnected = Boolean(hasPermission && optedIn && subId && subId.trim() !== '');
+    const isFullyConnected = Boolean(hasPermission && ((subId && subId.trim() !== '') || (externalId && optedIn)));
 
     return {
       isNative: true,
@@ -492,34 +533,46 @@ export const getNotificationDiagnostics = async (): Promise<NotificationDiagnost
 /**
  * Manually forces opt-in to push subscription and re-registers device.
  */
-export const forcePushSubscriptionOptIn = async (): Promise<boolean> => {
+export const forcePushSubscriptionOptIn = async (userId?: string): Promise<boolean> => {
   if (!isNativePlatform()) return false;
   try {
+    const currentUserId = userId || localStorage.getItem('onesignal_external_id');
+    
+    // 1. Native bridge triggers
+    requestNativePushPermission();
     forceNativeOptIn();
+    if (currentUserId) {
+      resetAndReOptInNative(currentUserId);
+      loginNativeOneSignal(currentUserId);
+    }
+    
     await initOneSignal();
+
+    // 2. Plugin requests
     const hasPerm = await OneSignal.Notifications.hasPermission().catch(() => false);
     if (!hasPerm) {
-      await OneSignal.Notifications.requestPermission(true);
+      await OneSignal.Notifications.requestPermission(true).catch(() => {});
     }
-    await OneSignal.User.pushSubscription.optIn();
+    await OneSignal.User.pushSubscription.optIn().catch(() => {});
     
-    const currentUserId = localStorage.getItem('onesignal_external_id');
+    // 3. User association
     if (currentUserId) {
-      loginNativeOneSignal(currentUserId);
       await OneSignal.login(currentUserId).catch(() => {});
       await OneSignal.User.addAlias('external_id', currentUserId).catch(() => {});
     }
 
-    // Allow FCM a moment to return token
-    for (let i = 0; i < 4; i++) {
+    // 4. Poll for up to 6 iterations (3 seconds total)
+    for (let i = 0; i < 6; i++) {
       await new Promise(r => setTimeout(r, 500));
       const subId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
-      if (subId) {
-        localStorage.setItem('onesignal_subscription_id', subId);
+      if (subId && subId.trim() !== '') {
+        localStorage.setItem('onesignal_subscription_id', subId.trim());
         return true;
       }
     }
-    return true;
+
+    const finalPerm = await OneSignal.Notifications.hasPermission().catch(() => false);
+    return Boolean(finalPerm);
   } catch (error) {
     console.error('Error forcing push subscription optIn:', error);
     return false;
@@ -532,6 +585,7 @@ export const forcePushSubscriptionOptIn = async (): Promise<boolean> => {
 export const requestPushPermissionAgain = async (): Promise<boolean> => {
   if (!isNativePlatform()) return false;
   try {
+    requestNativePushPermission();
     forceNativeOptIn();
     await initOneSignal();
     const granted = await OneSignal.Notifications.requestPermission(true);
@@ -545,60 +599,79 @@ export const requestPushPermissionAgain = async (): Promise<boolean> => {
 
 /**
  * Sends a live test push notification to the current user's device.
- * Prioritizes direct device subscription ID for 100% reliable instant delivery.
+ * Prioritizes direct device subscription ID, with seamless fallback to user ID (external_id).
  */
 export const sendTestPushToSelf = async (userId: string, subscriptionId?: string | null): Promise<PushSendResult> => {
-  let resolvedSubId = subscriptionId || getNativePushSubscriptionId() || null;
+  if (!userId) {
+    throw new Error('فشل الإرسال: يجب تسجيل الدخول بحسابك أولاً لإرسال إشعار تجريبي.');
+  }
 
+  // 1. Ensure user is firmly associated with OneSignal
   if (isNativePlatform()) {
     try {
-      const liveSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
-      if (liveSubId) {
-        resolvedSubId = liveSubId;
-        localStorage.setItem('onesignal_subscription_id', liveSubId);
-      }
-    } catch {}
-
-    if (!resolvedSubId) {
-      resolvedSubId = localStorage.getItem('onesignal_subscription_id');
-    }
-
-    // If still null, wait up to 2 seconds for FCM registration
-    if (!resolvedSubId) {
+      requestNativePushPermission();
       forceNativeOptIn();
-      await OneSignal.User.pushSubscription.optIn().catch(() => {});
-      for (let i = 0; i < 4; i++) {
-        await new Promise(r => setTimeout(r, 500));
-        const retryId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
-        if (retryId) {
-          resolvedSubId = retryId;
-          localStorage.setItem('onesignal_subscription_id', retryId);
-          break;
-        }
-      }
-    }
-
-    // Ensure external_id is firmly attached
-    try {
+      resetAndReOptInNative(userId);
       loginNativeOneSignal(userId);
-      await OneSignal.login(userId);
-      await OneSignal.User.addAlias('external_id', userId);
+      await OneSignal.login(userId).catch(() => {});
+      await OneSignal.User.addAlias('external_id', userId).catch(() => {});
+      await OneSignal.User.pushSubscription.optIn().catch(() => {});
+    } catch (e) {
+      console.warn('Re-linking warning in sendTestPushToSelf:', e);
+    }
+  }
+
+  // 2. Resolve subscription ID if available
+  let resolvedSubId = subscriptionId || getNativePushSubscriptionId() || null;
+  if (!resolvedSubId) {
+    resolvedSubId = localStorage.getItem('onesignal_subscription_id');
+  }
+
+  if (isNativePlatform() && !resolvedSubId) {
+    try {
+      const liveSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
+      if (liveSubId && liveSubId.trim() !== '') {
+        resolvedSubId = liveSubId.trim();
+        localStorage.setItem('onesignal_subscription_id', resolvedSubId);
+      }
     } catch {}
   }
 
-  // If subscription ID is STILL missing after waiting, provide a clear, helpful Arabic error rather than invalid_aliases
-  if (!resolvedSubId) {
-    throw new Error('فشل الإرسال: جهازك لم يستلم معرف الاشتراك من خادم الإشعارات بعد. يرجى الضغط على زر "تفعيل وتحديث الرمز" باللون البرتقالي في النافذة والانتظار 3 ثوانٍ.');
-  }
-
-  return sendPushNotificationDetailed({
-    subscriptionIds: [resolvedSubId],
+  // 3. Payload configuration
+  const pushData = {
     title: '🔔 إشعار تجريبي ناجح من جيبها',
     message: 'تهانينا! خدمة الإشعارات وتنبيهات الهاتف تعمل الآن بشكل سليم وسريع على جهازك.',
     data: {
       type: 'test_push',
       sentAt: new Date().toISOString()
     }
-  });
+  };
+
+  // If resolvedSubId is available, try direct delivery to subscriptionId first
+  if (resolvedSubId) {
+    try {
+      const res = await sendPushNotificationDetailed({
+        subscriptionIds: [resolvedSubId],
+        ...pushData
+      });
+      if (res.success) return res;
+    } catch (subErr: any) {
+      console.warn('Direct subscriptionId send attempt failed, trying fallback to userId:', subErr);
+    }
+  }
+
+  // Fallback to userId (external_id) alias delivery
+  try {
+    return await sendPushNotificationDetailed({
+      userIds: [userId],
+      ...pushData
+    });
+  } catch (userErr: any) {
+    const errorStr = userErr?.message || String(userErr);
+    if (errorStr.includes('invalid_aliases') || errorStr.includes('لم يتم العثور على أي مشترك')) {
+      throw new Error('جهازك قيد الربط بخادم الإشعارات. يرجى التأكد من تشغيل إذن الإشعارات لهاتف شاومي/ريدمي والضغط على زر "تحديث الرمز" ثم إعادة المحاولة.');
+    }
+    throw userErr;
+  }
 };
 

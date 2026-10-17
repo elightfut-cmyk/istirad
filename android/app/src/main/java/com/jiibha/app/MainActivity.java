@@ -107,10 +107,62 @@ public class MainActivity extends BridgeActivity {
                 }
 
                 @JavascriptInterface
+                public void requestPushPermission() {
+                    try {
+                        runOnUiThread(() -> {
+                            try {
+                                com.onesignal.OneSignal.getNotifications().requestPermission(true, com.onesignal.Continue.none());
+                                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @JavascriptInterface
+                public String getOnesignalId() {
+                    try {
+                        return com.onesignal.OneSignal.getUser().getOnesignalId();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                }
+
+                @JavascriptInterface
+                public String getExternalId() {
+                    try {
+                        return com.onesignal.OneSignal.getUser().getExternalId();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                }
+
+                @JavascriptInterface
+                public void resetAndReOptIn(String externalId) {
+                    try {
+                        runOnUiThread(() -> {
+                            try {
+                                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                                if (externalId != null && !externalId.trim().isEmpty()) {
+                                    com.onesignal.OneSignal.login(externalId.trim());
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @JavascriptInterface
                 public void loginOneSignal(String externalId) {
                     try {
                         if (externalId != null && !externalId.trim().isEmpty()) {
-                            com.onesignal.OneSignal.login(externalId);
+                            com.onesignal.OneSignal.login(externalId.trim());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

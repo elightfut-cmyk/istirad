@@ -324,10 +324,12 @@ public class MainActivity extends BridgeActivity {
                                 conn = (java.net.HttpURLConnection) url.openConnection();
                                 conn.setRequestMethod("POST");
                                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                                conn.setRequestProperty("Accept", "application/json");
+                                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android " + android.os.Build.VERSION.RELEASE + ") JiibhaApp/1.3.2");
                                 conn.setRequestProperty("Authorization", authHeader);
                                 conn.setDoOutput(true);
-                                conn.setConnectTimeout(15000);
-                                conn.setReadTimeout(15000);
+                                conn.setConnectTimeout(8000);
+                                conn.setReadTimeout(8000);
 
                                 byte[] input = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
                                 try (java.io.OutputStream os = conn.getOutputStream()) {
@@ -353,11 +355,11 @@ public class MainActivity extends BridgeActivity {
                                 }
                             }
                         });
-                        String res = future.get(20, java.util.concurrent.TimeUnit.SECONDS);
+                        String res = future.get(10, java.util.concurrent.TimeUnit.SECONDS);
                         executor.shutdown();
                         return res;
                     } catch (Exception e) {
-                        return "{\"status\":500,\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "error") + "\"}";
+                        return "{\"status\":500,\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "bridge_error") + "\",\"isBridgeError\":true}";
                     }
                 }
             }, "NativeDeviceBridge");

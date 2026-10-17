@@ -91,6 +91,7 @@ function apiDevPlugin(env: Record<string, string>): any {
               } else {
                 if (validSubIds.length > 0) {
                   payload.include_subscription_ids = validSubIds;
+                  payload.include_player_ids = validSubIds;
                 }
                 if (externalIds.length > 0) {
                   payload.include_aliases = { external_id: externalIds };

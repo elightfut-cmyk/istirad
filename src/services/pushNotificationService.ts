@@ -5,6 +5,12 @@ const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JnemozY3k2ZHFpdTVybTd6djdnN2s2aGRxYjVyYW1xc2M3em03bzd4cmdoemNzbXdzemJmdXRwZ25zZXZkeDNwd3ltbXl5YXlub2h2dnk=';
 
 const getResolvedApiKey = (): string => {
+  if (typeof window !== 'undefined') {
+    const customKey = localStorage.getItem('onesignal_custom_rest_key');
+    if (customKey && customKey.trim()) {
+      return customKey.trim();
+    }
+  }
   if (import.meta.env.VITE_ONESIGNAL_REST_API_KEY) {
     return import.meta.env.VITE_ONESIGNAL_REST_API_KEY;
   }

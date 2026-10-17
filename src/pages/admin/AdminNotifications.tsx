@@ -40,8 +40,11 @@ import NotificationDiagnosticsModal from '../../components/NotificationDiagnosti
 import { Download } from 'lucide-react';
 import AppUpdateAdminTab from '../../components/admin/AppUpdateAdminTab';
 import TenderAppPromptAdminTab from '../../components/admin/TenderAppPromptAdminTab';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function AdminNotifications() {
+  const { user } = useAuthStore();
+  const isAuthorized = user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com';
   const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push' | 'appUpdate' | 'tenderAppModal'>('popup');
 
   // Push Broadcast States
@@ -1022,14 +1025,16 @@ export default function AdminNotifications() {
                 )}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowDiagnostics(true)}
-                className="flex items-center gap-2 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition border border-indigo-200 dark:border-indigo-800 text-sm"
-              >
-                <Bell size={16} />
-                <span>فحص إشعارات الهاتف وحل المشاكل</span>
-              </button>
+              {isAuthorized && (
+                <button
+                  type="button"
+                  onClick={() => setShowDiagnostics(true)}
+                  className="flex items-center gap-2 px-4 py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition border border-indigo-200 dark:border-indigo-800 text-sm"
+                >
+                  <Bell size={16} />
+                  <span>فحص إشعارات الهاتف وحل المشاكل</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1129,11 +1134,13 @@ export default function AdminNotifications() {
       {/* TAB 6: TENDER APP PROMPT */}
       {activeTab === 'tenderAppModal' && <TenderAppPromptAdminTab />}
 
-      {/* Diagnostics Modal */}
-      <NotificationDiagnosticsModal
-        isOpen={showDiagnostics}
-        onClose={() => setShowDiagnostics(false)}
-      />
+      {/* Diagnostics Modal (Developer madaniameur26@gmail.com Only) */}
+      {isAuthorized && (
+        <NotificationDiagnosticsModal
+          isOpen={showDiagnostics}
+          onClose={() => setShowDiagnostics(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

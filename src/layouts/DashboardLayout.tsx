@@ -221,7 +221,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
                   <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
                     <h3 className="font-bold text-gray-800 dark:text-white">{t('nav.notifications')}</h3>
-                    {isNative && (
+                    {isNative && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
                       <button
                         onClick={() => {
                           setIsNotificationsOpen(false);
@@ -347,7 +347,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         isOpenControlled={isPollOpen} 
         onCloseControlled={() => setIsPollOpen(false)} 
       />
-      {isNative && (
+      {isNative && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
         <NotificationDiagnosticsModal
           isOpen={showDiagnosticsModal}
           onClose={() => setShowDiagnosticsModal(false)}

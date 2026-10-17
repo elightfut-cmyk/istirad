@@ -94,16 +94,18 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
     }
   };
 
+  const isAuthorized = user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com';
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAuthorized) {
       if (user?.id) {
         loginOneSignalUser(user.id).catch(() => {});
       }
       runDiagnostics();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, isAuthorized]);
 
-  if (!isOpen || !isNativePlatform()) return null;
+  if (!isOpen || !isAuthorized) return null;
 
   const handleRequestPermission = async () => {
     try {

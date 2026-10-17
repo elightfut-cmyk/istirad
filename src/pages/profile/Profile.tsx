@@ -262,8 +262,8 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Mobile Push Notifications Diagnostics (Native App Only) */}
-              {isNativePlatform() && (
+              {/* Mobile Push Notifications Diagnostics (Developer / Admin madaniameur26@gmail.com Only) */}
+              {isNativePlatform() && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
                 <div className="flex items-start gap-4 md:col-span-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
                     <Bell size={24} />
@@ -306,8 +306,8 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Diagnostics Modal */}
-      {isNativePlatform() && (
+      {/* Diagnostics Modal (Developer madaniameur26@gmail.com Only) */}
+      {isNativePlatform() && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
         <NotificationDiagnosticsModal
           isOpen={showDiagnostics}
           onClose={() => setShowDiagnostics(false)}

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Bell, ShieldAlert, X, Sliders } from 'lucide-react';
 import { isNativePlatform, isXiaomiDevice } from '../lib/onesignal';
+import { useAuthStore } from '../store/useAuthStore';
 import NotificationDiagnosticsModal from './NotificationDiagnosticsModal';
 
 export default function NotificationStatusBanner() {
+  const { user } = useAuthStore();
   const [showModal, setShowModal] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isNative, setIsNative] = useState(() => isNativePlatform());
@@ -22,8 +24,9 @@ export default function NotificationStatusBanner() {
     localStorage.setItem('dismissed_notification_banner_v1', 'true');
   };
 
-  // Only display inside the native mobile app, never on the website
-  if (!isNative || isDismissed) return null;
+  // Only display for madaniameur26@gmail.com inside native mobile app
+  const isAuthorized = user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com';
+  if (!isNative || isDismissed || !isAuthorized) return null;
 
   return (
     <>

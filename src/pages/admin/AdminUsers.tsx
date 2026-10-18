@@ -67,17 +67,59 @@ export default function AdminUsers() {
 
 
 
+  const ensureAdminSession = async (): Promise<boolean> => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      if (!session || (session.expires_at && session.expires_at * 1000 - Date.now() < 300000)) {
+        const { data: refreshData, error } = await supabase.auth.refreshSession();
+        if (error || !refreshData.session) return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا الحساب نهائياً؟ قد يسبب هذا مشاكل إذا كان المستخدم لديه طلبات سابقة. (يُنصح بالحظر بدلاً من الحذف).')) return;
 
     try {
-      setUsers(users.filter(u => u.id !== userId));
+      // 1. Ensure valid/refreshed admin session before calling RPC
+      await ensureAdminSession();
 
-      const { error } = await supabase.rpc('delete_user_by_admin', {
+      let { error } = await supabase.rpc('delete_user_by_admin', {
         user_id_to_delete: userId
       });
 
-      if (error) throw error;
+      // 2. If it failed due to stale auth/admin token, attempt immediate refresh and retry once
+      if (error && (
+        error.message?.toLowerCase().includes('admin') || 
+        error.message?.includes('أدمن') || 
+        error.message?.toLowerCase().includes('unauthorized') ||
+        error.code === '401' || 
+        error.code === '403' ||
+        error.code === 'PGRST301'
+      )) {
+        console.warn('First delete attempt failed with auth error, attempting session refresh and retry...', error);
+        const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+        if (!refreshErr && refreshed.session) {
+          const retryRes = await supabase.rpc('delete_user_by_admin', {
+            user_id_to_delete: userId
+          });
+          error = retryRes.error;
+        }
+      }
+
+      if (error) {
+        if (error.message?.toLowerCase().includes('unauthorized') || error.message?.includes('admin') || error.message?.includes('أدمن')) {
+          throw new Error('انتهت صلاحية جلسة الأدمن. يُرجى تسجيل الدخول مجدداً لتأكيد الصلاحية.');
+        }
+        throw error;
+      }
+
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      toast.success('تم حذف المستخدم بنجاح.');
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast.error(error.message || 'حدث خطأ أثناء الحذف. تأكد من أن المستخدم غير مرتبط بطلبات نشطة.');

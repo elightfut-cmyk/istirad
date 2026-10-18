@@ -15,7 +15,7 @@ export interface Notification {
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
-  fetchNotifications: (userId: string) => Promise<void>;
+  fetchNotifications: (userId: string, force?: boolean) => Promise<void>;
   subscribeToNotifications: (userId: string) => () => void;
   pauseRealtime: () => void;
   resumeRealtime: () => void;
@@ -50,11 +50,23 @@ export const playNotificationChime = () => {
   }
 };
 
+let lastFetchTime = 0;
+let lastFetchUserId: string | null = null;
+
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   
-  fetchNotifications: async (userId: string) => {
+  fetchNotifications: async (userId: string, force = false) => {
+    if (!userId) return;
+    const now = Date.now();
+    // Throttle calls to once per 10 seconds unless forced
+    if (!force && lastFetchUserId === userId && now - lastFetchTime < 10000) {
+      return;
+    }
+    lastFetchTime = now;
+    lastFetchUserId = userId;
+
     try {
       const { data, error } = await supabase
         .from('notifications')

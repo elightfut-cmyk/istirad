@@ -254,7 +254,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                       </span>
-                      <span>خدمة في الخلفية</span>
+                      <span>إعدادات الإشعارات</span>
                     </button>
                   </div>
 
@@ -317,7 +317,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                     </div>
                   )}
 
-                  {/* Tab 2: Native Background Service Status & OEM Battery Controls */}
+                  {/* Tab 2: Native Push Settings & OEM Battery Controls */}
                   {activeNotifTab === 'service' && (
                     <div className="p-4 space-y-3.5 bg-gray-50/40 dark:bg-gray-850">
                       {/* Active Status Badge */}
@@ -327,13 +327,13 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                         </div>
                         <div>
                           <div className="flex items-center gap-2 font-black text-xs text-emerald-800 dark:text-emerald-300">
-                            <span>خدمة الخلفية الأصلية:</span>
+                            <span>إشعارات OneSignal الأصلية:</span>
                             <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] px-2 py-0.5 rounded-full">
-                              🟢 متصلة ونشطة
+                              🟢 نشطة وسحابية (Zero-Polling)
                             </span>
                           </div>
                           <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
-                            تطبيق جيبها يستقبل تنبيهات الطلبات والعروض ويرن بهاتفك حتى أثناء إغلاق الشاشة.
+                            تصلك التنبيهات الفورية سحابياً بنظام Native Push المباشر بدون استنزاف البطارية أو بيانات الإنترنت في الخلفية.
                           </p>
                         </div>
                       </div>

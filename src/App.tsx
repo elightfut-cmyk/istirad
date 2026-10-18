@@ -42,6 +42,7 @@ import { initOneSignal } from './lib/onesignal';
 import AppSplashScreen from './components/AppSplashScreen';
 import ForceUpdateModal from './components/ForceUpdateModal';
 import { useNotificationStore } from './store/useNotificationStore';
+import { App as CapApp } from '@capacitor/app';
 
 function App() {
   const { user, checkSession, isLoading } = useAuthStore();
@@ -60,6 +61,47 @@ function App() {
       };
     }
   }, [user?.id, fetchNotifications, subscribeToNotifications]);
+
+  // Zero-Background Polling: Halt Supabase Realtime in background, resume when foregrounded
+  useEffect(() => {
+    let listenerHandle: any = null;
+
+    try {
+      CapApp.addListener('appStateChange', ({ isActive }) => {
+        console.log('📱 App State Changed - isActive:', isActive);
+        if (!isActive) {
+          // Immediately unsubscribe from Supabase Realtime to save quota
+          useNotificationStore.getState().pauseRealtime();
+        } else {
+          // Resume Realtime only when app returns to foreground
+          useNotificationStore.getState().resumeRealtime();
+        }
+      }).then(handle => {
+        listenerHandle = handle;
+      }).catch(err => {
+        console.warn('Capacitor App state listener error:', err);
+      });
+    } catch (e) {
+      console.warn('Capacitor App not available in web context:', e);
+    }
+
+    // Web visibility change fallback
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        useNotificationStore.getState().pauseRealtime();
+      } else {
+        useNotificationStore.getState().resumeRealtime();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (listenerHandle?.remove) {
+        listenerHandle.remove();
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)

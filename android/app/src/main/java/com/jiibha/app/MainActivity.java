@@ -315,55 +315,6 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void setUserSession(String role, String userId, String userName, String supabaseUrl, String supabaseKey) {
-            try {
-                SharedPreferences prefs = context.getSharedPreferences(JiibhaBackgroundService.PREFS_NAME, Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                if (role != null) editor.putString(JiibhaBackgroundService.PREF_ROLE, role);
-                if (userId != null) editor.putString(JiibhaBackgroundService.PREF_USER_ID, userId);
-                if (userName != null) editor.putString(JiibhaBackgroundService.PREF_USER_NAME, userName);
-                if (supabaseUrl != null) editor.putString(JiibhaBackgroundService.PREF_SUPABASE_URL, supabaseUrl);
-                if (supabaseKey != null) editor.putString(JiibhaBackgroundService.PREF_SUPABASE_KEY, supabaseKey);
-                editor.apply();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @JavascriptInterface
-        public void startBackgroundService() {
-            try {
-                Intent serviceIntent = new Intent(context, JiibhaBackgroundService.class);
-                serviceIntent.setAction(JiibhaBackgroundService.ACTION_START);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(serviceIntent);
-                } else {
-                    context.startService(serviceIntent);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @JavascriptInterface
-        public void stopBackgroundService() {
-            try {
-                Intent serviceIntent = new Intent(context, JiibhaBackgroundService.class);
-                serviceIntent.setAction(JiibhaBackgroundService.ACTION_STOP);
-                context.startService(serviceIntent);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        @JavascriptInterface
-        public void markAlerted(String id) {
-            if (id != null) {
-                JiibhaBackgroundService.alertedNotificationIds.add(id);
-            }
-        }
-
-        @JavascriptInterface
         public void loginOneSignal(String userId) {
             try {
                 if (userId != null && !userId.isEmpty()) {

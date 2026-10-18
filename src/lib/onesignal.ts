@@ -99,21 +99,66 @@ export const requestIgnoreBatteryOptimizations = (): boolean => {
   return false;
 };
 
+let isInitialized = false;
+
 /**
- * 1. Initialize OneSignal (Both Native Android Capacitor & Web/PWA)
+ * 1. Initialize OneSignal (Native Capacitor & Web/PWA)
+ * - OneSignal.initialize(ONESIGNAL_APP_ID)
+ * - foregroundWillDisplay: captures notification in foreground, plays chime, refreshes data
+ * - click: routes user to order/shipment/notification details
  */
 export const initOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
+  if (isInitialized) return;
 
-  // A. Native Mobile Initialization
+  // A. Native Mobile Initialization (Capacitor v6)
   if (isNativePlatform()) {
     try {
       OneSignal.Debug.setLogLevel(LogLevel.Warn);
       await OneSignal.initialize(ONESIGNAL_APP_ID);
+
+      // Listen for foreground notification arrival
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        const notif = event.getNotification();
+        console.log('🔔 OneSignal Native foreground notification received:', notif);
+        try {
+          // Play auditory chime and refresh notifications
+          import('../store/useNotificationStore').then(({ playNotificationChime, useNotificationStore }) => {
+            playNotificationChime();
+            const currentUserId = localStorage.getItem('onesignal_external_id');
+            if (currentUserId) {
+              useNotificationStore.getState().fetchNotifications(currentUserId);
+            }
+          });
+          // Refresh open pages (orders, requests, etc.)
+          window.dispatchEvent(new CustomEvent('refresh_data'));
+        } catch (e) {
+          console.warn('foregroundWillDisplay handling error:', e);
+        }
+      });
+
+      // Listen for notification clicks (from notification drawer / lockscreen)
+      OneSignal.Notifications.addEventListener('click', (event) => {
+        console.log('👆 OneSignal Notification clicked:', event.notification);
+        try {
+          const additionalData = (event.notification.additionalData || {}) as any;
+          const targetUrl = additionalData.url || additionalData.targetUrl || additionalData.link || '/notifications';
+          if (typeof window !== 'undefined') {
+            if (window.location.pathname !== targetUrl) {
+              window.location.href = targetUrl;
+            }
+          }
+        } catch (e) {
+          console.warn('OneSignal click handling error:', e);
+        }
+      });
+
       try {
         await OneSignal.User.pushSubscription.optIn();
       } catch (optErr) {}
-      console.log('✅ OneSignal Native initialized for App ID:', ONESIGNAL_APP_ID);
+
+      isInitialized = true;
+      console.log('✅ OneSignal Native initialized with event listeners for App ID:', ONESIGNAL_APP_ID);
       return;
     } catch (nativeErr) {
       console.warn('Native OneSignal plugin init warning:', nativeErr);
@@ -130,6 +175,29 @@ export const initOneSignal = async (): Promise<void> => {
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: true,
       });
+
+      if (OneSignalInstance.Notifications) {
+        OneSignalInstance.Notifications.addEventListener('foregroundWillDisplay', () => {
+          import('../store/useNotificationStore').then(({ playNotificationChime, useNotificationStore }) => {
+            playNotificationChime();
+            const currentUserId = localStorage.getItem('onesignal_external_id');
+            if (currentUserId) {
+              useNotificationStore.getState().fetchNotifications(currentUserId);
+            }
+          });
+          window.dispatchEvent(new CustomEvent('refresh_data'));
+        });
+
+        OneSignalInstance.Notifications.addEventListener('click', (event: any) => {
+          const data = event?.notification?.additionalData;
+          const targetUrl = data?.url || data?.targetUrl || '/notifications';
+          if (window.location.pathname !== targetUrl) {
+            window.location.href = targetUrl;
+          }
+        });
+      }
+
+      isInitialized = true;
       console.log('✅ OneSignal Web Push initialized for App ID:', ONESIGNAL_APP_ID);
     } catch (err) {
       console.warn('OneSignal Web init warning:', err);
@@ -139,35 +207,24 @@ export const initOneSignal = async (): Promise<void> => {
 
 /**
  * 2. Identity & Subscription Lifecycle:
- * Login user using external_id (UUID), attach tags, and start native background service.
+ * Login user using external_id (UUID) immediately upon authentication.
+ * Relied upon by Supabase Edge Function to target user without background polling.
  */
 export const loginOneSignal = async (userId: string | number, role?: string, userName?: string): Promise<void> => {
   if (typeof window === 'undefined' || !userId) return;
   const strId = String(userId);
 
-  // Store in localStorage for fast retrieval
   localStorage.setItem('onesignal_external_id', strId);
 
-  // A. Native Bridge session & service startup
+  // Sync with NativeBridge if present
   const bridge = getNativeBridge();
-  if (bridge) {
+  if (bridge?.loginOneSignal) {
     try {
-      bridge.loginOneSignal?.(strId);
-      bridge.setUserSession?.(
-        role || 'user',
-        strId,
-        userName || '',
-        import.meta.env.VITE_SUPABASE_URL || 'https://mfottmlpvjqonizrqegg.supabase.co',
-        import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-      );
-      bridge.startBackgroundService?.();
-      console.log('🔒 Jiibha Native Background Service started for user:', strId);
-    } catch (bridgeErr) {
-      console.warn('NativeBridge session setup warning:', bridgeErr);
-    }
+      bridge.loginOneSignal(strId);
+    } catch {}
   }
 
-  // B. Capacitor Plugin Login
+  // Capacitor Native Login
   if (isNativePlatform()) {
     try {
       await OneSignal.login(strId);
@@ -181,7 +238,7 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
     }
   }
 
-  // C. Web Push Deferred Login
+  // Web Push Deferred Login
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
     try {
@@ -206,7 +263,7 @@ export const loginOneSignalUser = (userId: string | number, role?: string, userN
 
 /**
  * 3. Identity Lifecycle:
- * Logout user from OneSignal and stop native background service.
+ * Logout user from OneSignal.
  */
 export const logoutOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
@@ -214,12 +271,10 @@ export const logoutOneSignal = async (): Promise<void> => {
   localStorage.removeItem('onesignal_subscription_id');
 
   const bridge = getNativeBridge();
-  if (bridge) {
+  if (bridge?.logoutOneSignal) {
     try {
-      bridge.logoutOneSignal?.();
-      bridge.stopBackgroundService?.();
-      console.log('🔓 Jiibha Native Background Service stopped');
-    } catch (e) {}
+      bridge.logoutOneSignal();
+    } catch {}
   }
 
   if (isNativePlatform()) {

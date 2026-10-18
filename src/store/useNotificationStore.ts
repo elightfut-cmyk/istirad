@@ -17,6 +17,8 @@ interface NotificationState {
   unreadCount: number;
   fetchNotifications: (userId: string) => Promise<void>;
   subscribeToNotifications: (userId: string) => () => void;
+  pauseRealtime: () => void;
+  resumeRealtime: () => void;
   markAsRead: () => Promise<void>;
   markSingleAsRead: (id: string) => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
@@ -76,7 +78,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   subscribeToNotifications: (userId: string) => {
     if (!userId) return () => {};
 
-    // If already subscribed to this same user, reuse channel
+    // If already subscribed to this same user with active channel, reuse
     if (activeChannel && activeUserId === userId) {
       return () => {};
     }
@@ -128,9 +130,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                   url: '/notifications'
                 });
               });
-              if (typeof window !== 'undefined' && window.NativeBridge?.markAlerted) {
-                window.NativeBridge.markAlerted(newNotif.id);
-              }
             } catch {}
 
             // Trigger global refresh for any open pages (orders, bids, requests)
@@ -169,12 +168,36 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         } catch {}
         if (activeChannel === channel) {
           activeChannel = null;
-          activeUserId = null;
         }
       };
     } catch (err) {
       console.warn('Realtime subscription error:', err);
       return () => {};
+    }
+  },
+
+  /**
+   * Zero-Background Polling: Immediately disconnects Supabase Realtime channel when app enters background.
+   * Eliminates quota exhaustion and stops unnecessary background network activity.
+   */
+  pauseRealtime: () => {
+    if (activeChannel) {
+      try {
+        supabase.removeChannel(activeChannel);
+      } catch {}
+      activeChannel = null;
+      console.log('🔌 Supabase Realtime paused (App in Background / Zero-Background Polling)');
+    }
+  },
+
+  /**
+   * Resumes Supabase Realtime subscription only when app returns to foreground.
+   */
+  resumeRealtime: () => {
+    if (activeUserId) {
+      console.log('⚡ Supabase Realtime resumed (App in Foreground) for user:', activeUserId);
+      get().fetchNotifications(activeUserId);
+      get().subscribeToNotifications(activeUserId);
     }
   },
 

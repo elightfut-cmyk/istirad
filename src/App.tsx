@@ -41,12 +41,25 @@ import FacebookPixel from './components/FacebookPixel';
 import { initOneSignal } from './lib/onesignal';
 import AppSplashScreen from './components/AppSplashScreen';
 import ForceUpdateModal from './components/ForceUpdateModal';
+import { useNotificationStore } from './store/useNotificationStore';
 
 function App() {
-  const { checkSession, isLoading } = useAuthStore();
+  const { user, checkSession, isLoading } = useAuthStore();
+  const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
   const [showSplash, setShowSplash] = useState(true);
+
+  // Global notification listener: Ensure every notification entering the bell alerts the user immediately across any page
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications(user.id);
+      const unsub = subscribeToNotifications(user.id);
+      return () => {
+        unsub();
+      };
+    }
+  }, [user?.id, fetchNotifications, subscribeToNotifications]);
 
   useEffect(() => {
     // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)

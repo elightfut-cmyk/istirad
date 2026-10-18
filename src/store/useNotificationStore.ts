@@ -18,10 +18,35 @@ interface NotificationState {
   fetchNotifications: (userId: string) => Promise<void>;
   subscribeToNotifications: (userId: string) => () => void;
   markAsRead: () => Promise<void>;
+  markSingleAsRead: (id: string) => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
 }
 
 let activeChannel: any = null;
+let activeUserId: string | null = null;
+
+export const playNotificationChime = () => {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    const now = ctx.currentTime;
+    // Harmonious double chime (D5 -> A5)
+    osc.frequency.setValueAtTime(587.33, now);
+    osc.frequency.setValueAtTime(880, now + 0.12);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.65);
+  } catch (e) {
+    // Audio context may require initial user gesture
+  }
+};
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
@@ -34,7 +59,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         .select('id, user_id, title, message, type, is_read, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(30);
         
       if (error) {
           console.error('Notifications fetch error:', error);
@@ -51,13 +76,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   subscribeToNotifications: (userId: string) => {
     if (!userId) return () => {};
 
-    // Remove existing subscription if any
+    // If already subscribed to this same user, reuse channel
+    if (activeChannel && activeUserId === userId) {
+      return () => {};
+    }
+
+    // Remove old subscription if switching users
     if (activeChannel) {
       try {
         supabase.removeChannel(activeChannel);
       } catch {}
       activeChannel = null;
     }
+
+    activeUserId = userId;
 
     try {
       const channel = supabase
@@ -83,6 +115,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                 unreadCount: state.unreadCount + (newNotif.is_read ? 0 : 1)
               };
             });
+
+            // Play auditory chime
+            playNotificationChime();
 
             // Trigger native/browser heads-up notification and vibration
             try {
@@ -132,6 +167,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         try {
           supabase.removeChannel(channel);
         } catch {}
+        if (activeChannel === channel) {
+          activeChannel = null;
+          activeUserId = null;
+        }
       };
     } catch (err) {
       console.warn('Realtime subscription error:', err);
@@ -163,6 +202,27 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
+  markSingleAsRead: async (id: string) => {
+    try {
+      const { notifications, unreadCount } = get();
+      const target = notifications.find(n => n.id === id);
+      if (!target || target.is_read) return;
+
+      // Optimistic update
+      set({
+        notifications: notifications.map(n => n.id === id ? { ...n, is_read: true } : n),
+        unreadCount: Math.max(0, unreadCount - 1)
+      });
+
+      await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+    } catch (error) {
+      console.error('Error marking single notification as read:', error);
+    }
+  },
+
   deleteNotification: async (id: string) => {
     try {
       const { notifications, unreadCount } = get();
@@ -171,7 +231,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       // Optimistic update
       set({ 
         notifications: notifications.filter(n => n.id !== id),
-        unreadCount: notifToDelete && !notifToDelete.is_read ? unreadCount - 1 : unreadCount
+        unreadCount: notifToDelete && !notifToDelete.is_read ? Math.max(0, unreadCount - 1) : unreadCount
       });
 
       const { error } = await supabase.from('notifications').delete().eq('id', id);

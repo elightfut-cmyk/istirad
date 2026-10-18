@@ -25,8 +25,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, title, sidebarLinks }: DashboardLayoutProps) {
   const { user, logout } = useAuthStore();
   const { currency, toggleCurrency, adTitle, adSubtitle, adImageUrl, adLinkUrl } = useSettingsStore();
-  const { notifications, unreadCount, fetchNotifications, subscribeToNotifications, markAsRead, deleteNotification } = useNotificationStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { notifications, unreadCount, fetchNotifications, subscribeToNotifications, markAsRead, markSingleAsRead, deleteNotification } = useNotificationStore();
   const { t } = useLanguageStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -260,16 +260,44 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
 
                   {/* Tab 1: Instant Push Notifications List */}
                   {activeNotifTab === 'instant' && (
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-84 overflow-y-auto">
+                      {notifications.length > 0 && (
+                        <div className="px-4 py-2 bg-gray-50/70 dark:bg-gray-750/70 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between text-xs">
+                          <span className="text-gray-500 dark:text-gray-400 text-[11px]">
+                            كل تنبيه هنا يصدر صوتاً وتنبيهاً فورياً
+                          </span>
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={() => markAsRead()}
+                              className="text-[#4f46e5] dark:text-indigo-400 hover:underline font-bold text-[11px]"
+                            >
+                              تحديد الكل كمقروء
+                            </button>
+                          )}
+                        </div>
+                      )}
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                           {t('nav.no_notifications')}
                         </div>
                       ) : (
                         notifications.map(notif => (
-                          <div key={notif.id} className={`p-4 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative group ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-indigo-900/20'}`}>
+                          <div 
+                            key={notif.id} 
+                            onClick={() => {
+                              if (!notif.is_read) {
+                                markSingleAsRead(notif.id);
+                              }
+                            }}
+                            className={`p-4 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative group cursor-pointer ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-indigo-900/20'}`}
+                          >
                             <div className="pr-6">
-                              <h4 className="text-sm font-bold text-gray-800 dark:text-white mb-1">{notif.title}</h4>
+                              <h4 className="text-sm font-bold text-gray-800 dark:text-white mb-1 flex items-center gap-1.5">
+                                <span>{notif.title}</span>
+                                {!notif.is_read && (
+                                  <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                                )}
+                              </h4>
                               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{notif.message}</p>
                               <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('en-GB')}</span>
                             </div>

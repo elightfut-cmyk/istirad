@@ -189,6 +189,17 @@ public class MainActivity extends BridgeActivity {
                     .setVibrate(new long[]{0, 300, 200, 300, 200, 500})
                     .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                // Wake screen briefly so user notices immediately even if screen is locked/off
+                try {
+                    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                    if (pm != null) {
+                        PowerManager.WakeLock screenLock = pm.newWakeLock(
+                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                            "jiibha:main_show_alert_wakelock"
+                        );
+                        screenLock.acquire(4000L);
+                    }
+                } catch (Exception ignored) {}
 
                 int notificationId = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
                 notificationManager.notify(notificationId, builder.build());

@@ -11,8 +11,7 @@ import {
   ShieldAlert, 
   X,
   Sliders,
-  Info,
-  Key
+  Info
 } from 'lucide-react';
 import { 
   isNativePlatform,
@@ -47,21 +46,6 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
   const [sendingTest, setSendingTest] = useState(false);
   const [activatingOptIn, setActivatingOptIn] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [customKey, setCustomKey] = useState(() => {
-    return (typeof window !== 'undefined' ? localStorage.getItem('onesignal_custom_rest_key') : '') || '';
-  });
-
-  const handleSaveCustomKey = async () => {
-    if (!customKey.trim()) {
-      localStorage.removeItem('onesignal_custom_rest_key');
-      toast.success('تمت إزالة المفتاح المخصص واستعادة الافتراضي');
-    } else {
-      localStorage.setItem('onesignal_custom_rest_key', customKey.trim());
-      toast.success('تم حفظ المفتاح الجديد بنجاح!');
-    }
-    await handleSendTestPush();
-  };
 
   const handleForceOptIn = async () => {
     setActivatingOptIn(true);
@@ -161,9 +145,6 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
         message: errorText
       });
       toast.error(errorText);
-      if (errorText.includes('401') || errorText.includes('غير مصرح') || errorText.includes('Unauthorized')) {
-        setShowKeyInput(true);
-      }
       runDiagnostics();
     } finally {
       setSendingTest(false);
@@ -322,57 +303,6 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
               </div>
             )}
 
-            {/* Direct REST API Key Quick Recovery Box */}
-            <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-800/50 text-xs">
-              <div className="flex items-center justify-between font-bold text-indigo-950 dark:text-indigo-200 mb-1">
-                <span className="flex items-center gap-1.5">
-                  <Key size={15} className="text-indigo-600 dark:text-indigo-400" />
-                  <span>مفتاح OneSignal REST API:</span>
-                </span>
-                <button
-                  onClick={() => setShowKeyInput(!showKeyInput)}
-                  className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
-                >
-                  {showKeyInput ? 'إخفاء ▲' : 'إدخال مفتاح جديد ▼'}
-                </button>
-              </div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
-                إذا قمت بتجديد أو استخراج مفتاح REST API جديد من لوحة OneSignal، الصقه هنا لتجربته فوراً دون إعادة تثبيت التطبيق.
-              </p>
-              {showKeyInput && (
-                <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-indigo-100 dark:border-indigo-900/40">
-                  <input
-                    type="text"
-                    dir="ltr"
-                    placeholder="os_v2_app_..."
-                    value={customKey}
-                    onChange={(e) => setCustomKey(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-gray-900 border-indigo-200 dark:border-indigo-800 text-xs font-mono text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveCustomKey}
-                      disabled={sendingTest}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition active:scale-98 shadow-sm"
-                    >
-                      حفظ المفتاح وتجربة الإشعار فوراً
-                    </button>
-                    {customKey && (
-                      <button
-                        onClick={() => {
-                          setCustomKey('');
-                          localStorage.removeItem('onesignal_custom_rest_key');
-                          toast.success('تمت استعادة المفتاح الافتراضي');
-                        }}
-                        className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition"
-                      >
-                        مسح
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Multi-Brand Smart Background & Battery Optimization Guidance */}
             {(() => {

@@ -104,8 +104,8 @@ export const sendPushNotificationDetailed = async ({
         message,
         data,
         sendToAll,
-        android_channel_id: android_channel_id || undefined,
-        existing_android_channel_id: 'jibha_channel'
+        android_channel_id: android_channel_id || 'default_notification_channel',
+        existing_android_channel_id: 'default_notification_channel'
       }
     });
 

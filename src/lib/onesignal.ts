@@ -1,9 +1,20 @@
 import { Capacitor } from '@capacitor/core';
 import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
-import toast from 'react-hot-toast';
-import { sendPushNotificationDetailed, PushSendResult } from '../services/pushNotificationService';
+import { supabase } from './supabase';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
+export const getOneSignalRestApiKey = (): string => {
+  return (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || '';
+};
+
+declare global {
+  interface Window {
+    OneSignalDeferred?: any[];
+    OneSignal?: any;
+    NativeBridge?: any;
+    NativeDeviceBridge?: any;
+  }
+}
 
 /**
  * Checks if current environment is a native mobile app (Capacitor native / Android APK).
@@ -11,26 +22,12 @@ export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 export const isNativePlatform = (): boolean => {
   if (typeof window === 'undefined') return false;
   try {
-    // 1. Injected Javascript Interface from MainActivity.java
-    if ((window as any).NativeDeviceBridge !== undefined) return true;
-
-    // 2. Window Capacitor object
+    if (window.NativeBridge !== undefined || window.NativeDeviceBridge !== undefined) return true;
     if ((window as any).Capacitor?.isNativePlatform?.()) return true;
     const plat = (window as any).Capacitor?.getPlatform?.();
     if (plat === 'android' || plat === 'ios') return true;
-
-    // 3. Imported Capacitor module
-    if (typeof Capacitor !== 'undefined') {
-      if (typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()) return true;
-      if (typeof Capacitor.getPlatform === 'function' && Capacitor.getPlatform() !== 'web') return true;
-      if ((Capacitor as any).isNative) return true;
-    }
-
-    // 4. Capacitor URL scheme on Android
+    if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) return true;
     if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') return true;
-    if ((window.location.hostname === 'localhost' || window.location.origin.includes('localhost')) && /android/i.test(navigator.userAgent || '')) return true;
-
-    // 5. Android WebView User Agent check
     const ua = (navigator.userAgent || '').toLowerCase();
     if (ua.includes('wv') && ua.includes('android')) return true;
     if (ua.includes('capacitor')) return true;
@@ -50,799 +47,431 @@ export const isXiaomiDevice = (): boolean => {
 };
 
 /**
- * Opens native Android App Settings using the Javascript interface exposed by MainActivity.
+ * Helper to get active NativeBridge object.
  */
+const getNativeBridge = () => {
+  if (typeof window === 'undefined') return null;
+  return window.NativeBridge || window.NativeDeviceBridge || null;
+};
+
 export const openNativeAppSettings = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openAppSettings) {
-      (window as any).NativeDeviceBridge.openAppSettings();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke NativeDeviceBridge.openAppSettings:', err);
+  const bridge = getNativeBridge();
+  if (bridge?.openAppSettings) {
+    bridge.openAppSettings();
+    return true;
   }
   return false;
 };
 
-/**
- * Opens native Android Notification Settings using the Javascript interface exposed by MainActivity.
- */
 export const openNativeNotificationSettings = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openNotificationSettings) {
-      (window as any).NativeDeviceBridge.openNotificationSettings();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke NativeDeviceBridge.openNotificationSettings:', err);
+  const bridge = getNativeBridge();
+  if (bridge?.openNotificationSettings) {
+    bridge.openNotificationSettings();
+    return true;
   }
   return false;
 };
 
-/**
- * Opens Xiaomi/Redmi Autostart settings directly.
- */
 export const openXiaomiAutostart = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openAutostartSettings) {
-      (window as any).NativeDeviceBridge.openAutostartSettings();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openAutostartSettings:', err);
+  const bridge = getNativeBridge();
+  if (bridge?.openAutoStartSettings) {
+    bridge.openAutoStartSettings();
+    return true;
   }
   return openNativeAppSettings();
 };
 
-/**
- * Opens Xiaomi/Redmi Battery Saver settings directly.
- */
 export const openXiaomiBatterySaver = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openBatterySettings) {
-      (window as any).NativeDeviceBridge.openBatterySettings();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openBatterySettings:', err);
+  const bridge = getNativeBridge();
+  if (bridge?.openBatterySaverSettings) {
+    bridge.openBatterySaverSettings();
+    return true;
   }
   return openNativeAppSettings();
 };
 
-/**
- * Opens Xiaomi/Redmi Permissions Editor (Show on Lockscreen, Pop-up windows).
- */
-export const openXiaomiPermissions = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openXiaomiPermissions) {
-      (window as any).NativeDeviceBridge.openXiaomiPermissions();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openXiaomiPermissions:', err);
+export const requestIgnoreBatteryOptimizations = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.requestIgnoreBatteryOptimizations) {
+    bridge.requestIgnoreBatteryOptimizations();
+    return true;
   }
-  return openNativeAppSettings();
-};
-
-/**
- * Opens Xiaomi/Redmi Background Data Usage & Firewall settings.
- */
-export const openXiaomiDataUsage = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openXiaomiDataUsage) {
-      (window as any).NativeDeviceBridge.openXiaomiDataUsage();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openXiaomiDataUsage:', err);
-  }
-  return openNativeAppSettings();
-};
-
-/**
- * Opens system-wide battery optimization settings (Samsung, Pixel, Motorola, etc.).
- */
-export const openUniversalBatterySettings = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openUniversalBatterySettings) {
-      (window as any).NativeDeviceBridge.openUniversalBatterySettings();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openUniversalBatterySettings:', err);
-  }
-  return openNativeAppSettings();
-};
-
-/**
- * Opens Huawei / Honor app launch management settings.
- */
-export const openHuaweiLaunchSettings = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openHuaweiAppLaunch) {
-      (window as any).NativeDeviceBridge.openHuaweiAppLaunch();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openHuaweiAppLaunch:', err);
-  }
-  return openNativeAppSettings();
-};
-
-/**
- * Opens Oppo / Realme / OnePlus auto-launch settings.
- */
-export const openOppoLaunchSettings = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openOppoAutoStart) {
-      (window as any).NativeDeviceBridge.openOppoAutoStart();
-      return true;
-    }
-  } catch (err) {
-    console.warn('Could not invoke openOppoAutoStart:', err);
-  }
-  return openNativeAppSettings();
-};
-
-export type DeviceBrand = 'samsung' | 'xiaomi' | 'huawei' | 'oppo' | 'vivo' | 'general';
-
-export interface DeviceBrandDetails {
-  brand: DeviceBrand;
-  manufacturer: string;
-  model: string;
-  androidVersion: number;
-}
-
-export const getDeviceBrandDetails = (): DeviceBrandDetails => {
-  let manufacturer = '';
-  let model = '';
-  let androidVersion = 0;
-
-  if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge) {
-    const bridge = (window as any).NativeDeviceBridge;
-    try {
-      if (bridge.getDeviceManufacturer) manufacturer = String(bridge.getDeviceManufacturer() || '').toLowerCase();
-      if (bridge.getDeviceModel) model = String(bridge.getDeviceModel() || '');
-      if (bridge.getAndroidVersion) androidVersion = Number(bridge.getAndroidVersion() || 0);
-    } catch {}
-  }
-
-  if (!manufacturer && typeof navigator !== 'undefined') {
-    const ua = (navigator.userAgent || '').toLowerCase();
-    if (ua.includes('samsung') || ua.includes('sm-')) manufacturer = 'samsung';
-    else if (ua.includes('xiaomi') || ua.includes('redmi') || ua.includes('poco') || ua.includes('miui')) manufacturer = 'xiaomi';
-    else if (ua.includes('huawei') || ua.includes('honor')) manufacturer = 'huawei';
-    else if (ua.includes('oppo') || ua.includes('realme') || ua.includes('oneplus')) manufacturer = 'oppo';
-    else if (ua.includes('vivo') || ua.includes('iqoo')) manufacturer = 'vivo';
-  }
-
-  let brand: DeviceBrand = 'general';
-  if (manufacturer.includes('samsung')) brand = 'samsung';
-  else if (manufacturer.includes('xiaomi') || manufacturer.includes('redmi') || manufacturer.includes('poco')) brand = 'xiaomi';
-  else if (manufacturer.includes('huawei') || manufacturer.includes('honor')) brand = 'huawei';
-  else if (manufacturer.includes('oppo') || manufacturer.includes('realme') || manufacturer.includes('oneplus')) brand = 'oppo';
-  else if (manufacturer.includes('vivo') || manufacturer.includes('iqoo')) brand = 'vivo';
-
-  return { brand, manufacturer, model, androidVersion };
-};
-
-/**
- * Directly asks native Firebase Messaging to sync FCM token with Google Play Services.
- */
-export const syncNativeFcmToken = (): void => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.syncFcmTokenDirect) {
-      (window as any).NativeDeviceBridge.syncFcmTokenDirect();
-    }
-  } catch {}
-};
-
-/**
- * Native bridge helpers directly querying Android Java OneSignal instance via NativeDeviceBridge
- */
-export const getNativePushSubscriptionId = (): string | null => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getPushSubscriptionId) {
-      const id = (window as any).NativeDeviceBridge.getPushSubscriptionId();
-      if (id && String(id).trim() !== '') return String(id).trim();
-    }
-  } catch {}
-  return null;
-};
-
-export const getNativePushSubscriptionToken = (): string | null => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getPushSubscriptionToken) {
-      const token = (window as any).NativeDeviceBridge.getPushSubscriptionToken();
-      if (token && String(token).trim() !== '') return String(token).trim();
-    }
-  } catch {}
-  return null;
-};
-
-export const getNativePushOptedIn = (): boolean => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getPushSubscriptionOptedIn) {
-      return Boolean((window as any).NativeDeviceBridge.getPushSubscriptionOptedIn());
-    }
-  } catch {}
   return false;
 };
 
-export const forceNativeOptIn = (): void => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.forceOptInPush) {
-      (window as any).NativeDeviceBridge.forceOptInPush();
-    }
-  } catch {}
-};
-
-export const requestNativePushPermission = (): void => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.requestPushPermission) {
-      (window as any).NativeDeviceBridge.requestPushPermission();
-    }
-  } catch {}
-};
-
-export const getNativeOnesignalId = (): string | null => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getOnesignalId) {
-      const id = (window as any).NativeDeviceBridge.getOnesignalId();
-      if (id && String(id).trim() !== '') return String(id).trim();
-    }
-  } catch {}
-  return null;
-};
-
-export const getNativeExternalId = (): string | null => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.getExternalId) {
-      const id = (window as any).NativeDeviceBridge.getExternalId();
-      if (id && String(id).trim() !== '') return String(id).trim();
-    }
-  } catch {}
-  return null;
-};
-
-export const resetAndReOptInNative = (userId: string | number): void => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.resetAndReOptIn) {
-      (window as any).NativeDeviceBridge.resetAndReOptIn(String(userId));
-    }
-  } catch {}
-};
-
-export const loginNativeOneSignal = (userId: string | number): void => {
-  try {
-    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.loginOneSignal) {
-      (window as any).NativeDeviceBridge.loginOneSignal(String(userId));
-    }
-  } catch {}
-};
-
-let isInitialized = false;
-let pendingUserId: string | null = null;
-
-export interface NotificationDiagnosticData {
-  isNative: boolean;
-  isInitialized: boolean;
-  hasPermission: boolean;
-  canRequestPermission: boolean;
-  subscriptionId: string | null;
-  pushToken: string | null;
-  optedIn: boolean;
-  isRegisteredWithFCM: boolean;
-  isFullyConnected: boolean;
-  externalId: string | null;
-  onesignalId: string | null;
-  isXiaomi: boolean;
-  brandDetails?: DeviceBrandDetails;
-  error?: string;
-}
-
 /**
- * Initializes OneSignal push notifications if running natively on Android or iOS.
+ * 1. Initialize OneSignal (Both Native Android Capacitor & Web/PWA)
  */
 export const initOneSignal = async (): Promise<void> => {
-  if (!isNativePlatform()) {
-    console.log('ℹ️ Running in web browser - native push initialization skipped.');
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
-  // Pre-seed native optIn
-  forceNativeOptIn();
-
-  if (isInitialized) {
-    return;
-  }
-
-  try {
-    console.log('🚀 Initializing OneSignal Capacitor Plugin for App ID:', ONESIGNAL_APP_ID);
-    
-    // Enable debug logging for troubleshooting
+  // A. Native Mobile Initialization
+  if (isNativePlatform()) {
     try {
       OneSignal.Debug.setLogLevel(LogLevel.Warn);
-    } catch {}
-
-    // 1. Initialize OneSignal native SDK
-    await OneSignal.initialize(ONESIGNAL_APP_ID);
-    isInitialized = true;
-    console.log('✅ OneSignal initialized successfully.');
-
-    // 2. Unconditionally opt in to push subscription
-    try {
-      forceNativeOptIn();
-      await OneSignal.User.pushSubscription.optIn();
-    } catch (optErr) {
-      console.warn('Initial pushSubscription optIn warning:', optErr);
-    }
-
-    // 3. Check and request permission if not already granted
-    try {
-      const hasPerm = await OneSignal.Notifications.hasPermission();
-      if (!hasPerm) {
-        console.log('🔔 Requesting OneSignal notification permission from user...');
-        const granted = await OneSignal.Notifications.requestPermission(true);
-        console.log('🔔 OneSignal permission request result:', granted);
-        if (granted) {
-          forceNativeOptIn();
-          await OneSignal.User.pushSubscription.optIn();
-        }
-      }
-    } catch (permErr) {
-      console.warn('OneSignal permission check/request warning:', permErr);
-    }
-
-    // 4. Register Permission Change Listener
-    try {
-      OneSignal.Notifications.addEventListener('permissionChange', async (permission) => {
-        console.log('🔔 OneSignal permission status changed:', permission);
-        if (permission) {
-          try {
-            forceNativeOptIn();
-            await OneSignal.User.pushSubscription.optIn();
-            const subId = (await OneSignal.User.pushSubscription.getIdAsync()) || getNativePushSubscriptionId();
-            if (subId) {
-              localStorage.setItem('onesignal_subscription_id', subId);
-            }
-            const storedUserId = localStorage.getItem('onesignal_external_id');
-            if (storedUserId) {
-              loginNativeOneSignal(storedUserId);
-              await OneSignal.login(storedUserId);
-              await OneSignal.User.addAlias('external_id', storedUserId);
-            }
-          } catch (pErr) {
-            console.warn('Error syncing after permission change:', pErr);
-          }
-        }
-      });
-    } catch (listenerErr) {
-      console.warn('Could not register permissionChange listener:', listenerErr);
-    }
-
-    // 5. Register Subscription State Change Listener for auto-sync and persistent caching
-    try {
-      OneSignal.User.pushSubscription.addEventListener('change', async (event: any) => {
-        console.log('🔔 OneSignal push subscription state changed:', event);
-        const currId = event?.current?.id || getNativePushSubscriptionId();
-        if (currId && String(currId).trim() !== '') {
-          localStorage.setItem('onesignal_subscription_id', String(currId));
-          const storedUserId = localStorage.getItem('onesignal_external_id');
-          if (storedUserId) {
-            try {
-              loginNativeOneSignal(storedUserId);
-              await OneSignal.login(storedUserId);
-              await OneSignal.User.addAlias('external_id', storedUserId);
-              console.log('🔗 OneSignal user re-linked on subscription token generation:', storedUserId, currId);
-            } catch {}
-          }
-        }
-        if (event?.current?.optedIn === false) {
-          const perm = await OneSignal.Notifications.hasPermission().catch(() => false);
-          if (perm) {
-            console.log('🔄 Permission granted but optedIn is false, opting in automatically...');
-            forceNativeOptIn();
-            await OneSignal.User.pushSubscription.optIn().catch(() => {});
-          }
-        }
-      });
-    } catch (subErr) {
-      console.warn('Could not register pushSubscription change listener:', subErr);
-    }
-
-    // 6. Register Foreground Notification Listener
-    try {
-      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-        const notif = event.getNotification();
-        console.log('🔔 Push notification received in foreground:', notif);
-
-        // Force native system tray / notification banner to display
-        try {
-          notif?.display?.();
-        } catch (dispErr) {
-          console.warn('OneSignal notification.display error:', dispErr);
-        }
-
-        // Also display immediate in-app toast alert
-        try {
-          const title = notif?.title || 'إشعار جديد من جيبها';
-          const body = notif?.body || '';
-          toast(
-            `${title}${body ? `\n${body}` : ''}`,
-            {
-              icon: '🔔',
-              duration: 6000,
-              position: 'top-center',
-              style: {
-                background: '#1e293b',
-                color: '#fff',
-                fontWeight: 'bold',
-                padding: '12px 18px',
-                borderRadius: '16px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)'
-              }
-            }
-          );
-        } catch {}
-      });
-
-      OneSignal.Notifications.addEventListener('click', (event) => {
-        console.log('👉 Push notification clicked:', event);
-      });
-    } catch (listenerErr) {
-      console.warn('OneSignal event listener warning:', listenerErr);
-    }
-
-    // 7. If user ID was pending before initialization, bind now
-    if (pendingUserId) {
-      const idToLogin = pendingUserId;
-      pendingUserId = null;
-      await loginOneSignalUser(idToLogin);
-    }
-  } catch (error: any) {
-    console.error('❌ Failed to initialize OneSignal Capacitor Plugin:', error);
-  }
-};
-
-/**
- * Associates user ID with OneSignal External ID when user logs in or starts session.
- */
-export const loginOneSignalUser = async (userId: string | number): Promise<void> => {
-  if (!userId) return;
-
-  const idStr = String(userId);
-  localStorage.setItem('onesignal_external_id', idStr);
-
-  loginNativeOneSignal(idStr);
-  forceNativeOptIn();
-
-  if (!isNativePlatform()) {
-    return;
-  }
-
-  if (!isInitialized) {
-    pendingUserId = idStr;
-    await initOneSignal();
-    return;
-  }
-
-  try {
-    console.log('🔐 Linking user to OneSignal with External ID:', idStr);
-    await OneSignal.login(idStr);
-    try {
-      await OneSignal.User.addAlias('external_id', idStr);
-    } catch {}
-    await OneSignal.User.pushSubscription.optIn();
-
-    const subId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
-    if (subId) {
-      localStorage.setItem('onesignal_subscription_id', subId);
-    }
-    console.log('✅ OneSignal user successfully logged in with External ID:', idStr, 'subId:', subId);
-  } catch (error) {
-    console.error('❌ Error logging in user to OneSignal:', error);
-    pendingUserId = idStr;
-  }
-};
-
-/**
- * Clears OneSignal user state on logout.
- */
-export const logoutOneSignalUser = async (): Promise<void> => {
-  localStorage.removeItem('onesignal_external_id');
-  if (!isNativePlatform() || !isInitialized) return;
-
-  try {
-    await OneSignal.logout();
-    console.log('👋 OneSignal user logged out.');
-  } catch (error) {
-    console.error('Error logging out from OneSignal:', error);
-  }
-};
-
-/**
- * Comprehensive diagnostic function to test notification capability and status.
- */
-export const getNotificationDiagnostics = async (): Promise<NotificationDiagnosticData> => {
-  const isNative = isNativePlatform();
-  const isXiaomi = isXiaomiDevice();
-
-  if (!isNative) {
-    return {
-      isNative: false,
-      isInitialized: false,
-      hasPermission: false,
-      canRequestPermission: false,
-      subscriptionId: null,
-      pushToken: null,
-      optedIn: false,
-      isRegisteredWithFCM: false,
-      isFullyConnected: false,
-      externalId: null,
-      onesignalId: null,
-      isXiaomi,
-      error: 'التطبيق يعمل داخل المتصفح (Web)، إشعارات الهاتف التلقائية تعمل داخل تطبيق الأندرويد المثبت.'
-    };
-  }
-
-  try {
-    if (!isInitialized) {
-      await initOneSignal();
-    }
-
-    const nativeSubId = getNativePushSubscriptionId();
-    const nativeToken = getNativePushSubscriptionToken();
-    const nativeOptedIn = getNativePushOptedIn();
-
-    let [
-      hasPermission,
-      canRequest,
-      subId,
-      pushToken,
-      optedIn,
-      externalId,
-      onesignalId
-    ] = await Promise.all([
-      OneSignal.Notifications.hasPermission().catch(() => false),
-      OneSignal.Notifications.canRequestPermission().catch(() => false),
-      OneSignal.User.pushSubscription.getIdAsync().catch(() => null),
-      OneSignal.User.pushSubscription.getTokenAsync().catch(() => null),
-      OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false),
-      OneSignal.User.getExternalId().catch(() => null),
-      OneSignal.User.getOnesignalId().catch(() => null),
-    ]);
-
-    subId = subId || nativeSubId || localStorage.getItem('onesignal_subscription_id') || null;
-    pushToken = pushToken || nativeToken || null;
-    optedIn = optedIn || nativeOptedIn;
-    externalId = externalId || getNativeExternalId() || localStorage.getItem('onesignal_external_id') || null;
-    onesignalId = onesignalId || getNativeOnesignalId() || null;
-
-    if (subId) {
-      localStorage.setItem('onesignal_subscription_id', subId);
-    }
-
-    // Auto-healing: If permission is granted by Android, but OneSignal subscription is not yet fully registered, trigger optIn & FCM sync
-    if (hasPermission && (!optedIn || !subId || !pushToken)) {
+      await OneSignal.initialize(ONESIGNAL_APP_ID);
       try {
-        console.log('🔄 Auto-healing: hasPermission is true, ensuring optIn and registration...');
-        syncNativeFcmToken();
-        requestNativePushPermission();
-        forceNativeOptIn();
-        if (externalId) {
-          resetAndReOptInNative(externalId);
-          loginNativeOneSignal(externalId);
-        }
-        await OneSignal.User.pushSubscription.optIn().catch(() => {});
-        if (externalId) {
-          await OneSignal.login(externalId).catch(() => {});
-        }
-        await new Promise(r => setTimeout(r, 400));
-        optedIn = (await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false)) || getNativePushOptedIn();
-        const freshSubId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
-        if (freshSubId) {
-          subId = freshSubId;
-          localStorage.setItem('onesignal_subscription_id', freshSubId);
-        }
-        pushToken = (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null)) || getNativePushSubscriptionToken() || pushToken;
-      } catch (healErr) {
-        console.warn('Auto-healing optIn error:', healErr);
-      }
+        await OneSignal.User.pushSubscription.optIn();
+      } catch (optErr) {}
+      console.log('✅ OneSignal Native initialized for App ID:', ONESIGNAL_APP_ID);
+      return;
+    } catch (nativeErr) {
+      console.warn('Native OneSignal plugin init warning:', nativeErr);
     }
-
-    const isRegisteredWithFCM = Boolean(pushToken && pushToken.trim() !== '');
-    // Crucial: Only truly connected if permission is granted AND FCM token is registered with Google Play AND subscribed
-    const isFullyConnected = Boolean(hasPermission && isRegisteredWithFCM && ((subId && subId.trim() !== '') || (externalId && optedIn)));
-
-    return {
-      isNative: true,
-      isInitialized,
-      hasPermission,
-      canRequestPermission: canRequest,
-      subscriptionId: subId,
-      pushToken,
-      optedIn,
-      isRegisteredWithFCM,
-      isFullyConnected,
-      externalId,
-      onesignalId,
-      isXiaomi,
-      brandDetails: getDeviceBrandDetails()
-    };
-  } catch (err: any) {
-    const nativeSubId = getNativePushSubscriptionId();
-    const nativeToken = getNativePushSubscriptionToken();
-    const subId = nativeSubId || localStorage.getItem('onesignal_subscription_id') || null;
-    const hasFcm = Boolean(nativeToken && nativeToken.trim() !== '');
-    return {
-      isNative: true,
-      isInitialized: false,
-      hasPermission: false,
-      canRequestPermission: false,
-      subscriptionId: subId,
-      pushToken: nativeToken,
-      optedIn: false,
-      isRegisteredWithFCM: hasFcm,
-      isFullyConnected: Boolean(subId && hasFcm),
-      externalId: localStorage.getItem('onesignal_external_id'),
-      onesignalId: null,
-      isXiaomi,
-      brandDetails: getDeviceBrandDetails(),
-      error: err?.message || String(err)
-    };
   }
+
+  // B. Web / PWA Initialization
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+    try {
+      await OneSignalInstance.init({
+        appId: ONESIGNAL_APP_ID,
+        serviceWorkerPath: '/sw.js',
+        notifyButton: { enable: false },
+        allowLocalhostAsSecureOrigin: true,
+      });
+      console.log('✅ OneSignal Web Push initialized for App ID:', ONESIGNAL_APP_ID);
+    } catch (err) {
+      console.warn('OneSignal Web init warning:', err);
+    }
+  });
 };
 
 /**
- * Manually forces opt-in to push subscription and re-registers device.
+ * 2. Identity & Subscription Lifecycle:
+ * Login user using external_id (UUID), attach tags, and start native background service.
  */
-export const forcePushSubscriptionOptIn = async (userId?: string): Promise<boolean> => {
-  if (!isNativePlatform()) return false;
-  try {
-    const currentUserId = userId || localStorage.getItem('onesignal_external_id');
-    
-    // 1. Native bridge triggers
-    syncNativeFcmToken();
-    requestNativePushPermission();
-    forceNativeOptIn();
-    if (currentUserId) {
-      resetAndReOptInNative(currentUserId);
-      loginNativeOneSignal(currentUserId);
+export const loginOneSignal = async (userId: string | number, role?: string, userName?: string): Promise<void> => {
+  if (typeof window === 'undefined' || !userId) return;
+  const strId = String(userId);
+
+  // Store in localStorage for fast retrieval
+  localStorage.setItem('onesignal_external_id', strId);
+
+  // A. Native Bridge session & service startup
+  const bridge = getNativeBridge();
+  if (bridge) {
+    try {
+      bridge.loginOneSignal?.(strId);
+      bridge.setUserSession?.(
+        role || 'user',
+        strId,
+        userName || '',
+        import.meta.env.VITE_SUPABASE_URL || 'https://mfottmlpvjqonizrqegg.supabase.co',
+        import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+      );
+      bridge.startBackgroundService?.();
+      console.log('🔒 Jiibha Native Background Service started for user:', strId);
+    } catch (bridgeErr) {
+      console.warn('NativeBridge session setup warning:', bridgeErr);
     }
-    
-    await initOneSignal();
-
-    // 2. Plugin requests
-    const hasPerm = await OneSignal.Notifications.hasPermission().catch(() => false);
-    if (!hasPerm) {
-      await OneSignal.Notifications.requestPermission(true).catch(() => {});
-    }
-    await OneSignal.User.pushSubscription.optIn().catch(() => {});
-    
-    // 3. User association
-    if (currentUserId) {
-      await OneSignal.login(currentUserId).catch(() => {});
-      await OneSignal.User.addAlias('external_id', currentUserId).catch(() => {});
-    }
-
-    // 4. Poll for up to 10 iterations (5 seconds total) for both subId and FCM token
-    for (let i = 0; i < 10; i++) {
-      await new Promise(r => setTimeout(r, 500));
-      syncNativeFcmToken();
-      const subId = (await OneSignal.User.pushSubscription.getIdAsync().catch(() => null)) || getNativePushSubscriptionId();
-      const token = (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null)) || getNativePushSubscriptionToken();
-      if (subId && subId.trim() !== '') {
-        localStorage.setItem('onesignal_subscription_id', subId.trim());
-      }
-      if (subId && token && token.trim() !== '') {
-        return true;
-      }
-    }
-
-    const finalPerm = await OneSignal.Notifications.hasPermission().catch(() => false);
-    return Boolean(finalPerm);
-  } catch (error) {
-    console.error('Error forcing push subscription optIn:', error);
-    return false;
-  }
-};
-
-/**
- * Re-prompts the user for notification permissions and opts into push.
- */
-export const requestPushPermissionAgain = async (): Promise<boolean> => {
-  if (!isNativePlatform()) return false;
-  try {
-    requestNativePushPermission();
-    forceNativeOptIn();
-    await initOneSignal();
-    const granted = await OneSignal.Notifications.requestPermission(true);
-    await OneSignal.User.pushSubscription.optIn();
-    return granted;
-  } catch (error) {
-    console.error('Error requesting permission again:', error);
-    return false;
-  }
-};
-
-/**
- * Sends a live test push notification to the current user's device.
- * Prioritizes direct device subscription ID, with seamless fallback to user ID (external_id).
- */
-export const sendTestPushToSelf = async (userId: string, subscriptionId?: string | null): Promise<PushSendResult> => {
-  if (!userId) {
-    throw new Error('فشل الإرسال: يجب تسجيل الدخول بحسابك أولاً لإرسال إشعار تجريبي.');
   }
 
-  // 1. Ensure user is firmly associated with OneSignal
+  // B. Capacitor Plugin Login
   if (isNativePlatform()) {
     try {
-      requestNativePushPermission();
-      forceNativeOptIn();
-      resetAndReOptInNative(userId);
-      loginNativeOneSignal(userId);
-      await OneSignal.login(userId).catch(() => {});
-      await OneSignal.User.addAlias('external_id', userId).catch(() => {});
-      await OneSignal.User.pushSubscription.optIn().catch(() => {});
+      await OneSignal.login(strId);
+      if (role) await OneSignal.User.addTag('role', role);
+      if (userName) await OneSignal.User.addTag('name', userName);
+      await OneSignal.User.addTag('user_id', strId);
+      console.log('🔒 OneSignal Native logged in with external_id:', strId);
+      return;
     } catch (e) {
-      console.warn('Re-linking warning in sendTestPushToSelf:', e);
+      console.warn('OneSignal native login warning:', e);
     }
   }
 
-  // 2. Resolve subscription ID if available
-  let resolvedSubId = subscriptionId || getNativePushSubscriptionId() || null;
-  if (!resolvedSubId) {
-    resolvedSubId = localStorage.getItem('onesignal_subscription_id');
+  // C. Web Push Deferred Login
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+    try {
+      if (OneSignalInstance.login) {
+        await OneSignalInstance.login(strId);
+        console.log('🔒 OneSignal Web logged in with external_id:', strId);
+      }
+      if (OneSignalInstance.User) {
+        if (role) await OneSignalInstance.User.addTag('role', role);
+        if (userName) await OneSignalInstance.User.addTag('name', userName);
+        await OneSignalInstance.User.addTag('user_id', strId);
+      }
+    } catch (e) {
+      console.warn('OneSignal Web login error:', e);
+    }
+  });
+};
+
+export const loginOneSignalUser = (userId: string | number, role?: string, userName?: string) => {
+  return loginOneSignal(userId, role, userName);
+};
+
+/**
+ * 3. Identity Lifecycle:
+ * Logout user from OneSignal and stop native background service.
+ */
+export const logoutOneSignal = async (): Promise<void> => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('onesignal_external_id');
+  localStorage.removeItem('onesignal_subscription_id');
+
+  const bridge = getNativeBridge();
+  if (bridge) {
+    try {
+      bridge.logoutOneSignal?.();
+      bridge.stopBackgroundService?.();
+      console.log('🔓 Jiibha Native Background Service stopped');
+    } catch (e) {}
   }
 
-  if (isNativePlatform() && !resolvedSubId) {
+  if (isNativePlatform()) {
     try {
-      const liveSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
-      if (liveSubId && liveSubId.trim() !== '') {
-        resolvedSubId = liveSubId.trim();
-        localStorage.setItem('onesignal_subscription_id', resolvedSubId);
+      await OneSignal.logout();
+      console.log('🔓 OneSignal Native logged out');
+    } catch (e) {}
+  }
+
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+    try {
+      if (OneSignalInstance.logout) {
+        await OneSignalInstance.logout();
+        console.log('🔓 OneSignal Web logged out');
       }
+    } catch (e) {}
+  });
+};
+
+export const logoutOneSignalUser = () => {
+  return logoutOneSignal();
+};
+
+/**
+ * 4. Request notification permission (Android 13+ / Browser)
+ */
+export const requestNotificationPermission = async (): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  if (isNativePlatform()) {
+    try {
+      const granted = await OneSignal.Notifications.requestPermission(true);
+      if (granted) {
+        try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+      }
+      return Boolean(granted);
+    } catch (e) {
+      console.warn('Native permission request warning:', e);
+    }
+  }
+
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    try {
+      const perm = await Notification.requestPermission();
+      return perm === 'granted';
+    } catch (e) {}
+  }
+
+  return new Promise((resolve) => {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+      try {
+        if (OneSignalInstance.Notifications) {
+          const permission = await OneSignalInstance.Notifications.requestPermission();
+          resolve(Boolean(permission));
+        } else {
+          resolve(true);
+        }
+      } catch {
+        resolve(false);
+      }
+    });
+  });
+};
+
+/**
+ * 5. Show External / System Notification:
+ * - Native Android Status Bar via NativeBridge
+ * - ServiceWorker showNotification / Web Notification
+ * - Hardware Vibration
+ */
+export const showExternalNotification = async ({
+  title = 'جيبها - إشعار جديد 📦',
+  message = 'لديك تحديث جديد في التطبيق',
+  url = '/notifications',
+  icon = '/header-logo.png'
+}: {
+  title?: string;
+  message?: string;
+  url?: string;
+  icon?: string;
+}): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  const bridge = getNativeBridge();
+  if (bridge && typeof bridge.showNotification === 'function') {
+    try {
+      bridge.showNotification(title, message, url);
+      return true;
+    } catch (e) {
+      console.warn('NativeBridge.showNotification error:', e);
+    }
+  }
+
+  if ('vibrate' in navigator) {
+    try {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    } catch (e) {}
+  }
+
+  if ('serviceWorker' in navigator && 'Notification' in window) {
+    if (Notification.permission === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body: message,
+            icon,
+            badge: '/favicon.png',
+            tag: 'jiibha-alert-' + Date.now(),
+            renotify: true,
+            requireInteraction: true,
+            vibrate: [200, 100, 200, 100, 200],
+            data: { url }
+          } as any);
+          return true;
+        }
+      } catch (swErr) {}
+
+      try {
+        new Notification(title, { body: message, icon });
+        return true;
+      } catch (domErr) {}
+    }
+  }
+
+  return false;
+};
+
+/**
+ * 6. Send Push Notification Dispatcher (Server-to-Device):
+ * High-priority FCM v1 / OneSignal dispatch via Supabase Edge Function 'send-push'
+ * Fallback to direct OneSignal REST API if needed.
+ */
+export const sendPushNotification = async ({
+  title,
+  message,
+  targetUserId = null,
+  targetRole = null,
+  targetUrl = '/notifications',
+  data = {}
+}: {
+  title: string;
+  message: string;
+  targetUserId?: string | null;
+  targetRole?: string | null;
+  targetUrl?: string;
+  data?: Record<string, any>;
+}): Promise<any> => {
+  // 1. Try Supabase Edge Function first
+  try {
+    const { data: responseData, error } = await supabase.functions.invoke('send-push', {
+      body: {
+        title,
+        message,
+        userIds: targetUserId ? [String(targetUserId)] : [],
+        targetRole,
+        data: { ...data, url: targetUrl },
+        android_channel_id: 'default_notification_channel',
+        existing_android_channel_id: 'default_notification_channel'
+      }
+    });
+
+    if (!error && responseData && !responseData.error) {
+      return responseData;
+    }
+  } catch (err) {
+    console.warn('Edge function invoke skipped, attempting direct OneSignal fallback');
+  }
+
+  // 2. Direct OneSignal REST API Fallback
+  const restApiKey = getOneSignalRestApiKey();
+  if (restApiKey && ONESIGNAL_APP_ID) {
+    try {
+      const payload: Record<string, any> = {
+        app_id: ONESIGNAL_APP_ID,
+        headings: { ar: title, en: title },
+        contents: { ar: message, en: message },
+        url: targetUrl,
+        data: { ...data, url: targetUrl },
+        android_channel_id: 'default_notification_channel',
+        priority: 10,
+        android_accent_color: 'FF4F46E5',
+        android_visibility: 1
+      };
+
+      if (targetUserId) {
+        payload.include_aliases = { external_id: [String(targetUserId)] };
+        payload.target_channel = 'push';
+      } else if (targetRole) {
+        payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
+      } else {
+        payload.included_segments = ['Subscribed Users'];
+      }
+
+      const res = await fetch('https://api.onesignal.com/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Key ${restApiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const resData = await res.json();
+      return resData;
+    } catch (directErr) {
+      console.error('Direct OneSignal dispatch failed:', directErr);
+      return { error: directErr };
+    }
+  }
+
+  return { error: 'No notification dispatcher available' };
+};
+
+export const getPushSubscriptionId = async (): Promise<string | null> => {
+  const bridge = getNativeBridge();
+  if (bridge?.getPushSubscriptionId) {
+    const id = bridge.getPushSubscriptionId();
+    if (id) return id;
+  }
+  if (isNativePlatform()) {
+    try {
+      return await OneSignal.User.pushSubscription.getIdAsync();
     } catch {}
   }
-
-  // Pre-validate FCM token on native Android
-  if (isNativePlatform()) {
-    let currentToken = getNativePushSubscriptionToken() || (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null));
-    if (!currentToken) {
-      syncNativeFcmToken();
-      forceNativeOptIn();
-      await new Promise(r => setTimeout(r, 1000));
-      currentToken = getNativePushSubscriptionToken() || (await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null));
-    }
-    if (!currentToken) {
-      throw new Error('فشل الإرسال: الهاتف بانتظار استلام رمز Google FCM. اضغط على زر "تحديث الرمز" وتأكد من قبول إذن الإشعارات للهاتف ثم أعد المحاولة بعد ثوانٍ.');
-    }
-  }
-
-  // 3. Payload configuration
-  const pushData = {
-    title: '🔔 إشعار تجريبي ناجح من جيبها',
-    message: 'تهانينا! خدمة الإشعارات وتنبيهات الهاتف تعمل الآن بشكل سليم وسريع على جهازك.',
-    data: {
-      type: 'test_push',
-      sentAt: new Date().toISOString()
-    }
-  };
-
-  // 4. Dispatch with primary device subscription ID and automatic userId fallback
-  try {
-    return await sendPushNotificationDetailed({
-      subscriptionIds: resolvedSubId ? [resolvedSubId] : [],
-      userIds: [userId],
-      ...pushData
-    });
-  } catch (err: any) {
-    const errorStr = err?.message || String(err);
-    if (errorStr.includes('invalid_aliases') || errorStr.includes('لم يتم العثور على أي مشترك')) {
-      throw new Error('جهازك قيد الربط بخادم الإشعارات. يرجى التأكد من تشغيل إذن الإشعارات لهاتف شاومي/ريدمي والضغط على زر "تحديث الرمز" ثم إعادة المحاولة.');
-    }
-    throw err;
-  }
+  return localStorage.getItem('onesignal_subscription_id');
 };
 
+export const getFcmToken = (): string => {
+  const bridge = getNativeBridge();
+  if (bridge?.getFcmToken) {
+    return bridge.getFcmToken() || '';
+  }
+  return '';
+};
+
+export const getPushDiagnosticData = async () => {
+  const subId = await getPushSubscriptionId();
+  const fcmToken = getFcmToken();
+  const externalId = localStorage.getItem('onesignal_external_id');
+  const bridge = getNativeBridge();
+
+  return {
+    appId: ONESIGNAL_APP_ID,
+    isNative: isNativePlatform(),
+    isXiaomi: isXiaomiDevice(),
+    hasBridge: Boolean(bridge),
+    subscriptionId: subId || 'None',
+    fcmToken: fcmToken ? `${fcmToken.slice(0, 15)}...` : 'None',
+    externalId: externalId || 'Unauthenticated',
+    channelId: 'default_notification_channel (IMPORTANCE_HIGH)'
+  };
+};

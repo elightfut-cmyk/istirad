@@ -48,7 +48,7 @@ export default function Login() {
 
         if (profile) {
           setUser(profile as User);
-          loginOneSignalUser(profile.id);
+          loginOneSignalUser(profile.id, profile.role, profile.name);
           navigate(`/${profile.role}`);
         }
       }

@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => {
     set({ user, isAuthenticated: !!user, isLoading: false });
     if (user?.id) {
-      loginOneSignalUser(user.id);
+      loginOneSignalUser(user.id, user.role || undefined, user.name || undefined);
     }
   },
   checkSession: async () => {
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (profile) {
         set({ user: profile as User, isAuthenticated: true, isLoading: false });
-        loginOneSignalUser(profile.id);
+        loginOneSignalUser(profile.id, profile.role || undefined, profile.name || undefined);
       } else {
         set({ user: null, isAuthenticated: false, isLoading: false });
       }

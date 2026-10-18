@@ -6,14 +6,15 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useLanguageStore } from '../store/useLanguageStore';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, UserCircle, DollarSign, Bell, Trash2, Sun, Moon, Vote, Smartphone } from 'lucide-react';
+import { LogOut, UserCircle, DollarSign, Bell, Trash2, Sun, Moon, Vote, Smartphone, Zap, Settings, Radio, ShieldCheck } from 'lucide-react';
 import WhatsAppButton from '../components/WhatsAppButton';
 import DashboardAlertModal from '../components/DashboardAlertModal';
 import SocialLinksModal from '../components/SocialLinksModal';
 import UserPollModal from '../components/UserPollModal';
-import NotificationDiagnosticsModal from '../components/NotificationDiagnosticsModal';
+import DeveloperDiagnosticsModal from '../components/DeveloperDiagnosticsModal';
+import OEMBatteryModal from '../components/OEMBatteryModal';
 import { pollService } from '../services/pollService';
-import { isNativePlatform } from '../lib/onesignal';
+import { isNativePlatform, openXiaomiAutostart } from '../lib/onesignal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -30,7 +31,9 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const navigate = useNavigate();
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [activeNotifTab, setActiveNotifTab] = useState<'instant' | 'service'>('instant');
   const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
+  const [isOEMModalOpen, setIsOEMModalOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   const [isNative, setIsNative] = useState(() => isNativePlatform());
 
@@ -155,11 +158,12 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               <a
                 href="/jiibha-app.apk"
                 download="jiibha-app.apk"
-                className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2.5 py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs whitespace-nowrap shrink-0"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 dark:text-emerald-300 font-bold px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg transition-all text-xs border border-emerald-200/80 dark:border-emerald-800 shadow-xs whitespace-nowrap shrink-0"
                 title="تحميل تطبيق جيبها للأندرويد"
               >
-                <Smartphone size={15} />
-                <span>حمل التطبيق</span>
+                <Smartphone size={14} />
+                <span className="hidden sm:inline">حمل التطبيق</span>
+                <span className="sm:hidden text-[11px]">APK</span>
               </a>
             )}
             {user && (user.role === 'merchant' || user.role === 'supplier') && hasActivePoll && (
@@ -218,50 +222,137 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
               </button>
               
               {isNotificationsOpen && (
-                <div className="absolute left-0 mt-2 w-80 sm:w-80 max-w-[calc(100vw-1rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
-                  <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800 dark:text-white">{t('nav.notifications')}</h3>
-                    {isNative && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
-                      <button
-                        onClick={() => {
-                          setIsNotificationsOpen(false);
-                          setShowDiagnosticsModal(true);
-                        }}
-                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-bold flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded-lg border border-indigo-200/50 dark:border-indigo-800 transition"
-                        title="فحص وصول إشعارات الهاتف وتجربتها فوراً"
-                      >
-                        <Smartphone size={13} />
-                        <span>فحص الإشعارات</span>
-                      </button>
-                    )}
+                <div className="absolute left-0 mt-2 w-84 sm:w-96 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50">
+                  {/* Two Tabs Header */}
+                  <div className="p-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-750 flex items-center gap-1.5">
+                    <button
+                      onClick={() => setActiveNotifTab('instant')}
+                      className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+                        activeNotifTab === 'instant'
+                          ? 'bg-white dark:bg-gray-800 text-[#4f46e5] dark:text-indigo-400 shadow-xs'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      <Bell size={15} />
+                      <span>إشعارات فورية</span>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => setActiveNotifTab('service')}
+                      className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
+                        activeNotifTab === 'service'
+                          ? 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <span>خدمة في الخلفية</span>
+                    </button>
                   </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-                        {t('nav.no_notifications')}
-                      </div>
-                    ) : (
-                      notifications.map(notif => (
-                        <div key={notif.id} className={`p-4 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative group ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-indigo-900/20'}`}>
-                          <div className="pr-6">
-                            <h4 className="text-sm font-bold text-gray-800 dark:text-white mb-1">{notif.title}</h4>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{notif.message}</p>
-                            <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('en-GB')}</span>
-                          </div>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notif.id);
-                            }}
-                            className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 dark:bg-red-900/30 p-1 rounded-md"
-                            title={t('nav.delete_notification')}
-                          >
-                            <Trash2 size={16} />
-                          </button>
+
+                  {/* Tab 1: Instant Push Notifications List */}
+                  {activeNotifTab === 'instant' && (
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                          {t('nav.no_notifications')}
                         </div>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div key={notif.id} className={`p-4 border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative group ${notif.is_read ? 'opacity-70' : 'bg-blue-50/30 dark:bg-indigo-900/20'}`}>
+                            <div className="pr-6">
+                              <h4 className="text-sm font-bold text-gray-800 dark:text-white mb-1">{notif.title}</h4>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{notif.message}</p>
+                              <span className="text-[10px] text-gray-400 mt-2 block">{new Date(notif.created_at).toLocaleString('en-GB')}</span>
+                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notif.id);
+                              }}
+                              className="absolute top-4 left-4 z-10 text-red-500 hover:text-red-700 transition-opacity bg-red-50 dark:bg-red-900/30 p-1 rounded-md"
+                              title={t('nav.delete_notification')}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab 2: Native Background Service Status & OEM Battery Controls */}
+                  {activeNotifTab === 'service' && (
+                    <div className="p-4 space-y-3.5 bg-gray-50/40 dark:bg-gray-850">
+                      {/* Active Status Badge */}
+                      <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800 rounded-xl p-3 flex items-start gap-3">
+                        <div className="mt-0.5 p-1 bg-emerald-500 text-white rounded-lg">
+                          <Radio size={16} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 font-black text-xs text-emerald-800 dark:text-emerald-300">
+                            <span>خدمة الخلفية الأصلية:</span>
+                            <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[10px] px-2 py-0.5 rounded-full">
+                              🟢 متصلة ونشطة
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                            تطبيق جيبها يستقبل تنبيهات الطلبات والعروض ويرن بهاتفك حتى أثناء إغلاق الشاشة.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Quick OEM Optimization Buttons */}
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setIsNotificationsOpen(false);
+                            setIsOEMModalOpen(true);
+                          }}
+                          className="w-full py-2.5 px-3 bg-gradient-to-r from-indigo-500 to-[#4f46e5] hover:opacity-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+                        >
+                          <Zap size={14} />
+                          <span>إلغاء قيود البطارية (بدون قيود)</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (typeof window !== 'undefined' && window.NativeBridge?.openAutoStartSettings) {
+                              window.NativeBridge.openAutoStartSettings();
+                            } else {
+                              openXiaomiAutostart();
+                            }
+                          }}
+                          className="w-full py-2.5 px-3 bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-650 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+                        >
+                          <Settings size={14} />
+                          <span>التشغيل التلقائي (AutoStart)</span>
+                        </button>
+
+                        {/* Strict Principle 5: Developer Diagnostics Modal button isolated to developer email */}
+                        {user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
+                          <button
+                            onClick={() => {
+                              setIsNotificationsOpen(false);
+                              setShowDiagnosticsModal(true);
+                            }}
+                            className="w-full py-2 px-3 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+                          >
+                            <ShieldCheck size={14} />
+                            <span>فحص الإشعارات (للمطور فقط)</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -347,12 +438,17 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
         isOpenControlled={isPollOpen} 
         onCloseControlled={() => setIsPollOpen(false)} 
       />
-      {isNative && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
-        <NotificationDiagnosticsModal
-          isOpen={showDiagnosticsModal}
-          onClose={() => setShowDiagnosticsModal(false)}
-        />
-      )}
+      <OEMBatteryModal 
+        isOpen={isOEMModalOpen} 
+        onClose={() => setIsOEMModalOpen(false)} 
+      />
+      <DeveloperDiagnosticsModal
+        isOpen={showDiagnosticsModal}
+        onClose={() => setShowDiagnosticsModal(false)}
+        currentUserEmail={user?.email}
+        userId={user?.id}
+        userRole={user?.role || undefined}
+      />
     </div>
   );
 }

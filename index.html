@@ -33,5 +33,17 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            reg.update();
+          }).catch((err) => {
+            console.log('SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

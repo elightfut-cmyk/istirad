@@ -84,6 +84,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
               };
             });
 
+            // Trigger native/browser heads-up notification and vibration
+            try {
+              import('../lib/onesignal').then(({ showExternalNotification }) => {
+                showExternalNotification({
+                  title: newNotif.title || 'جيبها - إشعار جديد 📦',
+                  message: newNotif.message || 'لديك تحديث جديد في حسابك',
+                  url: '/notifications'
+                });
+              });
+              if (typeof window !== 'undefined' && window.NativeBridge?.markAlerted) {
+                window.NativeBridge.markAlerted(newNotif.id);
+              }
+            } catch {}
+
             // Trigger global refresh for any open pages (orders, bids, requests)
             try {
               window.dispatchEvent(new CustomEvent('refresh_data'));

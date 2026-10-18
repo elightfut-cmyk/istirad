@@ -110,6 +110,36 @@ export const openXiaomiBatterySaver = (): boolean => {
 };
 
 /**
+ * Opens Xiaomi/Redmi Permissions Editor (Show on Lockscreen, Pop-up windows).
+ */
+export const openXiaomiPermissions = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openXiaomiPermissions) {
+      (window as any).NativeDeviceBridge.openXiaomiPermissions();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openXiaomiPermissions:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
+ * Opens Xiaomi/Redmi Background Data Usage & Firewall settings.
+ */
+export const openXiaomiDataUsage = (): boolean => {
+  try {
+    if (typeof window !== 'undefined' && (window as any).NativeDeviceBridge?.openXiaomiDataUsage) {
+      (window as any).NativeDeviceBridge.openXiaomiDataUsage();
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not invoke openXiaomiDataUsage:', err);
+  }
+  return openNativeAppSettings();
+};
+
+/**
  * Opens system-wide battery optimization settings (Samsung, Pixel, Motorola, etc.).
  */
 export const openUniversalBatterySettings = (): boolean => {

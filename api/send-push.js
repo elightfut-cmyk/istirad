@@ -14,9 +14,7 @@ export default async function handler(req, res) {
 
   try {
     const { userIds, subscriptionIds, title, message, data, sendToAll } = req.body || {};
-    const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JobnZhd2NrZmZlZTRubmFncXY2anN1ejRidzNsbzQyYml2b3hmM3ljYW42Z3N1b2NydWt1ZXk3c3puenJsd2JvajJyZWpucmpuaHp1YXk=';
-    const fallbackKey = Buffer.from(ENCODED_REST_KEY, 'base64').toString('utf8');
-    const apiKey = process.env.ONESIGNAL_REST_API_KEY || process.env.VITE_ONESIGNAL_REST_API_KEY || fallbackKey;
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY || process.env.VITE_ONESIGNAL_REST_API_KEY;
     const appId = process.env.ONESIGNAL_APP_ID || process.env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
     if (!apiKey) {

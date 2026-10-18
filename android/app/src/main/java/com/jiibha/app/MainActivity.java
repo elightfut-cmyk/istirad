@@ -83,6 +83,8 @@ public class MainActivity extends BridgeActivity {
             channel.setDescription(description);
             channel.enableVibration(true);
             channel.enableLights(true);
+            channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            channel.setBypassDnd(true);
 
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
@@ -199,6 +201,39 @@ public class MainActivity extends BridgeActivity {
                         intent.setComponent(new ComponentName("com.miui.powerkeeper", "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"));
                         intent.putExtra("package_name", getPackageName());
                         intent.putExtra("package_label", getResources().getString(R.string.app_name));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        openAppSettings();
+                    }
+                }
+
+                @JavascriptInterface
+                public void openXiaomiPermissions() {
+                    try {
+                        Intent intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
+                        intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity");
+                        intent.putExtra("extra_pkgname", getPackageName());
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (Exception e1) {
+                        try {
+                            Intent intent = new Intent("miui.intent.action.APP_PERM_EDITOR");
+                            intent.setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.AppPermissionsEditorActivity");
+                            intent.putExtra("extra_pkgname", getPackageName());
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Exception e2) {
+                            openAppSettings();
+                        }
+                    }
+                }
+
+                @JavascriptInterface
+                public void openXiaomiDataUsage() {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.networkassistant.ui.activity.FirewallActivity"));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                     } catch (Exception e) {

@@ -1,8 +1,6 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 
 const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
-// Valid base64 encoded OneSignal App REST API key
-const ENCODED_REST_KEY = 'b3NfdjJfYXBwXzNsdm82c21yZXZocGZja3FucWNjcWJyN2JobnZhd2NrZmZlZTRubmFncXY2anN1ejRidzNsbzQyYml2b3hmM3ljYW42Z3N1b2NydWt1ZXk3c3puenJsd2JvajJyZWpucmpuaHp1YXk=';
 
 const getResolvedApiKey = (): string => {
   if (typeof window !== 'undefined') {
@@ -17,11 +15,6 @@ const getResolvedApiKey = (): string => {
   if (typeof window !== 'undefined' && (window as any)?.__ONESIGNAL_REST_KEY__) {
     return (window as any).__ONESIGNAL_REST_KEY__;
   }
-  try {
-    if (typeof atob === 'function') {
-      return atob(ENCODED_REST_KEY);
-    }
-  } catch {}
   return '';
 };
 
@@ -181,16 +174,7 @@ export const sendPushNotificationDetailed = async ({
   }
 
   const apiKey = getResolvedApiKey();
-
-  if (!apiKey) {
-    const errorMsg = 'فشل الإرسال: مفتاح VITE_ONESIGNAL_REST_API_KEY غير متوفر في الإعدادات';
-    console.error(errorMsg);
-    throw new Error(errorMsg);
-  }
-
-  const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
-    ? apiKey
-    : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
+  let lastDirectError = '';
 
   const payload: Record<string, any> = {
     app_id: ONESIGNAL_APP_ID,
@@ -230,16 +214,20 @@ export const sendPushNotificationDetailed = async ({
   }
 
   // 1. Direct call to OneSignal (via CapacitorHttp, Native Android Bridge, or direct fetch)
-  const onesignalEndpoints = [
-    'https://api.onesignal.com/notifications',
-    'https://onesignal.com/api/v1/notifications'
-  ];
+  // Only executed if an API key is resolved locally (e.g. from local storage or env)
+  if (apiKey) {
+    const authHeader = apiKey.startsWith('Basic ') || apiKey.startsWith('Key ')
+      ? apiKey
+      : (apiKey.startsWith('os_v2_') ? `Key ${apiKey}` : `Basic ${apiKey}`);
 
-  let lastDirectError = '';
+    const onesignalEndpoints = [
+      'https://api.onesignal.com/notifications',
+      'https://onesignal.com/api/v1/notifications'
+    ];
 
-  for (const endpoint of onesignalEndpoints) {
-    try {
-      const { status, data: resJson } = await dispatchOneSignalNotification(endpoint, authHeader, payload);
+    for (const endpoint of onesignalEndpoints) {
+      try {
+        const { status, data: resJson } = await dispatchOneSignalNotification(endpoint, authHeader, payload);
 
       const hasValidId = Boolean(resJson?.id && String(resJson.id).trim() !== '');
       const recipients = typeof resJson?.recipients === 'number' ? resJson.recipients : (hasValidId ? 1 : 0);
@@ -267,6 +255,7 @@ export const sendPushNotificationDetailed = async ({
       lastDirectError = directErr?.message || String(directErr);
       console.warn(`Direct dispatch to ${endpoint} failed:`, directErr);
     }
+  }
   }
 
   // 2. Cloud Server Proxy fallback (works seamlessly on BOTH native mobile and web)

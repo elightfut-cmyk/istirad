@@ -25,6 +25,8 @@ import {
   openNativeNotificationSettings,
   openXiaomiAutostart,
   openXiaomiBatterySaver,
+  openXiaomiPermissions,
+  openXiaomiDataUsage,
   openUniversalBatterySettings,
   openHuaweiLaunchSettings,
   openOppoLaunchSettings,
@@ -511,7 +513,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                     
                     <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
                       <div 
-                        onClick={handleOpenSettings}
+                        onClick={openXiaomiPermissions}
                         className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
                       >
                         <div className="flex items-center gap-2">
@@ -524,7 +526,7 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                       </div>
 
                       <div 
-                        onClick={handleOpenNotificationSettings}
+                        onClick={openXiaomiPermissions}
                         className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-amber-100 dark:border-amber-900/40 cursor-pointer hover:bg-amber-100/40 active:scale-98 transition"
                       >
                         <div className="flex items-center gap-2">
@@ -561,6 +563,24 @@ export const NotificationDiagnosticsModal = ({ isOpen, onClose }: Props) => {
                           ضبط "لا توجد قيود" ⚡
                         </span>
                       </div>
+
+                      <div 
+                        onClick={openXiaomiDataUsage}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-purple-100 dark:border-purple-900/40 cursor-pointer hover:bg-purple-100/40 active:scale-98 transition"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                          <span className="font-bold">بيانات الهاتف واستهلاك الخلفية (4G / Data):</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                          فحص بيانات 4G 📶
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 p-2.5 rounded-xl bg-amber-100/70 dark:bg-amber-900/30 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-1.5">
+                      <span className="shrink-0 text-amber-600 font-bold">💡 نصيحة حاسمة:</span>
+                      <span>لضمان عدم نوم التطبيق عند استعمال الـ 4G، تأكد من إعدادات البطارية بهاتفك ألا تكون ميزة "إيقاف بيانات الهاتف عند قفل الجهاز" مفعلة، وتفعيل "العرض على شاشة القفل".</span>
                     </div>
                   </div>
                 );

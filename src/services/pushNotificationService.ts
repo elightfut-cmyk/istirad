@@ -76,7 +76,7 @@ export const sendPushNotificationDetailed = async ({
   message,
   data = {},
   sendToAll = false,
-  android_channel_id = 'default_notification_channel'
+  android_channel_id
 }: PushNotificationPayload): Promise<PushSendResult> => {
   const rawIds = userIds || (user_id ? [user_id] : []);
   const externalIds = (Array.isArray(rawIds) ? rawIds : [rawIds])
@@ -104,7 +104,7 @@ export const sendPushNotificationDetailed = async ({
         message,
         data,
         sendToAll,
-        android_channel_id,
+        android_channel_id: android_channel_id || undefined,
         existing_android_channel_id: 'jibha_channel'
       }
     });

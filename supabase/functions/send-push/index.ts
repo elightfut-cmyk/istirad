@@ -115,7 +115,6 @@ serve(async (req) => {
     const oneSignalPayload: Record<string, any> = {
       app_id: ONESIGNAL_APP_ID,
       priority: 10,
-      android_channel_id: android_channel_id || "default_notification_channel",
       existing_android_channel_id: existing_android_channel_id || "jibha_channel",
       android_accent_color: "FF4F46E5",
       android_sound: "default",
@@ -133,6 +132,12 @@ serve(async (req) => {
         timestamp: Date.now()
       }
     };
+
+    // Only attach android_channel_id if it's explicitly a valid OneSignal Category UUID
+    const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
+    if (android_channel_id && isUuid(android_channel_id)) {
+      oneSignalPayload.android_channel_id = android_channel_id.trim();
+    }
 
     // 5. Apply MUTUALLY EXCLUSIVE targeting (OneSignal REST API requirement)
     if (sendToAll) {
@@ -154,7 +159,7 @@ serve(async (req) => {
       ? cleanKey
       : `Key ${cleanKey}`;
 
-    const oneSignalRes = await fetch('https://api.onesignal.com/notifications', {
+    let oneSignalRes = await fetch('https://api.onesignal.com/notifications', {
       method: 'POST',
       headers: {
         'Authorization': authHeaderValue,
@@ -163,7 +168,28 @@ serve(async (req) => {
       body: JSON.stringify(oneSignalPayload)
     });
 
-    const resJson = await oneSignalRes.json().catch(() => ({}));
+    let resJson = await oneSignalRes.json().catch(() => ({}));
+
+    // Auto-retry if OneSignal rejected any channel configuration
+    if (!oneSignalRes.ok && JSON.stringify(resJson).includes('android_channel_id')) {
+      const channelFreePayload = { ...oneSignalPayload };
+      delete channelFreePayload.android_channel_id;
+      delete channelFreePayload.existing_android_channel_id;
+
+      const retryRes = await fetch('https://api.onesignal.com/notifications', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeaderValue,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(channelFreePayload)
+      });
+      const retryJson = await retryRes.json().catch(() => ({}));
+      if (retryRes.ok) {
+        oneSignalRes = retryRes;
+        resJson = retryJson;
+      }
+    }
 
     // If subscription delivery failed and externalIds are available, fallback to external_id alias
     if (!oneSignalRes.ok && validSubIds.length > 0 && externalIds.length > 0) {

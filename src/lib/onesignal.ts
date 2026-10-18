@@ -830,31 +830,19 @@ export const sendTestPushToSelf = async (userId: string, subscriptionId?: string
     }
   };
 
-  // If resolvedSubId is available, try direct delivery to subscriptionId first
-  if (resolvedSubId) {
-    try {
-      const res = await sendPushNotificationDetailed({
-        subscriptionIds: [resolvedSubId],
-        ...pushData
-      });
-      if (res.success) return res;
-    } catch (subErr: any) {
-      console.warn('Direct subscriptionId send attempt failed, trying fallback to userId:', subErr);
-    }
-  }
-
-  // Fallback to userId (external_id) alias delivery
+  // 4. Dispatch with primary device subscription ID and automatic userId fallback
   try {
     return await sendPushNotificationDetailed({
+      subscriptionIds: resolvedSubId ? [resolvedSubId] : [],
       userIds: [userId],
       ...pushData
     });
-  } catch (userErr: any) {
-    const errorStr = userErr?.message || String(userErr);
+  } catch (err: any) {
+    const errorStr = err?.message || String(err);
     if (errorStr.includes('invalid_aliases') || errorStr.includes('لم يتم العثور على أي مشترك')) {
       throw new Error('جهازك قيد الربط بخادم الإشعارات. يرجى التأكد من تشغيل إذن الإشعارات لهاتف شاومي/ريدمي والضغط على زر "تحديث الرمز" ثم إعادة المحاولة.');
     }
-    throw userErr;
+    throw err;
   }
 };
 

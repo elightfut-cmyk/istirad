@@ -24,6 +24,9 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
   if (status === 401 || (resJson && JSON.stringify(resJson).includes('Access denied'))) {
     return 'مفتاح OneSignal غير مصرح به أو تم إلغاؤه (401 Unauthorized)';
   }
+  if (resJson && resJson.error && typeof resJson.error === 'string') {
+    return resJson.error;
+  }
   if (resJson && resJson.errors) {
     if (resJson.errors.invalid_aliases) {
       return 'معرف المستخدم أو الجهاز غير مسجل حالياً في خدمة الإشعارات. يرجى فتح التطبيق على هاتفك والضغط على زر "تحديث الرمز" في نافذة فحص الإشعارات ثم الانتظار 3 ثوانٍ.';
@@ -38,6 +41,9 @@ export const extractOneSignalError = (resJson: any, status?: number): string => 
       return resJson.errors;
     }
     return JSON.stringify(resJson.errors);
+  }
+  if (resJson && resJson.message && typeof resJson.message === 'string') {
+    return resJson.message;
   }
   if (resJson && resJson.error) {
     return typeof resJson.error === 'string' ? resJson.error : JSON.stringify(resJson.error);
@@ -104,8 +110,31 @@ export const sendPushNotificationDetailed = async ({
     });
 
     if (invokeError) {
-      const errorMsg = `فشل الإرسال: ${invokeError.message || 'خطأ أثناء الاتصال بالخادم السحابي'}`;
-      console.error('send-push invoke error:', invokeError);
+      let detailedMessage = invokeError.message;
+      try {
+        if ('context' in invokeError && (invokeError as any).context) {
+          const res = (invokeError as any).context as Response;
+          const bodyJson = await res.json().catch(() => null);
+          if (bodyJson) {
+            detailedMessage = extractOneSignalError(bodyJson, res.status) || bodyJson.error || bodyJson.message || JSON.stringify(bodyJson);
+          } else {
+            const text = await res.text().catch(() => '');
+            if (text) {
+              try {
+                const parsed = JSON.parse(text);
+                detailedMessage = extractOneSignalError(parsed, res.status) || parsed.error || parsed.message || text;
+              } catch {
+                detailedMessage = text;
+              }
+            }
+          }
+        }
+      } catch (parseErr) {
+        console.warn('Could not extract detailed error body from invokeError context:', parseErr);
+      }
+
+      const errorMsg = `فشل الإرسال: ${detailedMessage || 'خطأ أثناء الاتصال بالخادم السحابي'}`;
+      console.error('send-push invoke error:', invokeError, detailedMessage);
       throw new Error(errorMsg);
     }
 
@@ -113,9 +142,9 @@ export const sendPushNotificationDetailed = async ({
       throw new Error('فشل الإرسال: لم يتم استلام أي استجابة من خادم الإشعارات');
     }
 
-    // Check if OneSignal returned an error payload
-    if (resData.errors || resData.error) {
-      const errorReason = extractOneSignalError(resData);
+    // Check if OneSignal or server returned an error payload
+    if (resData.ok === false || resData.errors || resData.error) {
+      const errorReason = extractOneSignalError(resData, resData.status || resData.onesignal_status);
       const errorMsg = `فشل الإرسال: ${errorReason}`;
       console.error(errorMsg, resData);
       throw new Error(errorMsg);

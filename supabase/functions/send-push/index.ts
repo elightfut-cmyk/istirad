@@ -13,39 +13,65 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Verify user authentication via JWT
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // 1. Verify client authorization
+    const authHeader = req.headers.get('Authorization') || '';
+    const apiKey = req.headers.get('apikey') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+    const isApiKeyValid = Boolean(
+      (apiKey && (apiKey === supabaseAnonKey || (supabaseServiceRoleKey && apiKey === supabaseServiceRoleKey))) ||
+      (token && (token === supabaseAnonKey || (supabaseServiceRoleKey && token === supabaseServiceRoleKey)))
+    );
+
+    let isUserValid = false;
+    if (!isApiKeyValid && token) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (user && !authError) {
+          isUserValid = true;
+        }
+      } catch (authErr) {
+        console.warn('User auth check warning:', authErr);
+      }
+    }
+
+    if (!isApiKeyValid && !isUserValid) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized: Invalid or expired token' }),
+        JSON.stringify({ 
+          ok: false,
+          error: 'Unauthorized: Missing or invalid Supabase Authorization token/apikey' 
+        }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // 2. Read Server Secrets
-    const ONESIGNAL_REST_API_KEY = Deno.env.get('ONESIGNAL_REST_API_KEY');
-    const ONESIGNAL_APP_ID = Deno.env.get('ONESIGNAL_APP_ID') || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+    const rawApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY') 
+      || Deno.env.get('ONESIGNAL_API_KEY')
+      || Deno.env.get('ONESIGNAL_KEY')
+      || Deno.env.get('VITE_ONESIGNAL_REST_API_KEY');
 
-    if (!ONESIGNAL_REST_API_KEY) {
+    const rawAppId = Deno.env.get('ONESIGNAL_APP_ID') 
+      || Deno.env.get('VITE_ONESIGNAL_APP_ID') 
+      || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+
+    if (!rawApiKey || rawApiKey.trim() === '') {
       return new Response(
-        JSON.stringify({ error: 'Server configuration error: ONESIGNAL_REST_API_KEY is not configured on the server.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          ok: false,
+          error: 'Server configuration error: لم يتم العثور على مفتاح ONESIGNAL_REST_API_KEY في أسرار الخادم (Supabase Secrets). يرجى إضافته في إعدادات Edge Functions Secrets.' 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const cleanKey = rawApiKey.trim();
+    const ONESIGNAL_APP_ID = rawAppId.trim();
 
     // 3. Parse incoming payload
     const body = await req.json().catch(() => ({}));
@@ -77,8 +103,11 @@ serve(async (req) => {
 
     if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'No recipients provided (missing userIds or subscriptionIds)' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          ok: false,
+          error: 'No recipients provided: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه' 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -105,27 +134,25 @@ serve(async (req) => {
       }
     };
 
+    // 5. Apply MUTUALLY EXCLUSIVE targeting (OneSignal REST API requirement)
     if (sendToAll) {
-      oneSignalPayload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
-    } else {
-      if (validSubIds.length > 0) {
-        oneSignalPayload.include_subscription_ids = validSubIds;
-        oneSignalPayload.include_player_ids = validSubIds;
-      }
-      if (externalIds.length > 0) {
-        oneSignalPayload.target_channel = 'push';
-        oneSignalPayload.include_aliases = {
-          external_id: externalIds
-        };
-        oneSignalPayload.include_external_user_ids = externalIds;
-        oneSignalPayload.channel_for_external_user_ids = 'push';
-      }
+      oneSignalPayload.included_segments = ['Subscribed Users'];
+    } else if (validSubIds.length > 0) {
+      // Modern target by device subscription ID
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_subscription_ids = validSubIds;
+    } else if (externalIds.length > 0) {
+      // Target by external user ID alias
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_aliases = {
+        external_id: externalIds
+      };
     }
 
-    // 5. Forward request securely to OneSignal REST API
-    const authHeaderValue = ONESIGNAL_REST_API_KEY.startsWith('Key ') || ONESIGNAL_REST_API_KEY.startsWith('Basic ')
-      ? ONESIGNAL_REST_API_KEY
-      : `Key ${ONESIGNAL_REST_API_KEY}`;
+    // 6. Forward request securely to OneSignal REST API
+    const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
+      ? cleanKey
+      : `Key ${cleanKey}`;
 
     const oneSignalRes = await fetch('https://api.onesignal.com/notifications', {
       method: 'POST',
@@ -136,21 +163,62 @@ serve(async (req) => {
       body: JSON.stringify(oneSignalPayload)
     });
 
-    const resJson = await oneSignalRes.json().catch(() => null);
+    const resJson = await oneSignalRes.json().catch(() => ({}));
 
+    // If subscription delivery failed and externalIds are available, fallback to external_id alias
+    if (!oneSignalRes.ok && validSubIds.length > 0 && externalIds.length > 0) {
+      const fallbackPayload = {
+        ...oneSignalPayload,
+        target_channel: 'push',
+        include_aliases: {
+          external_id: externalIds
+        }
+      };
+      delete fallbackPayload.include_subscription_ids;
+
+      const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeaderValue,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(fallbackPayload)
+      });
+      const fallbackJson = await fallbackRes.json().catch(() => ({}));
+      if (fallbackRes.ok) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            status: fallbackRes.status,
+            ...fallbackJson
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Always return HTTP 200 with embedded OneSignal response
+    // so supabase-js functions.invoke does not throw a generic FunctionsHttpError
     return new Response(
-      JSON.stringify(resJson),
-      {
+      JSON.stringify({
+        ok: oneSignalRes.ok,
         status: oneSignalRes.status,
+        ...resJson
+      }),
+      {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
   } catch (error: any) {
     return new Response(
-      JSON.stringify({ error: error?.message || 'Internal Server Error' }),
+      JSON.stringify({ 
+        ok: false,
+        error: error?.message || 'Internal Server Error' 
+      }),
       {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

@@ -85,18 +85,13 @@ function apiDevPlugin(env: Record<string, string>): any {
               };
 
               if (sendToAll) {
-                payload.included_segments = ['Subscribed Users', 'Total Subscriptions'];
-              } else {
-                if (validSubIds.length > 0) {
-                  payload.include_subscription_ids = validSubIds;
-                  payload.include_player_ids = validSubIds;
-                }
-                if (externalIds.length > 0) {
-                  payload.include_aliases = { external_id: externalIds };
-                  payload.include_external_user_ids = externalIds;
-                  payload.channel_for_external_user_ids = 'push';
-                }
+                payload.included_segments = ['Subscribed Users'];
+              } else if (validSubIds.length > 0) {
                 payload.target_channel = 'push';
+                payload.include_subscription_ids = validSubIds;
+              } else if (externalIds.length > 0) {
+                payload.target_channel = 'push';
+                payload.include_aliases = { external_id: externalIds };
               }
 
               let oneSignalRes: any;

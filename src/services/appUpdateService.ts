@@ -13,6 +13,8 @@ export interface AppUpdateConfig {
 }
 
 const POLICY_TYPE = 'APP_FORCE_UPDATE';
+let cachedUpdateConfig: { data: AppUpdateConfig; timestamp: number } | null = null;
+const UPDATE_CACHE_TTL = 10 * 60 * 1000;
 
 export const defaultUpdateConfig: AppUpdateConfig = {
   id: 'app_update_default',
@@ -30,7 +32,10 @@ export const appUpdateService = {
   /**
    * Fetch current update configuration
    */
-  async getConfig(): Promise<AppUpdateConfig> {
+  async getConfig(force = false): Promise<AppUpdateConfig> {
+    if (!force && cachedUpdateConfig && (Date.now() - cachedUpdateConfig.timestamp < UPDATE_CACHE_TTL)) {
+      return cachedUpdateConfig.data;
+    }
     try {
       const { data, error } = await supabase
         .from('platform_policies')
@@ -49,10 +54,12 @@ export const appUpdateService = {
 
       try {
         const parsed = JSON.parse(data.content) as Partial<AppUpdateConfig>;
-        return {
+        const res = {
           ...defaultUpdateConfig,
           ...parsed,
         };
+        cachedUpdateConfig = { data: res, timestamp: Date.now() };
+        return res;
       } catch (err) {
         console.error('Error parsing update config JSON:', err);
         return defaultUpdateConfig;

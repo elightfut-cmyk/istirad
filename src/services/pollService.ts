@@ -21,12 +21,17 @@ export interface UserPoll {
 
 const POLICY_TYPE = 'USER_POLL';
 const STORAGE_PREFIX = 'jiibha_poll_voted_';
+let cachedPoll: { data: UserPoll | null; timestamp: number } | null = null;
+const POLL_CACHE_TTL = 3 * 60 * 1000;
 
 export const pollService = {
   /**
    * Fetch the current active poll from platform_policies and tally live votes
    */
-  async getPoll(): Promise<UserPoll | null> {
+  async getPoll(force = false): Promise<UserPoll | null> {
+    if (!force && cachedPoll && (Date.now() - cachedPoll.timestamp < POLL_CACHE_TTL)) {
+      return cachedPoll.data;
+    }
     try {
       const { data, error } = await supabase
         .from('platform_policies')
@@ -85,6 +90,7 @@ export const pollService = {
    * Save or update the poll (Admin only)
    */
   async savePoll(pollData: Partial<UserPoll>): Promise<{ success: boolean; data?: UserPoll; error?: any }> {
+    cachedPoll = null;
     try {
       const now = new Date().toISOString();
       const existing = await this.getPoll();

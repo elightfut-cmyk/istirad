@@ -16,12 +16,17 @@ export interface DashboardAlert {
 
 const POLICY_TYPE = 'DASHBOARD_POPUP';
 const STORAGE_PREFIX = 'jiibha_alert_seen_';
+let cachedAlert: { data: DashboardAlert | null; timestamp: number } | null = null;
+const ALERT_CACHE_TTL = 5 * 60 * 1000;
 
 export const dashboardAlertService = {
   /**
    * Fetch the current dashboard popup alert from platform_policies
    */
-  async getAlert(): Promise<DashboardAlert | null> {
+  async getAlert(force = false): Promise<DashboardAlert | null> {
+    if (!force && cachedAlert && (Date.now() - cachedAlert.timestamp < ALERT_CACHE_TTL)) {
+      return cachedAlert.data;
+    }
     try {
       const { data, error } = await supabase
         .from('platform_policies')
@@ -40,8 +45,9 @@ export const dashboardAlertService = {
 
       try {
         const parsed = JSON.parse(data.content) as DashboardAlert;
-        if (parsed.isDeleted) return null;
-        return parsed;
+        const res = parsed.isDeleted ? null : parsed;
+        cachedAlert = { data: res, timestamp: Date.now() };
+        return res;
       } catch (err) {
         console.error('Error parsing dashboard alert content:', err);
         return null;
@@ -57,8 +63,9 @@ export const dashboardAlertService = {
    */
   async saveAlert(alertData: Partial<DashboardAlert>): Promise<{ success: boolean; data?: DashboardAlert; error?: any }> {
     try {
+      cachedAlert = null;
       const now = new Date().toISOString();
-      const existing = await this.getAlert();
+      const existing = await this.getAlert(true);
 
       const newAlert: DashboardAlert = {
         id: alertData.id || existing?.id || `alert_${Date.now()}`,

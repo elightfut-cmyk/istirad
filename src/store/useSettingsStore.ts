@@ -161,7 +161,9 @@ export const useSettingsStore = create<SettingsState>()(
           return `${parts.join(',')} دج`;
         }
       },
-      fetchSettings: async () => {
+      fetchSettings: async (force = false) => {
+        if (!force && (globalThis as any).__lastSettingsFetch && Date.now() - (globalThis as any).__lastSettingsFetch < 300000) return;
+        (globalThis as any).__lastSettingsFetch = Date.now();
         try {
           const { data, error } = await supabase.from('platform_settings').select('*').eq('id', 1).single();
           if (data && !error) {

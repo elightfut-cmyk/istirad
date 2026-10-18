@@ -15,9 +15,14 @@ export interface SocialLinksAlert {
 
 const POLICY_TYPE = 'SOCIAL_LINKS_POPUP';
 const STORAGE_PREFIX = 'jiibha_social_alert_seen_';
+let cachedSocialAlert: { data: SocialLinksAlert | null; timestamp: number } | null = null;
+const SOCIAL_CACHE_TTL = 5 * 60 * 1000;
 
 export const socialLinksAlertService = {
-  async getAlert(): Promise<SocialLinksAlert | null> {
+  async getAlert(force = false): Promise<SocialLinksAlert | null> {
+    if (!force && cachedSocialAlert && (Date.now() - cachedSocialAlert.timestamp < SOCIAL_CACHE_TTL)) {
+      return cachedSocialAlert.data;
+    }
     try {
       const { data, error } = await supabase
         .from('platform_policies')
@@ -36,8 +41,9 @@ export const socialLinksAlertService = {
 
       try {
         const parsed = JSON.parse(data.content) as SocialLinksAlert;
-        if (parsed.isDeleted) return null;
-        return parsed;
+        const res = parsed.isDeleted ? null : parsed;
+        cachedSocialAlert = { data: res, timestamp: Date.now() };
+        return res;
       } catch (err) {
         console.error('Error parsing social links alert content:', err);
         return null;
@@ -50,8 +56,9 @@ export const socialLinksAlertService = {
 
   async saveAlert(alertData: Partial<SocialLinksAlert>): Promise<{ success: boolean; data?: SocialLinksAlert; error?: any }> {
     try {
+      cachedSocialAlert = null;
       const now = new Date().toISOString();
-      const existing = await this.getAlert();
+      const existing = await this.getAlert(true);
 
       const newAlert: SocialLinksAlert = {
         id: alertData.id || existing?.id || `social_alert_${Date.now()}`,

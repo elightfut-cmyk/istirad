@@ -311,6 +311,9 @@ export default function Profile() {
         <NotificationDiagnosticsModal
           isOpen={showDiagnostics}
           onClose={() => setShowDiagnostics(false)}
+          currentUserEmail={user?.email}
+          userId={user?.id}
+          userRole={user?.role || undefined}
         />
       )}
     </DashboardLayout>

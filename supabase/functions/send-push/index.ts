@@ -115,6 +115,7 @@ serve(async (req) => {
     const oneSignalPayload: Record<string, any> = {
       app_id: ONESIGNAL_APP_ID,
       priority: 10,
+      ttl: 259200, // 3 days TTL to survive carrier reconnects
       existing_android_channel_id: existing_android_channel_id || "default_notification_channel",
       android_accent_color: "FF4F46E5",
       android_sound: "default",

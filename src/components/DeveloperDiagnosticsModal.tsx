@@ -7,16 +7,29 @@ import {
   Smartphone, 
   RefreshCw, 
   CheckCircle2, 
-  Send
+  Send,
+  Wifi,
+  Radio,
+  Sliders,
+  ExternalLink,
+  HelpCircle,
+  Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../store/useAuthStore';
 import { 
   ONESIGNAL_APP_ID, 
   requestNotificationPermission, 
   sendPushNotification,
   getPushSubscriptionId,
   getFcmToken,
-  isNativePlatform
+  isNativePlatform,
+  openDataSaverSettings,
+  openGooglePlayServicesSettings,
+  openMobileNetworkSettings,
+  openFcmDiagnostics,
+  getNetworkDiagnosticInfo,
+  NetworkDiagnosticInfo
 } from '../lib/onesignal';
 
 const AUTHORIZED_DEVELOPER_EMAIL = 'madaniameur26@gmail.com';
@@ -26,7 +39,7 @@ interface DeveloperDiagnosticsModalProps {
   onClose: () => void;
   currentUserEmail?: string;
   userId?: string;
-  userRole?: string;
+  userRole?: string | null;
 }
 
 export default function DeveloperDiagnosticsModal({
@@ -36,8 +49,13 @@ export default function DeveloperDiagnosticsModal({
   userId,
   userRole
 }: DeveloperDiagnosticsModalProps) {
+  const authUser = useAuthStore((state) => state.user);
+  const effectiveEmail = currentUserEmail || authUser?.email;
+  const effectiveUserId = userId || authUser?.id;
+  const effectiveRole = userRole || authUser?.role;
+
   // Principle 5: Enforce zero-leakage security. Non-developers receive null immediately!
-  const isAuthorized = currentUserEmail?.trim().toLowerCase() === AUTHORIZED_DEVELOPER_EMAIL;
+  const isAuthorized = effectiveEmail?.trim().toLowerCase() === AUTHORIZED_DEVELOPER_EMAIL;
   if (!isOpen || !isAuthorized) {
     return null;
   }
@@ -48,10 +66,20 @@ export default function DeveloperDiagnosticsModal({
   const [isTestingPush, setIsTestingPush] = useState(false);
   const [subId, setSubId] = useState<string | null>(null);
   const [fcmToken, setFcmToken] = useState<string>('');
+  const [netInfo, setNetInfo] = useState<NetworkDiagnosticInfo | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
 
-  useEffect(() => {
+  const refreshAll = () => {
     getPushSubscriptionId().then(setSubId);
     setFcmToken(getFcmToken());
+    const info = getNetworkDiagnosticInfo();
+    setNetInfo(info);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshAll();
+    }
   }, [isOpen]);
 
   const handleTestPush = async () => {
@@ -61,9 +89,9 @@ export default function DeveloperDiagnosticsModal({
     try {
       const res = await sendPushNotification({
         title: '🧪 اختبار إشعار منصة جيبها',
-        message: `وصول مؤكد بجودة FCM v1 على معرف العميل: ${userId || 'عام'}`,
-        targetUserId: userId || null,
-        targetRole: userRole || null,
+        message: `وصول فوري بجودة FCM v1 على معرف العميل: ${effectiveUserId || 'عام'}`,
+        targetUserId: effectiveUserId || null,
+        targetRole: effectiveRole || null,
         data: { test: true, timestamp: Date.now() }
       });
 
@@ -89,7 +117,7 @@ export default function DeveloperDiagnosticsModal({
     <div className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 font-mono text-xs" dir="ltr">
       <div className="bg-slate-950 border border-emerald-500/30 text-emerald-400 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[0_20px_50px_rgba(16,185,129,0.15)] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between bg-slate-900/60">
+        <div className="p-4 border-b border-emerald-500/20 flex items-center justify-between bg-slate-900/60 sticky top-0 z-10 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <ShieldAlert size={18} className="text-emerald-400 animate-pulse" />
             <span className="font-bold tracking-wider text-white">ENGINEERING DIAGNOSTICS BRIDGE</span>
@@ -97,16 +125,159 @@ export default function DeveloperDiagnosticsModal({
               DEVELOPER ONLY
             </span>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={refreshAll} 
+              title="تحديث البيانات"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <RefreshCw size={15} />
+            </button>
+            <button 
+              onClick={onClose} 
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
+
+          {/* Cellular / SIM & Network Health */}
+          <div className="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3" dir="rtl">
+            <div className="flex items-center justify-between text-slate-300 font-sans font-bold text-sm" dir="ltr">
+              <span className="flex items-center gap-1.5">
+                {netInfo?.networkType === 'CELLULAR' ? (
+                  <Radio size={16} className="text-amber-400 animate-pulse" />
+                ) : (
+                  <Wifi size={16} className="text-cyan-400" />
+                )}
+                <span className="font-mono">Cellular & SIM Network Diagnostics</span>
+              </span>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                netInfo?.networkType === 'CELLULAR' 
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                  : netInfo?.networkType === 'WIFI' 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                    : 'bg-slate-800 text-slate-400'
+              }`}>
+                {netInfo?.networkType === 'CELLULAR' ? 'شريحة الهاتف (Mobile Data)' : (netInfo?.networkType === 'WIFI' ? 'واي فاي (Wi-Fi)' : 'حالة الشبكة')}
+              </span>
+            </div>
+
+            <div className="space-y-1 text-slate-300 font-sans text-xs">
+              <div className="flex justify-between py-1 border-b border-slate-800">
+                <span className="text-slate-400">نوع الاتصال الحالي:</span>
+                <span className="font-bold text-cyan-300 font-mono">
+                  {netInfo?.networkType || (navigator.onLine ? 'متصل بالإنترنت' : 'غير متصل')}
+                </span>
+              </div>
+              {netInfo?.carrierName && (
+                <div className="flex justify-between py-1 border-b border-slate-800">
+                  <span className="text-slate-400">مشغل الشريحة (Carrier):</span>
+                  <span className="font-bold text-amber-300">{netInfo.carrierName}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1 border-b border-slate-800">
+                <span className="text-slate-400">موفّر البيانات (Data Saver):</span>
+                <span className={`font-bold ${netInfo?.isDataSaverActive ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {netInfo?.isDataSaverActive ? 'مفعّل (قد يقيد اتصالات الخلفية على الشريحة)' : 'معطّل (سليم)'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-800">
+                <span className="text-slate-400">استخدام بيانات الخلفية للتطبيق:</span>
+                <span className={`font-bold ${netInfo?.isAppRestricted ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {netInfo?.isAppRestricted ? 'مقيد (ممنوع من الوصول في الخلفية)' : 'غير مقيد (مصرّح بالكامل)'}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Fix Action Buttons for Mobile SIM */}
+            <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 font-sans">
+              <button
+                onClick={() => {
+                  openDataSaverSettings();
+                  toast.success('تم فتح إعدادات البيانات غير المقيدة للتطبيق');
+                }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+              >
+                <Sliders size={13} className="text-amber-400" />
+                <span>السماح ببيانات غير مقيدة للتطبيق</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  openGooglePlayServicesSettings();
+                  toast.success('تم فتح إعدادات خدمات Google Play');
+                }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+              >
+                <ExternalLink size={13} className="text-cyan-400" />
+                <span>فحص بيانات خدمات Google Play</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  openMobileNetworkSettings();
+                  toast.success('تم فتح إعدادات شبكة الهاتف والـ APN');
+                }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+              >
+                <Radio size={13} className="text-emerald-400" />
+                <span>إعدادات الشريحة ونقطة الوصول (APN)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  openFcmDiagnostics();
+                  toast.success('تم تشغيل أداة فحص قناة اتصال FCM (*#*#426#*#*)');
+                }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+              >
+                <Activity size={13} className="text-indigo-400" />
+                <span>فحص قناة FCM الحية (*#*#426#*#*)</span>
+              </button>
+            </div>
+
+            {/* Explanation Toggle */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <button
+                onClick={() => setShowExplanation(!showExplanation)}
+                className="w-full text-left text-xs text-amber-300/90 hover:text-amber-200 flex items-center justify-between py-1 transition"
+              >
+                <span className="flex items-center gap-1.5 font-bold">
+                  <HelpCircle size={14} className="text-amber-400" />
+                  لماذا لا تصل التنبيهات على نت الشريحة وتصل دفعة واحدة عند تشغيل الويفي؟
+                </span>
+                <span className="font-mono text-[10px] text-slate-400">{showExplanation ? 'إخفاء' : 'عرض التفاصيل'}</span>
+              </button>
+
+              {showExplanation && (
+                <div className="mt-2.5 p-3.5 bg-slate-950/90 rounded-xl border border-amber-500/20 text-slate-300 text-[11px] leading-relaxed space-y-2">
+                  <p className="text-amber-300 font-bold">
+                    وصول الإشعارات متأخرة دفعة واحدة عند فتح الويفي يثبت أن السيرفر أرسلها بنجاح، ولكن قناة الاتصال (Socket) كانت معلقة على شبكة الهاتف للأسباب التالية:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-slate-300 pr-1">
+                    <li>
+                      <strong className="text-white">مهلة جدول الـ NAT لمشغل الهاتف (Carrier NAT Timeout):</strong> تقوم شركات الاتصالات بقطع قناة TCP بين الهاتف وخوادم Google Play بعد 1-3 دقائق من الخمول لتوفير الـ IP، بينما يرسل أندرويد نبضة التحقق كل 28 دقيقة على الشريحة، فيظن الهاتف أنه متصل بينما الاتصال مقطوع فعلياً!
+                    </li>
+                    <li>
+                      <strong className="text-white">تقييد بيانات الخلفية (Data Saver):</strong> يمنع أندرويد تلقائياً خدمات Google Play أو التطبيق من الاتصال في الخلفية لتوفير رصيد الشريحة، وعند التحويل للواي فاي تُرفع القيود فوراً فتصل الإشعارات.
+                    </li>
+                    <li>
+                      <strong className="text-white">بروتوكول IPv6 في إعدادات نقطة الوصول (APN):</strong> بعض الشرائح تفقد حزم خوادم Google عبر IPv6. الحل ضبط بروتوكول APN على <span className="font-mono text-cyan-300">IPv4/IPv6</span> أو <span className="font-mono text-cyan-300">IPv4</span>.
+                    </li>
+                    <li>
+                      <strong className="text-white">وضع سكون مودم الشريحة (Doze Mode):</strong> يقوم النظام بتعليق راديو الشريحة لتوفير البطارية، ويجب تفعيل "الاستخدام غير المقيد للبيانات" للتطبيق لتفادي ذلك.
+                    </li>
+                  </ol>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Key Separation & Zero Trust Status */}
           <div className="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between text-slate-300 font-sans font-bold text-sm">
@@ -124,7 +295,7 @@ export default function DeveloperDiagnosticsModal({
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Active Identity (external_id):</span>
-                <span className="text-cyan-300 font-bold">{userId || 'Unauthenticated'}</span>
+                <span className="text-cyan-300 font-bold">{effectiveUserId || 'Unauthenticated'}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800">
                 <span className="text-slate-400">Subscription ID:</span>
@@ -156,7 +327,7 @@ export default function DeveloperDiagnosticsModal({
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-slate-400">Target Role:</span>
-                <span className="text-slate-300">{userRole || 'merchant'}</span>
+                <span className="text-slate-300">{effectiveRole || 'merchant'}</span>
               </div>
             </div>
             <div className="pt-2 flex gap-2">

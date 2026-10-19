@@ -99,6 +99,64 @@ export const requestIgnoreBatteryOptimizations = (): boolean => {
   return false;
 };
 
+export const openDataSaverSettings = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.openDataSaverSettings) {
+    bridge.openDataSaverSettings();
+    return true;
+  }
+  return openNativeAppSettings();
+};
+
+export const openGooglePlayServicesSettings = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.openGooglePlayServicesSettings) {
+    bridge.openGooglePlayServicesSettings();
+    return true;
+  }
+  return openNativeAppSettings();
+};
+
+export const openMobileNetworkSettings = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.openMobileNetworkSettings) {
+    bridge.openMobileNetworkSettings();
+    return true;
+  }
+  return false;
+};
+
+export const openFcmDiagnostics = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.openFcmDiagnostics) {
+    bridge.openFcmDiagnostics();
+    return true;
+  }
+  return false;
+};
+
+export interface NetworkDiagnosticInfo {
+  networkType: 'WIFI' | 'CELLULAR' | 'NONE' | 'OTHER';
+  isConnected: boolean;
+  isMetered: boolean;
+  isDataSaverActive: boolean;
+  isAppRestricted: boolean;
+  carrierName: string;
+}
+
+export const getNetworkDiagnosticInfo = (): NetworkDiagnosticInfo | null => {
+  const bridge = getNativeBridge();
+  if (bridge?.getNetworkDiagnostics) {
+    try {
+      const raw = bridge.getNetworkDiagnostics();
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('getNetworkDiagnostics parse error:', e);
+    }
+  }
+  return null;
+};
+
 let isInitialized = false;
 
 /**

@@ -18,7 +18,12 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.webkit.JavascriptInterface;
-import androidx.core.app.NotificationCompat;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.telephony.TelephonyManager;
+import org.json.JSONObject;
 import com.getcapacitor.BridgeActivity;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -42,6 +47,9 @@ public class MainActivity extends BridgeActivity {
 
         // Cache FCM token
         syncFcmToken();
+
+        // Monitor network state (Wi-Fi <-> Cellular) to re-sync push sockets immediately
+        registerNetworkCallback();
     }
 
     @Override
@@ -91,6 +99,29 @@ public class MainActivity extends BridgeActivity {
                     } catch (Exception ignored) {}
                 }
             });
+        } catch (Exception ignored) {}
+    }
+
+    private void registerNetworkCallback() {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                cm.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
+                    @Override
+                    public void onAvailable(Network network) {
+                        super.onAvailable(network);
+                        syncFcmToken();
+                    }
+
+                    @Override
+                    public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+                        super.onCapabilitiesChanged(network, capabilities);
+                        if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                            syncFcmToken();
+                        }
+                    }
+                });
+            }
         } catch (Exception ignored) {}
     }
 
@@ -350,6 +381,158 @@ public class MainActivity extends BridgeActivity {
                 return com.onesignal.OneSignal.getNotifications().getPermission();
             } catch (Exception e) {
                 return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void openDataSaverSettings() {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    Intent intent = new Intent(Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS);
+                    intent.setData(Uri.parse("package:" + context.getPackageName()));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                    return;
+                }
+            } catch (Exception ignored) {}
+
+            try {
+                Intent fallback = new Intent(Settings.ACTION_DATA_SAVER_SETTINGS);
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(fallback);
+            } catch (Exception ignored) {
+                openAppSettings();
+            }
+        }
+
+        @JavascriptInterface
+        public void openGooglePlayServicesSettings() {
+            try {
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.parse("package:com.google.android.gms"));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                openAppSettings();
+            }
+        }
+
+        @JavascriptInterface
+        public void openMobileNetworkSettings() {
+            try {
+                Intent intent = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e1) {
+                try {
+                    Intent fallback = new Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS);
+                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(fallback);
+                } catch (Exception ignored) {
+                    try {
+                        Intent wireless = new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+                        wireless.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(wireless);
+                    } catch (Exception ignored2) {}
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public void openFcmDiagnostics() {
+            try {
+                Intent intent = new Intent();
+                intent.setClassName("com.google.android.gms", "com.google.android.gms.gcm.GcmDiagnostics");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception ignored) {
+                try {
+                    Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+                    dialIntent.setData(Uri.parse("tel:" + Uri.encode("*#*#426#*#*")));
+                    dialIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(dialIntent);
+                } catch (Exception ignored2) {}
+            }
+        }
+
+        @JavascriptInterface
+        public String getNetworkDiagnostics() {
+            try {
+                JSONObject obj = new JSONObject();
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+
+                String networkType = "NONE";
+                boolean isMetered = true;
+                boolean isConnected = false;
+
+                if (cm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Network activeNetwork = cm.getActiveNetwork();
+                        if (activeNetwork != null) {
+                            NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+                            if (caps != null) {
+                                isConnected = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                                    networkType = "WIFI";
+                                    isMetered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+                                } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                                    networkType = "CELLULAR";
+                                    isMetered = true;
+                                } else {
+                                    networkType = "OTHER";
+                                }
+                            }
+                        }
+                    } else {
+                        NetworkInfo info = cm.getActiveNetworkInfo();
+                        if (info != null && info.isConnected()) {
+                            isConnected = true;
+                            if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+                                networkType = "WIFI";
+                                isMetered = false;
+                            } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                                networkType = "CELLULAR";
+                                isMetered = true;
+                            }
+                        }
+                    }
+                }
+
+                boolean isDataSaverActive = false;
+                boolean isAppRestricted = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && cm != null) {
+                    int status = cm.getRestrictBackgroundStatus();
+                    if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED) {
+                        isDataSaverActive = true;
+                        isAppRestricted = true;
+                    } else if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED) {
+                        isDataSaverActive = true;
+                        isAppRestricted = false;
+                    } else {
+                        isDataSaverActive = false;
+                        isAppRestricted = false;
+                    }
+                }
+
+                String carrierName = "";
+                if (tm != null) {
+                    carrierName = tm.getNetworkOperatorName();
+                    if (carrierName == null || carrierName.isEmpty()) {
+                        carrierName = tm.getSimOperatorName();
+                    }
+                }
+
+                obj.put("networkType", networkType);
+                obj.put("isConnected", isConnected);
+                obj.put("isMetered", isMetered);
+                obj.put("isDataSaverActive", isDataSaverActive);
+                obj.put("isAppRestricted", isAppRestricted);
+                obj.put("carrierName", carrierName != null ? carrierName : "");
+
+                return obj.toString();
+            } catch (Exception e) {
+                return "{}";
             }
         }
     }

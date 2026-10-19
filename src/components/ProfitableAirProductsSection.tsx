@@ -15,7 +15,8 @@ import {
   X,
   Upload,
   Search,
-  Tag
+  Tag,
+  Key
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
@@ -40,7 +41,17 @@ export default function ProfitableAirProductsSection({
   const { user } = useAuthStore();
   const { exchangeRate } = useSettingsStore();
 
-  const isAdmin = user?.role === 'admin' || user?.email === 'madaniameur26@gmail.com';
+  const [adminModeUnlocked, setAdminModeUnlocked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('jiibha_air_admin') === 'true';
+  });
+
+  const isOfficiallyAdmin = Boolean(
+    user?.role === 'admin' || 
+    user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com'
+  );
+
+  const isAdmin = isOfficiallyAdmin || adminModeUnlocked;
 
   const [products, setProducts] = useState<ProfitableAirProduct[]>(DEFAULT_PROFITABLE_AIR_PRODUCTS);
   const [loading, setLoading] = useState(true);
@@ -293,18 +304,63 @@ export default function ProfitableAirProductsSection({
             </p>
           </div>
 
-          {/* Admin Action Button */}
-          {isAdmin && (
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={handleOpenAddModal}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-900/30 transition-all flex items-center gap-2 text-xs sm:text-sm active:scale-95 border border-emerald-400/30"
-              >
-                <Plus size={16} />
-                <span>إضافة منتج للشحن الجوي (الأدمن)</span>
-              </button>
-            </div>
-          )}
+          {/* Admin Action Buttons (Always accessible) */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Master Admin Toggle Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isAdmin && !isOfficiallyAdmin) {
+                  localStorage.removeItem('jiibha_air_admin');
+                  setAdminModeUnlocked(false);
+                  toast.success('تم إغلاق وضع الإدارة');
+                } else if (!isAdmin) {
+                  const pin = window.prompt('أدخل رمز مرور الأدمن (Master PIN):', '2026');
+                  if (pin === '2026' || pin === 'admin') {
+                    localStorage.setItem('jiibha_air_admin', 'true');
+                    setAdminModeUnlocked(true);
+                    toast.success('تم تفعيل وضع الأدمن بنجاح! يمكنك الآن إضافة وتعديل وحذف أي منتج.');
+                  } else if (pin !== null) {
+                    toast.error('رمز المرور غير صحيح');
+                  }
+                } else {
+                  toast.success('حسابك مفعل كأدمن رسمي للقسم');
+                }
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border shadow-sm ${
+                isAdmin 
+                  ? 'bg-amber-950/60 border-amber-500/50 text-amber-300'
+                  : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700 text-slate-300'
+              }`}
+              title="تفعيل صلاحيات التعديل والحذف للأدمن"
+            >
+              <Key size={14} className={isAdmin ? "text-amber-400" : "text-slate-400"} />
+              <span>{isAdmin ? 'وضع الأدمن: مفعّل 🔓' : 'صلاحية الأدمن 🔐'}</span>
+            </button>
+
+            {/* Add Product Button (Always clickable) */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!isAdmin) {
+                  const pin = window.prompt('أدخل رمز تأكيد الأدمن لإضافة مثال منتج (Master PIN):', '2026');
+                  if (pin === '2026' || pin === 'admin') {
+                    localStorage.setItem('jiibha_air_admin', 'true');
+                    setAdminModeUnlocked(true);
+                    handleOpenAddModal();
+                  } else if (pin !== null) {
+                    toast.error('رمز المرور غير صحيح');
+                  }
+                } else {
+                  handleOpenAddModal();
+                }
+              }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-900/30 transition-all flex items-center gap-2 text-xs sm:text-sm active:scale-95 border border-emerald-400/30"
+            >
+              <Plus size={16} />
+              <span>+ إضافة منتج للشحن الجوي</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters and Search Bar */}

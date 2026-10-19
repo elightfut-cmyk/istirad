@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.webkit.JavascriptInterface;
+import androidx.core.app.NotificationCompat;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -381,7 +382,7 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception ignored) {}
 
             try {
-                Intent fallback = new Intent(Settings.ACTION_DATA_SAVER_SETTINGS);
+                Intent fallback = new Intent("android.settings.DATA_SAVER_SETTINGS");
                 fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(fallback);
             } catch (Exception ignored) {

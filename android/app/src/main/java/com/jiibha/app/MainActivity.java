@@ -31,6 +31,7 @@ public class MainActivity extends BridgeActivity {
 
     public static final String NOTIFICATION_CHANNEL_ID = "default_notification_channel";
     public static volatile String cachedFcmToken = "";
+    public static volatile String cachedSubscriptionId = "";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,11 +46,8 @@ public class MainActivity extends BridgeActivity {
         // Principle 2: Setup Native Bridge for OEM Battery Management (Xiaomi, Huawei, Oppo, etc.)
         setupNativeBridge();
 
-        // Cache FCM token
+        // Cache FCM token and subscription
         syncFcmToken();
-
-        // Monitor network state (Wi-Fi <-> Cellular) to re-sync push sockets immediately
-        registerNetworkCallback();
     }
 
     @Override
@@ -94,34 +92,14 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult() != null) {
                     cachedFcmToken = task.getResult();
-                    try {
-                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
-                    } catch (Exception ignored) {}
                 }
             });
-        } catch (Exception ignored) {}
-    }
-
-    private void registerNetworkCallback() {
-        try {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                cm.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
-                    @Override
-                    public void onAvailable(Network network) {
-                        super.onAvailable(network);
-                        syncFcmToken();
-                    }
-
-                    @Override
-                    public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
-                        super.onCapabilitiesChanged(network, capabilities);
-                        if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-                            syncFcmToken();
-                        }
-                    }
-                });
-            }
+            try {
+                String subId = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
+                if (subId != null && !subId.isEmpty()) {
+                    cachedSubscriptionId = subId;
+                }
+            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
@@ -363,11 +341,17 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public String getPushSubscriptionId() {
-            try {
-                return com.onesignal.OneSignal.getUser().getPushSubscription().getId();
-            } catch (Exception e) {
-                return "";
+            if (cachedSubscriptionId != null && !cachedSubscriptionId.isEmpty()) {
+                return cachedSubscriptionId;
             }
+            try {
+                String id = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
+                if (id != null && !id.isEmpty()) {
+                    cachedSubscriptionId = id;
+                    return id;
+                }
+            } catch (Exception ignored) {}
+            return "";
         }
 
         @JavascriptInterface
@@ -456,45 +440,51 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public void openXiaomiDataUsageSettings() {
+            try {
+                String packageName = context.getPackageName();
+                String[][] intents = {
+                    {"com.miui.securitycenter", "com.miui.networkassistant.ui.activity.FirewallActivity"},
+                    {"com.miui.securitycenter", "com.miui.networkassistant.ui.activity.AppNetworkDetailActivity"},
+                    {"com.miui.networkassistant", "com.miui.networkassistant.ui.activity.FirewallActivity"}
+                };
+                for (String[] pair : intents) {
+                    try {
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName(pair[0], pair[1]));
+                        intent.putExtra("package_name", packageName);
+                        intent.putExtra("package_label", "جيبها");
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
+                        return;
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {}
+            openAppSettings();
+        }
+
+        @JavascriptInterface
         public String getNetworkDiagnostics() {
             try {
                 JSONObject obj = new JSONObject();
                 ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-                TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
                 String networkType = "NONE";
-                boolean isMetered = true;
                 boolean isConnected = false;
+                boolean isMetered = true;
 
                 if (cm != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        Network activeNetwork = cm.getActiveNetwork();
-                        if (activeNetwork != null) {
-                            NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-                            if (caps != null) {
-                                isConnected = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-                                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                                    networkType = "WIFI";
-                                    isMetered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
-                                } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                                    networkType = "CELLULAR";
-                                    isMetered = true;
-                                } else {
-                                    networkType = "OTHER";
-                                }
-                            }
-                        }
-                    } else {
-                        NetworkInfo info = cm.getActiveNetworkInfo();
-                        if (info != null && info.isConnected()) {
-                            isConnected = true;
-                            if (info.getType() == ConnectivityManager.TYPE_WIFI) {
-                                networkType = "WIFI";
-                                isMetered = false;
-                            } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
-                                networkType = "CELLULAR";
-                                isMetered = true;
-                            }
+                    NetworkInfo info = cm.getActiveNetworkInfo();
+                    if (info != null && info.isConnected()) {
+                        isConnected = true;
+                        if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+                            networkType = "WIFI";
+                            isMetered = false;
+                        } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+                            networkType = "CELLULAR";
+                            isMetered = true;
+                        } else {
+                            networkType = "OTHER";
                         }
                     }
                 }
@@ -502,25 +492,16 @@ public class MainActivity extends BridgeActivity {
                 boolean isDataSaverActive = false;
                 boolean isAppRestricted = false;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && cm != null) {
-                    int status = cm.getRestrictBackgroundStatus();
-                    if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED) {
-                        isDataSaverActive = true;
-                        isAppRestricted = true;
-                    } else if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED) {
-                        isDataSaverActive = true;
-                        isAppRestricted = false;
-                    } else {
-                        isDataSaverActive = false;
-                        isAppRestricted = false;
-                    }
-                }
-
-                String carrierName = "";
-                if (tm != null) {
-                    carrierName = tm.getNetworkOperatorName();
-                    if (carrierName == null || carrierName.isEmpty()) {
-                        carrierName = tm.getSimOperatorName();
-                    }
+                    try {
+                        int status = cm.getRestrictBackgroundStatus();
+                        if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED) {
+                            isDataSaverActive = true;
+                            isAppRestricted = true;
+                        } else if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED) {
+                            isDataSaverActive = true;
+                            isAppRestricted = false;
+                        }
+                    } catch (Exception ignored) {}
                 }
 
                 obj.put("networkType", networkType);
@@ -528,7 +509,7 @@ public class MainActivity extends BridgeActivity {
                 obj.put("isMetered", isMetered);
                 obj.put("isDataSaverActive", isDataSaverActive);
                 obj.put("isAppRestricted", isAppRestricted);
-                obj.put("carrierName", carrierName != null ? carrierName : "");
+                obj.put("carrierName", "");
 
                 return obj.toString();
             } catch (Exception e) {

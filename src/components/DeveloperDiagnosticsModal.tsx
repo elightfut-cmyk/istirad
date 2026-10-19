@@ -24,6 +24,10 @@ import {
   getPushSubscriptionId,
   getFcmToken,
   isNativePlatform,
+  isXiaomiDevice,
+  openXiaomiDataUsageSettings,
+  openXiaomiBatterySaver,
+  openXiaomiAutostart,
   openDataSaverSettings,
   openGooglePlayServicesSettings,
   openMobileNetworkSettings,
@@ -70,14 +74,25 @@ export default function DeveloperDiagnosticsModal({
   const [showExplanation, setShowExplanation] = useState(false);
 
   const refreshAll = () => {
-    getPushSubscriptionId().then(setSubId);
-    setFcmToken(getFcmToken());
-    const info = getNetworkDiagnosticInfo();
-    setNetInfo(info);
+    // Non-blocking async fetch
+    setTimeout(async () => {
+      try {
+        const id = await getPushSubscriptionId();
+        if (id) setSubId(id);
+        const token = getFcmToken();
+        if (token) setFcmToken(token);
+        const info = getNetworkDiagnosticInfo();
+        if (info) setNetInfo(info);
+      } catch (e) {
+        console.warn('Diagnostics refresh notice:', e);
+      }
+    }, 20);
   };
 
   useEffect(() => {
     if (isOpen) {
+      const localSub = localStorage.getItem('onesignal_subscription_id');
+      if (localSub) setSubId(localSub);
       refreshAll();
     }
   }, [isOpen]);
@@ -92,6 +107,7 @@ export default function DeveloperDiagnosticsModal({
         message: `وصول فوري بجودة FCM v1 على معرف العميل: ${effectiveUserId || 'عام'}`,
         targetUserId: effectiveUserId || null,
         targetRole: effectiveRole || null,
+        targetSubscriptionId: subId || null,
         data: { test: true, timestamp: Date.now() }
       });
 
@@ -277,6 +293,53 @@ export default function DeveloperDiagnosticsModal({
               )}
             </div>
           </div>
+
+          {/* Xiaomi / Redmi Specific Fixes */}
+          {isXiaomiDevice() && (
+            <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3.5 space-y-2.5" dir="rtl">
+              <div className="flex items-center justify-between text-amber-300 font-bold text-xs" dir="ltr">
+                <span className="flex items-center gap-1.5">
+                  <Smartphone size={15} className="text-amber-400" />
+                  <span>Xiaomi / Redmi MIUI 4G Settings</span>
+                </span>
+                <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded text-amber-300 font-mono">
+                  MIUI DETECTED
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-200/90 leading-relaxed font-sans">
+                هواتف شاومي وريدمي تقوم افتراضياً بحجب الإنترنت عن التطبيقات في الـ 4G عند إغلاق الشاشة لتوفير الرصيد والبطارية. اضغط الأزرار التالية لضبطها:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-sans pt-1">
+                <button
+                  onClick={() => {
+                    openXiaomiDataUsageSettings();
+                    toast.success('تأكد من تفعيل علامة الصح أمام "بيانات الهاتف" (Mobile data)');
+                  }}
+                  className="bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border border-amber-500/40"
+                >
+                  <span>1. تقييد بيانات الشريحة</span>
+                </button>
+                <button
+                  onClick={() => {
+                    openXiaomiBatterySaver();
+                    toast.success('اختر "لا توجد قيود" (No restrictions)');
+                  }}
+                  className="bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border border-amber-500/40"
+                >
+                  <span>2. موفر البطارية (لا توجد قيود)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    openXiaomiAutostart();
+                    toast.success('قم بتفعيل "التشغيل التلقائي" للتطبيق');
+                  }}
+                  className="bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 border border-amber-500/40"
+                >
+                  <span>3. التشغيل التلقائي</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Key Separation & Zero Trust Status */}
           <div className="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">

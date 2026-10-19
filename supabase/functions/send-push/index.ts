@@ -85,10 +85,13 @@ serve(async (req) => {
       headings, 
       contents, 
       data = {}, 
-      sendToAll = false,
+      sendToAll: rawSendToAll = false,
+      targetRole,
       android_channel_id,
       existing_android_channel_id 
     } = body;
+
+    let sendToAll = Boolean(rawSendToAll || targetRole === 'all');
 
     const rawIds = userIds || (user_id ? [user_id] : []);
     const externalIds = (Array.isArray(rawIds) ? rawIds : [rawIds])
@@ -101,7 +104,7 @@ serve(async (req) => {
       .filter(Boolean)
       .map(String);
 
-    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
+    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0 && !targetRole) {
       return new Response(
         JSON.stringify({ 
           ok: false,
@@ -153,6 +156,8 @@ serve(async (req) => {
       oneSignalPayload.include_aliases = {
         external_id: externalIds
       };
+    } else if (targetRole && targetRole !== 'all') {
+      oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     }
 
     // 6. Forward request securely to OneSignal REST API
@@ -192,8 +197,9 @@ serve(async (req) => {
       }
     }
 
-    // If subscription delivery failed and externalIds are available, fallback to external_id alias
-    if (!oneSignalRes.ok && validSubIds.length > 0 && externalIds.length > 0) {
+    // If subscription delivery failed or returned 0 recipients and externalIds are available, fallback to external_id alias
+    const hasZeroRecipients = resJson && resJson.recipients === 0;
+    if ((!oneSignalRes.ok || hasZeroRecipients) && validSubIds.length > 0 && externalIds.length > 0) {
       const fallbackPayload = {
         ...oneSignalPayload,
         target_channel: 'push',

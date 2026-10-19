@@ -90,6 +90,15 @@ export const openXiaomiBatterySaver = (): boolean => {
   return openNativeAppSettings();
 };
 
+export const openXiaomiDataUsageSettings = (): boolean => {
+  const bridge = getNativeBridge();
+  if (bridge?.openXiaomiDataUsageSettings) {
+    bridge.openXiaomiDataUsageSettings();
+    return true;
+  }
+  return openNativeAppSettings();
+};
+
 export const requestIgnoreBatteryOptimizations = (): boolean => {
   const bridge = getNativeBridge();
   if (bridge?.requestIgnoreBatteryOptimizations) {
@@ -473,6 +482,7 @@ export const sendPushNotification = async ({
   message,
   targetUserId = null,
   targetRole = null,
+  targetSubscriptionId = null,
   targetUrl = '/notifications',
   data = {}
 }: {
@@ -480,6 +490,7 @@ export const sendPushNotification = async ({
   message: string;
   targetUserId?: string | null;
   targetRole?: string | null;
+  targetSubscriptionId?: string | null;
   targetUrl?: string;
   data?: Record<string, any>;
 }): Promise<any> => {
@@ -490,6 +501,7 @@ export const sendPushNotification = async ({
         title,
         message,
         userIds: targetUserId ? [String(targetUserId)] : [],
+        subscriptionIds: targetSubscriptionId ? [String(targetSubscriptionId)] : [],
         targetRole,
         data: { ...data, url: targetUrl },
         android_channel_id: 'default_notification_channel',

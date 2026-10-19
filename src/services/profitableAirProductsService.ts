@@ -17,13 +17,15 @@ export interface ProfitableAirProduct {
   adminBadge?: string;
   adminNote: string;
   isActive: boolean;
+  displayOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
 
+const TABLE_NAME = 'profitable_air_products';
 const POLICY_TYPE = 'PROFITABLE_AIR_PRODUCTS';
 let cachedProducts: { data: ProfitableAirProduct[]; timestamp: number } | null = null;
-const CACHE_TTL = 3 * 60 * 1000; // 3 minutes cache to avoid DB quota bloat
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes cache
 
 export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
   {
@@ -43,6 +45,7 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'منتج رابح جداً ✈️✨',
     adminNote: 'وزن خفيف جداً (120 غرام). تكلفة شحنه الجوي لا تتجاوز 420 دج، ويباع في السوق الجزائري بـ 2900 دج. هامش ربح صافي يتجاوز 135%!',
     isActive: true,
+    displayOrder: 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -63,6 +66,7 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'أعلى نسبة مبيعات 🚀',
     adminNote: 'منتج ترند دائم الطلب. شحن جوي سريع في 7-10 أيام بأقل من 350 دج للقطعة، يضمن للتاجر دورة رأس مال سريعة للغاية.',
     isActive: true,
+    displayOrder: 2,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -83,6 +87,7 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'هامش ربح ممتاز 💎',
     adminNote: 'وزن ربع كيلو ممتاز، جودة معدنية فاخرة تقنع المشتري فوراً. ربح صافي يتجاوز 2200 دج للقطعة الواحدة بالشحن الجوي.',
     isActive: true,
+    displayOrder: 3,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -103,6 +108,7 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'غير مناسب للشحن الجوي ⚠️🚫',
     adminNote: 'تنبيه خطير: وزن الكرسي 17.5 كغ بحجم ضخم! تكلفة الشحن الجوي تفوق 61 ألف دج فتصل تكلفته لـ 70 ألف بينما يباع محلياً بـ 28 ألف دج. هذا المنتج يستورد بحرياً فقط!',
     isActive: true,
+    displayOrder: 4,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -123,6 +129,7 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'شحن بحري فقط 🚢⚠️',
     adminNote: 'الوزن الحجمي والفعلي مرتفع (أكثر من 8 كغ). الشحن الجوي يلتهم أي هامش ربح ويحول الصفقة إلى خسارة. مناسب حصرياً للشحن البحري الجماعي.',
     isActive: true,
+    displayOrder: 5,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -143,20 +150,104 @@ export const DEFAULT_PROFITABLE_AIR_PRODUCTS: ProfitableAirProduct[] = [
     adminBadge: 'ترند نسائي قوي 🌸✨',
     adminNote: 'منتج فيروسي على تيك توك وإنستغرام. وزنه خفيف ويكلف واصلاً للجزائر 2650 دج ويباع بسهولة بـ 5900 دج. عائد استثماري خيالي.',
     isActive: true,
+    displayOrder: 6,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
 ];
 
+function mapDbRowToProduct(row: any): ProfitableAirProduct {
+  return {
+    id: String(row.id),
+    title: row.title || 'منتج',
+    category: row.category || 'عام',
+    imageUrl: row.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
+    sourcePlatform: (row.source_platform as any) || '1688',
+    priceUsd: Number(row.price_usd) || 0,
+    priceDzd: Number(row.price_dzd) || 0,
+    weightKg: Number(row.weight_kg) || 0.1,
+    shippingCostDzd: Number(row.shipping_cost_dzd) || 0,
+    finalCostDzd: Number(row.final_cost_dzd) || 0,
+    sellingPriceDzd: Number(row.selling_price_dzd) || 0,
+    profitDzd: Number(row.profit_dzd) || 0,
+    statusColor: row.status_color === 'red' ? 'red' : 'green',
+    adminBadge: row.admin_badge || undefined,
+    adminNote: row.admin_note || '',
+    isActive: row.is_active !== false,
+    displayOrder: row.display_order ? Number(row.display_order) : 0,
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || new Date().toISOString(),
+  };
+}
+
+function mapProductToDbRow(p: Partial<ProfitableAirProduct>): any {
+  const row: any = {};
+  if (p.id) row.id = p.id;
+  if (p.title !== undefined) row.title = p.title;
+  if (p.category !== undefined) row.category = p.category;
+  if (p.imageUrl !== undefined) row.image_url = p.imageUrl;
+  if (p.sourcePlatform !== undefined) row.source_platform = p.sourcePlatform;
+  if (p.priceUsd !== undefined) row.price_usd = Number(p.priceUsd);
+  if (p.priceDzd !== undefined) row.price_dzd = Number(p.priceDzd);
+  if (p.weightKg !== undefined) row.weight_kg = Number(p.weightKg);
+  if (p.shippingCostDzd !== undefined) row.shipping_cost_dzd = Number(p.shippingCostDzd);
+  if (p.finalCostDzd !== undefined) row.final_cost_dzd = Number(p.finalCostDzd);
+  if (p.sellingPriceDzd !== undefined) row.selling_price_dzd = Number(p.sellingPriceDzd);
+  if (p.profitDzd !== undefined) row.profit_dzd = Number(p.profitDzd);
+  if (p.statusColor !== undefined) row.status_color = p.statusColor;
+  if (p.adminBadge !== undefined) row.admin_badge = p.adminBadge;
+  if (p.adminNote !== undefined) row.admin_note = p.adminNote;
+  if (p.isActive !== undefined) row.is_active = p.isActive;
+  if (p.displayOrder !== undefined) row.display_order = p.displayOrder;
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
 export const profitableAirProductsService = {
   /**
-   * Fetch all profitable air freight products from platform_policies
+   * Fetch all profitable air freight products.
+   * Directly queries the dedicated table `profitable_air_products`.
+   * Falls back gracefully to `platform_policies` if table hasn't been migrated yet.
    */
   async getProducts(force = false): Promise<ProfitableAirProduct[]> {
     if (!force && cachedProducts && (Date.now() - cachedProducts.timestamp < CACHE_TTL)) {
       return cachedProducts.data;
     }
 
+    try {
+      // 1. Primary: query dedicated database table `profitable_air_products`
+      const { data: tableData, error: tableError } = await supabase
+        .from(TABLE_NAME)
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (!tableError && tableData) {
+        if (tableData.length > 0) {
+          const mapped = tableData.map(mapDbRowToProduct);
+          cachedProducts = { data: mapped, timestamp: Date.now() };
+          return mapped;
+        } else {
+          // Table exists but is empty -> seed it with defaults
+          await this.seedDedicatedTable(DEFAULT_PROFITABLE_AIR_PRODUCTS);
+          cachedProducts = { data: DEFAULT_PROFITABLE_AIR_PRODUCTS, timestamp: Date.now() };
+          return DEFAULT_PROFITABLE_AIR_PRODUCTS;
+        }
+      }
+
+      // If table query failed (table not created yet in DB), fall back to platform_policies
+      console.warn(`Table ${TABLE_NAME} query notice:`, tableError?.message || 'Using fallback policy');
+      return await this.getFromFallbackPolicy();
+    } catch (err) {
+      console.error('Unexpected error in getProducts:', err);
+      return await this.getFromFallbackPolicy();
+    }
+  },
+
+  /**
+   * Fallback method using platform_policies
+   */
+  async getFromFallbackPolicy(): Promise<ProfitableAirProduct[]> {
     try {
       const { data, error } = await supabase
         .from('platform_policies')
@@ -165,132 +256,137 @@ export const profitableAirProductsService = {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profitable air products:', error);
         return DEFAULT_PROFITABLE_AIR_PRODUCTS;
       }
 
       if (!data || !data.content) {
-        // Automatically seed with default high-quality examples if none exist
-        await this.saveAllProducts(DEFAULT_PROFITABLE_AIR_PRODUCTS);
         cachedProducts = { data: DEFAULT_PROFITABLE_AIR_PRODUCTS, timestamp: Date.now() };
         return DEFAULT_PROFITABLE_AIR_PRODUCTS;
       }
 
-      try {
-        const parsed = JSON.parse(data.content) as ProfitableAirProduct[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          cachedProducts = { data: parsed, timestamp: Date.now() };
-          return parsed;
-        } else {
-          return DEFAULT_PROFITABLE_AIR_PRODUCTS;
-        }
-      } catch (e) {
-        console.error('Error parsing profitable air products JSON:', e);
-        return DEFAULT_PROFITABLE_AIR_PRODUCTS;
+      const parsed = JSON.parse(data.content) as ProfitableAirProduct[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedProducts = { data: parsed, timestamp: Date.now() };
+        return parsed;
       }
-    } catch (err) {
-      console.error('Unexpected error in getProducts:', err);
+      return DEFAULT_PROFITABLE_AIR_PRODUCTS;
+    } catch {
       return DEFAULT_PROFITABLE_AIR_PRODUCTS;
     }
   },
 
   /**
-   * Save an entire array of products
+   * Seed dedicated table
    */
-  async saveAllProducts(products: ProfitableAirProduct[]): Promise<{ success: boolean; error?: any }> {
+  async seedDedicatedTable(products: ProfitableAirProduct[]) {
     try {
-      cachedProducts = null;
-      const now = new Date().toISOString();
-
-      const { error } = await supabase
-        .from('platform_policies')
-        .upsert(
-          {
-            policy_type: POLICY_TYPE,
-            content: JSON.stringify(products),
-            updated_at: now,
-          },
-          { onConflict: 'policy_type' }
-        );
-
-      if (error) {
-        console.error('Error saving air products to platform_policies:', error);
-        return { success: false, error };
-      }
-
-      cachedProducts = { data: products, timestamp: Date.now() };
-      return { success: true };
-    } catch (err) {
-      console.error('Unexpected error in saveAllProducts:', err);
-      return { success: false, error: err };
+      const rows = products.map(mapProductToDbRow);
+      await supabase.from(TABLE_NAME).upsert(rows, { onConflict: 'id' });
+    } catch (e) {
+      console.warn('Could not seed dedicated table:', e);
     }
   },
 
   /**
-   * Add or update a single product
+   * Add or update a product in the dedicated database table
    */
   async saveProduct(productData: Partial<ProfitableAirProduct>): Promise<{ success: boolean; data?: ProfitableAirProduct; error?: any }> {
     try {
-      const currentList = await this.getProducts(true);
+      cachedProducts = null;
       const now = new Date().toISOString();
+      const id = productData.id || `air_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-      let targetProduct: ProfitableAirProduct;
-      let updatedList: ProfitableAirProduct[];
+      const targetProduct: ProfitableAirProduct = {
+        id,
+        title: productData.title || 'منتج شحن جوي',
+        category: productData.category || 'عام',
+        imageUrl: productData.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
+        sourcePlatform: productData.sourcePlatform || '1688',
+        priceUsd: Number(productData.priceUsd) || 0,
+        priceDzd: Number(productData.priceDzd) || 0,
+        weightKg: Number(productData.weightKg) || 0.1,
+        shippingCostDzd: Number(productData.shippingCostDzd) || 0,
+        finalCostDzd: Number(productData.finalCostDzd) || 0,
+        sellingPriceDzd: Number(productData.sellingPriceDzd) || 0,
+        profitDzd: Number(productData.profitDzd) || 0,
+        statusColor: productData.statusColor || 'green',
+        adminBadge: productData.adminBadge || (productData.statusColor === 'red' ? 'تكلفة مرتفعة - بحري ⚠️' : 'منتج رابح ✈️'),
+        adminNote: productData.adminNote || '',
+        isActive: productData.isActive !== false,
+        displayOrder: productData.displayOrder || 0,
+        createdAt: productData.createdAt || now,
+        updatedAt: now,
+      };
 
-      const existingIndex = currentList.findIndex(p => p.id === productData.id);
+      const dbRow = mapProductToDbRow(targetProduct);
 
-      if (existingIndex >= 0) {
-        const existing = currentList[existingIndex];
-        targetProduct = {
-          ...existing,
-          ...productData,
-          updatedAt: now,
-        } as ProfitableAirProduct;
-        updatedList = [...currentList];
-        updatedList[existingIndex] = targetProduct;
-      } else {
-        targetProduct = {
-          id: productData.id || `air_prod_${Date.now()}`,
-          title: productData.title || 'منتج جديد',
-          category: productData.category || 'عام',
-          imageUrl: productData.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
-          sourcePlatform: productData.sourcePlatform || '1688',
-          priceUsd: Number(productData.priceUsd) || 0,
-          priceDzd: Number(productData.priceDzd) || 0,
-          weightKg: Number(productData.weightKg) || 0.1,
-          shippingCostDzd: Number(productData.shippingCostDzd) || 0,
-          finalCostDzd: Number(productData.finalCostDzd) || 0,
-          sellingPriceDzd: Number(productData.sellingPriceDzd) || 0,
-          profitDzd: Number(productData.profitDzd) || 0,
-          statusColor: productData.statusColor || 'green',
-          adminBadge: productData.adminBadge || (productData.statusColor === 'red' ? 'تكلفة مرتفعة - الأفضل بحري ⚠️' : 'منتج رابح ✈️'),
-          adminNote: productData.adminNote || '',
-          isActive: productData.isActive !== false,
-          createdAt: now,
-          updatedAt: now,
-        };
-        updatedList = [targetProduct, ...currentList];
+      // 1. Save to dedicated table
+      const { error: tableError } = await supabase
+        .from(TABLE_NAME)
+        .upsert(dbRow, { onConflict: 'id' });
+
+      if (tableError) {
+        console.warn(`Upsert into ${TABLE_NAME} failed, saving to platform_policies fallback:`, tableError);
       }
 
-      const res = await this.saveAllProducts(updatedList);
-      if (!res.success) return { success: false, error: res.error };
+      // 2. Also keep platform_policies in sync as seamless backup
+      const currentFallback = await this.getFromFallbackPolicy();
+      const idx = currentFallback.findIndex(p => p.id === targetProduct.id);
+      let updatedFallback = [...currentFallback];
+      if (idx >= 0) {
+        updatedFallback[idx] = targetProduct;
+      } else {
+        updatedFallback = [targetProduct, ...currentFallback];
+      }
+
+      await supabase
+        .from('platform_policies')
+        .upsert({
+          policy_type: POLICY_TYPE,
+          content: JSON.stringify(updatedFallback),
+          updated_at: now
+        }, { onConflict: 'policy_type' });
+
+      // Refresh cache
+      await this.getProducts(true);
 
       return { success: true, data: targetProduct };
     } catch (err) {
-      console.error('Error saving single air product:', err);
+      console.error('Error saving air product:', err);
       return { success: false, error: err };
     }
   },
 
   /**
-   * Delete a product by id
+   * Delete a product by ID from the database table
    */
   async deleteProduct(id: string): Promise<{ success: boolean; error?: any }> {
     try {
-      const currentList = await this.getProducts(true);
-      const updatedList = currentList.filter(p => p.id !== id);
-      return await this.saveAllProducts(updatedList);
+      cachedProducts = null;
+
+      // 1. Delete from dedicated table
+      await supabase
+        .from(TABLE_NAME)
+        .delete()
+        .eq('id', id);
+
+      // 2. Also delete from fallback policy
+      const currentFallback = await this.getFromFallbackPolicy();
+      const updatedFallback = currentFallback.filter(p => p.id !== id);
+      await supabase
+        .from('platform_policies')
+        .upsert({
+          policy_type: POLICY_TYPE,
+          content: JSON.stringify(updatedFallback),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'policy_type' });
+
+      // Refresh cache
+      await this.getProducts(true);
+
+      return { success: true };
     } catch (err) {
+      console.error('Error deleting air product:', err);
       return { success: false, error: err };
     }
   },
@@ -300,9 +396,24 @@ export const profitableAirProductsService = {
    */
   async toggleActive(id: string, isActive: boolean): Promise<{ success: boolean; error?: any }> {
     try {
-      const currentList = await this.getProducts(true);
-      const updatedList = currentList.map(p => p.id === id ? { ...p, isActive, updatedAt: new Date().toISOString() } : p);
-      return await this.saveAllProducts(updatedList);
+      cachedProducts = null;
+      await supabase
+        .from(TABLE_NAME)
+        .update({ is_active: isActive, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      const currentFallback = await this.getFromFallbackPolicy();
+      const updatedFallback = currentFallback.map(p => p.id === id ? { ...p, isActive, updatedAt: new Date().toISOString() } : p);
+      await supabase
+        .from('platform_policies')
+        .upsert({
+          policy_type: POLICY_TYPE,
+          content: JSON.stringify(updatedFallback),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'policy_type' });
+
+      await this.getProducts(true);
+      return { success: true };
     } catch (err) {
       return { success: false, error: err };
     }

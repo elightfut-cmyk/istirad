@@ -59,11 +59,11 @@ export default function DeveloperDiagnosticsModal({
   const effectiveUserId = userId || authUser?.id;
   const effectiveRole = userRole || authUser?.role;
 
-  // Principle 5: Enforce zero-leakage security. Non-developers receive null immediately!
-  const isAuthorized = effectiveEmail?.trim().toLowerCase() === AUTHORIZED_DEVELOPER_EMAIL;
-  if (!isOpen || !isAuthorized) {
-    return null;
-  }
+  // Principle 5: Enforce zero-leakage security. Non-developers receive null
+  const isAuthorized = Boolean(
+    effectiveRole === 'admin' ||
+    effectiveEmail?.trim().toLowerCase() === AUTHORIZED_DEVELOPER_EMAIL
+  );
 
   const [notificationState, setNotificationState] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'unknown'
@@ -179,6 +179,10 @@ export default function DeveloperDiagnosticsModal({
     setNotificationState(perm ? 'granted' : 'denied');
     toast.success(perm ? 'تم منح الإذن بنجاح' : 'تم رفض الإذن');
   };
+
+  if (!isOpen || !isAuthorized) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 font-mono text-xs" dir="ltr">

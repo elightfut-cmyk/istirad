@@ -224,6 +224,21 @@ export const initOneSignal = async (): Promise<void> => {
         await OneSignal.User.pushSubscription.optIn();
       } catch (optErr) {}
 
+      // Auto-reconnect identity after fresh reinstall or app relaunch
+      try {
+        const storedUserId = localStorage.getItem('onesignal_external_id');
+        if (storedUserId) {
+          await OneSignal.login(storedUserId);
+          console.log('🔒 Auto-logged in OneSignal on init with external_id:', storedUserId);
+        }
+        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync();
+        if (freshSubId) {
+          localStorage.setItem('onesignal_subscription_id', freshSubId);
+        }
+      } catch (e) {
+        console.warn('Auto-identity sync notice:', e);
+      }
+
       isInitialized = true;
       console.log('✅ OneSignal Native initialized with event listeners for App ID:', ONESIGNAL_APP_ID);
       return;
@@ -293,12 +308,22 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
 
   // Capacitor Native Login
   if (isNativePlatform()) {
+    if (!isInitialized) {
+      try {
+        await initOneSignal();
+      } catch {}
+    }
     try {
       await OneSignal.login(strId);
       if (role) await OneSignal.User.addTag('role', role);
       if (userName) await OneSignal.User.addTag('name', userName);
       await OneSignal.User.addTag('user_id', strId);
-      console.log('🔒 OneSignal Native logged in with external_id:', strId);
+      try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+      const freshSubId = await OneSignal.User.pushSubscription.getIdAsync();
+      if (freshSubId) {
+        localStorage.setItem('onesignal_subscription_id', freshSubId);
+      }
+      console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
       return;
     } catch (e) {
       console.warn('OneSignal native login warning:', e);

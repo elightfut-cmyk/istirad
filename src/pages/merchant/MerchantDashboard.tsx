@@ -9,6 +9,7 @@ import CustomWindowSlider from '../../components/CustomWindowSlider';
 import NewsTicker from '../../components/NewsTicker';
 import YoutubePlayer from '../../components/YoutubePlayer';
 import NotificationStatusBanner from '../../components/NotificationStatusBanner';
+import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
 
 export default function MerchantDashboard() {
   const { user } = useAuthStore();
@@ -99,6 +100,11 @@ export default function MerchantDashboard() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Luxury Air Freight Profitable Products Section */}
+      <div className="mb-10">
+        <ProfitableAirProductsSection />
       </div>
       
       <div className="flex justify-between items-center mb-4">

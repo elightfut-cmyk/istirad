@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 
+import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
 import WhatsAppButton from '../../components/WhatsAppButton';
 import FAQSection from '../../components/FAQSection';
 import Footer from '../../components/Footer';
@@ -205,6 +206,9 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      {/* Profitable Air Freight Showcase Section */}
+      <ProfitableAirProductsSection />
 
       <YoutubePlayer />
 

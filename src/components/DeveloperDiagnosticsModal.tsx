@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { 
   ONESIGNAL_APP_ID, 
+  loginOneSignal,
   requestNotificationPermission, 
   sendPushNotification,
   getPushSubscriptionId,
@@ -97,6 +98,52 @@ export default function DeveloperDiagnosticsModal({
     }
   }, [isOpen]);
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncDevice = async () => {
+    setIsSyncing(true);
+    const toastId = toast.loading('جاري طلب إذن النظام ومزامنة رمز الجهاز مع الحساب...');
+
+    try {
+      // 1. Request OS permission
+      const permGranted = await requestNotificationPermission();
+      setNotificationState(permGranted ? 'granted' : 'denied');
+
+      // 2. Re-login to OneSignal to associate this device with current user ID
+      if (effectiveUserId) {
+        await loginOneSignal(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
+      }
+
+      // 3. OptIn push subscription
+      try {
+        const OS = (window as any).OneSignal;
+        if (OS?.User?.pushSubscription?.optIn) {
+          await OS.User.pushSubscription.optIn();
+        }
+      } catch {}
+
+      // 4. Read fresh IDs
+      const freshSubId = await getPushSubscriptionId();
+      if (freshSubId) {
+        setSubId(freshSubId);
+        localStorage.setItem('onesignal_subscription_id', freshSubId);
+      }
+      const token = getFcmToken();
+      if (token) setFcmToken(token);
+
+      toast.success(
+        freshSubId 
+          ? `✅ تم ربط جهازك بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
+          : 'تم تحديث أذونات الإشعارات بنجاح', 
+        { id: toastId }
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'فشلت عملية المزامنة', { id: toastId });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleTestPush = async () => {
     setIsTestingPush(true);
     const toastId = toast.loading('إرسال إشعار فحص عالي الأولوية (Priority: 10)...');
@@ -113,8 +160,12 @@ export default function DeveloperDiagnosticsModal({
 
       if (res?.error) {
         toast.error(`فشل الإرسال: ${res.error.message || JSON.stringify(res.error)}`, { id: toastId });
+      } else if (res?.recipients === 0) {
+        toast.error('تم الإرسال ولكن لم يستقبله أي جهاز (0 مستلمين). اضغط زر "مزامنة وربط رمز الجهاز" أولاً.', { id: toastId, duration: 6000 });
+      } else if (res?.errors && res.errors.length > 0) {
+        toast.error(`OneSignal Notice: ${res.errors.join(', ')}`, { id: toastId });
       } else {
-        toast.success('تم إرسال الإشعار بنجاح عبر الـ Backend (Zero Trust)!', { id: toastId });
+        toast.success(`تم إرسال الإشعار بنجاح! (الأجهزة المستهدفة: ${res?.recipients ?? 1})`, { id: toastId });
       }
     } catch (err: any) {
       toast.error(err?.message || 'خطأ غير متوقع في الاتصال بالخادم', { id: toastId });
@@ -393,20 +444,31 @@ export default function DeveloperDiagnosticsModal({
                 <span className="text-slate-300">{effectiveRole || 'merchant'}</span>
               </div>
             </div>
-            <div className="pt-2 flex gap-2">
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleSyncDevice}
+                disabled={isSyncing}
+                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-sans font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+              >
+                {isSyncing ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                <span>مزامنة وربط رمز الجهاز الجديد</span>
+              </button>
+
               <button
                 onClick={handleRequestPermission}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-sans font-bold py-2 rounded-lg transition flex items-center justify-center gap-1.5"
+                className="bg-slate-800 hover:bg-slate-700 text-white font-sans font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 border border-slate-700"
               >
-                <CheckCircle2 size={14} className="text-emerald-400" /> Request Permission
+                <CheckCircle2 size={14} className="text-emerald-400" />
+                <span>إذن النظام</span>
               </button>
+
               <button
                 onClick={handleTestPush}
                 disabled={isTestingPush}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-sans font-bold py-2 rounded-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-sans font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-md"
               >
                 {isTestingPush ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
-                Test Priority 10 Push
+                <span>إرسال فحص (Priority 10)</span>
               </button>
             </div>
           </div>

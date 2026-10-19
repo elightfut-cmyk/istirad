@@ -6,6 +6,8 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
+import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
+import { Plane } from 'lucide-react';
 
 // We fetch categories dynamically if available, otherwise just use 'الكل'
 
@@ -22,6 +24,7 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('الكل');
   const [maxPrice, setMaxPrice] = useState<number>(5000);
+  const [activeTab, setActiveTab] = useState<'marketplace' | 'air_freight'>('marketplace');
 
   // Order Modal State
   const [orderingProduct, setOrderingProduct] = useState<any | null>(null);
@@ -194,7 +197,44 @@ export default function Marketplace() {
         { label: 'الشكاوى', href: '/merchant/complaints', icon: <AlertTriangle size={20} /> },
       ]}
     >
-      <div className="flex flex-col md:flex-row gap-6">
+      {/* View Switcher: General Marketplace vs Air Freight Feasibility */}
+      <div className="mb-6 flex items-center gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 w-fit">
+        <button
+          onClick={() => setActiveTab('marketplace')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+            activeTab === 'marketplace'
+              ? 'bg-white dark:bg-gray-700 text-[#4f46e5] dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
+          }`}
+        >
+          <Store size={16} />
+          <span>سوق المنتجات العام</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('air_freight')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+            activeTab === 'air_freight'
+              ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-900/20'
+              : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+          }`}
+        >
+          <Plane size={16} />
+          <span>أمثلة منتجات الشحن الجوي الرابحة ✈️✨</span>
+        </button>
+      </div>
+
+      {activeTab === 'air_freight' ? (
+        <div className="space-y-6">
+          <ProfitableAirProductsSection 
+            onSelectProduct={(p) => {
+              setActiveTab('marketplace');
+              setSearchQuery(p.title);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col md:flex-row gap-6">
         {/* Filters Sidebar */}
         <div className="w-full md:w-64 flex-shrink-0">
           <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 sticky top-4">
@@ -352,6 +392,7 @@ export default function Marketplace() {
           )}
         </div>
       </div>
+      )}
 
       {/* Order Modal */}
       {orderingProduct && (

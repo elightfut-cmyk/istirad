@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { LayoutDashboard, ShoppingBag, Users, Package, Ticket, MessageSquare, Lightbulb, Search, Image as ImageIcon, Loader2, CheckCircle2, Edit3 , Video } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
 
 export default function AdminSmartImport() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -289,6 +290,14 @@ export default function AdminSmartImport() {
              )}
           </div>
 
+        </div>
+
+        {/* Admin Air Freight Products Management */}
+        <div className="mt-12">
+          <ProfitableAirProductsSection 
+            title="إدارة أمثلة منتجات الشحن الجوي الرابحة والخاسرة"
+            subtitle="أضف أو عدّل أو احذف المنتجات التوضيحية التي تظهر للتجار في الصفحة الرئيسية وصفحة المنتجات."
+          />
         </div>
       </div>
     </DashboardLayout>

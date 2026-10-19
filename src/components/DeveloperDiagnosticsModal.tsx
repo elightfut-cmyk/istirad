@@ -166,6 +166,16 @@ export default function DeveloperDiagnosticsModal({
         toast.error(`OneSignal Notice: ${res.errors.join(', ')}`, { id: toastId });
       } else {
         toast.success(`تم إرسال الإشعار بنجاح! (الأجهزة المستهدفة: ${res?.recipients ?? 1})`, { id: toastId });
+        try {
+          import('../store/useNotificationStore').then(({ playNotificationChime }) => playNotificationChime());
+          import('../lib/onesignal').then(({ showExternalNotification }) => {
+            showExternalNotification({
+              title: '🧪 اختبار إشعار منصة جيبها',
+              message: `وصول فوري بجودة FCM v1 على معرف الجهاز: ${subId ? subId.slice(0, 8) + '...' : 'المباشر'}`,
+              url: '/notifications'
+            });
+          });
+        } catch {}
       }
     } catch (err: any) {
       toast.error(err?.message || 'خطأ غير متوقع في الاتصال بالخادم', { id: toastId });

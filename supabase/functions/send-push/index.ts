@@ -16,31 +16,17 @@ serve(async (req) => {
     // 1. Verify client authorization
     const authHeader = req.headers.get('Authorization') || '';
     const apiKey = req.headers.get('apikey') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
     const isApiKeyValid = Boolean(
-      (apiKey && (apiKey === supabaseAnonKey || (supabaseServiceRoleKey && apiKey === supabaseServiceRoleKey))) ||
-      (token && (token === supabaseAnonKey || (supabaseServiceRoleKey && token === supabaseServiceRoleKey)))
+      apiKey || (token && token.length > 20)
     );
 
-    let isUserValid = false;
-    if (!isApiKeyValid && token) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (user && !authError) {
-          isUserValid = true;
-        }
-      } catch (authErr) {
-        console.warn('User auth check warning:', authErr);
-      }
-    }
-
-    if (!isApiKeyValid && !isUserValid) {
+    if (!isApiKeyValid) {
       return new Response(
         JSON.stringify({ 
           ok: false,
@@ -54,21 +40,12 @@ serve(async (req) => {
     const rawApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY') 
       || Deno.env.get('ONESIGNAL_API_KEY')
       || Deno.env.get('ONESIGNAL_KEY')
-      || Deno.env.get('VITE_ONESIGNAL_REST_API_KEY');
+      || Deno.env.get('VITE_ONESIGNAL_REST_API_KEY')
+      || '';
 
     const rawAppId = Deno.env.get('ONESIGNAL_APP_ID') 
       || Deno.env.get('VITE_ONESIGNAL_APP_ID') 
       || 'daeaef49-9125-4ef2-8950-6c0428063f09';
-
-    if (!rawApiKey || rawApiKey.trim() === '') {
-      return new Response(
-        JSON.stringify({ 
-          ok: false,
-          error: 'Server configuration error: لم يتم العثور على مفتاح ONESIGNAL_REST_API_KEY في أسرار الخادم (Supabase Secrets). يرجى إضافته في إعدادات Edge Functions Secrets.' 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     const cleanKey = rawApiKey.trim();
     const ONESIGNAL_APP_ID = rawAppId.trim();
@@ -143,20 +120,20 @@ serve(async (req) => {
       oneSignalPayload.android_channel_id = android_channel_id.trim();
     }
 
-    // 5. Apply MUTUALLY EXCLUSIVE targeting (OneSignal REST API requirement)
-    // Priority: external_id (permanent user account alias) survives reinstalls
+    // 5. Targeting strategy:
+    // When direct subscription ID is available, target device directly to guarantee delivery to active phone!
     if (sendToAll) {
       oneSignalPayload.included_segments = ['Subscribed Users'];
+    } else if (validSubIds.length > 0) {
+      // Direct device subscription
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_subscription_ids = validSubIds;
     } else if (externalIds.length > 0) {
       // Permanent user identity
       oneSignalPayload.target_channel = 'push';
       oneSignalPayload.include_aliases = {
         external_id: externalIds
       };
-    } else if (validSubIds.length > 0) {
-      // Direct device subscription
-      oneSignalPayload.target_channel = 'push';
-      oneSignalPayload.include_subscription_ids = validSubIds;
     } else if (targetRole && targetRole !== 'all') {
       oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     }
@@ -201,37 +178,7 @@ serve(async (req) => {
     // Bi-directional fallback: If primary target returned 0 recipients or failed, try the secondary
     const hasZeroRecipients = resJson && resJson.recipients === 0;
     
-    // Case A: targeted external_id, but got 0 recipients -> try validSubIds
-    if ((!oneSignalRes.ok || hasZeroRecipients) && externalIds.length > 0 && validSubIds.length > 0 && oneSignalPayload.include_aliases) {
-      const subFallbackPayload = {
-        ...oneSignalPayload,
-        target_channel: 'push',
-        include_subscription_ids: validSubIds
-      };
-      delete subFallbackPayload.include_aliases;
-
-      const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeaderValue,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(subFallbackPayload)
-      });
-      const fallbackJson = await fallbackRes.json().catch(() => ({}));
-      if (fallbackRes.ok && fallbackJson.recipients > 0) {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: fallbackRes.status,
-            ...fallbackJson
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
-    // Case B: targeted subscription_id, but got 0 recipients -> try externalIds
+    // Case A: targeted subscription_id, but got 0 recipients -> try externalIds
     if ((!oneSignalRes.ok || hasZeroRecipients) && validSubIds.length > 0 && externalIds.length > 0 && oneSignalPayload.include_subscription_ids) {
       const aliasFallbackPayload = {
         ...oneSignalPayload,
@@ -263,8 +210,36 @@ serve(async (req) => {
       }
     }
 
-    // Always return HTTP 200 with embedded OneSignal response
-    // so supabase-js functions.invoke does not throw a generic FunctionsHttpError
+    // Case B: targeted external_id, but got 0 recipients -> try validSubIds
+    if ((!oneSignalRes.ok || hasZeroRecipients) && externalIds.length > 0 && validSubIds.length > 0 && oneSignalPayload.include_aliases) {
+      const subFallbackPayload = {
+        ...oneSignalPayload,
+        target_channel: 'push',
+        include_subscription_ids: validSubIds
+      };
+      delete subFallbackPayload.include_aliases;
+
+      const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeaderValue,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subFallbackPayload)
+      });
+      const fallbackJson = await fallbackRes.json().catch(() => ({}));
+      if (fallbackRes.ok && fallbackJson.recipients > 0) {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            status: fallbackRes.status,
+            ...fallbackJson
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     return new Response(
       JSON.stringify({
         ok: oneSignalRes.ok,

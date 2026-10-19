@@ -96,17 +96,22 @@ export const sendPushNotificationDetailed = async ({
   }
 
   try {
+    const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
+    const pushBody: Record<string, any> = {
+      userIds: externalIds,
+      subscriptionIds: validSubIds,
+      title,
+      message,
+      data,
+      sendToAll,
+      existing_android_channel_id: 'default_notification_channel'
+    };
+    if (android_channel_id && isUuid(android_channel_id)) {
+      pushBody.android_channel_id = android_channel_id.trim();
+    }
+
     const { data: resData, error: invokeError } = await supabase.functions.invoke('send-push', {
-      body: {
-        userIds: externalIds,
-        subscriptionIds: validSubIds,
-        title,
-        message,
-        data,
-        sendToAll,
-        android_channel_id: android_channel_id || 'default_notification_channel',
-        existing_android_channel_id: 'default_notification_channel'
-      }
+      body: pushBody
     });
 
     if (invokeError) {

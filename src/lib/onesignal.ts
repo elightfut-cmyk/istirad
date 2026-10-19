@@ -197,6 +197,12 @@ export const initOneSignal = async (): Promise<void> => {
               useNotificationStore.getState().fetchNotifications(currentUserId);
             }
           });
+          // Also trigger hardware status bar notification via native bridge so it's impossible to miss
+          showExternalNotification({
+            title: notif.title || 'جيبها - إشعار جديد 📦',
+            message: notif.body || 'لديك تحديث جديد في حسابك',
+            url: notif.launchURL || '/notifications'
+          });
           // Refresh open pages (orders, requests, etc.)
           window.dispatchEvent(new CustomEvent('refresh_data'));
         } catch (e) {
@@ -529,7 +535,6 @@ export const sendPushNotification = async ({
         subscriptionIds: targetSubscriptionId ? [String(targetSubscriptionId)] : [],
         targetRole,
         data: { ...data, url: targetUrl },
-        android_channel_id: 'default_notification_channel',
         existing_android_channel_id: 'default_notification_channel'
       }
     });
@@ -551,13 +556,16 @@ export const sendPushNotification = async ({
         contents: { ar: message, en: message },
         url: targetUrl,
         data: { ...data, url: targetUrl },
-        android_channel_id: 'default_notification_channel',
+        existing_android_channel_id: 'default_notification_channel',
         priority: 10,
         android_accent_color: 'FF4F46E5',
         android_visibility: 1
       };
 
-      if (targetUserId) {
+      if (targetSubscriptionId) {
+        payload.include_subscription_ids = [String(targetSubscriptionId)];
+        payload.target_channel = 'push';
+      } else if (targetUserId) {
         payload.include_aliases = { external_id: [String(targetUserId)] };
         payload.target_channel = 'push';
       } else if (targetRole) {

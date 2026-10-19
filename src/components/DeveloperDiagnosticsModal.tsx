@@ -21,6 +21,7 @@ import {
   ONESIGNAL_APP_ID, 
   loginOneSignal,
   requestNotificationPermission, 
+  optInPushSubscription,
   sendPushNotification,
   getPushSubscriptionId,
   getFcmToken,
@@ -109,20 +110,18 @@ export default function DeveloperDiagnosticsModal({
       const permGranted = await requestNotificationPermission();
       setNotificationState(permGranted ? 'granted' : 'denied');
 
-      // 2. Re-login to OneSignal to associate this device with current user ID
+      // 2. Explicitly Opt-In push subscription natively
+      await optInPushSubscription();
+
+      // 3. Re-login to OneSignal to associate this device with current user ID and role
       if (effectiveUserId) {
         await loginOneSignal(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
       }
 
-      // 3. OptIn push subscription
-      try {
-        const OS = (window as any).OneSignal;
-        if (OS?.User?.pushSubscription?.optIn) {
-          await OS.User.pushSubscription.optIn();
-        }
-      } catch {}
+      // 4. Wait 1200ms to allow OneSignal SDK network handshake to register subscription
+      await new Promise(r => setTimeout(r, 1200));
 
-      // 4. Read fresh IDs
+      // 5. Read fresh IDs
       const freshSubId = await getPushSubscriptionId();
       if (freshSubId) {
         setSubId(freshSubId);
@@ -133,8 +132,8 @@ export default function DeveloperDiagnosticsModal({
 
       toast.success(
         freshSubId 
-          ? `✅ تم ربط جهازك بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
-          : 'تم تحديث أذونات الإشعارات بنجاح', 
+          ? `✅ تم ربط جهازك واشتراكه بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
+          : 'تم تحديث أذونات الإشعارات وطلب الاشتراك بنجاح', 
         { id: toastId }
       );
     } catch (err: any) {
@@ -149,21 +148,29 @@ export default function DeveloperDiagnosticsModal({
     const toastId = toast.loading('إرسال إشعار فحص عالي الأولوية (Priority: 10)...');
 
     try {
+      // Only target subscription ID if it's a valid string (not 'None')
+      const validSubId = subId && subId !== 'None' && subId.length > 10 ? subId : null;
+
       const res = await sendPushNotification({
         title: '🧪 اختبار إشعار منصة جيبها',
         message: `وصول فوري بجودة FCM v1 على معرف العميل: ${effectiveUserId || 'عام'}`,
         targetUserId: effectiveUserId || null,
         targetRole: effectiveRole || null,
-        targetSubscriptionId: subId || null,
+        targetSubscriptionId: validSubId,
         data: { test: true, timestamp: Date.now() }
       });
 
       if (res?.error) {
         toast.error(`فشل الإرسال: ${res.error.message || JSON.stringify(res.error)}`, { id: toastId });
       } else if (res?.recipients === 0) {
-        toast.error('تم الإرسال ولكن لم يستقبله أي جهاز (0 مستلمين). اضغط زر "مزامنة وربط رمز الجهاز" أولاً.', { id: toastId, duration: 6000 });
+        toast.error('لم يتم العثور على أجهزة مشتركة حالياً. اضغط على زر "مزامنة وربط رمز الجهاز الجديد" بالأعلى لتسجيل جهازك كمشترك!', { id: toastId, duration: 7000 });
       } else if (res?.errors && res.errors.length > 0) {
-        toast.error(`OneSignal Notice: ${res.errors.join(', ')}`, { id: toastId });
+        const errorText = Array.isArray(res.errors) ? res.errors.join(', ') : JSON.stringify(res.errors);
+        if (errorText.includes('All included players are not subscribed')) {
+          toast.error('الهاتف غير مسجل كمشترك نشط بعد! اضغط زر "مزامنة وربط رمز الجهاز الجديد" بالأعلى واقبل إذن الإشعارات أولاً.', { id: toastId, duration: 8000 });
+        } else {
+          toast.error(`تنبيه OneSignal: ${errorText}`, { id: toastId });
+        }
       } else {
         toast.success(`تم إرسال الإشعار بنجاح! (الأجهزة المستهدفة: ${res?.recipients ?? 1})`, { id: toastId });
         try {

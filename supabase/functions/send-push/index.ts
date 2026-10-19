@@ -301,27 +301,6 @@ serve(async (req) => {
       }
     }
 
-      const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeaderValue,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(subFallbackPayload)
-      });
-      const fallbackJson = await fallbackRes.json().catch(() => ({}));
-      if (fallbackRes.ok && fallbackJson.recipients > 0) {
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            status: fallbackRes.status,
-            ...fallbackJson
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
     return new Response(
       JSON.stringify({
         ok: oneSignalRes.ok,

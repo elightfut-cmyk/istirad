@@ -38,7 +38,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
-import { initOneSignal } from './lib/onesignal';
+import { initOneSignal, optInPushSubscription, loginOneSignalUser } from './lib/onesignal';
 import AppSplashScreen from './components/AppSplashScreen';
 import ForceUpdateModal from './components/ForceUpdateModal';
 import { useNotificationStore } from './store/useNotificationStore';
@@ -56,11 +56,16 @@ function App() {
     if (user?.id) {
       fetchNotifications(user.id);
       const unsub = subscribeToNotifications(user.id);
+
+      // Auto-bind device identity to OneSignal and ensure push subscription is active
+      loginOneSignalUser(user.id, user.role || undefined, user.name || undefined);
+      optInPushSubscription();
+
       return () => {
         unsub();
       };
     }
-  }, [user?.id, fetchNotifications, subscribeToNotifications]);
+  }, [user?.id, user?.role, user?.name, fetchNotifications, subscribeToNotifications]);
 
   // Zero-Background Polling: Halt Supabase Realtime in background, resume when foregrounded
   useEffect(() => {
@@ -105,8 +110,11 @@ function App() {
 
   useEffect(() => {
     // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)
-    const initTimer = setTimeout(() => {
-      initOneSignal();
+    const initTimer = setTimeout(async () => {
+      await initOneSignal();
+      try {
+        await optInPushSubscription();
+      } catch {}
     }, 600);
 
     // Safety fallback: Ensure splash/loading screen dismisses even on slow mobile networks

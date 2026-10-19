@@ -1,5 +1,6 @@
 package com.jiibha.app;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -80,11 +81,32 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                    syncFcmToken();
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
     private void requestNotificationRuntimePermission() {
         if (Build.VERSION.SDK_INT >= 33) {
             if (checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 101);
+            } else {
+                try {
+                    com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                } catch (Exception ignored) {}
             }
+        } else {
+            try {
+                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+            } catch (Exception ignored) {}
         }
     }
 
@@ -96,6 +118,7 @@ public class MainActivity extends BridgeActivity {
                 }
             });
             try {
+                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
                 String subId = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
                 if (subId != null && !subId.isEmpty()) {
                     cachedSubscriptionId = subId;
@@ -405,6 +428,32 @@ public class MainActivity extends BridgeActivity {
         public boolean isNotificationPermissionGranted() {
             try {
                 return com.onesignal.OneSignal.getNotifications().getPermission();
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void requestNotificationPermission() {
+            try {
+                if (context instanceof Activity && Build.VERSION.SDK_INT >= 33) {
+                    ((Activity) context).requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 101);
+                }
+                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public void optInPushSubscription() {
+            try {
+                com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public boolean isSubscribed() {
+            try {
+                return com.onesignal.OneSignal.getUser().getPushSubscription().getOptedIn();
             } catch (Exception e) {
                 return false;
             }

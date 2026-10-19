@@ -412,6 +412,13 @@ export const logoutOneSignalUser = () => {
 export const requestNotificationPermission = async (): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
 
+  const bridge = getNativeBridge();
+  if (bridge?.requestNotificationPermission) {
+    try {
+      bridge.requestNotificationPermission();
+    } catch {}
+  }
+
   if (isNativePlatform()) {
     try {
       const granted = await OneSignal.Notifications.requestPermission(true);
@@ -446,6 +453,35 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
       }
     });
   });
+};
+
+/**
+ * Opt-In push subscription to ensure device receives push notifications.
+ */
+export const optInPushSubscription = async (): Promise<boolean> => {
+  const bridge = getNativeBridge();
+  if (bridge?.optInPushSubscription) {
+    try {
+      bridge.optInPushSubscription();
+    } catch {}
+  }
+
+  if (isNativePlatform()) {
+    try {
+      await OneSignal.User.pushSubscription.optIn();
+      return true;
+    } catch {}
+  }
+
+  try {
+    const OS = (window as any).OneSignal;
+    if (OS?.User?.pushSubscription?.optIn) {
+      await OS.User.pushSubscription.optIn();
+      return true;
+    }
+  } catch {}
+
+  return false;
 };
 
 /**
@@ -521,6 +557,7 @@ export const sendPushNotification = async ({
   title,
   message,
   targetUserId = null,
+  userIds = null,
   targetRole = null,
   targetSubscriptionId = null,
   targetUrl = '/notifications',
@@ -529,18 +566,25 @@ export const sendPushNotification = async ({
   title: string;
   message: string;
   targetUserId?: string | null;
+  userIds?: string[] | string | null;
   targetRole?: string | null;
   targetSubscriptionId?: string | null;
   targetUrl?: string;
   data?: Record<string, any>;
 }): Promise<any> => {
+  const finalUserIds = (
+    userIds 
+      ? (Array.isArray(userIds) ? userIds : [userIds])
+      : (targetUserId ? [targetUserId] : [])
+  ).map(String).filter(Boolean);
+
   // 1. Try Supabase Edge Function first
   try {
     const { data: responseData, error } = await supabase.functions.invoke('send-push', {
       body: {
         title,
         message,
-        userIds: targetUserId ? [String(targetUserId)] : [],
+        userIds: finalUserIds,
         subscriptionIds: targetSubscriptionId ? [String(targetSubscriptionId)] : [],
         targetRole,
         data: { ...data, url: targetUrl },
@@ -574,8 +618,8 @@ export const sendPushNotification = async ({
       if (targetSubscriptionId) {
         payload.include_subscription_ids = [String(targetSubscriptionId)];
         payload.target_channel = 'push';
-      } else if (targetUserId) {
-        payload.include_aliases = { external_id: [String(targetUserId)] };
+      } else if (finalUserIds.length > 0) {
+        payload.include_aliases = { external_id: finalUserIds };
         payload.target_channel = 'push';
       } else if (targetRole) {
         payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];

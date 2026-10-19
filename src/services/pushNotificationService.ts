@@ -9,6 +9,7 @@ export interface PushNotificationPayload {
   message: string;
   data?: Record<string, any>;
   sendToAll?: boolean;
+  targetRole?: string | null;
   android_channel_id?: string;
 }
 
@@ -76,6 +77,7 @@ export const sendPushNotificationDetailed = async ({
   message,
   data = {},
   sendToAll = false,
+  targetRole,
   android_channel_id
 }: PushNotificationPayload): Promise<PushSendResult> => {
   const rawIds = userIds || (user_id ? [user_id] : []);
@@ -89,7 +91,7 @@ export const sendPushNotificationDetailed = async ({
     .filter(Boolean)
     .map(String);
 
-  if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0) {
+  if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0 && !targetRole) {
     const errorMsg = 'فشل الإرسال: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه';
     console.error(errorMsg);
     throw new Error(errorMsg);
@@ -104,6 +106,7 @@ export const sendPushNotificationDetailed = async ({
       message,
       data,
       sendToAll,
+      targetRole: targetRole || undefined,
       existing_android_channel_id: 'default_notification_channel'
     };
     if (android_channel_id && isUuid(android_channel_id)) {

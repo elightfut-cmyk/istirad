@@ -101,6 +101,23 @@ public class MainActivity extends BridgeActivity {
                     cachedSubscriptionId = subId;
                 }
             } catch (Exception ignored) {}
+
+            // Auto-restore saved user identity & role tags on resume/start
+            try {
+                SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                String savedUserId = prefs.getString("user_id", null);
+                String savedRole = prefs.getString("user_role", null);
+                if (savedUserId != null && !savedUserId.trim().isEmpty()) {
+                    com.onesignal.OneSignal.login(savedUserId.trim());
+                    com.onesignal.OneSignal.getUser().addTag("user_id", savedUserId.trim());
+                    if (savedRole != null && !savedRole.trim().isEmpty()) {
+                        com.onesignal.OneSignal.getUser().addTag("role", savedRole.trim());
+                    }
+                    try {
+                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                    } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
@@ -326,16 +343,40 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public void loginOneSignal(String userId) {
+            loginOneSignal(userId, null);
+        }
+
+        @JavascriptInterface
+        public void loginOneSignal(String userId, String role) {
             try {
-                if (userId != null && !userId.isEmpty()) {
-                    com.onesignal.OneSignal.login(userId);
+                if (userId != null && !userId.trim().isEmpty()) {
+                    String cleanId = userId.trim();
+                    SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit().putString("user_id", cleanId);
+                    if (role != null && !role.trim().isEmpty()) {
+                        editor.putString("user_role", role.trim());
+                    }
+                    editor.apply();
+
+                    com.onesignal.OneSignal.login(cleanId);
+                    com.onesignal.OneSignal.getUser().addTag("user_id", cleanId);
+                    if (role != null && !role.trim().isEmpty()) {
+                        com.onesignal.OneSignal.getUser().addTag("role", role.trim());
+                    }
+                    try {
+                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                    } catch (Exception ignored) {}
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         @JavascriptInterface
         public void logoutOneSignal() {
             try {
+                SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                prefs.edit().remove("user_id").remove("user_role").apply();
                 com.onesignal.OneSignal.logout();
             } catch (Exception ignored) {}
         }

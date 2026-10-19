@@ -121,21 +121,24 @@ serve(async (req) => {
     }
 
     // 5. Targeting strategy:
-    // When direct subscription ID is available, target device directly to guarantee delivery to active phone!
+    // Direct device subscription takes highest priority for diagnostic tests and single-device targeting.
+    // Next, role broadcasts (admin, supplier) broadcast to all tagged devices.
+    // Next, user UUIDs (aliases) target specific users.
     if (sendToAll) {
       oneSignalPayload.included_segments = ['Subscribed Users'];
     } else if (validSubIds.length > 0) {
       // Direct device subscription
       oneSignalPayload.target_channel = 'push';
       oneSignalPayload.include_subscription_ids = validSubIds;
+    } else if (targetRole && targetRole !== 'all') {
+      // Broadcast to all active users with this role tag (admin, supplier)
+      oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     } else if (externalIds.length > 0) {
       // Permanent user identity
       oneSignalPayload.target_channel = 'push';
       oneSignalPayload.include_aliases = {
         external_id: externalIds
       };
-    } else if (targetRole && targetRole !== 'all') {
-      oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     }
 
     // 6. Forward request securely to OneSignal REST API
@@ -177,17 +180,105 @@ serve(async (req) => {
 
     // Bi-directional fallback: If primary target returned 0 recipients or failed, try the secondary
     const hasZeroRecipients = resJson && resJson.recipients === 0;
+    const isInvalidAliases = resJson && JSON.stringify(resJson).includes('invalid_aliases');
     
-    // Case A: targeted subscription_id, but got 0 recipients -> try externalIds
-    if ((!oneSignalRes.ok || hasZeroRecipients) && validSubIds.length > 0 && externalIds.length > 0 && oneSignalPayload.include_subscription_ids) {
-      const aliasFallbackPayload = {
+    // Case A: targeted subscription_id, but got 0 recipients -> try targetRole or externalIds
+    if ((!oneSignalRes.ok || hasZeroRecipients) && validSubIds.length > 0 && oneSignalPayload.include_subscription_ids) {
+      let fallbackPayload: Record<string, any> | null = null;
+      if (targetRole && targetRole !== 'all') {
+        fallbackPayload = {
+          ...oneSignalPayload,
+          filters: [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }]
+        };
+        delete fallbackPayload.include_subscription_ids;
+      } else if (externalIds.length > 0) {
+        fallbackPayload = {
+          ...oneSignalPayload,
+          target_channel: 'push',
+          include_aliases: { external_id: externalIds }
+        };
+        delete fallbackPayload.include_subscription_ids;
+      }
+
+      if (fallbackPayload) {
+        const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeaderValue,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(fallbackPayload)
+        });
+        const fallbackJson = await fallbackRes.json().catch(() => ({}));
+        if (fallbackRes.ok && fallbackJson.recipients > 0) {
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              status: fallbackRes.status,
+              ...fallbackJson
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
+    // Case B: targeted external_id, but got invalid_aliases or 0 recipients -> try tag:user_id or validSubIds or targetRole
+    if ((!oneSignalRes.ok || hasZeroRecipients || isInvalidAliases) && externalIds.length > 0 && oneSignalPayload.include_aliases) {
+      let subFallbackPayload: Record<string, any> | null = null;
+      if (validSubIds.length > 0) {
+        subFallbackPayload = {
+          ...oneSignalPayload,
+          target_channel: 'push',
+          include_subscription_ids: validSubIds
+        };
+        delete subFallbackPayload.include_aliases;
+      } else if (targetRole && targetRole !== 'all') {
+        subFallbackPayload = {
+          ...oneSignalPayload,
+          filters: [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }]
+        };
+        delete subFallbackPayload.include_aliases;
+      } else {
+        // Fallback to tag user_id
+        subFallbackPayload = {
+          ...oneSignalPayload,
+          filters: [{ field: 'tag', key: 'user_id', relation: '=', value: externalIds[0] }]
+        };
+        delete subFallbackPayload.include_aliases;
+      }
+
+      if (subFallbackPayload) {
+        const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeaderValue,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(subFallbackPayload)
+        });
+        const fallbackJson = await fallbackRes.json().catch(() => ({}));
+        if (fallbackRes.ok && fallbackJson.recipients > 0) {
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              status: fallbackRes.status,
+              ...fallbackJson
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
+    // Case C: targeted targetRole, but got 'All included players are not subscribed' -> try externalIds if present
+    if ((!oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed')) && targetRole && externalIds.length > 0 && oneSignalPayload.filters) {
+      const aliasPayload = {
         ...oneSignalPayload,
         target_channel: 'push',
-        include_aliases: {
-          external_id: externalIds
-        }
+        include_aliases: { external_id: externalIds }
       };
-      delete aliasFallbackPayload.include_subscription_ids;
+      delete aliasPayload.filters;
 
       const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
         method: 'POST',
@@ -195,7 +286,7 @@ serve(async (req) => {
           'Authorization': authHeaderValue,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(aliasFallbackPayload)
+        body: JSON.stringify(aliasPayload)
       });
       const fallbackJson = await fallbackRes.json().catch(() => ({}));
       if (fallbackRes.ok && fallbackJson.recipients > 0) {
@@ -209,15 +300,6 @@ serve(async (req) => {
         );
       }
     }
-
-    // Case B: targeted external_id, but got 0 recipients -> try validSubIds
-    if ((!oneSignalRes.ok || hasZeroRecipients) && externalIds.length > 0 && validSubIds.length > 0 && oneSignalPayload.include_aliases) {
-      const subFallbackPayload = {
-        ...oneSignalPayload,
-        target_channel: 'push',
-        include_subscription_ids: validSubIds
-      };
-      delete subFallbackPayload.include_aliases;
 
       const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
         method: 'POST',

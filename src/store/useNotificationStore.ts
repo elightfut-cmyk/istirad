@@ -1,4 +1,6 @@
+import React from 'react';
 import { create } from 'zustand';
+import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { sendPushNotification } from '../services/pushNotificationService';
 
@@ -132,6 +134,45 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
             // Play auditory chime
             playNotificationChime();
+
+            // Trigger In-App Interactive Toast Banner
+            try {
+              toast((t) => (
+                React.createElement('div', {
+                  onClick: () => {
+                    toast.dismiss(t.id);
+                    if (window.location.pathname !== '/notifications') {
+                      window.location.href = '/notifications';
+                    }
+                  },
+                  style: { cursor: 'pointer', direction: 'rtl', width: '100%' }
+                }, [
+                  React.createElement('div', {
+                    key: 'title',
+                    style: { fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: '#ffffff' }
+                  }, newNotif.title || 'إشعار جديد'),
+                  React.createElement('div', {
+                    key: 'msg',
+                    style: { fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }
+                  }, newNotif.message || '')
+                ])
+              ), {
+                icon: '🔔',
+                duration: 6000,
+                position: 'top-center',
+                style: {
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  border: '1px solid #6366f1',
+                  borderRadius: '16px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+                  padding: '12px 16px',
+                  maxWidth: '420px'
+                }
+              });
+            } catch (toastErr) {
+              console.warn('Toast display warning:', toastErr);
+            }
 
             // Trigger native/browser heads-up notification and vibration
             try {
@@ -282,6 +323,10 @@ export const sendNotification = async (userId: string, title: string, message: s
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
        const { data: targetUsers } = await supabase.from('users').select('id').eq('role', roleToFind);
+       const targetIds = (targetUsers && targetUsers.length > 0)
+         ? targetUsers.map(u => String(u.id))
+         : [];
+
        if (targetUsers && targetUsers.length > 0) {
          const inserts = targetUsers.map(u => ({
            user_id: u.id,
@@ -290,19 +335,19 @@ export const sendNotification = async (userId: string, title: string, message: s
            type
          }));
          await supabase.from('notifications').insert(inserts);
+       }
 
-         // Dispatch push notification to all target mobile users via OneSignal API
-         try {
-           const targetIds = targetUsers.map(u => String(u.id));
-           await sendPushNotification({
-             userIds: targetIds,
-             title,
-             message,
-             data: { type }
-           });
-         } catch (pushErr) {
-           console.error('OneSignal Push Error (all users):', pushErr);
-         }
+       // Dispatch push notification to all target mobile users via OneSignal API
+       try {
+         await sendPushNotification({
+           userIds: targetIds.length > 0 ? targetIds : undefined,
+           targetRole: roleToFind,
+           title,
+           message,
+           data: { type, role: roleToFind }
+         });
+       } catch (pushErr) {
+         console.error('OneSignal Push Error (role broadcast):', pushErr);
        }
        return;
     }

@@ -189,6 +189,15 @@ export const initOneSignal = async (): Promise<void> => {
         const notif = event.getNotification();
         console.log('🔔 OneSignal Native foreground notification received:', notif);
         try {
+          // Explicitly display native OS banner
+          if (notif && typeof (notif as any).display === 'function') {
+            (notif as any).display();
+          }
+        } catch (displayErr) {
+          console.warn('OneSignal notif.display notice:', displayErr);
+        }
+
+        try {
           // Play auditory chime and refresh notifications
           import('../store/useNotificationStore').then(({ playNotificationChime, useNotificationStore }) => {
             playNotificationChime();
@@ -308,7 +317,7 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
   const bridge = getNativeBridge();
   if (bridge?.loginOneSignal) {
     try {
-      bridge.loginOneSignal(strId);
+      bridge.loginOneSignal(strId, role || '');
     } catch {}
   }
 

@@ -80,9 +80,9 @@ export default function DeveloperDiagnosticsModal({
     setTimeout(async () => {
       try {
         const id = await getPushSubscriptionId();
-        if (id) setSubId(id);
+        if (id && id !== 'None') setSubId(id);
         const token = getFcmToken();
-        if (token) setFcmToken(token);
+        if (token && token !== 'None') setFcmToken(token);
         const info = getNetworkDiagnosticInfo();
         if (info) setNetInfo(info);
       } catch (e) {
@@ -94,9 +94,23 @@ export default function DeveloperDiagnosticsModal({
   useEffect(() => {
     if (isOpen) {
       const localSub = localStorage.getItem('onesignal_subscription_id');
-      if (localSub) setSubId(localSub);
+      if (localSub && localSub !== 'None') setSubId(localSub);
       refreshAll();
     }
+
+    const handleSubReady = (e: any) => {
+      const newSub = e?.detail?.subscriptionId || localStorage.getItem('onesignal_subscription_id');
+      if (newSub && newSub !== 'None') {
+        setSubId(newSub);
+      }
+      const token = getFcmToken();
+      if (token) setFcmToken(token);
+    };
+
+    window.addEventListener('onesignal_subscription_ready', handleSubReady);
+    return () => {
+      window.removeEventListener('onesignal_subscription_ready', handleSubReady);
+    };
   }, [isOpen]);
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -118,12 +132,17 @@ export default function DeveloperDiagnosticsModal({
         await loginOneSignal(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
       }
 
-      // 4. Wait 1200ms to allow OneSignal SDK network handshake to register subscription
-      await new Promise(r => setTimeout(r, 1200));
+      // 4. Poll for fresh subscription ID across multiple iterations to accommodate 4G mobile latency
+      let freshSubId: string | null = null;
+      for (let attempt = 1; attempt <= 7; attempt++) {
+        await new Promise(r => setTimeout(r, 650));
+        freshSubId = await getPushSubscriptionId();
+        if (freshSubId && freshSubId !== 'None' && freshSubId.length > 5) {
+          break;
+        }
+      }
 
-      // 5. Read fresh IDs
-      const freshSubId = await getPushSubscriptionId();
-      if (freshSubId) {
+      if (freshSubId && freshSubId !== 'None') {
         setSubId(freshSubId);
         localStorage.setItem('onesignal_subscription_id', freshSubId);
       }
@@ -131,7 +150,7 @@ export default function DeveloperDiagnosticsModal({
       if (token) setFcmToken(token);
 
       toast.success(
-        freshSubId 
+        freshSubId && freshSubId !== 'None'
           ? `✅ تم ربط جهازك واشتراكه بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
           : 'تم تحديث أذونات الإشعارات وطلب الاشتراك بنجاح', 
         { id: toastId }

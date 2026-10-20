@@ -91,6 +91,39 @@ serve(async (req) => {
       );
     }
 
+    // 3.5 Guaranteed Database Notification Insert (Service Role / Zero RLS)
+    if (supabaseUrl && supabaseServiceRoleKey) {
+      try {
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+        const notifTitle = title || (headings && (headings.ar || headings.en)) || 'إشعار جديد';
+        const notifMessage = message || (contents && (contents.ar || contents.en)) || '';
+        const notifType = data?.type || 'info';
+
+        if (targetRole === 'admin' || targetRole === 'supplier') {
+          const { data: roleUsers } = await supabaseAdmin.from('users').select('id').eq('role', targetRole);
+          if (roleUsers && roleUsers.length > 0) {
+            const inserts = roleUsers.map(u => ({
+              user_id: u.id,
+              title: notifTitle,
+              message: notifMessage,
+              type: notifType
+            }));
+            await supabaseAdmin.from('notifications').insert(inserts);
+          }
+        } else if (externalIds.length > 0 && !data?.test) {
+          const inserts = externalIds.map(id => ({
+            user_id: id,
+            title: notifTitle,
+            message: notifMessage,
+            type: notifType
+          }));
+          await supabaseAdmin.from('notifications').insert(inserts);
+        }
+      } catch (dbErr) {
+        console.warn('Edge function db insert notice:', dbErr);
+      }
+    }
+
     // 4. Build standard OneSignal Push payload
     const oneSignalPayload: Record<string, any> = {
       app_id: ONESIGNAL_APP_ID,
@@ -271,30 +304,63 @@ serve(async (req) => {
       }
     }
 
-    // Case C: targeted targetRole, but got 'All included players are not subscribed' -> try externalIds if present
-    if ((!oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed')) && targetRole && externalIds.length > 0 && oneSignalPayload.filters) {
-      const aliasPayload = {
-        ...oneSignalPayload,
-        target_channel: 'push',
-        include_aliases: { external_id: externalIds }
-      };
-      delete aliasPayload.filters;
+    // Case C: targeted targetRole, but got 'All included players are not subscribed' -> try externalIds if present, then broadcast to Subscribed Users
+    if ((!oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed')) && targetRole) {
+      if (externalIds.length > 0) {
+        const aliasPayload = {
+          ...oneSignalPayload,
+          target_channel: 'push',
+          include_aliases: { external_id: externalIds }
+        };
+        delete aliasPayload.filters;
 
-      const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+        const fallbackRes = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeaderValue,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(aliasPayload)
+        });
+        const fallbackJson = await fallbackRes.json().catch(() => ({}));
+        if (fallbackRes.ok && fallbackJson.recipients > 0) {
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              status: fallbackRes.status,
+              ...fallbackJson
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // If role tags and external_ids yielded 0 recipients, broadcast to all subscribed users
+      const broadcastPayload = {
+        ...oneSignalPayload,
+        included_segments: ['Subscribed Users']
+      };
+      delete broadcastPayload.filters;
+      delete broadcastPayload.target_channel;
+      delete broadcastPayload.include_aliases;
+      delete broadcastPayload.include_subscription_ids;
+
+      const broadRes = await fetch('https://api.onesignal.com/notifications', {
         method: 'POST',
         headers: {
           'Authorization': authHeaderValue,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(aliasPayload)
+        body: JSON.stringify(broadcastPayload)
       });
-      const fallbackJson = await fallbackRes.json().catch(() => ({}));
-      if (fallbackRes.ok && fallbackJson.recipients > 0) {
+      const broadJson = await broadRes.json().catch(() => ({}));
+      if (broadRes.ok && broadJson.recipients > 0) {
         return new Response(
           JSON.stringify({
             ok: true,
-            status: fallbackRes.status,
-            ...fallbackJson
+            status: broadRes.status,
+            fallbackToBroadcast: true,
+            ...broadJson
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

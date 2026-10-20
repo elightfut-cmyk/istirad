@@ -1,9 +1,13 @@
 package com.jiibha.app;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import com.onesignal.OneSignal;
 import com.onesignal.debug.LogLevel;
+import com.onesignal.user.subscriptions.IPushSubscriptionObserver;
+import com.onesignal.user.subscriptions.PushSubscriptionChangedState;
 
 public class MainApplication extends Application {
     private static final String TAG = "JiibhaApp";
@@ -16,6 +20,32 @@ public class MainApplication extends Application {
             Log.d(TAG, "Initializing OneSignal native SDK from MainApplication...");
             OneSignal.getDebug().setLogLevel(LogLevel.WARN);
             OneSignal.initWithContext(this, ONESIGNAL_APP_ID);
+
+            // Register Push Subscription Observer to capture ID and Token as soon as assigned
+            OneSignal.getUser().getPushSubscription().addObserver(new IPushSubscriptionObserver() {
+                @Override
+                public void onPushSubscriptionChange(PushSubscriptionChangedState state) {
+                    try {
+                        String id = state.getCurrent().getId();
+                        String token = state.getCurrent().getToken();
+                        if (id != null && !id.isEmpty()) {
+                            MainActivity.cachedSubscriptionId = id;
+                            SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                            prefs.edit().putString("subscription_id", id).apply();
+                            Log.d(TAG, "OneSignal Subscription ID observed: " + id);
+                        }
+                        if (token != null && !token.isEmpty()) {
+                            MainActivity.cachedFcmToken = token;
+                            SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                            prefs.edit().putString("fcm_token", token).apply();
+                            Log.d(TAG, "FCM Token observed: " + token.substring(0, Math.min(10, token.length())) + "...");
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "PushSubscriptionObserver error", e);
+                    }
+                }
+            });
+
             try {
                 OneSignal.getUser().getPushSubscription().optIn();
             } catch (Exception ignored) {}
@@ -25,3 +55,4 @@ public class MainApplication extends Application {
         }
     }
 }
+

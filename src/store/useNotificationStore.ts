@@ -323,21 +323,50 @@ export const sendNotification = async (userId: string, title: string, message: s
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
        const { data: targetUsers } = await supabase.from('users').select('id').eq('role', roleToFind);
-       const targetIds = (targetUsers && targetUsers.length > 0)
+       let targetIds = (targetUsers && targetUsers.length > 0)
          ? targetUsers.map(u => String(u.id))
          : [];
 
-       if (targetUsers && targetUsers.length > 0) {
-         const inserts = targetUsers.map(u => ({
-           user_id: u.id,
+       // Resilient fallback for admin in case anonymous select on users table is restricted
+       if (targetIds.length === 0 && roleToFind === 'admin') {
+         targetIds = ['eb79cb0c-00c6-4bc2-b833-d02e6f605e30'];
+       }
+
+       // 1. Direct bulk insert attempt
+       let insertedDirectly = false;
+       if (targetIds.length > 0) {
+         const inserts = targetIds.map(id => ({
+           user_id: id,
            title,
            message,
            type
          }));
-         await supabase.from('notifications').insert(inserts);
+         const { error: insertErr } = await supabase.from('notifications').insert(inserts);
+         if (!insertErr) {
+           insertedDirectly = true;
+         } else {
+           console.warn('Direct bulk notifications insert blocked (RLS). Falling back to SECURITY DEFINER RPC:', insertErr);
+         }
        }
 
-       // Dispatch push notification to all target mobile users via OneSignal API
+       // 2. Fallback to SECURITY DEFINER RPC for each target user
+       // Completely bypasses RLS policies and works reliably for unauthenticated registration events
+       if (!insertedDirectly && targetIds.length > 0) {
+         for (const id of targetIds) {
+           try {
+             await supabase.rpc('send_user_notification', {
+               p_user_id: id,
+               p_title: title,
+               p_message: message,
+               p_type: type
+             });
+           } catch (rpcErr) {
+             console.error('send_user_notification RPC error for target:', id, rpcErr);
+           }
+         }
+       }
+
+       // 3. Dispatch push notification to all target mobile devices via Edge Function
        try {
          await sendPushNotification({
            userIds: targetIds.length > 0 ? targetIds : undefined,

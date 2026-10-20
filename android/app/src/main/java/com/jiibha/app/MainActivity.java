@@ -39,6 +39,19 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Immediate restore of cached OneSignal and FCM tokens from SharedPreferences
+        try {
+            SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+            String savedSub = prefs.getString("subscription_id", "");
+            if (savedSub != null && !savedSub.isEmpty()) {
+                cachedSubscriptionId = savedSub;
+            }
+            String savedFcm = prefs.getString("fcm_token", "");
+            if (savedFcm != null && !savedFcm.isEmpty()) {
+                cachedFcmToken = savedFcm;
+            }
+        } catch (Exception ignored) {}
+
         // Principle 3: Setup Notification Channel with IMPORTANCE_HIGH (Android 8.0+ / Android 13+)
         createDefaultNotificationChannel();
 
@@ -63,6 +76,22 @@ public class MainActivity extends BridgeActivity {
         super.onResume();
         setupNativeBridge();
         syncFcmToken();
+    }
+
+    public void notifyWebSubscription(String subId) {
+        if (this.bridge != null && this.bridge.getWebView() != null && subId != null && !subId.isEmpty()) {
+            runOnUiThread(() -> {
+                try {
+                    this.bridge.getWebView().evaluateJavascript(
+                        "try { " +
+                        "  localStorage.setItem('onesignal_subscription_id', '" + subId + "'); " +
+                        "  window.dispatchEvent(new CustomEvent('onesignal_subscription_ready', { detail: { subscriptionId: '" + subId + "' } })); " +
+                        "} catch (e) {}",
+                        null
+                    );
+                } catch (Exception ignored) {}
+            });
+        }
     }
 
     @Override
@@ -115,6 +144,10 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult() != null) {
                     cachedFcmToken = task.getResult();
+                    try {
+                        SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                        prefs.edit().putString("fcm_token", cachedFcmToken).apply();
+                    } catch (Exception ignored) {}
                 }
             });
             try {
@@ -122,6 +155,11 @@ public class MainActivity extends BridgeActivity {
                 String subId = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
                 if (subId != null && !subId.isEmpty()) {
                     cachedSubscriptionId = subId;
+                    try {
+                        SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                        prefs.edit().putString("subscription_id", subId).apply();
+                        notifyWebSubscription(subId);
+                    } catch (Exception ignored) {}
                 }
             } catch (Exception ignored) {}
 
@@ -388,6 +426,11 @@ public class MainActivity extends BridgeActivity {
                     }
                     try {
                         com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                        String id = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
+                        if (id != null && !id.isEmpty()) {
+                            cachedSubscriptionId = id;
+                            prefs.edit().putString("subscription_id", id).apply();
+                        }
                     } catch (Exception ignored) {}
                 }
             } catch (Exception e) {
@@ -413,7 +456,19 @@ public class MainActivity extends BridgeActivity {
                 String id = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
                 if (id != null && !id.isEmpty()) {
                     cachedSubscriptionId = id;
+                    try {
+                        SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                        prefs.edit().putString("subscription_id", id).apply();
+                    } catch (Exception ignored) {}
                     return id;
+                }
+            } catch (Exception ignored) {}
+            try {
+                SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                String saved = prefs.getString("subscription_id", "");
+                if (saved != null && !saved.isEmpty()) {
+                    cachedSubscriptionId = saved;
+                    return saved;
                 }
             } catch (Exception ignored) {}
             return "";
@@ -421,7 +476,14 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public String getFcmToken() {
-            return cachedFcmToken;
+            if (cachedFcmToken != null && !cachedFcmToken.isEmpty()) {
+                return cachedFcmToken;
+            }
+            try {
+                SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                return prefs.getString("fcm_token", "");
+            } catch (Exception ignored) {}
+            return "";
         }
 
         @JavascriptInterface
@@ -447,6 +509,14 @@ public class MainActivity extends BridgeActivity {
         public void optInPushSubscription() {
             try {
                 com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
+                String id = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
+                if (id != null && !id.isEmpty()) {
+                    cachedSubscriptionId = id;
+                    try {
+                        SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                        prefs.edit().putString("subscription_id", id).apply();
+                    } catch (Exception ignored) {}
+                }
             } catch (Exception ignored) {}
         }
 

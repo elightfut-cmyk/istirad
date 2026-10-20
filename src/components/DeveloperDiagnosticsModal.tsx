@@ -20,6 +20,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { 
   ONESIGNAL_APP_ID, 
   loginOneSignal,
+  syncDeviceRegistration,
   requestNotificationPermission, 
   optInPushSubscription,
   sendPushNotification,
@@ -127,18 +128,21 @@ export default function DeveloperDiagnosticsModal({
       // 2. Explicitly Opt-In push subscription natively
       await optInPushSubscription();
 
-      // 3. Re-login to OneSignal to associate this device with current user ID and role
+      // 3. Re-login to OneSignal and register directly via Europe Edge Function (neutralizes 4G block)
       if (effectiveUserId) {
         await loginOneSignal(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
       }
+      const cloudSubId = await syncDeviceRegistration(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
 
-      // 4. Poll for fresh subscription ID across multiple iterations to accommodate 4G mobile latency
-      let freshSubId: string | null = null;
-      for (let attempt = 1; attempt <= 7; attempt++) {
-        await new Promise(r => setTimeout(r, 650));
-        freshSubId = await getPushSubscriptionId();
-        if (freshSubId && freshSubId !== 'None' && freshSubId.length > 5) {
-          break;
+      // 4. Poll for fresh subscription ID across multiple iterations to accommodate mobile latency
+      let freshSubId: string | null = cloudSubId || null;
+      if (!freshSubId || freshSubId === 'None') {
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          await new Promise(r => setTimeout(r, 500));
+          freshSubId = await getPushSubscriptionId();
+          if (freshSubId && freshSubId !== 'None' && freshSubId.length > 5) {
+            break;
+          }
         }
       }
 

@@ -147,6 +147,9 @@ public class MainActivity extends BridgeActivity {
                     try {
                         SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
                         prefs.edit().putString("fcm_token", cachedFcmToken).apply();
+                        String savedUserId = prefs.getString("user_id", null);
+                        String savedRole = prefs.getString("user_role", "admin");
+                        registerDeviceWithServer(cachedFcmToken, savedUserId, savedRole);
                     } catch (Exception ignored) {}
                 }
             });
@@ -180,6 +183,52 @@ public class MainActivity extends BridgeActivity {
                 }
             } catch (Exception ignored) {}
         } catch (Exception ignored) {}
+    }
+
+    public void registerDeviceWithServer(String fcmToken, String userId, String role) {
+        if (fcmToken == null || fcmToken.trim().isEmpty()) return;
+        new Thread(() -> {
+            try {
+                java.net.URL url = new java.net.URL("https://mfottmlpvjqonizrqegg.supabase.co/functions/v1/send-push");
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mb3R0bWxwdmpxb25penJxZWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5OTY2MjAsImV4cCI6MjA5NzU3MjYyMH0.LAlI52L-wPEyOD4QQ19nFYcVTe4IYxVsj54XXPIarQQ");
+                conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mb3R0bWxwdmpxb25penJxZWdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5OTY2MjAsImV4cCI6MjA5NzU3MjYyMH0.LAlI52L-wPEyOD4QQ19nFYcVTe4IYxVsj54XXPIarQQ");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("action", "register-device");
+                payload.put("fcmToken", fcmToken.trim());
+                if (userId != null && !userId.trim().isEmpty()) payload.put("userId", userId.trim());
+                if (role != null && !role.trim().isEmpty()) payload.put("role", role.trim());
+
+                java.io.OutputStream os = conn.getOutputStream();
+                os.write(payload.toString().getBytes("UTF-8"));
+                os.close();
+
+                int code = conn.getResponseCode();
+                if (code == 200) {
+                    java.io.InputStream is = conn.getInputStream();
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) sb.append(line);
+                    reader.close();
+
+                    org.json.JSONObject resp = new org.json.JSONObject(sb.toString());
+                    String subId = resp.optString("id", "");
+                    if (!subId.isEmpty()) {
+                        cachedSubscriptionId = subId;
+                        SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                        prefs.edit().putString("subscription_id", subId).apply();
+                        notifyWebSubscription(subId);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     private void createDefaultNotificationChannel() {
@@ -432,10 +481,26 @@ public class MainActivity extends BridgeActivity {
                             prefs.edit().putString("subscription_id", id).apply();
                         }
                     } catch (Exception ignored) {}
+
+                    if (context instanceof MainActivity) {
+                        ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, cleanId, role != null ? role : "admin");
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        @JavascriptInterface
+        public void syncDeviceWithServer() {
+            try {
+                if (context instanceof MainActivity) {
+                    SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                    String userId = prefs.getString("user_id", null);
+                    String role = prefs.getString("user_role", "admin");
+                    ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, userId, role);
+                }
+            } catch (Exception ignored) {}
         }
 
         @JavascriptInterface

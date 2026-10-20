@@ -354,6 +354,9 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
         localStorage.setItem('onesignal_subscription_id', freshSubId);
       }
       console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
+
+      // Cloud Europe bridge sync (bypasses Algeria 4G block)
+      await syncDeviceRegistration(strId, role, userName);
       return;
     } catch (e) {
       console.warn('OneSignal native login warning:', e);
@@ -377,6 +380,44 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
       console.warn('OneSignal Web login error:', e);
     }
   });
+
+  // Cloud Europe bridge sync (bypasses Algeria 4G block)
+  await syncDeviceRegistration(strId, role, userName);
+};
+
+/**
+ * Direct device registration via Supabase Europe Edge Function.
+ * Connects directly to OneSignal REST API in Europe to register the device's live FCM token,
+ * completely neutralizing the Algeria 4G carrier block on api.onesignal.com.
+ */
+export const syncDeviceRegistration = async (userId?: string, role?: string, userName?: string): Promise<string | null> => {
+  const fcmToken = getFcmToken();
+  const effectiveId = userId || localStorage.getItem('onesignal_external_id');
+  const bridge = getNativeBridge();
+  if (bridge?.syncDeviceWithServer) {
+    try { bridge.syncDeviceWithServer(); } catch {}
+  }
+  if (!fcmToken) return null;
+
+  try {
+    const { data: resData } = await supabase.functions.invoke('send-push', {
+      body: {
+        action: 'register-device',
+        fcmToken,
+        userId: effectiveId,
+        role: role || 'admin',
+        name: userName || ''
+      }
+    });
+    if (resData?.id) {
+      localStorage.setItem('onesignal_subscription_id', resData.id);
+      window.dispatchEvent(new CustomEvent('onesignal_subscription_ready', { detail: { subscriptionId: resData.id } }));
+      return resData.id;
+    }
+  } catch (err) {
+    console.warn('Sync device registration notice:', err);
+  }
+  return null;
 };
 
 export const loginOneSignalUser = (userId: string | number, role?: string, userName?: string) => {

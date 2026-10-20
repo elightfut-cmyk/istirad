@@ -239,6 +239,21 @@ export const initOneSignal = async (): Promise<void> => {
         await OneSignal.User.pushSubscription.optIn();
       } catch (optErr) {}
 
+      // Listen for push subscription state changes (ID assigned, token assigned)
+      try {
+        OneSignal.User.pushSubscription.addEventListener('change', (event: any) => {
+          const newId = event?.current?.id;
+          const newToken = event?.current?.token;
+          if (newId && newId !== 'null' && newId !== 'None') {
+            localStorage.setItem('onesignal_subscription_id', newId);
+            window.dispatchEvent(new CustomEvent('onesignal_subscription_ready', { detail: { subscriptionId: newId } }));
+          }
+          if (newToken) {
+            localStorage.setItem('onesignal_fcm_token', newToken);
+          }
+        });
+      } catch (listenerErr) {}
+
       // Auto-reconnect identity after fresh reinstall or app relaunch
       try {
         const storedUserId = localStorage.getItem('onesignal_external_id');
@@ -650,15 +665,23 @@ export const sendPushNotification = async ({
 export const getPushSubscriptionId = async (): Promise<string | null> => {
   const bridge = getNativeBridge();
   if (bridge?.getPushSubscriptionId) {
-    const id = bridge.getPushSubscriptionId();
-    if (id) return id;
+    try {
+      const id = bridge.getPushSubscriptionId();
+      if (id && id !== 'None' && id.length > 5) return id;
+    } catch {}
   }
   if (isNativePlatform()) {
     try {
-      return await OneSignal.User.pushSubscription.getIdAsync();
+      const id = await OneSignal.User.pushSubscription.getIdAsync();
+      if (id && id !== 'None' && id.length > 5) {
+        localStorage.setItem('onesignal_subscription_id', id);
+        return id;
+      }
     } catch {}
   }
-  return localStorage.getItem('onesignal_subscription_id');
+  const local = localStorage.getItem('onesignal_subscription_id');
+  if (local && local !== 'None' && local.length > 5) return local;
+  return null;
 };
 
 export const getFcmToken = (): string => {

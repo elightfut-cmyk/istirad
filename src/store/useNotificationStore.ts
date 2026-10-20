@@ -82,20 +82,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           return;
       }
       
-      // Clean UI display deduplication: filter out immediate 1-3.5s twin records from presentation
+      // Clean UI display deduplication: merge identical twin notifications created within 60s
       const deduplicated: Notification[] = [];
-      const seenIds = new Set<string>();
-
       for (const n of (data as Notification[])) {
-        if (seenIds.has(n.id)) continue;
         const isTwin = deduplicated.some(existing => 
           existing.title === n.title &&
           existing.message === n.message &&
-          Math.abs(new Date(existing.created_at).getTime() - new Date(n.created_at).getTime()) < 3500
+          Math.abs(new Date(existing.created_at).getTime() - new Date(n.created_at).getTime()) < 60000
         );
-
         if (!isTwin) {
-          seenIds.add(n.id);
           deduplicated.push(n);
         }
       }
@@ -140,23 +135,23 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             const newNotif = payload.new as Notification;
             if (!newNotif) return;
 
-            let isTwin = false;
+            let isDuplicate = false;
             set((state) => {
-              // 1. Check if exact ID already in state
+              // 1. Check if exact ID already exists in state
               if (state.notifications.some(n => n.id === newNotif.id)) {
-                isTwin = true;
+                isDuplicate = true;
                 return state;
               }
 
-              // 2. Check if a twin (same title & message within 3.5s) was already added
-              const hasTwin = state.notifications.some(n => 
+              // 2. Check if an identical notification (same title & message within 60s) already exists
+              const alreadyExists = state.notifications.some(n => 
                 n.title === newNotif.title &&
                 n.message === newNotif.message &&
-                Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(newNotif.created_at || Date.now()).getTime()) < 3500
+                Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(newNotif.created_at || Date.now()).getTime()) < 60000
               );
 
-              if (hasTwin) {
-                isTwin = true;
+              if (alreadyExists) {
+                isDuplicate = true;
                 return state;
               }
 
@@ -166,8 +161,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
               };
             });
 
-            // If it's an immediate duplicate twin arriving 1s later, suppress duplicate chime & toast
-            if (isTwin) return;
+            // If it's a twin duplicate event arriving right after, suppress duplicate chime & toast
+            if (isDuplicate) return;
 
             // Play auditory chime
             playNotificationChime();
@@ -341,13 +336,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const { notifications, unreadCount } = get();
       const notifToDelete = notifications.find(n => n.id === id);
       
-      // Optimistic update: remove target and any twin duplicate from state
+      // Optimistic update
       set({ 
         notifications: notifications.filter(n => n.id !== id && !(
           notifToDelete &&
           n.title === notifToDelete.title &&
           n.message === notifToDelete.message &&
-          Math.abs(new Date(n.created_at).getTime() - new Date(notifToDelete.created_at).getTime()) < 4000
+          Math.abs(new Date(n.created_at).getTime() - new Date(notifToDelete.created_at).getTime()) < 60000
         )),
         unreadCount: notifToDelete && !notifToDelete.is_read ? Math.max(0, unreadCount - 1) : unreadCount
       });
@@ -355,17 +350,17 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const { error } = await supabase.from('notifications').delete().eq('id', id);
       if (error) throw error;
 
-      // Also clean up any twin duplicate row from DB
+      // Clean up twin duplicate row in DB if any
       if (notifToDelete) {
-        const time = new Date(notifToDelete.created_at).getTime();
-        const fourSecsBefore = new Date(time - 4000).toISOString();
-        const fourSecsAfter = new Date(time + 4000).toISOString();
+        const t = new Date(notifToDelete.created_at).getTime();
+        const before = new Date(t - 60000).toISOString();
+        const after = new Date(t + 60000).toISOString();
         await supabase.from('notifications').delete()
           .eq('user_id', notifToDelete.user_id)
           .eq('title', notifToDelete.title)
           .eq('message', notifToDelete.message)
-          .gte('created_at', fourSecsBefore)
-          .lte('created_at', fourSecsAfter);
+          .gte('created_at', before)
+          .lte('created_at', after);
       }
     } catch (error) {
       console.error('Error deleting notification:', error);

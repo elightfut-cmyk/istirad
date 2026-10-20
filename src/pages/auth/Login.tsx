@@ -4,7 +4,6 @@ import { useLanguageStore } from '../../store/useLanguageStore';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { loginOneSignalUser } from '../../lib/onesignal';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -95,8 +94,7 @@ export default function Login() {
 
         if (profile) {
           setUser(profile as User);
-          loginOneSignalUser(profile.id, profile.role, profile.name);
-          navigate(`/${profile.role}`);
+          navigate(`/${profile.role}`, { replace: true });
         }
       }
     } catch (error: any) {
@@ -175,25 +173,28 @@ export default function Login() {
         {!showForgot ? (
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">{t('auth.email')}</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">{t('auth.email')}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none rtl:right-0 rtl:pr-3 ltr:right-auto ltr:left-0 ltr:pl-3">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="login-email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full rtl:pr-10 rtl:pl-3 ltr:pl-10 ltr:pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] sm:text-sm transition-colors bg-gray-50 dark:bg-gray-900 focus:bg-white dark:focus:bg-gray-800 dark:text-white"
                   placeholder={t('auth.email_placeholder')}
                   required
+                  autoComplete="username"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">{t('auth.password')}</label>
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">{t('auth.password')}</label>
                 <button
                   type="button"
                   onClick={() => setShowForgot(true)}
@@ -207,6 +208,8 @@ export default function Login() {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="login-password"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

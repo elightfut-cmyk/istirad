@@ -159,13 +159,16 @@ try {
     console.log('🔄 Supabase Auth Event:', event);
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        if (profile) {
-          useAuthStore.getState().setUser(profile as User);
+        const currentUser = useAuthStore.getState().user;
+        if (!currentUser || currentUser.id !== session.user.id) {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (profile) {
+            useAuthStore.getState().setUser(profile as User);
+          }
         }
       }
     } else if (event === 'SIGNED_OUT') {

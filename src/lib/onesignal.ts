@@ -322,13 +322,22 @@ export const initOneSignal = async (): Promise<void> => {
  * Login user using external_id (UUID) immediately upon authentication.
  * Relied upon by Supabase Edge Function to target user without background polling.
  */
+let lastLoggedInUserId: string | null = null;
+
 export const loginOneSignal = async (userId: string | number, role?: string, userName?: string): Promise<void> => {
   if (typeof window === 'undefined' || !userId) return;
-  const strId = String(userId);
+  const strId = String(userId).trim();
+  if (!strId) return;
+
+  // Prevent duplicate rapid calls with the same user ID
+  if (lastLoggedInUserId === strId) {
+    return;
+  }
+  lastLoggedInUserId = strId;
 
   localStorage.setItem('onesignal_external_id', strId);
 
-  // Sync with NativeBridge if present
+  // Sync with NativeBridge if present (Android Java)
   const bridge = getNativeBridge();
   if (bridge?.loginOneSignal) {
     try {
@@ -355,34 +364,39 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
       }
       console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
 
-      // Cloud Europe bridge sync (bypasses Algeria 4G block)
-      await syncDeviceRegistration(strId, role, userName);
+      // Cloud Europe bridge sync (bypasses Algeria 4G block, runs non-blocking)
+      syncDeviceRegistration(strId, role, userName).catch(() => {});
       return;
     } catch (e) {
       console.warn('OneSignal native login warning:', e);
     }
   }
 
-  // Web Push Deferred Login
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
-    try {
-      if (OneSignalInstance.login) {
-        await OneSignalInstance.login(strId);
-        console.log('🔒 OneSignal Web logged in with external_id:', strId);
+  // Web Push Deferred Login (Safe against internal SDK errors like Qe undefined)
+  if (typeof window !== 'undefined' && !isNativePlatform()) {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+      try {
+        if (!OneSignalInstance) return;
+        if (typeof OneSignalInstance.login === 'function') {
+          await OneSignalInstance.login(strId).catch((err: any) => {
+            console.warn('OneSignal Web login non-fatal notice:', err);
+          });
+          console.log('🔒 OneSignal Web logged in with external_id:', strId);
+        }
+        if (OneSignalInstance.User?.addTag) {
+          if (role) await OneSignalInstance.User.addTag('role', role).catch(() => {});
+          if (userName) await OneSignalInstance.User.addTag('name', userName).catch(() => {});
+          await OneSignalInstance.User.addTag('user_id', strId).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('OneSignal Web login non-fatal notice:', e);
       }
-      if (OneSignalInstance.User) {
-        if (role) await OneSignalInstance.User.addTag('role', role);
-        if (userName) await OneSignalInstance.User.addTag('name', userName);
-        await OneSignalInstance.User.addTag('user_id', strId);
-      }
-    } catch (e) {
-      console.warn('OneSignal Web login error:', e);
-    }
-  });
+    });
+  }
 
-  // Cloud Europe bridge sync (bypasses Algeria 4G block)
-  await syncDeviceRegistration(strId, role, userName);
+  // Cloud Europe bridge sync (bypasses Algeria 4G block, runs non-blocking)
+  syncDeviceRegistration(strId, role, userName).catch(() => {});
 };
 
 /**
@@ -430,6 +444,7 @@ export const loginOneSignalUser = (userId: string | number, role?: string, userN
  */
 export const logoutOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
+  lastLoggedInUserId = null;
   localStorage.removeItem('onesignal_external_id');
   localStorage.removeItem('onesignal_subscription_id');
 

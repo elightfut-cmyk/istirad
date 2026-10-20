@@ -80,6 +80,8 @@ function App() {
         } else {
           // Resume Realtime only when app returns to foreground
           useNotificationStore.getState().resumeRealtime();
+          // Silently re-validate/refresh session tokens without interrupting user
+          useAuthStore.getState().checkSession();
         }
       }).then(handle => {
         listenerHandle = handle;

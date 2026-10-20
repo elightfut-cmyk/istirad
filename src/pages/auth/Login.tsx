@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore, User } from '../../store/useAuthStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { useNavigate, Link } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { loginOneSignalUser } from '../../lib/onesignal';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,9 +20,39 @@ export default function Login() {
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotError, setForgotError] = useState('');
   
-  const { setUser } = useAuthStore();
+  const { user, isAuthenticated, setUser } = useAuthStore();
   const { t } = useLanguageStore();
   const navigate = useNavigate();
+
+  // If already authenticated, redirect straight to user dashboard without staying on login
+  useEffect(() => {
+    if (isAuthenticated && user?.role) {
+      navigate(`/${user.role}`, { replace: true });
+    }
+  }, [isAuthenticated, user?.role, navigate]);
+
+  // Restore saved credentials from localStorage
+  useEffect(() => {
+    try {
+      const savedEmail = localStorage.getItem('jiibha_saved_email');
+      const savedPassword = localStorage.getItem('jiibha_saved_password');
+      const savedRemember = localStorage.getItem('jiibha_remember_login');
+
+      if (savedRemember !== null) {
+        setRememberMe(savedRemember === 'true');
+      }
+
+      if (savedEmail) {
+        setEmail(savedEmail);
+      }
+
+      if (savedPassword && (savedRemember === null || savedRemember === 'true')) {
+        setPassword(savedPassword);
+      }
+    } catch (e) {
+      console.warn('Could not restore saved login credentials:', e);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +60,28 @@ export default function Login() {
     setLoading(true);
     
     try {
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         password,
       });
 
       if (error) throw error;
+
+      // Save credentials if Remember Me is checked
+      try {
+        if (rememberMe) {
+          localStorage.setItem('jiibha_remember_login', 'true');
+          localStorage.setItem('jiibha_saved_email', cleanEmail);
+          localStorage.setItem('jiibha_saved_password', password);
+        } else {
+          localStorage.setItem('jiibha_remember_login', 'false');
+          localStorage.removeItem('jiibha_saved_email');
+          localStorage.removeItem('jiibha_saved_password');
+        }
+      } catch (storageErr) {
+        console.warn('Could not persist credentials:', storageErr);
+      }
 
       if (data.user) {
         // Fetch user profile
@@ -169,6 +216,26 @@ export default function Login() {
                   autoComplete="current-password"
                 />
               </div>
+            </div>
+
+            {/* Remember Me / Credentials Persistence */}
+            <div className="flex items-center justify-between text-sm py-1 select-none">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-[#4f46e5] rounded border-gray-300 dark:border-gray-600 focus:ring-[#4f46e5] cursor-pointer"
+                />
+                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium">
+                  حفظ معلومات الدخول تلقائياً
+                </span>
+              </label>
+              {email && (
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full font-medium border border-emerald-200 dark:border-emerald-800/40">
+                  حفظ دائم مفعّل ✓
+                </span>
+              )}
             </div>
 
             <button

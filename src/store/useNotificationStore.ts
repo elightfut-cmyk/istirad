@@ -423,7 +423,8 @@ export const sendNotification = async (userId: string, title: string, message: s
            targetRole: roleToFind,
            title,
            message,
-           data: { type, role: roleToFind }
+           data: { type, role: roleToFind },
+           skipDbInsert: true
          });
        } catch (pushErr) {
          console.error('OneSignal Push Error (role broadcast):', pushErr);
@@ -454,7 +455,8 @@ export const sendNotification = async (userId: string, title: string, message: s
         userIds: [String(userId)],
         title,
         message,
-        data: { type }
+        data: { type },
+        skipDbInsert: true
       });
     } catch (pushErr) {
       console.error('OneSignal Push Error:', pushErr);

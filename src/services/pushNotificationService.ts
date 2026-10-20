@@ -11,6 +11,7 @@ export interface PushNotificationPayload {
   sendToAll?: boolean;
   targetRole?: string | null;
   android_channel_id?: string;
+  skipDbInsert?: boolean;
 }
 
 export interface PushSendResult {
@@ -78,7 +79,8 @@ export const sendPushNotificationDetailed = async ({
   data = {},
   sendToAll = false,
   targetRole,
-  android_channel_id
+  android_channel_id,
+  skipDbInsert
 }: PushNotificationPayload): Promise<PushSendResult> => {
   const rawIds = userIds || (user_id ? [user_id] : []);
   const externalIds = (Array.isArray(rawIds) ? rawIds : [rawIds])
@@ -107,7 +109,8 @@ export const sendPushNotificationDetailed = async ({
       data,
       sendToAll,
       targetRole: targetRole || undefined,
-      existing_android_channel_id: 'default_notification_channel'
+      existing_android_channel_id: 'default_notification_channel',
+      skipDbInsert: Boolean(skipDbInsert)
     };
     if (android_channel_id && isUuid(android_channel_id)) {
       pushBody.android_channel_id = android_channel_id.trim();

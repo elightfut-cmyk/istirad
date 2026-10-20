@@ -632,7 +632,8 @@ export const sendPushNotification = async ({
   targetRole = null,
   targetSubscriptionId = null,
   targetUrl = '/notifications',
-  data = {}
+  data = {},
+  skipDbInsert = false
 }: {
   title: string;
   message: string;
@@ -642,12 +643,15 @@ export const sendPushNotification = async ({
   targetSubscriptionId?: string | null;
   targetUrl?: string;
   data?: Record<string, any>;
+  skipDbInsert?: boolean;
 }): Promise<any> => {
   const finalUserIds = (
     userIds 
       ? (Array.isArray(userIds) ? userIds : [userIds])
       : (targetUserId ? [targetUserId] : [])
   ).map(String).filter(Boolean);
+
+  const restApiKey = getOneSignalRestApiKey();
 
   // 1. Try Supabase Edge Function first
   try {
@@ -659,19 +663,22 @@ export const sendPushNotification = async ({
         subscriptionIds: targetSubscriptionId ? [String(targetSubscriptionId)] : [],
         targetRole,
         data: { ...data, url: targetUrl },
-        existing_android_channel_id: 'default_notification_channel'
+        existing_android_channel_id: 'default_notification_channel',
+        skipDbInsert,
+        apiKey: restApiKey
       }
     });
 
-    if (!error && responseData && !responseData.error) {
+    const isOk = !error && responseData && responseData.ok !== false && !responseData.errors && !responseData.error && (responseData.id || (responseData.recipients !== undefined && responseData.recipients > 0));
+    if (isOk) {
       return responseData;
     }
+    console.warn('Edge function returned non-success, attempting direct OneSignal fallback:', responseData || error);
   } catch (err) {
-    console.warn('Edge function invoke skipped, attempting direct OneSignal fallback');
+    console.warn('Edge function invoke skipped, attempting direct OneSignal fallback:', err);
   }
 
   // 2. Direct OneSignal REST API Fallback
-  const restApiKey = getOneSignalRestApiKey();
   if (restApiKey && ONESIGNAL_APP_ID) {
     try {
       const payload: Record<string, any> = {
@@ -682,6 +689,7 @@ export const sendPushNotification = async ({
         data: { ...data, url: targetUrl },
         existing_android_channel_id: 'default_notification_channel',
         priority: 10,
+        android_priority: 10,
         android_accent_color: 'FF4F46E5',
         android_visibility: 1
       };
@@ -692,10 +700,10 @@ export const sendPushNotification = async ({
       } else if (finalUserIds.length > 0) {
         payload.include_aliases = { external_id: finalUserIds };
         payload.target_channel = 'push';
-      } else if (targetRole) {
+      } else if (targetRole && targetRole !== 'all') {
         payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
       } else {
-        payload.included_segments = ['Subscribed Users'];
+        payload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
       }
 
       const res = await fetch('https://api.onesignal.com/notifications', {

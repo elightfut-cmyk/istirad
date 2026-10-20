@@ -47,15 +47,15 @@ serve(async (req) => {
       || Deno.env.get('VITE_ONESIGNAL_APP_ID') 
       || 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
-    const cleanKey = rawApiKey.trim();
-    const ONESIGNAL_APP_ID = rawAppId.trim();
+    // 3. Parse incoming payload
+    const body = await req.json().catch(() => ({}));
+
+    const cleanKey = (rawApiKey || body.apiKey || body.restApiKey || '').trim();
+    const ONESIGNAL_APP_ID = (rawAppId || body.appId || 'daeaef49-9125-4ef2-8950-6c0428063f09').trim();
 
     const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
       ? cleanKey
       : `Key ${cleanKey}`;
-
-    // 3. Parse incoming payload
-    const body = await req.json().catch(() => ({}));
 
     // Action A: Direct Device FCM Registration (Solves 4G blocking in Algeria)
     // The phone gets its FCM token directly from Google (never blocked) and posts to this Edge function.
@@ -149,7 +149,8 @@ serve(async (req) => {
       sendToAll: rawSendToAll = false,
       targetRole,
       android_channel_id,
-      existing_android_channel_id 
+      existing_android_channel_id,
+      skipDbInsert = false
     } = body;
 
     let sendToAll = Boolean(rawSendToAll || targetRole === 'all');
@@ -175,8 +176,10 @@ serve(async (req) => {
       );
     }
 
-    // Guaranteed Database Notification Insert (Service Role / Zero RLS)
-    if (supabaseUrl && supabaseServiceRoleKey) {
+    // Guaranteed Database Notification Insert (Zero Duplicate Guard)
+    // Only insert if skipDbInsert is false and not test notification
+    const shouldInsertDb = !skipDbInsert && !body.skip_db_insert && !data?.test;
+    if (shouldInsertDb && supabaseUrl && supabaseServiceRoleKey) {
       try {
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
         const notifTitle = title || (headings && (headings.ar || headings.en)) || 'إشعار جديد';
@@ -194,7 +197,7 @@ serve(async (req) => {
             }));
             await supabaseAdmin.from('notifications').insert(inserts);
           }
-        } else if (externalIds.length > 0 && !data?.test) {
+        } else if (externalIds.length > 0) {
           const inserts = externalIds.map(id => ({
             user_id: id,
             title: notifTitle,
@@ -239,29 +242,21 @@ serve(async (req) => {
       oneSignalPayload.android_channel_id = android_channel_id.trim();
     }
 
-    // Targeting strategy:
+    // Targeting strategy (Principle #4: prioritize identity external_id alias):
     if (sendToAll) {
       oneSignalPayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
     } else if (validSubIds.length > 0) {
-      // Direct device subscription: use include_player_ids for maximum reliability across OneSignal versions
+      // Direct device subscription
       oneSignalPayload.include_player_ids = validSubIds;
-    } else if (targetRole && targetRole !== 'all') {
-      // Broadcast to all active devices tagged with this role OR matching userIds
-      if (externalIds.length > 0) {
-        oneSignalPayload.filters = [
-          { field: 'tag', key: 'role', relation: '=', value: String(targetRole) },
-          { operator: 'OR' },
-          { field: 'tag', key: 'user_id', relation: '=', value: externalIds[0] }
-        ];
-      } else {
-        oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
-      }
     } else if (externalIds.length > 0) {
-      // Dual target by external_id alias and user_id tag
+      // Direct user UUID targeting via external_id alias
       oneSignalPayload.target_channel = 'push';
       oneSignalPayload.include_aliases = {
         external_id: externalIds
       };
+    } else if (targetRole && targetRole !== 'all') {
+      // Role-based targeting fallback
+      oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     }
 
     // Send request to OneSignal REST API

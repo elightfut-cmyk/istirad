@@ -1,209 +1,129 @@
-# دليل وبرومبت هندسي شامل: بناء وتصحيح أنظمة الإشعارات الفورية (Push Notifications)
-## Master Engineering Blueprint & System Prompt for Mobile Push Notifications
+# الدليل الشامل والبرومبت المرجعي لبناء نظام إشعارات فوري فائق الاعتمادية
+## The Bulletproof Push Notification Architecture (Android, Telecom, & Cloud)
 
-> هذا الملف هو الدليل المرجعي الصارم (Master Blueprint & Prompt) الذي يجب استدعاؤه واتباعه حرفياً عند تصميم، بناء، أو تصحيح أي نظام إشعارات فورية (Push Notifications) لتطبيق هجين (Capacitor / React) أو أصيل (Native Android/iOS).
+> **طريقة الاستخدام:**  
+> هذا البرومبت تم إعداده وصياغته من واقع تجارب هندسية معقدة وحلول لأصعب المشاكل التقنية في بيئات الإنتاج (Production). قم بنسخ هذا البرومبت بالكامل وتقديمه للذكاء الاصطناعي أو لفريق التطوير في أي مشروع جديد (تطبيق جوال هجين أو أصلي مع خلفية سحابية).
 
 ---
-
-## 📌 البرومبت التأسيسي (System Prompt للاستخدام المباشر)
 
 ```markdown
-أنت مهندس نظم وتطبيقات متقدم (Principal Mobile & Systems Engineer) متخصص في بنيات الإشعارات الفورية (Push Notifications Architecture) عبر بيئات الهواتف الذكية (Android / iOS) والأنظمة السحابية (OneSignal / Firebase FCM / Supabase).
+# نظام التوجيه الهندسي الصارم: بناء معمارية الإشعارات الفورية الشاملة المضادة للحظر والاستنزاف
+# Role: Senior Principal Systems, Telecom & Android Architect
 
-عند بناء أو تصحيح نظام إشعارات فورية لأي تطبيق، يجب أن تعمل وفق المبادئ الصارمة التالية دون أي تهاون:
+أنت تعمل بصفتك "كبير مهندسي النظم وشبكات الاتصالات وتطبيقات أندرويد" (Principal Systems, Telecom & Android Architect).
+مهمتك هي بناء أو إعادة هيكلة نظام الإشعارات الفورية (Push Notifications) لتطبيق جوال متكامل (Capacitor/Android + React/Vite + Supabase Edge Functions + OneSignal + Google FCM v1).
 
-1. الفصل المطلق بين المفاتيح (Key Separation & Zero Trust):
-   - لا تخلط أبداً بين App ID (المعرف العلني) ومفتاح الـ REST API Key (المفتاح السري للخادم).
-   - لا تضع مفاتيح الـ REST API في كود العميل (Client-side) نهائياً؛ الإرسال يتم دائماً عبر Backend / Supabase Edge Functions.
-   - تحقق دائماً من صيغة المفاتيح (مثل صيغ OneSignal v2 الحديثة: os_v2_app_...) ولا تخلط بين الحسابات أو التطبيقات المختلفة.
-
-2. حتمية التعامل مع تباين أجهزة ومصنعي الهواتف (OEM Fragmentation):
-   - لا تفترض أبداً أن نجاح الإشعار في هاتف أو محاكي يعني نجاحه على هواتف شاومي (Redmi/Xiaomi)، هواوي (Huawei)، أوبو (Oppo)، أو سامسونج (Samsung).
-   - واجهات MIUI / HyperOS / EMUI تقتل التطبيقات في الخلفية وتمنع التشغيل التلقائي (AutoStart) افتراضياً.
-   - يجب توفير واجهات مساعدة برمجية (Native Intents & Bridges) لتوجيه المستخدمين بوضوح لتعطيل موفر الطاقة وإتاحة التشغيل في الخلفية للأجهزة المستهدفة.
-
-3. هندسة الأذونات وقنوات أندرويد (Android 13+ & Notification Channels):
-   - أندرويد 13+ (API 33+) يتطلب إذن POST_NOTIFICATIONS صريح أثناء التشغيل (Runtime Permission)؛ بدونه لن يصل أي إشعار.
-   - أندرويد 8.0+ (API 26+) يشترط وجود قناة تنبيه (Notification Channel) بأهمية قصوى (IMPORTANCE_HIGH) لكي يصدر الهاتف صوتاً واهتزازاً ويظهر التنبيه العائم (Heads-up).
-
-4. دورة حياة الربط والتسجيل (User Identity & Subscription Lifecycle):
-   - يتم تهيئة OneSignal فور إقلاع التطبيق، ويتم استدعاء OneSignal.login(userId) فور توثيق المستخدم لربط المعرف الخارجي (External ID).
-   - عند الإرسال، يتم الاعتماد على المعرف الموحد للمستخدم (External ID) لتصل التنبيهات لجميع أجهزته المتزامنة تلقائياً.
-
-5. الأمان وخصوصية الواجهة (UI Security & Strict Isolation):
-   - أدوات الفحص، شاشات الـ Diagnostics، أزرار التجربة، والـ Player IDs هي أدوات للمطور فقط.
-   - يحظر تماماً عرض شاشات الفحص أو التوكنات التقنية للمستخدمين العاديين، ويجب قصرها برمجياً على حساب المطور المسؤول.
-```
+يجب عليك تطبيق هذا النظام وفق معايير هندسية صارمة جداً، مستفيداً من الدروس المستفادة والأخطاء الكارثية التي تواجه النظم في بيئات التشغيل الواقعية، خاصة:
+1. معضلة حجب وتقييد شبكات الجيل الرابع (4G Carrier Deep Packet Inspection / DNS Blocking) لخدمات الإشعارات الخارجية مقارنة بالـ Wi-Fi.
+2. معضلة استنزاف موارد وحصص قاعدة البيانات السحابية (Database Compute & Quota Exhaustion) نتيجة الاستماع الحي (Realtime) أو الاستعلام الدوري (Polling).
+3. معضلة فقدان الإشعارات أثناء وضع السبات العميق للأندرويد (Android Doze Mode).
+4. معضلة تكرار استدعاءات تسجيل الأجهزة وأخطاء الـ SDK (مثل أخطاء التسجيل المتزامن في الويب والأندرويد).
+5. معضلة تعارض مسارات الـ SPA في Service Worker التي تتسبب في فشل التنقل وتوقف التطبيق على "جاري التحقق".
 
 ---
 
-## 🛠️ الدليل الهندسي التفصيلي: الخطوات العملية والأخطاء التي يجب تفاديها
+## المبادئ الحاكمة والخطوط الحمراء (Strict Engineering Principles)
 
-### 1. معضلة المفاتيح (App ID vs REST API Key vs FCM v1)
+### 1. الخط الأحمر الأول: حظر استدعاءات الإرسال من جهاز العميل مباشرة (No Client-Side Push Dispatch)
+* **المشكلة:** شبكات الهاتف المحمول (مثل شركات الاتصالات 4G في شمال إفريقيا والشرق الأوسط: Mobilis, Djezzy, Ooredoo وغيرها) تطبق جدران نارية وفحص حزم عميق (DPI) أو قيود DNS قد تعطل الوصول إلى نطاقات REST API الخاصة بـ OneSignal أو خدمات الإشعارات، مما يجعل الإشعار ينجح على Wi-Fi ويفشل تماماً على 4G.
+* **القاعدة الصارمة:** لا يُسمح نهائياً للتطبيق الجوال باستدعاء REST API لـ OneSignal لإرسال إشعار.
+* **الحل المعماري:**
+  - التطبيق يتعامل فقط مع الخادم السحابي الخاص بنا (Supabase Edge Function المتمركزة في خوادم أوروبية فرانكفورت/لندن ذات توجيه شبكي دولي سريع ومستقر).
+  - الدالة السحابية (Edge Function) هي الوحيدة المصرح لها بطلب الإرسال من OneSignal API عبر قنوات سيرفر إلى سيرفر (Server-to-Server).
+  - هاتف المستخدم يتلقى الإشعار حصرياً عبر قناة Google FCM الدائمة (TCP Ports 5228-5230) المفتوحة إجبارياً وبشكل مستقر على كافة شبكات الاتصالات لأن خدمات Google Play تعتمد عليها.
 
-#### ❌ الأخطاء السابقة الشائعة:
-- استخدام مفتاح REST API قديم ملغى في خوادم Supabase، مع تحديثه فقط في كود العميل أو العكس.
-- نسخ الـ REST API Key في خانة الـ App ID أو العكس.
-- استدعاء واجهات إرسال OneSignal مباشرة من كود React بواسطة مفتاح REST API سري، مما يجعله عرضة للاستخراج والفحص من ملفات APK.
+### 2. الخط الأحمر الثاني: الحظر التام للاستنزاف (Zero-Polling & Zero Realtime Battery/DB Drain)
+* **المشكلة:** الاعتماد على الـ Polling الدوري أو فتح قنوات WebSockets دائمة (Realtime Listeners) لاستقبال التنبيهات في الخلفية يستنزف حصة قاعدة البيانات (Egress & Compute Limits) ويفرغ بطارية الهاتف ويؤدي لتعليق التطبيق.
+* **القاعدة الصارمة:**
+  - لا Polling نهائياً للإشعارات.
+  - لا Realtime Sockets مفتوحة في الخلفية بعد قفل الشاشة أو في دورة حياة التوقف (Paused/Background).
+  - الإشعار يجب أن يكون Push حقيقي 100% مدفوع من الخادم، ولا يُسجل الجهاز في قاعدة البيانات إلا مرة واحدة عند تسجيل الدخول أو عند تجدد معرف الاشتراك (Idempotent Device Registration).
 
-#### ✅ القواعد الذهبية:
-1. **OneSignal App ID (معرف التطبيق)**:
-   - شكله: UUID قياسي مثل `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`.
-   - مكانه: يوضع في كود الواجهة الأمامية (`capacitor.config.ts`, `src/lib/onesignal.ts`, `.env.production`).
-   - وظيفته: تسجيل الجهاز لدى خدمة OneSignal واستقبال التوكنات فقط.
-2. **OneSignal REST API Key (مفتاح الخادم السري)**:
-   - شكله: يبدأ بالبادئة الحديثة `os_v2_app_...` بطول حوالي 80+ محرف.
-   - مكانه: حصرياً في خوادم Backend أو Supabase Secrets (`supabase secrets set ONESIGNAL_REST_API_KEY=...`).
-   - وظيفته: إرسال الإشعارات إلى المستخدمين عبر الطلبات البرمجية الموثوقة.
-3. **Google Firebase FCM v1 Service Account**:
-   - لم يعد Google يدعم مفاتيح Legacy Server Key القديمة.
-   - يجب توليد ملف JSON من Google Cloud Console لحساب الخدمة (Firebase Service Account) ورفعه داخل لوحة OneSignal Dashboard تحت إعدادات Android.
-
----
-
-### 2. هندسة أذونات أندرويد وقنوات التنبيه (Permissions & Channels)
-
-#### أ. إذن POST_NOTIFICATIONS (Android 13+ / API 33):
-في ملف `android/app/src/main/AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-<uses-permission android:name="android.permission.VIBRATE" />
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-```
-
-#### ب. إنشاء قناة الإشعارات الإجبارية (High Importance Notification Channel):
-في `MainActivity.java`، لا تعتمد على إنشاء القناة تلقائياً، بل قم بإنشائها برمجياً في `onCreate`:
-```java
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    NotificationManager notificationManager = getSystemService(NotificationManager.class);
-    if (notificationManager != null) {
-        String channelId = "default_notification_channel";
-        NotificationChannel channel = new NotificationChannel(
-            channelId,
-            "تنبيهات التطبيق الهامة",
-            NotificationManager.IMPORTANCE_HIGH
-        );
-        channel.setDescription("إشعارات فورية للطلبات، العروض، وحالة الحساب");
-        channel.enableVibration(true);
-        channel.enableLights(true);
-        channel.setShowBadge(true);
-        channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-        
-        notificationManager.createNotificationChannel(channel);
-    }
-}
-```
+### 3. الخط الأحمر الثالث: استهداف الهوية (Targeting via external_id)
+* **القاعدة الصارمة:** يتم ربط كل مستخدم في النظام بمعرفه الأساسي UUID في OneSignal كـ `external_id`.
+* عند إرسال أي إشعار لشخص معين (أدمن، تاجر، مورد، عميل)، تستهدف الدالة السحابية:
+  `include_aliases: { external_id: [TARGET_USER_UUID] }`
+* يمنع استهداف الـ `All / Subscribed Users` عشوائياً بدون تحديد، لمنع استهلاك رصيد المشتركين أو إرسال إشعارات لغير أصحابها.
 
 ---
 
-### 3. معضلة تباين الهواتف ومصنعي الأجهزة (The OEM Battery Killer Dilemma)
+## التفاصيل التنفيذية لمعمارية النظام (Implementation Blueprint)
 
-#### ما السبب وراء فشل الإشعارات على Redmi / Xiaomi / Oppo / Huawei رغم عملها على Samsung أو Pixel؟
-تحتوي أنظمة أندرويد المعدلة (Custom ROMs) على برامج إدارة طاقة عدوانية للغاية:
-1. **شاومي / ريدمي (MIUI / HyperOS)**:
-   - خاصية **AutoStart (التشغيل التلقائي)** مغلقة افتراضياً لأي تطبيق لا ينتمي لشاومي أو جوجل. بمجرد خروج المستخدم من التطبيق، تُغلق خلفيته ويمنع استيقاظه بواسطة FCM.
-   - خيار **MIUI Battery Saver** يقوم بقطع الاتصال بالشبكة عن التطبيقات في الخلفية بعد دقائق من قفل الشاشة.
-2. **هواوي (EMUI / HarmonyOS)**:
-   - نظام **App Launch** يُعيّن التطبيقات تلقائياً على "إدارة تلقائية"، مما يمنع التشغيل الثانوي (Secondary Launch).
-3. **أوبو / ريلمي / فيفو (ColorOS / OriginOS)**:
-   - خاصية **Background Freeze** تُجمد العملية البرمجية بالكامل عند سكون الهاتف.
-
-#### ✅ الحل البرمجي المتكامل: جسر النظام (Native Device Bridge):
-تمكين التطبيق من فتح شاشات الضبط الخاصة بكل مصنّع مباشرة:
-1. **فتح إعداد التشغيل التلقائي لشومي (Xiaomi Autostart Intent)**:
-   ```java
-   Intent intent = new Intent();
-   intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
-   startActivity(intent);
+### أولاً: بنية الدالة السحابية (Supabase Edge Function: `send-push`)
+يجب أن تحتوي الدالة السحابية على التالي:
+1. **التحقق والأمان:** التأكد من وجود مفتاح API السري لـ OneSignal `ONESIGNAL_REST_API_KEY` ومفتاح التطبيق `ONESIGNAL_APP_ID` المخزنين في بيئة العمل المشفرة (Secrets)، وعدم كشفهما نهائياً في كود الفرونت إند.
+2. **حمولة أندرويد فائقة الأولوية (High Priority Payload):**
+   ```json
+   {
+     "app_id": "YOUR_ONESIGNAL_APP_ID",
+     "include_aliases": { "external_id": ["USER_UUID"] },
+     "target_channel": "push",
+     "headings": { "ar": "العنوان بالعربية", "en": "Title" },
+     "contents": { "ar": "نص التنبيه", "en": "Body" },
+     "priority": 10,
+     "android_priority": 10,
+     "android_channel_id": "urgent_notification_channel",
+     "android_sound": "notification",
+     "android_accent_color": "FF4F46E5",
+     "small_icon": "ic_stat_onesignal_default",
+     "data": {
+       "route": "/orders/123",
+       "click_action": "FLUTTER_NOTIFICATION_CLICK"
+     }
+   }
    ```
-2. **فتح إعداد توفير البطارية بدون قيود (MIUI No Restrictions)**:
-   ```java
-   Intent intent = new Intent();
-   intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"));
-   intent.putExtra("package_name", getPackageName());
-   intent.putExtra("package_label", "Jiibha");
-   startActivity(intent);
-   ```
-3. **الطلب العام لتجاهل تحسين البطارية (Universal Battery Optimization Request)**:
-   ```java
-   Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-   intent.setData(Uri.parse("package:" + getPackageName()));
-   startActivity(intent);
-   ```
+3. **آلية الإرسال الاحتياطية المزدوجة (Dual Routing Fallback):**
+   - إذا تم تحديد مستخدم مسجل: ترسل الدالة عبر `include_aliases.external_id`.
+   - إذا كان الإشعار عاماً (مثل إشعار للإدارة برول `admin`): تبحث الدالة السحابية في جدول `user_devices` عن معرفات الاشتراكات النشطة فقط لمدراء النظام، وترسلها عبر `include_subscription_ids`.
+
+### ثانياً: تهيئة بيئة أندرويد الأصلية (Android Native & Capacitor Layer)
+1. **تحديث Google Cloud Console و OneSignal:**
+   - تفعيل واجهة `Firebase Cloud Messaging API (V1)` الإلزامية.
+   - إنشاء Service Account بصلاحية `Firebase Cloud Messaging API Admin`، وتوليد مفتاح JSON خاص.
+   - رفع المفتاح في لوحة OneSignal تحت إعدادات Android (FCM v1).
+2. **إنشاء قناة الإشعارات الأصلية (High Importance Notification Channel):**
+   يجب تهيئة القناة برمجياً في `MainActivity.java` أو عبر إعدادات الـ Native Bridge:
+   - `Channel ID`: `urgent_notification_channel`
+   - `Importance`: `NotificationManager.IMPORTANCE_HIGH` أو `IMPORTANCE_MAX`.
+   - تفعيل الاهتزاز (Vibration Pattern: `new long[]{0, 250, 250, 250}`).
+   - تفعيل إضاءة التنبيهات وإظهار الشارة على أيقونة التطبيق (Badges).
+3. **تخطي وضع السبات (Android Doze Mode):**
+   - إعداد الإشعار ذو أولوية قصوى (`priority: 10`) يجبر نظام أندرويد على إيقاظ المعالج لحظياً وعرض الإشعار فوراً حتى وإن كان الهاتف في جيب المستخدم لساعات على شبكة 4G.
+
+### ثالثاً: إدارة الحالة في الواجهة الأمامية (Frontend & Native Bridge)
+1. **دورة حياة تسجيل الجهاز (Debounced Idempotent Device Sync):**
+   - عند تسجيل دخول المستخدم، يتم استدعاء `loginOneSignal(userId, role, userName)`.
+   - يتم تخزين المعرف محلياً لمنع تكرار النداء لنفس المعرف في نفس الجلسة (`lastLoggedInUserId`).
+   - في أندرويد الأصلي: استدعاء دالة `OneSignal.login(userId)` ثم استخراج `subscription_id` وتحديث سجل الجهاز في الخادم في الخلفية دون تعطيل واجهة المستخدم (Non-blocking).
+   - في الويب: استخدام `OneSignalDeferred` مع التحقق الصارم من وجود دالة `login` لحماية التطبيق من أخطاء الـ SDK الداخلية.
+2. **دورة حياة تسجيل الخروج:**
+   - مسح `external_id` واستدعاء `logoutOneSignal()` لقطع ارتباط الإشعارات عن الحساب عند تسجيل الخروج، لمنع وصول إشعارات مستخدم لآخر على نفس الهاتف.
+
+### رابعاً: تحصين الـ Service Worker لمتصفحات الويب و PWA
+1. **معالجة مسارات الـ SPA الافتراضية:**
+   - التأكد من أن `sw.js` لا يعترض مسارات التطبيق الداخلية (`/merchant`, `/admin`, `/supplier`, إلخ) بـ `fetch` غير محمي يؤدي إلى خطأ `Failed to fetch`.
+   - توفير مسار استرجاع آمن (Fallback to `/index.html`) لكل طلبات الـ Navigation حال عدم توفر اتصال بالشبكة أو عند الانتقال الداخلي.
+2. **إضافة وسوم الحفظ التلقائي:**
+   - تزويد جميع حقول تسجيل الدخول بسمات `autoComplete="username"` و `autoComplete="current-password"` لضمان سلاسة الحفظ التلقائي من النظام.
 
 ---
 
-### 4. دورة حياة ربط المستخدم (OneSignal User Lifecycle)
+## واجهة التشخيص والشفاء الذاتي (Self-Healing & Diagnostics Screen)
 
-```
-[تسجيل الدخول / فتح التطبيق]
-         │
-         ▼
- 1. initOneSignal() ──────────► تهيئة المكتبة بالـ App ID فقط
-         │
-         ▼
- 2. طلب إذن الإشعارات ────────► OneSignal.Notifications.requestPermission(true)
-         │
-         ▼
- 3. ربط هوية المستخدم ────────► OneSignal.login(user.id)
-         │
-         ▼
- 4. تخزين الاشتراك ───────────► حفظ subscriptionId و pushToken في جدول profiles
-```
-
-#### حمولة الإرسال النموذجية للـ Backend (Payload Standard):
-عند استدعاء API الـ OneSignal من السيرفر أو Edge Function:
-```json
-{
-  "app_id": "YOUR_ONESIGNAL_APP_ID",
-  "include_aliases": {
-    "external_id": ["user-uuid-here"]
-  },
-  "target_channel": "push",
-  "headings": { "en": "عنوان الإشعار", "ar": "عنوان الإشعار" },
-  "contents": { "en": "نص التنبيه بالتفصيل", "ar": "نص التنبيه بالتفصيل" },
-  "android_channel_id": "default_notification_channel",
-  "priority": 10,
-  "android_visibility": 1,
-  "small_icon": "ic_stat_onesignal_default",
-  "data": {
-    "url": "/orders/123",
-    "type": "order_update"
-  }
-}
-```
+يجب بناء شاشة مخفية أو متاحة للأدمن باسم `PushDiagnostics` تفحص وتتحقق من العناصر التالية مباشرة من الهاتف:
+1. نوع اتصال الشبكة الحالي (Wi-Fi أو Mobile 4G).
+2. حالة Google Play Services وتوفر FCM.
+3. معرّف الاشتراك المستخرج من OneSignal (`subscription_id`).
+4. معرّف المستخدم الخارجي المرتبط (`external_id`).
+5. زر "إرسال إشعار تجريبي فوري" يستدعي الدالة السحابية مباشرة مع عرض استجابة الـ HTTP ورمز التتبع، لتحديد موضع أي خلل في أقل من 5 ثوانٍ.
 
 ---
 
-### 5. أمان الواجهة وخصوصية أدوات الفحص (Security & Developer Tool Isolation)
-
-#### ❌ الخطر الأمني السابق:
-ترك زر "فحص الإشعارات وتجربتها" أو كروت التشخيص متاحة لكل المستخدمين والتجار والزبائن في لوحة التحكم أو الملف الشخصي، مع إمكانية عرض التوكنات أو إتاحة تعديل الـ REST API Key.
-
-#### ✅ معايير الأمان المطبقة:
-1. **Strict Email Authorization**:
-   - لا يتم فتح أو تصيير (Render) نوافذ التشخيص وأزرار الاختبار إلا للمطور المعتمد:
-   ```typescript
-   const isAuthorized = user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com';
-   if (!isOpen || !isAuthorized) return null;
-   ```
-2. **Hidden Triggers**:
-   - إخفاء أزرار الفحص بالكامل من شريط الإشعارات، جرس التنبيهات، صفحة الملف الشخصي، ولوحة التحكم لأي حساب آخر.
-
----
-
-### 6. قائمة الفحص العملية الإجبارية (Pre-Flight Checklist)
-قبل الإعلان عن جاهزية نظام الإشعارات أو تسليم أي تطبيق، يجب التأكد من:
-- [ ] التأكد من صحة OneSignal App ID في الواجهة، وصحة REST API Key في خوادم Backend.
-- [ ] التأكد من وجود ملف `google-services.json` صالح داخل مجلد `android/app`.
-- [ ] التحقق من إنشاء `NotificationChannel` بقيمة `IMPORTANCE_HIGH` داخل كود الأندرويد.
-- [ ] التحقق من تضمين إذن `POST_NOTIFICATIONS` في `AndroidManifest.xml`.
-- [ ] اختبار الربط باستخدام `OneSignal.login(user.id)` والتحقق من ظهور الجهاز في لوحة OneSignal Dashboard تحت المستخدم الصحيح.
-- [ ] تجربة وصول الإشعار في 3 حالات للجهاز:
-  1. التطبيق مفتوح في الواجهة (Foreground).
-  2. التطبيق في الخلفية (Background).
-  3. التطبيق مغلق تماماً (Killed / Terminated state).
-- [ ] التحقق من عمل الإشعارات على هاتف شاومي / ريدمي بعد تفعيل التشغيل التلقائي وإلغاء تقييد البطارية.
-- [ ] التحقق بنسبة 100% من أن نوافذ وأدوات الفحص لا تظهر لأي مستخدم عادي ومحصورة على إيميل المطور فقط.
+## مخرجات العمل المطلوبة عند بناء أي نظام جديد
+عند تكليفك بتنفيذ هذا النظام، يجب عليك:
+1. كتابة كود الدالة السحابية المتكاملة مع الأمان والتحقق ومعالجة الاستثناءات.
+2. تهيئة إعدادات الأندرويد الأصلية وقنوات التنبيه في الكود البرمجي وملفات الـ Manifest.
+3. كتابة كود إدارة الـ OneSignal Bridge مع مانع التكرار والحماية الكاملة.
+4. التأكد من تنظيف كود الـ Service Worker من أي أخطاء متعلقة بـ SPA Fetch Rejection.
+5. توفير شاشة الفحص والاختبار للتأكد من وصول الإشعار على Wi-Fi وعلى 4G قبل التسليم.
+```

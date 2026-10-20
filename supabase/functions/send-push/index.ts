@@ -176,64 +176,32 @@ serve(async (req) => {
     }
 
     // Guaranteed Database Notification Insert (Service Role / Zero RLS)
-    // ONLY executed if caller did not already insert to database, with strict 30s deduplication
-    const alreadyInsertedInDb = Boolean(data?.alreadyInsertedInDb);
-    if (supabaseUrl && supabaseServiceRoleKey && !alreadyInsertedInDb) {
+    if (supabaseUrl && supabaseServiceRoleKey) {
       try {
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
         const notifTitle = title || (headings && (headings.ar || headings.en)) || 'إشعار جديد';
         const notifMessage = message || (contents && (contents.ar || contents.en)) || '';
         const notifType = data?.type || 'info';
-        const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
 
         if (targetRole === 'admin' || targetRole === 'supplier') {
           const { data: roleUsers } = await supabaseAdmin.from('users').select('id').eq('role', targetRole);
           if (roleUsers && roleUsers.length > 0) {
-            const roleUserIds = roleUsers.map(u => u.id);
-            const { data: existingNotifs } = await supabaseAdmin
-              .from('notifications')
-              .select('user_id')
-              .in('user_id', roleUserIds)
-              .eq('title', notifTitle)
-              .eq('message', notifMessage)
-              .gte('created_at', thirtySecondsAgo);
-
-            const existingUserIds = new Set((existingNotifs || []).map((n: any) => n.user_id));
-            const inserts = roleUsers
-              .filter(u => !existingUserIds.has(u.id))
-              .map(u => ({
-                user_id: u.id,
-                title: notifTitle,
-                message: notifMessage,
-                type: notifType
-              }));
-
-            if (inserts.length > 0) {
-              await supabaseAdmin.from('notifications').insert(inserts);
-            }
-          }
-        } else if (externalIds.length > 0 && !data?.test) {
-          const { data: existingNotifs } = await supabaseAdmin
-            .from('notifications')
-            .select('user_id')
-            .in('user_id', externalIds)
-            .eq('title', notifTitle)
-            .eq('message', notifMessage)
-            .gte('created_at', thirtySecondsAgo);
-
-          const existingUserIds = new Set((existingNotifs || []).map((n: any) => n.user_id));
-          const inserts = externalIds
-            .filter(id => !existingUserIds.has(id))
-            .map(id => ({
-              user_id: id,
+            const inserts = roleUsers.map(u => ({
+              user_id: u.id,
               title: notifTitle,
               message: notifMessage,
               type: notifType
             }));
-
-          if (inserts.length > 0) {
             await supabaseAdmin.from('notifications').insert(inserts);
           }
+        } else if (externalIds.length > 0 && !data?.test) {
+          const inserts = externalIds.map(id => ({
+            user_id: id,
+            title: notifTitle,
+            message: notifMessage,
+            type: notifType
+          }));
+          await supabaseAdmin.from('notifications').insert(inserts);
         }
       } catch (dbErr) {
         console.warn('Edge function db insert notice:', dbErr);

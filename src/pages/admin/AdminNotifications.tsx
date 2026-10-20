@@ -302,7 +302,7 @@ export default function AdminNotifications() {
           userIds,
           title: pushTitle.trim(),
           message: pushMessage.trim(),
-          data: { type: pushType, alreadyInsertedInDb: true },
+          data: { type: pushType },
           sendToAll: pushTarget === 'all'
         });
         toast.success(`تم إرسال الإشعار بنجاح إلى ${users.length} مستخدم (جرس + هاتف)!`);

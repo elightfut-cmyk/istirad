@@ -82,22 +82,19 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           return;
       }
       
-      // Deduplicate notifications with identical title & message created within 30 seconds
+      // Clean UI display deduplication: filter out immediate 1-3.5s twin records from presentation
       const deduplicated: Notification[] = [];
-      const duplicateIdsToDelete: string[] = [];
       const seenIds = new Set<string>();
 
       for (const n of (data as Notification[])) {
         if (seenIds.has(n.id)) continue;
-        const isDuplicate = deduplicated.some(existing => 
+        const isTwin = deduplicated.some(existing => 
           existing.title === n.title &&
           existing.message === n.message &&
-          Math.abs(new Date(existing.created_at).getTime() - new Date(n.created_at).getTime()) < 30000
+          Math.abs(new Date(existing.created_at).getTime() - new Date(n.created_at).getTime()) < 3500
         );
 
-        if (isDuplicate) {
-          duplicateIdsToDelete.push(n.id);
-        } else {
+        if (!isTwin) {
           seenIds.add(n.id);
           deduplicated.push(n);
         }
@@ -105,14 +102,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
       const unreadCount = deduplicated.filter(n => !n.is_read).length;
       set({ notifications: deduplicated, unreadCount });
-
-      // Silently clean up redundant duplicate rows from Supabase
-      if (duplicateIdsToDelete.length > 0) {
-        supabase.from('notifications').delete().in('id', duplicateIdsToDelete).then(
-          () => console.log(`Cleaned up ${duplicateIdsToDelete.length} redundant duplicate notification(s)`),
-          () => {}
-        );
-      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -151,17 +140,25 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             const newNotif = payload.new as Notification;
             if (!newNotif) return;
 
-            let isDuplicate = false;
+            let isTwin = false;
             set((state) => {
-              isDuplicate = state.notifications.some(n => 
-                n.id === newNotif.id || (
-                  n.title === newNotif.title &&
-                  n.message === newNotif.message &&
-                  Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(newNotif.created_at || Date.now()).getTime()) < 30000
-                )
+              // 1. Check if exact ID already in state
+              if (state.notifications.some(n => n.id === newNotif.id)) {
+                isTwin = true;
+                return state;
+              }
+
+              // 2. Check if a twin (same title & message within 3.5s) was already added
+              const hasTwin = state.notifications.some(n => 
+                n.title === newNotif.title &&
+                n.message === newNotif.message &&
+                Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(newNotif.created_at || Date.now()).getTime()) < 3500
               );
 
-              if (isDuplicate) return state;
+              if (hasTwin) {
+                isTwin = true;
+                return state;
+              }
 
               return {
                 notifications: [newNotif, ...state.notifications],
@@ -169,13 +166,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
               };
             });
 
-            // If duplicate, delete redundant DB row silently and do NOT play sounds or show toasts
-            if (isDuplicate) {
-              if (newNotif.id) {
-                supabase.from('notifications').delete().eq('id', newNotif.id).then(() => {}, () => {});
-              }
-              return;
-            }
+            // If it's an immediate duplicate twin arriving 1s later, suppress duplicate chime & toast
+            if (isTwin) return;
 
             // Play auditory chime
             playNotificationChime();
@@ -355,7 +347,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           notifToDelete &&
           n.title === notifToDelete.title &&
           n.message === notifToDelete.message &&
-          Math.abs(new Date(n.created_at).getTime() - new Date(notifToDelete.created_at).getTime()) < 30000
+          Math.abs(new Date(n.created_at).getTime() - new Date(notifToDelete.created_at).getTime()) < 4000
         )),
         unreadCount: notifToDelete && !notifToDelete.is_read ? Math.max(0, unreadCount - 1) : unreadCount
       });
@@ -365,14 +357,15 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
       // Also clean up any twin duplicate row from DB
       if (notifToDelete) {
-        const thirtySecsBefore = new Date(new Date(notifToDelete.created_at).getTime() - 30000).toISOString();
-        const thirtySecsAfter = new Date(new Date(notifToDelete.created_at).getTime() + 30000).toISOString();
+        const time = new Date(notifToDelete.created_at).getTime();
+        const fourSecsBefore = new Date(time - 4000).toISOString();
+        const fourSecsAfter = new Date(time + 4000).toISOString();
         await supabase.from('notifications').delete()
           .eq('user_id', notifToDelete.user_id)
           .eq('title', notifToDelete.title)
           .eq('message', notifToDelete.message)
-          .gte('created_at', thirtySecsBefore)
-          .lte('created_at', thirtySecsAfter);
+          .gte('created_at', fourSecsBefore)
+          .lte('created_at', fourSecsAfter);
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -380,27 +373,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   }
 }));
 
-// Debounce map to prevent duplicate sendNotification calls within 3 seconds
-const recentNotificationDispatches = new Map<string, number>();
-
 export const sendNotification = async (userId: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
   try {
-    const dispatchKey = `${userId}:${title}:${message}`;
-    const now = Date.now();
-    const lastSent = recentNotificationDispatches.get(dispatchKey) || 0;
-    if (now - lastSent < 3000) {
-      console.log('Debouncing duplicate sendNotification within 3s:', dispatchKey);
-      return;
-    }
-    recentNotificationDispatches.set(dispatchKey, now);
-
-    // Periodic cleanup of debounce cache
-    if (recentNotificationDispatches.size > 100) {
-      for (const [key, timestamp] of recentNotificationDispatches.entries()) {
-        if (now - timestamp > 10000) recentNotificationDispatches.delete(key);
-      }
-    }
-
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
        const { data: targetUsers } = await supabase.from('users').select('id').eq('role', roleToFind);
@@ -448,14 +422,13 @@ export const sendNotification = async (userId: string, title: string, message: s
        }
 
        // 3. Dispatch push notification to all target mobile devices via Edge Function
-       // Pass alreadyInsertedInDb: true so Edge Function does not duplicate DB insert
        try {
          await sendPushNotification({
            userIds: targetIds.length > 0 ? targetIds : undefined,
            targetRole: roleToFind,
            title,
            message,
-           data: { type, role: roleToFind, alreadyInsertedInDb: true }
+           data: { type, role: roleToFind }
          });
        } catch (pushErr) {
          console.error('OneSignal Push Error (role broadcast):', pushErr);
@@ -481,13 +454,12 @@ export const sendNotification = async (userId: string, title: string, message: s
     }
 
     // Dispatch push notification to target user's mobile via OneSignal API
-    // Pass alreadyInsertedInDb: true so Edge Function does not duplicate DB insert
     try {
       await sendPushNotification({
         userIds: [String(userId)],
         title,
         message,
-        data: { type, alreadyInsertedInDb: true }
+        data: { type }
       });
     } catch (pushErr) {
       console.error('OneSignal Push Error:', pushErr);

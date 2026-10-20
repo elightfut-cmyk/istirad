@@ -82,8 +82,37 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
           return;
       }
       
-      const unreadCount = data.filter(n => !n.is_read).length;
-      set({ notifications: data as Notification[], unreadCount });
+      // Deduplicate notifications with identical title & message created within 30 seconds
+      const deduplicated: Notification[] = [];
+      const duplicateIdsToDelete: string[] = [];
+      const seenIds = new Set<string>();
+
+      for (const n of (data as Notification[])) {
+        if (seenIds.has(n.id)) continue;
+        const isDuplicate = deduplicated.some(existing => 
+          existing.title === n.title &&
+          existing.message === n.message &&
+          Math.abs(new Date(existing.created_at).getTime() - new Date(n.created_at).getTime()) < 30000
+        );
+
+        if (isDuplicate) {
+          duplicateIdsToDelete.push(n.id);
+        } else {
+          seenIds.add(n.id);
+          deduplicated.push(n);
+        }
+      }
+
+      const unreadCount = deduplicated.filter(n => !n.is_read).length;
+      set({ notifications: deduplicated, unreadCount });
+
+      // Silently clean up redundant duplicate rows from Supabase
+      if (duplicateIdsToDelete.length > 0) {
+        supabase.from('notifications').delete().in('id', duplicateIdsToDelete).then(
+          () => console.log(`Cleaned up ${duplicateIdsToDelete.length} redundant duplicate notification(s)`),
+          () => {}
+        );
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -122,15 +151,31 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             const newNotif = payload.new as Notification;
             if (!newNotif) return;
 
+            let isDuplicate = false;
             set((state) => {
-              const exists = state.notifications.some(n => n.id === newNotif.id);
-              if (exists) return state;
+              isDuplicate = state.notifications.some(n => 
+                n.id === newNotif.id || (
+                  n.title === newNotif.title &&
+                  n.message === newNotif.message &&
+                  Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(newNotif.created_at || Date.now()).getTime()) < 30000
+                )
+              );
+
+              if (isDuplicate) return state;
 
               return {
                 notifications: [newNotif, ...state.notifications],
                 unreadCount: state.unreadCount + (newNotif.is_read ? 0 : 1)
               };
             });
+
+            // If duplicate, delete redundant DB row silently and do NOT play sounds or show toasts
+            if (isDuplicate) {
+              if (newNotif.id) {
+                supabase.from('notifications').delete().eq('id', newNotif.id).then(() => {}, () => {});
+              }
+              return;
+            }
 
             // Play auditory chime
             playNotificationChime();
@@ -304,22 +349,58 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const { notifications, unreadCount } = get();
       const notifToDelete = notifications.find(n => n.id === id);
       
-      // Optimistic update
+      // Optimistic update: remove target and any twin duplicate from state
       set({ 
-        notifications: notifications.filter(n => n.id !== id),
+        notifications: notifications.filter(n => n.id !== id && !(
+          notifToDelete &&
+          n.title === notifToDelete.title &&
+          n.message === notifToDelete.message &&
+          Math.abs(new Date(n.created_at).getTime() - new Date(notifToDelete.created_at).getTime()) < 30000
+        )),
         unreadCount: notifToDelete && !notifToDelete.is_read ? Math.max(0, unreadCount - 1) : unreadCount
       });
 
       const { error } = await supabase.from('notifications').delete().eq('id', id);
       if (error) throw error;
+
+      // Also clean up any twin duplicate row from DB
+      if (notifToDelete) {
+        const thirtySecsBefore = new Date(new Date(notifToDelete.created_at).getTime() - 30000).toISOString();
+        const thirtySecsAfter = new Date(new Date(notifToDelete.created_at).getTime() + 30000).toISOString();
+        await supabase.from('notifications').delete()
+          .eq('user_id', notifToDelete.user_id)
+          .eq('title', notifToDelete.title)
+          .eq('message', notifToDelete.message)
+          .gte('created_at', thirtySecsBefore)
+          .lte('created_at', thirtySecsAfter);
+      }
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
   }
 }));
 
+// Debounce map to prevent duplicate sendNotification calls within 3 seconds
+const recentNotificationDispatches = new Map<string, number>();
+
 export const sendNotification = async (userId: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
   try {
+    const dispatchKey = `${userId}:${title}:${message}`;
+    const now = Date.now();
+    const lastSent = recentNotificationDispatches.get(dispatchKey) || 0;
+    if (now - lastSent < 3000) {
+      console.log('Debouncing duplicate sendNotification within 3s:', dispatchKey);
+      return;
+    }
+    recentNotificationDispatches.set(dispatchKey, now);
+
+    // Periodic cleanup of debounce cache
+    if (recentNotificationDispatches.size > 100) {
+      for (const [key, timestamp] of recentNotificationDispatches.entries()) {
+        if (now - timestamp > 10000) recentNotificationDispatches.delete(key);
+      }
+    }
+
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
        const { data: targetUsers } = await supabase.from('users').select('id').eq('role', roleToFind);
@@ -367,13 +448,14 @@ export const sendNotification = async (userId: string, title: string, message: s
        }
 
        // 3. Dispatch push notification to all target mobile devices via Edge Function
+       // Pass alreadyInsertedInDb: true so Edge Function does not duplicate DB insert
        try {
          await sendPushNotification({
            userIds: targetIds.length > 0 ? targetIds : undefined,
            targetRole: roleToFind,
            title,
            message,
-           data: { type, role: roleToFind }
+           data: { type, role: roleToFind, alreadyInsertedInDb: true }
          });
        } catch (pushErr) {
          console.error('OneSignal Push Error (role broadcast):', pushErr);
@@ -399,12 +481,13 @@ export const sendNotification = async (userId: string, title: string, message: s
     }
 
     // Dispatch push notification to target user's mobile via OneSignal API
+    // Pass alreadyInsertedInDb: true so Edge Function does not duplicate DB insert
     try {
       await sendPushNotification({
         userIds: [String(userId)],
         title,
         message,
-        data: { type }
+        data: { type, alreadyInsertedInDb: true }
       });
     } catch (pushErr) {
       console.error('OneSignal Push Error:', pushErr);

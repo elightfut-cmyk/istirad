@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { PackageSearch, Mail, Lock, User, Phone, MapPin, Building2, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -25,11 +25,14 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const isSubmittingRef = useRef(false);
   
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setErrorMsg('');
     setLoading(true);
     
@@ -73,6 +76,7 @@ export default function Register() {
       setErrorMsg(error.message || t('auth.login_error'));
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

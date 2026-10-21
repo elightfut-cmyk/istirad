@@ -40,12 +40,13 @@ import NotificationDiagnosticsModal from '../../components/NotificationDiagnosti
 import { Download } from 'lucide-react';
 import AppUpdateAdminTab from '../../components/admin/AppUpdateAdminTab';
 import TenderAppPromptAdminTab from '../../components/admin/TenderAppPromptAdminTab';
+import AppUsersTrackerTab from '../../components/admin/AppUsersTrackerTab';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function AdminNotifications() {
   const { user } = useAuthStore();
   const isAuthorized = user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com';
-  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push' | 'appUpdate' | 'tenderAppModal'>('popup');
+  const [activeTab, setActiveTab] = useState<'popup' | 'socialLinks' | 'poll' | 'telegram' | 'push' | 'appUpdate' | 'tenderAppModal' | 'appUsers'>('popup');
 
   // Push Broadcast States
   const [pushTitle, setPushTitle] = useState('');
@@ -510,7 +511,7 @@ export default function AdminNotifications() {
             <span>تحديث التطبيق (إجباري)</span>
           </button>
 
-          <button
+            <button
             onClick={() => setActiveTab('tenderAppModal')}
             className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'tenderAppModal'
@@ -520,6 +521,18 @@ export default function AdminNotifications() {
           >
             <Smartphone size={17} className="shrink-0" />
             <span>تنبيه مناقصات (تطبيق)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('appUsers')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'appUsers'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Users size={17} className="shrink-0" />
+            <span>مستخدمو التطبيق والإصدارات</span>
           </button>
         </div>
       </div>
@@ -1133,6 +1146,9 @@ export default function AdminNotifications() {
 
       {/* TAB 6: TENDER APP PROMPT */}
       {activeTab === 'tenderAppModal' && <TenderAppPromptAdminTab />}
+
+      {/* TAB 7: APP USERS & VERSIONS TRACKER */}
+      {activeTab === 'appUsers' && <AppUsersTrackerTab />}
 
       {/* Diagnostics Modal (Developer madaniameur26@gmail.com Only) */}
       {isAuthorized && (

@@ -18,6 +18,8 @@ import InvoiceDocument from '../../components/InvoiceDocument';
 import html2pdf from 'html2pdf.js';
 import { trackCustomFacebookEvent } from '../../components/FacebookPixel';
 import TenderAppPromptModal from '../../components/TenderAppPromptModal';
+import { isNativePlatform } from '../../lib/onesignal';
+import { tenderAppPromptService } from '../../services/tenderAppPromptService';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -26,6 +28,35 @@ export default function MerchantOrders() {
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
   const [selectedBidTiers, setSelectedBidTiers] = useState<Record<string, any>>({});
+
+  const handleOpenCreateTender = async () => {
+    try {
+      const config = await tenderAppPromptService.getConfig();
+      const isNative = isNativePlatform();
+
+      // If app is required and user is on web: block and show modal
+      if (!isNative && config.isActive && config.forceAppToSubmit) {
+        setShowTenderAppPrompt(true);
+        return;
+      }
+
+      // If modal is configured for this platform and hasn't been seen
+      if (config.isActive) {
+        const target = config.displayTarget || 'web';
+        if ((target === 'web' && !isNative) || (target === 'app' && isNative) || target === 'both') {
+          const seen = tenderAppPromptService.hasUserSeenPrompt(config.versionToken || 'v1');
+          if (!seen) {
+            setShowTenderAppPrompt(true);
+            return;
+          }
+        }
+      }
+
+      setShowModal(true);
+    } catch {
+      setShowModal(true);
+    }
+  };
 
   const getBidFinalPrices = (bid: any, reqQuantity: number) => {
     if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0, supplierTotal: 0, markupPercentage: 0 };
@@ -226,6 +257,20 @@ export default function MerchantOrders() {
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    if (!isNativePlatform()) {
+      try {
+        const config = await tenderAppPromptService.getConfig();
+        if (config.isActive && config.forceAppToSubmit) {
+          toast.error('إنشاء المناقصات متاح حصرياً عبر تطبيق جيبها على الهاتف. يرجى تحميل التطبيق للمتابعة.');
+          setShowModal(false);
+          setShowTenderAppPrompt(true);
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not verify tender prompt config:', err);
+      }
+    }
 
     if (!formData.product_link) {
       toast.error('يجب إدخال رابط المنتج.');
@@ -795,8 +840,8 @@ export default function MerchantOrders() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">إدارة الطلبات</h2>
         <button 
-          onClick={() => setShowTenderAppPrompt(true)}
-          className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition"
+          onClick={handleOpenCreateTender}
+          className="flex items-center gap-2 bg-[#4f46e5] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#4338ca] transition cursor-pointer"
         >
           <Plus size={20} />
           إنشاء مناقصة جديدة

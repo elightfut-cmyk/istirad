@@ -25,7 +25,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -248,13 +248,22 @@ export default function AdminUsers() {
                   <tr key={u.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
                     <td className="p-4">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-bold text-gray-800 dark:text-gray-100">{u.name}</p>
                           {u.verification_badge === 'blue' && (
                             <BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" />
                           )}
                           {u.verification_badge === 'gold' && (
                             <BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" />
+                          )}
+                          {u.current_app_version && u.current_app_version > 1 ? (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title={`يعمل بتطبيق الهاتف - كود: ${u.current_app_version}`}>
+                              📱 تطبيق #{u.current_app_version}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title="متصفح الويب">
+                              🌐 ويب
+                            </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>

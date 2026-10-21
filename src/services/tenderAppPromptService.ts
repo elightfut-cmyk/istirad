@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 export interface TenderAppPromptConfig {
   id: string;
   isActive: boolean;
+  forceAppToSubmit: boolean; // خيار عدم تمكن المستخدم من وضع المناقصة إلا بعد تحميل التطبيق
+  displayTarget: 'web' | 'app' | 'both'; // أظهره في التطبيق أو المتصفح أو في كليهما
   title: string;
   message: string;
   buttonText: string;
@@ -17,6 +19,8 @@ const STORAGE_KEY = 'jiibha_tender_prompt_seen_token';
 export const defaultTenderPromptConfig: TenderAppPromptConfig = {
   id: 'tender_prompt_default',
   isActive: true,
+  forceAppToSubmit: true,
+  displayTarget: 'web',
   title: 'حمّل التطبيق لتصلك تنبيهات المناقصات فوراً!',
   message: 'عند قيامك بطرح مناقصة جديدة أو تقديم عروض أسعار، من الضروري تثبيت تطبيق جيبها على هاتفك لتلقي تنبيهات وإشعارات فورية على شاشة هاتفك بمجرد ورود أي عرض أو رد جديد.',
   buttonText: 'تحميل وتثبيت التطبيق الآن',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye , AlertTriangle} from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye, AlertTriangle, Plus, Trash2, Layers } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -37,9 +37,24 @@ export default function SupplierRequests() {
   };
 
   const [requests, setRequests] = useState<any[]>([]);
+  interface TierItem {
+    quantity: number;
+    cost_price: number;
+  }
+
   const [loading, setLoading] = useState(true);
   const [biddingRequest, setBiddingRequest] = useState<any>(null);
-  const [bidForm, setBidForm] = useState({ id: null as string | null, price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
+  const [bidForm, setBidForm] = useState<{
+    id: string | null;
+    advance_percentage: number;
+    notes: string;
+    tiers: TierItem[];
+  }>({
+    id: null,
+    advance_percentage: 20,
+    notes: '',
+    tiers: [{ quantity: 1, cost_price: 0 }]
+  });
   const exchangeRate = useSettingsStore(state => state.exchangeRate) || 135;
   const [submitting, setSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
@@ -60,7 +75,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
           merchant:users!merchant_id(name, company_name, phone, address, email),
-          supplier_bids (id, supplier_id, price, cost_price, advance_percentage, notes, status, created_at, allow_negotiation, negotiated_price, negotiated_by, customer_reply, supplier:users!supplier_id(name, company_name)),
+          supplier_bids (*, supplier:users!supplier_id(name, company_name)),
           supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
@@ -76,27 +91,92 @@ export default function SupplierRequests() {
     }
   };
 
+  const handleOpenBidModal = (req: any, existingBid?: any) => {
+    setBiddingRequest(req);
+    if (existingBid) {
+      let tiers: TierItem[] = [];
+      if (existingBid.quantity_tiers && Array.isArray(existingBid.quantity_tiers) && existingBid.quantity_tiers.length > 0) {
+        tiers = existingBid.quantity_tiers.map((t: any) => ({
+          quantity: Number(t.quantity) || 1,
+          cost_price: Number(t.cost_price) || 0,
+        }));
+      } else {
+        const q = req.quantity || 1;
+        const unitCost = existingBid.cost_price ? (existingBid.cost_price / q) : (existingBid.price / q);
+        tiers = [{ quantity: q, cost_price: unitCost }];
+      }
+      setBidForm({
+        id: existingBid.id,
+        advance_percentage: existingBid.advance_percentage || 20,
+        notes: existingBid.notes || '',
+        tiers,
+      });
+    } else {
+      setBidForm({
+        id: null,
+        advance_percentage: 20,
+        notes: '',
+        tiers: [{ quantity: req.quantity || 100, cost_price: 0 }],
+      });
+    }
+  };
+
   const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !biddingRequest) return;
+
+    if (!bidForm.tiers || bidForm.tiers.length === 0) {
+      toast.error('يرجى إضافة شريحة كمية وسعر واحدة على الأقل');
+      return;
+    }
+
+    for (let i = 0; i < bidForm.tiers.length; i++) {
+      const t = bidForm.tiers[i];
+      if (!t.quantity || t.quantity <= 0) {
+        toast.error(`يرجى تحديد كمية صحيحة للشريحة رقم ${i + 1}`);
+        return;
+      }
+      if (!t.cost_price || t.cost_price <= 0) {
+        toast.error(`يرجى إدخال السعر للشريحة رقم ${i + 1}`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     
-    const quantity = biddingRequest.quantity || 1;
-    const calculation = calculateFinalPrice(bidForm.cost_price, quantity, profitSettings);
+    // First tier serves as the base for backward-compatibility
+    const baseTier = bidForm.tiers[0];
+    const baseQuantity = baseTier.quantity || biddingRequest.quantity || 1;
+    const baseCalculation = calculateFinalPrice(baseTier.cost_price, baseQuantity, profitSettings);
     
-    const calculatedPriceTotal = calculation.finalTotal;
-    const calculatedCostTotal = bidForm.cost_price * quantity;
+    const calculatedPriceTotal = baseCalculation.finalTotal;
+    const calculatedCostTotal = baseTier.cost_price * baseQuantity;
+
+    // Build structured quantity_tiers list
+    const formattedTiers = bidForm.tiers.map((t) => {
+      const calc = calculateFinalPrice(t.cost_price, t.quantity, profitSettings);
+      return {
+        quantity: t.quantity,
+        cost_price: t.cost_price,
+        cost_total: t.cost_price * t.quantity,
+        final_item_price: calc.finalItemPrice,
+        final_total: calc.finalTotal,
+      };
+    });
+
+    const payload: any = {
+      price: calculatedPriceTotal,
+      cost_price: calculatedCostTotal,
+      price_usd: calculatedPriceTotal / exchangeRate,
+      cost_price_usd: calculatedCostTotal / exchangeRate,
+      advance_percentage: bidForm.advance_percentage,
+      notes: bidForm.notes,
+      quantity_tiers: formattedTiers,
+    };
 
     try {
       if (bidForm.id) {
-        const { error } = await supabase.from('supplier_bids').update({
-          price: calculatedPriceTotal,
-          cost_price: calculatedCostTotal,
-          price_usd: calculatedPriceTotal / exchangeRate,
-          cost_price_usd: calculatedCostTotal / exchangeRate,
-          advance_percentage: bidForm.advance_percentage,
-          notes: bidForm.notes,
-        }).eq('id', bidForm.id);
+        const { error } = await supabase.from('supplier_bids').update(payload).eq('id', bidForm.id);
 
         if (error) throw error;
         sendNotification(biddingRequest.merchant_id, 'تعديل عرض سعر', `قام ${user.name} بتعديل عرضه على مناقصتك: ${biddingRequest.title}`, 'info');
@@ -108,8 +188,8 @@ export default function SupplierRequests() {
           merchantName: biddingRequest.merchant?.company_name || biddingRequest.merchant?.name,
           supplierName: user.company_name || user.name,
           tenderTitle: biddingRequest.title,
-          quantity,
-          itemPrice: calculation.finalItemPrice,
+          quantity: baseQuantity,
+          itemPrice: baseCalculation.finalItemPrice,
           totalPrice: calculatedPriceTotal,
           advancePercentage: bidForm.advance_percentage,
           notes: bidForm.notes,
@@ -117,19 +197,14 @@ export default function SupplierRequests() {
 
       } else {
         const { error } = await supabase.from('supplier_bids').insert({
+          ...payload,
           request_id: biddingRequest.id,
           supplier_id: user.id,
-          price: calculatedPriceTotal,
-          cost_price: calculatedCostTotal,
-          price_usd: calculatedPriceTotal / exchangeRate,
-          cost_price_usd: calculatedCostTotal / exchangeRate,
-          advance_percentage: bidForm.advance_percentage,
-          notes: bidForm.notes,
           shipping_status: biddingRequest.request_type === 'direct' ? 'processing' : 'pending_in_china'
         });
 
         if (error) throw error;
-        sendNotification(biddingRequest.merchant_id, 'عرض سعر جديد', `تلقيت عرضاً جديداً من ${user.name} على مناقصتك: ${biddingRequest.title}`, 'info');
+        sendNotification(biddingRequest.merchant_id, 'عرض سعر جديد', `تلقيت عرضاً جديداً بشرائح كميات وأسعار من ${user.name} على مناقصتك: ${biddingRequest.title}`, 'info');
 
         // Send Email to Merchant via Resend
         const advanceAmount = (calculatedPriceTotal * bidForm.advance_percentage) / 100;
@@ -139,8 +214,8 @@ export default function SupplierRequests() {
           merchantName: biddingRequest.merchant?.company_name || biddingRequest.merchant?.name,
           supplierName: user.company_name || user.name,
           tenderTitle: biddingRequest.title,
-          quantity,
-          itemPrice: calculation.finalItemPrice,
+          quantity: baseQuantity,
+          itemPrice: baseCalculation.finalItemPrice,
           totalPrice: calculatedPriceTotal,
           advancePercentage: bidForm.advance_percentage,
           advanceAmount,
@@ -150,7 +225,8 @@ export default function SupplierRequests() {
       
       await fetchRequests();
       setBiddingRequest(null);
-      setBidForm({ id: null, price: 0, cost_price: 0, advance_percentage: 20, notes: '' });
+      setBidForm({ id: null, advance_percentage: 20, notes: '', tiers: [{ quantity: 1, cost_price: 0 }] });
+      toast.success(bidForm.id ? 'تم تعديل العرض بنجاح' : 'تم إرسال العرض بنجاح');
     } catch (error) {
       console.error(error);
       toast.error('حدث خطأ أثناء تقديم العرض');
@@ -398,6 +474,26 @@ export default function SupplierRequests() {
                             <span className="font-bold text-[#4f46e5]">{formatCurrency(myBid.price)}</span>
                           </div>
                         ) : null}
+
+                        {/* Display Multiple Quantity Tiers if available */}
+                        {myBid.quantity_tiers && Array.isArray(myBid.quantity_tiers) && myBid.quantity_tiers.length > 0 && (
+                          <div className="mt-2 mb-3 bg-indigo-50/70 dark:bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900/50 text-right">
+                            <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 block mb-1">
+                              شرائح الكميات والأسعار المعروضة ({myBid.quantity_tiers.length}):
+                            </span>
+                            <div className="space-y-1">
+                              {myBid.quantity_tiers.map((t: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-xs text-gray-700 dark:text-gray-300">
+                                  <span>{t.quantity} قطعة:</span>
+                                  <span className="font-bold text-[#4f46e5] dark:text-indigo-400">
+                                    {formatCurrency(t.cost_price || 0)} <span className="text-[10px] text-gray-400 font-normal">/قطعة</span>
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                       <div className="flex justify-between text-sm mb-4">
                         <span className="text-gray-500 dark:text-gray-400">الدفعة المقدمة:</span>
                         <span className="font-bold bg-orange-100 text-orange-800 px-2 rounded">{myBid.advance_percentage}%</span>
@@ -455,16 +551,7 @@ export default function SupplierRequests() {
 
                       {!isClosed && myBid.status === 'pending' && myBid.negotiated_by !== 'merchant' && myBid.negotiated_by !== 'supplier_accepted' && myBid.negotiated_by !== 'supplier_rejected' && (
                         <button 
-                          onClick={() => {
-                            setBiddingRequest(req);
-                            setBidForm({ 
-                              id: myBid.id, 
-                              price: myBid.price / req.quantity, 
-                              cost_price: myBid.cost_price ? myBid.cost_price / req.quantity : myBid.price / req.quantity, 
-                              advance_percentage: myBid.advance_percentage, 
-                              notes: myBid.notes
-                            });
-                          }}
+                          onClick={() => handleOpenBidModal(req, myBid)}
                           className="w-full bg-white dark:bg-gray-800 text-blue-600 border border-blue-200 py-2 rounded-xl font-bold hover:bg-blue-50 transition shadow-sm"
                         >
                           تعديل العرض
@@ -485,7 +572,7 @@ export default function SupplierRequests() {
                       ) : (
                         <>
                           <button 
-                            onClick={() => setBiddingRequest(req)}
+                            onClick={() => handleOpenBidModal(req)}
                             className="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-bold hover:bg-[#4338ca] transition shadow-sm"
                           >
                             تقديم عرض سعر
@@ -528,6 +615,18 @@ export default function SupplierRequests() {
                               <span className="text-xs text-gray-500 dark:text-gray-400">السعر الإجمالي الخام (بنسبة عربون {otherBid.advance_percentage}%):</span>
                               <span className="font-bold text-sm text-[#4f46e5]">{formatCurrency(otherBid.cost_price || otherBid.price)}</span>
                             </div>
+                            {otherBid.quantity_tiers && Array.isArray(otherBid.quantity_tiers) && otherBid.quantity_tiers.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/60 text-xs">
+                                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 block mb-1">الشرائح المقدمة ({otherBid.quantity_tiers.length}):</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {otherBid.quantity_tiers.map((t: any, idx: number) => (
+                                    <span key={idx} className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded text-[11px] font-medium">
+                                      {t.quantity} ق: {formatCurrency(t.cost_price)}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             {(otherBid.negotiated_by === 'merchant' || otherBid.negotiated_by === 'supplier_accepted' || otherBid.negotiated_by === 'supplier_rejected') && (
                               <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 bg-orange-50/50 p-2 rounded-lg">
                                 <p className="text-xs font-bold text-orange-800 mb-1">تفاوض التاجر مع هذا المورد:</p>
@@ -587,31 +686,114 @@ export default function SupplierRequests() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 border-b pb-4">{biddingRequest.title}</p>
             
             <form onSubmit={handleSubmitBid} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">سعرك الخام للقطعة الواحدة بالدينار (DZD)</label>
-                <input 
-                  type="number" step="0.01" required min="0.01"
-                  value={bidForm.cost_price || ''} 
-                  onChange={e => setBidForm({...bidForm, cost_price: parseFloat(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900"
-                  placeholder="أدخل السعر الخام للقطعة الواحدة"
-                />
-                
-                {bidForm.cost_price > 0 && (
-                  <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
-                    <p className="text-gray-600 dark:text-gray-300 mb-1 text-xs font-bold">السعر النهائي الذي سيظهر للتاجر (بعد إضافة العمولة والرسوم):</p>
-                    <div className="flex justify-between items-center font-bold">
-                      <span>للقطعة الواحدة:</span>
-                      <span className="text-[#4f46e5]">{formatCurrency(calculateFinalPrice(bidForm.cost_price, biddingRequest?.quantity || 1, profitSettings).finalItemPrice)}</span>
-                    </div>
-                    <div className="flex justify-between items-center font-bold mt-1">
-                      <span>الإجمالي:</span>
-                      <span className="text-[#4f46e5]">{formatCurrency(calculateFinalPrice(bidForm.cost_price, biddingRequest?.quantity || 1, profitSettings).finalTotal)}</span>
-                    </div>
-                  </div>
-                )}
-                
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">يساوي بالدولار (خام): ${Number(((bidForm.cost_price || 0) / exchangeRate).toFixed(2))} | إجمالي السعر الخام: {formatCurrency((bidForm.cost_price || 0) * biddingRequest.quantity)}</p>
+              {/* Multi-tier Quantity and Pricing Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-gray-800 dark:text-gray-100">
+                    شرائح الكميات والأسعار:
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const lastTier = bidForm.tiers[bidForm.tiers.length - 1];
+                      const nextQty = lastTier && lastTier.quantity > 0 ? Math.round(lastTier.quantity * 2) : 200;
+                      setBidForm({
+                        ...bidForm,
+                        tiers: [...bidForm.tiers, { quantity: nextQty, cost_price: 0 }]
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-[#4f46e5] dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl text-xs font-bold transition border border-indigo-200 dark:border-indigo-800 cursor-pointer"
+                  >
+                    <Plus size={14} />
+                    <span>إضافة شريحة كمية أخرى (+)</span>
+                  </button>
+                </div>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  مثال: 100 قطعة بـ 500 دج، 200 قطعة بـ 450 دج... يتيح ذلك للتاجر اختيار الكمية الأنسب لميزانيته.
+                </p>
+
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                  {bidForm.tiers.map((tier, idx) => {
+                    const calc = tier.cost_price > 0 && tier.quantity > 0
+                      ? calculateFinalPrice(tier.cost_price, tier.quantity, profitSettings)
+                      : null;
+
+                    return (
+                      <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-900/70 border border-gray-200 dark:border-gray-700 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-gray-700 dark:text-gray-200">
+                          <span className="flex items-center gap-1">
+                            <Layers size={13} className="text-[#4f46e5]" />
+                            الشريحة #{idx + 1}
+                          </span>
+                          {bidForm.tiers.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = bidForm.tiers.filter((_, i) => i !== idx);
+                                setBidForm({ ...bidForm, tiers: updated });
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition"
+                              title="حذف هذه الشريحة"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">الكمية (قطعة)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              required
+                              value={tier.quantity || ''}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10) || 0;
+                                const newTiers = [...bidForm.tiers];
+                                newTiers[idx].quantity = val;
+                                setBidForm({ ...bidForm, tiers: newTiers });
+                              }}
+                              className="w-full p-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                              placeholder="مثال: 100"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">سعرك الخام للقطعة (DZD)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              required
+                              value={tier.cost_price || ''}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                const newTiers = [...bidForm.tiers];
+                                newTiers[idx].cost_price = val;
+                                setBidForm({ ...bidForm, tiers: newTiers });
+                              }}
+                              className="w-full p-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                              placeholder="مثال: 500"
+                            />
+                          </div>
+                        </div>
+
+                        {calc && (
+                          <div className="pt-2 border-t border-gray-200 dark:border-gray-700/80 flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">
+                              سعر التاجر: <strong className="text-[#4f46e5] font-bold">{formatCurrency(calc.finalItemPrice)}</strong>/قطعة
+                            </span>
+                            <span className="text-gray-800 dark:text-gray-100 font-bold">
+                              الإجمالي: {formatCurrency(calc.finalTotal)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               
 

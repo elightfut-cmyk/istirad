@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Gavel } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Gavel, Layers } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -25,8 +25,18 @@ export default function MerchantOrders() {
   const { formatCurrency, minQuantity, exchangeRate, markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee, shippingPricePerKilo, bidWindowExchangeRate } = useSettingsStore();
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
+  const [selectedBidTiers, setSelectedBidTiers] = useState<Record<string, any>>({});
+
   const getBidFinalPrices = (bid: any, reqQuantity: number) => {
     if (!bid) return { finalItemPrice: 0, finalTotal: 0, platformProfit: 0, supplierTotal: 0, markupPercentage: 0 };
+    
+    // If a specific tier is chosen, calculate based on that tier's quantity and cost
+    if (bid.chosen_tier) {
+      const tierQty = bid.chosen_tier.quantity || reqQuantity;
+      const tierCost = bid.chosen_tier.cost_price || (bid.chosen_tier.cost_total / tierQty);
+      return calculateFinalPrice(tierCost, tierQty, profitSettings);
+    }
+
     let activeTotal = bid.cost_price || bid.price;
     if (bid.negotiated_price && bid.negotiated_by !== 'supplier_rejected') {
       activeTotal = bid.negotiated_price * reqQuantity;
@@ -371,7 +381,11 @@ export default function MerchantOrders() {
       return;
     }
     
-    setSelectedBidForPayment({ ...bid, reqId });
+    // Check if the merchant selected a tier for this bid
+    const chosenTier = selectedBidTiers[bid.id] || bid.chosen_tier || bid.selected_tier;
+    const bidToUse = chosenTier ? { ...bid, chosen_tier: chosenTier, reqId } : { ...bid, reqId };
+
+    setSelectedBidForPayment(bidToUse);
     setPaymentType(type);
     setExistingCouponId(existingCoupon);
     setCouponCode('');
@@ -457,8 +471,21 @@ export default function MerchantOrders() {
       if (walletError) throw walletError;
 
       if (paymentType === 'advance') {
-        await supabase.from('supplier_bids').update({ status: 'accepted' }).eq('id', selectedBidForPayment.id);
+        const chosenTier = selectedBidForPayment.chosen_tier;
+        const bidUpdatePayload: any = { status: 'accepted' };
+        if (chosenTier) {
+          bidUpdatePayload.selected_tier = chosenTier;
+          bidUpdatePayload.price = finalTotal;
+          bidUpdatePayload.cost_price = chosenTier.cost_total || (chosenTier.cost_price * chosenTier.quantity);
+          bidUpdatePayload.price_usd = finalTotal / exchangeRate;
+          bidUpdatePayload.cost_price_usd = (chosenTier.cost_total || (chosenTier.cost_price * chosenTier.quantity)) / exchangeRate;
+        }
+        await supabase.from('supplier_bids').update(bidUpdatePayload).eq('id', selectedBidForPayment.id);
+        
         const requestUpdate: any = { status: 'closed' };
+        if (chosenTier?.quantity) {
+          requestUpdate.quantity = chosenTier.quantity;
+        }
         await supabase.from('custom_requests').update(requestUpdate).eq('id', selectedBidForPayment.reqId);
         await supabase.rpc('grant_loyalty_points', { p_user_id: user.id });
         sendNotification(selectedBidForPayment.supplier_id, 'قبول العرض ودفع العربون', `قام التاجر ${user.name} بقبول عرضك ودفع العربون لطلبك`, 'success');
@@ -510,14 +537,19 @@ export default function MerchantOrders() {
       setWalletBalance(prev => prev - amountToPay);
       setRequests(requests.map(req => {
         if (req.id === selectedBidForPayment.reqId) {
+          const chosenTier = selectedBidForPayment.chosen_tier;
           return {
             ...req,
+            quantity: chosenTier?.quantity || req.quantity,
             status: paymentType === 'advance' ? 'closed' : req.status,
             supplier_bids: req.supplier_bids?.map((bid: any) => 
               bid.id === selectedBidForPayment.id 
                 ? { 
                     ...bid, 
                     status: paymentType === 'advance' ? 'accepted' : bid.status, 
+                    price: chosenTier ? finalTotal : bid.price,
+                    cost_price: chosenTier ? (chosenTier.cost_total || (chosenTier.cost_price * chosenTier.quantity)) : bid.cost_price,
+                    selected_tier: chosenTier || bid.selected_tier,
                     is_fully_paid: paymentType === 'remaining' ? true : bid.is_fully_paid,
                     deposit_paid_at: paymentType === 'advance' ? new Date().toISOString() : bid.deposit_paid_at
                   } 
@@ -539,13 +571,35 @@ export default function MerchantOrders() {
     if (!selectedBidForPayment) return;
     try {
       const req = requests.find((r: any) => r.id === selectedBidForPayment.reqId);
-      const quantity = req?.quantity || 1;
+      const chosenTier = selectedBidForPayment.chosen_tier;
+      const quantity = chosenTier?.quantity || req?.quantity || 1;
       const finalPricing = getBidFinalPrices(selectedBidForPayment, quantity);
       const finalTotal = finalPricing.finalTotal;
 
       let amountToPay = 0;
       if (paymentType === 'advance') {
         amountToPay = (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
+        
+        // If a tier is chosen, record it in database before initiating payment
+        if (chosenTier) {
+          try {
+            await supabase.from('supplier_bids').update({
+              selected_tier: chosenTier,
+              price: finalTotal,
+              cost_price: chosenTier.cost_total || (chosenTier.cost_price * chosenTier.quantity),
+              price_usd: finalTotal / exchangeRate,
+              cost_price_usd: (chosenTier.cost_total || (chosenTier.cost_price * chosenTier.quantity)) / exchangeRate,
+            }).eq('id', selectedBidForPayment.id);
+
+            if (chosenTier.quantity) {
+              await supabase.from('custom_requests').update({
+                quantity: chosenTier.quantity
+              }).eq('id', selectedBidForPayment.reqId);
+            }
+          } catch (tierErr) {
+            console.warn('Notice: Could not pre-save chosen tier:', tierErr);
+          }
+        }
       } else {
         amountToPay = finalTotal - (finalTotal * (selectedBidForPayment.advance_percentage / 100)) - couponDiscountAmount;
       }
@@ -1077,7 +1131,14 @@ export default function MerchantOrders() {
                   <h4 className="font-bold text-gray-700 dark:text-gray-200 mb-4">العروض المقدمة من الموردين ({req.supplier_bids?.length || 0})</h4>
                   {req.supplier_bids?.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {req.supplier_bids.map((bid: any) => (
+                      {req.supplier_bids.map((bid: any) => {
+                        const activeTier = selectedBidTiers[bid.id] 
+                          || (bid.selected_tier || (bid.quantity_tiers && bid.quantity_tiers.length > 0 ? bid.quantity_tiers[0] : null));
+                        const effectiveBid = activeTier ? { ...bid, chosen_tier: activeTier } : bid;
+                        const currentQty = activeTier ? activeTier.quantity : (req.quantity || 1);
+                        const bidPricing = getBidFinalPrices(effectiveBid, currentQty);
+
+                        return (
                         <div key={bid.id} className={`border rounded-xl p-4 relative ${bid.status === 'accepted' ? 'border-green-500 bg-green-50' : 'border-gray-200 dark:border-gray-700'}`}>
                           {bid.status === 'accepted' && (
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
@@ -1091,20 +1152,63 @@ export default function MerchantOrders() {
                               <span title="مورد مميز (VIP)"><BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" /></span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{bid.supplier?.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{bid.supplier?.name}</p>
+
+                          {/* Interactive Quantity Tiers Selector if supplier offered multiple tiers */}
+                          {bid.quantity_tiers && Array.isArray(bid.quantity_tiers) && bid.quantity_tiers.length > 0 && (
+                            <div className="mb-3.5 p-2.5 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1">
+                                  <Layers size={13} className="text-[#4f46e5]" />
+                                  اختر كمية الصفقة:
+                                </span>
+                                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                                  ({bid.quantity_tiers.length} شرائح متاحة)
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {bid.quantity_tiers.map((t: any, tIdx: number) => {
+                                  const isSelected = activeTier ? activeTier.quantity === t.quantity : tIdx === 0;
+                                  const tierPrice = t.final_item_price || calculateFinalPrice(t.cost_price, t.quantity, profitSettings).finalItemPrice;
+                                  return (
+                                    <button
+                                      key={tIdx}
+                                      type="button"
+                                      disabled={bid.status === 'accepted'}
+                                      onClick={() => setSelectedBidTiers(prev => ({ ...prev, [bid.id]: t }))}
+                                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex flex-col items-center cursor-pointer border ${
+                                        isSelected 
+                                          ? 'bg-[#4f46e5] text-white border-[#4f46e5] shadow-xs' 
+                                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-indigo-300'
+                                      } disabled:cursor-default`}
+                                    >
+                                      <span>{t.quantity} قطعة</span>
+                                      <span className={`text-[10px] font-normal ${isSelected ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                                        {formatCurrency(tierPrice)}/ق
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                           
                           <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">الكمية المطلوبة:</span>
+                            <span className="font-bold text-gray-800 dark:text-gray-100">{currentQty} قطعة</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-1">
                             <span className="text-sm text-gray-600 dark:text-gray-300">سعر القطعة الواحدة:</span>
-                            <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalItemPrice)}</span>
+                            <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(bidPricing.finalItemPrice)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-600 dark:text-gray-300">السعر الإجمالي:</span>
-                            <span className="font-black text-[#4f46e5]">{formatCurrency(getBidFinalPrices(bid, req.quantity || 1).finalTotal)}</span>
+                            <span className="font-black text-[#4f46e5]">{formatCurrency(bidPricing.finalTotal)}</span>
                           </div>
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-600 dark:text-gray-300">الدفعة المقدمة (العربون):</span>
                             <span className="font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-sm">
-                              {formatCurrency((getBidFinalPrices(bid, req.quantity || 1).finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
+                              {formatCurrency((bidPricing.finalTotal * bid.advance_percentage) / 100)} ({bid.advance_percentage}%)
                             </span>
                           </div>
                           
@@ -1129,7 +1233,7 @@ export default function MerchantOrders() {
                           {req.status === 'open' && bid.status === 'pending' && (!bid.negotiated_by || bid.negotiated_by === 'supplier_rejected') && (
                             <div className="flex flex-col sm:flex-row gap-2 mt-4">
                               <button 
-                                onClick={() => openPaymentModal(bid, req.id, 'advance', req.coupon_id)}
+                                onClick={() => openPaymentModal(effectiveBid, req.id, 'advance', req.coupon_id)}
                                 className="flex-1 py-2 bg-[#4f46e5] text-white rounded-lg font-bold text-sm hover:bg-[#4338ca] transition"
                               >
                                 قبول العرض
@@ -1268,7 +1372,8 @@ export default function MerchantOrders() {
                             />
                           )}
                         </div>
-                      ))}
+                      );
+                    })}
                     </div>
                   ) : (
                     <p className="text-gray-400 text-sm">في انتظار عروض الموردين...</p>

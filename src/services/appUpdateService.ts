@@ -98,6 +98,20 @@ export const appUpdateService = {
         return { success: false, error };
       }
 
+      // Sync with app_settings table
+      try {
+        const versionCode = parseInt(updated.version.replace(/[^\d]/g, ''), 10) || 1;
+        await supabase.from('app_settings').upsert({
+          id: 1,
+          latest_version_code: versionCode,
+          latest_version_name: updated.version,
+          apk_download_url: updated.apkUrl,
+          updated_at: updated.updatedAt,
+        }, { onConflict: 'id' });
+      } catch (e) {
+        console.warn('Could not sync to app_settings:', e);
+      }
+
       return { success: true, data: updated };
     } catch (err) {
       console.error('Unexpected error saving update config:', err);

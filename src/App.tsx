@@ -40,7 +40,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
 import { initOneSignal, optInPushSubscription, loginOneSignalUser } from './lib/onesignal';
 import AppSplashScreen from './components/AppSplashScreen';
-import ForceUpdateModal from './components/ForceUpdateModal';
+import AppVersionModal from './components/AppVersionModal';
 import { useNotificationStore } from './store/useNotificationStore';
 import { App as CapApp } from '@capacitor/app';
 
@@ -191,7 +191,7 @@ function App() {
   return (
     <Router>
       <FacebookPixel />
-      <ForceUpdateModal />
+      <AppVersionModal />
       <Toaster position="top-center" toastOptions={{ duration: 4000, style: { fontFamily: 'Tajawal', padding: '16px', borderRadius: '12px' } }} />
       <div className="min-h-screen bg-[#f5f5f0] text-[#1a1a1a] font-['Tajawal'] dark:bg-[#121212] dark:text-gray-100 transition-colors">
         <Routes>

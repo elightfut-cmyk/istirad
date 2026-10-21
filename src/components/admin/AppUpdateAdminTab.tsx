@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { appUpdateService, AppUpdateConfig, defaultUpdateConfig } from '../../services/appUpdateService';
-import ForceUpdateModal from '../ForceUpdateModal';
+import AppVersionModal from '../AppVersionModal';
 import toast from 'react-hot-toast';
 import { Download, RefreshCw, Save, Eye } from 'lucide-react';
 
@@ -206,8 +206,13 @@ export default function AppUpdateAdminTab() {
 
       {/* Live Preview Modal */}
       {previewing && (
-        <ForceUpdateModal
-          previewConfig={config}
+        <AppVersionModal
+          previewMode={true}
+          previewData={{
+            latestVersionCode: parseInt(config.version.replace(/[^\d]/g, ''), 10) || 2,
+            latestVersionName: config.version,
+            apkUrl: config.apkUrl,
+          }}
           onClosePreview={() => setPreviewing(false)}
         />
       )}

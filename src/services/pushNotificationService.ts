@@ -110,7 +110,8 @@ export const sendPushNotificationDetailed = async ({
       sendToAll,
       targetRole: targetRole || undefined,
       existing_android_channel_id: 'default_notification_channel',
-      skipDbInsert: Boolean(skipDbInsert)
+      skipDbInsert: Boolean(skipDbInsert),
+      apiKey: (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') || undefined
     };
     if (android_channel_id && isUuid(android_channel_id)) {
       pushBody.android_channel_id = android_channel_id.trim();

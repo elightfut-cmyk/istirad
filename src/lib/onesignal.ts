@@ -4,7 +4,11 @@ import { supabase } from './supabase';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 export const getOneSignalRestApiKey = (): string => {
-  return (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || '';
+  return (
+    (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') ||
+    (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY ||
+    ''
+  );
 };
 
 declare global {
@@ -420,7 +424,8 @@ export const syncDeviceRegistration = async (userId?: string, role?: string, use
         fcmToken,
         userId: effectiveId,
         role: role || 'admin',
-        name: userName || ''
+        name: userName || '',
+        apiKey: getOneSignalRestApiKey()
       }
     });
     if (resData?.id) {
@@ -665,7 +670,7 @@ export const sendPushNotification = async ({
         data: { ...data, url: targetUrl },
         existing_android_channel_id: 'default_notification_channel',
         skipDbInsert,
-        apiKey: restApiKey
+        apiKey: restApiKey || getOneSignalRestApiKey()
       }
     });
 

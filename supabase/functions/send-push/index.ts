@@ -50,7 +50,11 @@ serve(async (req) => {
     // 3. Parse incoming payload
     const body = await req.json().catch(() => ({}));
 
-    const cleanKey = (rawApiKey || body.apiKey || body.restApiKey || '').trim();
+    const cleanKey = (
+      body.apiKey ||
+      body.restApiKey ||
+      rawApiKey
+    ).trim();
     const ONESIGNAL_APP_ID = (rawAppId || body.appId || 'daeaef49-9125-4ef2-8950-6c0428063f09').trim();
 
     const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
@@ -242,21 +246,29 @@ serve(async (req) => {
       oneSignalPayload.android_channel_id = android_channel_id.trim();
     }
 
-    // Targeting strategy (Principle #4: prioritize identity external_id alias):
+    // Targeting strategy (Proven from morning version 80d5e3b):
     if (sendToAll) {
       oneSignalPayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
     } else if (validSubIds.length > 0) {
       // Direct device subscription
       oneSignalPayload.include_player_ids = validSubIds;
+    } else if (targetRole && targetRole !== 'all') {
+      // Broadcast to all active devices tagged with this role OR matching userIds
+      if (externalIds.length > 0) {
+        oneSignalPayload.filters = [
+          { field: 'tag', key: 'role', relation: '=', value: String(targetRole) },
+          { operator: 'OR' },
+          { field: 'tag', key: 'user_id', relation: '=', value: externalIds[0] }
+        ];
+      } else {
+        oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
+      }
     } else if (externalIds.length > 0) {
       // Direct user UUID targeting via external_id alias
       oneSignalPayload.target_channel = 'push';
       oneSignalPayload.include_aliases = {
         external_id: externalIds
       };
-    } else if (targetRole && targetRole !== 'all') {
-      // Role-based targeting fallback
-      oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
     }
 
     // Send request to OneSignal REST API
@@ -292,9 +304,9 @@ serve(async (req) => {
       }
     }
 
-    // Robust Fallbacks:
+    // Robust Fallbacks from morning version (80d5e3b):
     const hasZeroRecipients = resJson && resJson.recipients === 0;
-    const isInvalid = !oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed');
+    const isInvalid = !oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed') || JSON.stringify(resJson).includes('invalid_aliases');
 
     if (isInvalid) {
       // Fallback 1: If role filter failed, try include_aliases or direct player search
@@ -315,6 +327,8 @@ serve(async (req) => {
             };
             delete playerPayload.filters;
             delete playerPayload.included_segments;
+            delete playerPayload.include_aliases;
+            delete playerPayload.target_channel;
 
             const playerRes = await fetch('https://api.onesignal.com/notifications', {
               method: 'POST',
@@ -334,7 +348,7 @@ serve(async (req) => {
         }
       }
 
-      // Fallback 2: Broadcast to Total Subscriptions
+      // Fallback 2: Broadcast to Total Subscriptions / Active Subscriptions
       if (targetRole === 'admin') {
         const broadPayload = {
           ...oneSignalPayload,
@@ -342,6 +356,8 @@ serve(async (req) => {
         };
         delete broadPayload.filters;
         delete broadPayload.include_player_ids;
+        delete broadPayload.include_aliases;
+        delete broadPayload.target_channel;
 
         const broadRes = await fetch('https://api.onesignal.com/notifications', {
           method: 'POST',

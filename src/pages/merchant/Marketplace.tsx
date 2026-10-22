@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { Store, Search, Filter, ShoppingCart, X, Heart, Users, CreditCard, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -8,6 +8,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
 import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
 import { Plane } from 'lucide-react';
+import SupplierBadge from '../../components/SupplierBadge';
 
 // We fetch categories dynamically if available, otherwise just use 'الكل'
 
@@ -90,7 +91,7 @@ export default function Marketplace() {
         .from('products')
         .select(`
           id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, stock, supplier_id, created_at, status, category,
-          supplier:users!supplier_id(name, company_name, verification_badge)
+          supplier:users!supplier_id(id, name, company_name, verification_badge, supplier_tier, average_rating, total_reviews)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -329,15 +330,16 @@ export default function Marketplace() {
                         {product.description}
                       </p>
 
-                      <div className="flex items-center gap-1 mb-4 bg-orange-50 w-full sm:w-max px-2 py-1 rounded-md">
-                        <Store size={14} className="text-orange-500" />
-                        <span className="text-xs text-orange-700">{product.supplier?.name || 'مورد غير معروف'}</span>
-                        {product.supplier?.verification_badge === 'blue' && (
-                          <span title="مورد موثق"><BadgeCheck size={16} className="text-blue-500" fill="currentColor" color="white" /></span>
-                        )}
-                        {product.supplier?.verification_badge === 'gold' && (
-                          <span title="مورد مميز (VIP)"><BadgeCheck size={16} className="text-yellow-500" fill="currentColor" color="white" /></span>
-                        )}
+                      <div className="mb-4">
+                        <SupplierBadge
+                          supplierId={product.supplier_id}
+                          name={product.supplier?.name}
+                          companyName={product.supplier?.company_name}
+                          tier={product.supplier?.supplier_tier}
+                          rating={product.supplier?.average_rating}
+                          totalReviews={product.supplier?.total_reviews}
+                          size="xs"
+                        />
                       </div>
 
                       <div className="flex items-end justify-between pt-4 border-t border-gray-50 mt-auto">

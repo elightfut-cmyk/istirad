@@ -43,13 +43,16 @@ import AppSplashScreen from './components/AppSplashScreen';
 import AppVersionModal from './components/AppVersionModal';
 import { useNotificationStore } from './store/useNotificationStore';
 import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import SupplierPublicProfile from './pages/supplier/SupplierPublicProfile';
 
 function App() {
   const { user, checkSession, isLoading } = useAuthStore();
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
-  const [showSplash, setShowSplash] = useState(true);
+  // Show splash screen ONLY in native mobile application, not in web browser
+  const [showSplash, setShowSplash] = useState(() => Capacitor.isNativePlatform());
 
   // Global notification listener: Ensure every notification entering the bell alerts the user immediately across any page
   useEffect(() => {
@@ -357,6 +360,9 @@ function App() {
               <SupplierRequests />
             </ProtectedRoute>
           } />
+
+          <Route path="/supplier/profile" element={<SupplierPublicProfile />} />
+          <Route path="/supplier/profile/:supplierId" element={<SupplierPublicProfile />} />
         </Routes>
       </div>
     </Router>

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, DollarSign, Calculator } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, DollarSign, Calculator, Award, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { calculateFinalPrice, calculateSupplierPriceFromFinal } from '../../utils/profitCalculator';
 import NotificationStatusBanner from '../../components/NotificationStatusBanner';
+import SupplierBadge from '../../components/SupplierBadge';
 
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
@@ -80,8 +82,30 @@ export default function SupplierDashboard() {
         { label: 'سوق الطلبات', href: '/supplier/requests', icon: <Gavel size={20} /> },
         { label: 'الطلبات الواردة', href: '/supplier/orders', icon: <ShoppingBag size={20} /> },
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
+        { label: 'بروفايلي وتقييماتي', href: '/supplier/profile', icon: <Award size={20} /> },
       ]}
     >
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xs">
+        <div className="flex items-center gap-3">
+          <SupplierBadge
+            supplierId={user?.id}
+            name={user?.name}
+            companyName={user?.company_name}
+            tier={user?.supplier_tier}
+            rating={user?.average_rating}
+            totalReviews={user?.total_reviews}
+            size="md"
+          />
+        </div>
+        <Link
+          to={`/supplier/profile/${user?.id}`}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4f46e5] hover:text-[#4338ca] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3.5 py-2 rounded-xl transition"
+        >
+          <span>معاينة بروفايلي كما يراه التجار</span>
+          <ExternalLink size={14} />
+        </Link>
+      </div>
+
       <div className="mb-6">
         <NotificationStatusBanner />
       </div>

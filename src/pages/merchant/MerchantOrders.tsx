@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, BadgeCheck, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Gavel, Layers } from 'lucide-react';
+import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Gavel, Layers, Star } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -20,6 +20,8 @@ import { trackCustomFacebookEvent } from '../../components/FacebookPixel';
 import TenderAppPromptModal from '../../components/TenderAppPromptModal';
 import { isNativePlatform } from '../../lib/onesignal';
 import { tenderAppPromptService } from '../../services/tenderAppPromptService';
+import SupplierBadge from '../../components/SupplierBadge';
+import ReviewModal from '../../components/ReviewModal';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -28,6 +30,14 @@ export default function MerchantOrders() {
   const profitSettings = { markupTier1Percentage, markupTier2Percentage, markupTier3Percentage, markupTier4Percentage, orderFixedFee };
 
   const [selectedBidTiers, setSelectedBidTiers] = useState<Record<string, any>>({});
+  const [reviewedOrderIds, setReviewedOrderIds] = useState<Record<string, { rating: number; id: string }>>({});
+  const [reviewModalData, setReviewModalData] = useState<{
+    isOpen: boolean;
+    orderId: string;
+    supplierId: string;
+    supplierName?: string;
+    orderTitle?: string;
+  } | null>(null);
 
   const handleOpenCreateTender = async () => {
     try {
@@ -237,7 +247,7 @@ export default function MerchantOrders() {
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china,
           supplier_bids (
             id, request_id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
-            supplier:users(name, company_name, phone, verification_badge)
+            supplier:users(id, name, company_name, phone, verification_badge, supplier_tier, average_rating, total_reviews)
           ),
           supplier_interests(id, supplier_id)
         `)
@@ -247,6 +257,24 @@ export default function MerchantOrders() {
 
       if (error) throw error;
       setRequests(data || []);
+
+      // Fetch reviews submitted by this merchant to show rating state
+      try {
+        const { data: revData } = await supabase
+          .from('supplier_reviews')
+          .select('order_id, rating, id')
+          .eq('merchant_id', user.id);
+
+        if (revData) {
+          const map: Record<string, { rating: number; id: string }> = {};
+          revData.forEach((r: any) => {
+            map[r.order_id] = { rating: r.rating, id: r.id };
+          });
+          setReviewedOrderIds(map);
+        }
+      } catch (revErr) {
+        console.warn('Could not fetch merchant reviews:', revErr);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -933,7 +961,15 @@ export default function MerchantOrders() {
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">المورد:</span>
-                          <span className="font-bold">{bid?.supplier?.name || 'غير معروف'}</span>
+                          <SupplierBadge
+                            supplierId={bid?.supplier_id}
+                            name={bid?.supplier?.name}
+                            companyName={bid?.supplier?.company_name}
+                            tier={bid?.supplier?.supplier_tier}
+                            rating={bid?.supplier?.average_rating}
+                            totalReviews={bid?.supplier?.total_reviews}
+                            size="xs"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1049,6 +1085,47 @@ export default function MerchantOrders() {
                               />
                             </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* قسم تقييم المورد عند اكتمال الطلب وتسليم السلعة */}
+                      {bid?.shipping_status === 'delivered' && (
+                        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/20 border border-amber-200 dark:border-amber-700/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                              <Star size={22} className="fill-amber-400 text-amber-500" />
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-sm text-gray-900 dark:text-white">
+                                {reviewedOrderIds[bid.id] ? 'تم تقييم هذا المورد بنجاح' : 'تم تسليم السلعة! كيف كانت تجربتك؟'}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                {reviewedOrderIds[bid.id]
+                                  ? `لقد قيّمت هذا المورد بـ ${reviewedOrderIds[bid.id].rating} من 5 نجوم ⭐`
+                                  : 'تقييمك الموثق يرفع من مصداقية المنصة ويساعد بقية التجار.'}
+                              </p>
+                            </div>
+                          </div>
+                          {reviewedOrderIds[bid.id] ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-xs whitespace-nowrap">
+                              <CheckCircle2 size={16} />
+                              <span>تم التقييم ({reviewedOrderIds[bid.id].rating}/5)</span>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setReviewModalData({
+                                isOpen: true,
+                                orderId: bid.id,
+                                supplierId: bid.supplier_id,
+                                supplierName: bid.supplier?.company_name || bid.supplier?.name,
+                                orderTitle: req.title,
+                              })}
+                              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-102 cursor-pointer whitespace-nowrap"
+                            >
+                              <Star size={16} className="fill-white" />
+                              <span>قيّم المورد الآن ⭐</span>
+                            </button>
+                          )}
                         </div>
                       )}
                       
@@ -1188,16 +1265,17 @@ export default function MerchantOrders() {
                           {bid.status === 'accepted' && (
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
                           )}
-                          <div className="flex items-center gap-1 mb-1">
-                            <h5 className="font-bold text-gray-900 dark:text-white">{bid.supplier?.name}</h5>
-                            {bid.supplier?.verification_badge === 'blue' && (
-                              <span title="مورد موثق"><BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" /></span>
-                            )}
-                            {bid.supplier?.verification_badge === 'gold' && (
-                              <span title="مورد مميز (VIP)"><BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" /></span>
-                            )}
+                          <div className="mb-3">
+                            <SupplierBadge
+                              supplierId={bid.supplier_id}
+                              name={bid.supplier?.name}
+                              companyName={bid.supplier?.company_name}
+                              tier={bid.supplier?.supplier_tier}
+                              rating={bid.supplier?.average_rating}
+                              totalReviews={bid.supplier?.total_reviews}
+                              size="sm"
+                            />
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{bid.supplier?.name}</p>
 
                           {/* Interactive Quantity Tiers Selector if supplier offered multiple tiers */}
                           {bid.quantity_tiers && Array.isArray(bid.quantity_tiers) && bid.quantity_tiers.length > 0 && (
@@ -1392,6 +1470,45 @@ export default function MerchantOrders() {
                                   isDirectOrder={req.request_type === 'direct'}
                                 />
                               </div>
+
+                              {/* قسم تقييم المورد للمناقصات المكتملة */}
+                              {bid.shipping_status === 'delivered' && (
+                                <div className="mt-3 mb-3 p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/20 border border-amber-200 dark:border-amber-700/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <Star size={20} className="fill-amber-400 text-amber-500 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-extrabold text-xs text-gray-900 dark:text-white">
+                                        {reviewedOrderIds[bid.id] ? 'تم تقييم المورد' : 'اكتملت الطلبية وتم تسليم السلعة!'}
+                                      </p>
+                                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                        {reviewedOrderIds[bid.id]
+                                          ? `تقييمك: ${reviewedOrderIds[bid.id].rating} نجوم ⭐`
+                                          : 'شارك تجربتك لتعزيز الموثوقية.'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {reviewedOrderIds[bid.id] ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-xs whitespace-nowrap">
+                                      <CheckCircle2 size={14} />
+                                      <span>مقيّم ({reviewedOrderIds[bid.id].rating}/5)</span>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => setReviewModalData({
+                                        isOpen: true,
+                                        orderId: bid.id,
+                                        supplierId: bid.supplier_id,
+                                        supplierName: bid.supplier?.company_name || bid.supplier?.name,
+                                        orderTitle: req.title,
+                                      })}
+                                      className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-extrabold text-xs px-3.5 py-2 rounded-lg shadow-xs transition-all hover:scale-102 cursor-pointer whitespace-nowrap"
+                                    >
+                                      <Star size={14} className="fill-white" />
+                                      <span>قيّم المورد الآن ⭐</span>
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                               <button 
                                 onClick={() => handleDownloadInvoice(req)}
                                 disabled={generatingInvoice === req.id}
@@ -1767,6 +1884,22 @@ export default function MerchantOrders() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Review Modal for Rating Completed Orders */}
+      {reviewModalData && (
+        <ReviewModal
+          isOpen={reviewModalData.isOpen}
+          onClose={() => setReviewModalData(null)}
+          orderId={reviewModalData.orderId}
+          supplierId={reviewModalData.supplierId}
+          merchantId={user!.id}
+          supplierName={reviewModalData.supplierName}
+          orderTitle={reviewModalData.orderTitle}
+          onSuccess={() => {
+            fetchRequests();
+          }}
+        />
       )}
     </DashboardLayout>
 

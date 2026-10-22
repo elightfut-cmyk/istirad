@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, CheckCircle2, ShoppingBag, DollarSign, Clock, Store, User, MapPin, Phone } from 'lucide-react';
+import { Package, CheckCircle2, ShoppingBag, DollarSign, Clock, Store, User, MapPin, Phone, PackageCheck, Loader2 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -17,6 +17,7 @@ export default function SupplierOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingDealId, setCancellingDealId] = useState<string | null>(null);
+  const [markingDeliveredId, setMarkingDeliveredId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -91,6 +92,8 @@ export default function SupplierOrders() {
       const updateData: any = { shipping_status: status };
       if (status === 'delivered') {
         updateData.is_fully_paid = true;
+        updateData.order_status = 'COMPLETED';
+        updateData.delivered_at = new Date().toISOString();
       }
 
       const { error } = await supabase
@@ -103,7 +106,12 @@ export default function SupplierOrders() {
       const order = orders.find(o => o.id === bidId);
       if (order && order.custom_requests?.merchant_id) {
         const statusText = status === 'shipped' ? 'قيد الشحن' : status === 'delivered' ? 'مُسلّمة' : 'قيد التجهيز';
-        sendNotification(order.custom_requests.merchant_id, 'تحديث حالة الشحن', `قام المورد ${user?.company_name} بتحديث حالة شحن طلبك إلى: ${statusText}`, 'info');
+        const titleText = status === 'delivered' ? 'تم تسليم السلعة! 🎉' : 'تحديث حالة الشحن';
+        const messageText = status === 'delivered'
+          ? `قام المورد ${user?.company_name || user?.name || ''} بتأكيد تسليم سلعة طلبك بنجاح. يُرجى تقييم تجربتك مع المورد لمساعدة باقي التجار.`
+          : `قام المورد ${user?.company_name} بتحديث حالة شحن طلبك إلى: ${statusText}`;
+
+        sendNotification(order.custom_requests.merchant_id, titleText, messageText, status === 'delivered' ? 'success' : 'info');
 
         // Send Email to Merchant via Resend
         notifyMerchantShippingUpdate({
@@ -116,6 +124,22 @@ export default function SupplierOrders() {
     } catch (error) {
       console.error('Error updating shipping status:', error);
       toast.error('حدث خطأ أثناء تحديث حالة الشحن');
+    }
+  };
+
+  const handleConfirmDelivery = async (order: any) => {
+    if (!window.confirm('هل أنت متأكد من تسليم السلعة للتاجر؟ سيتم تسجيل الطلبية كمكتملة وسيحث النظام التاجر على تقييم أدائك.')) {
+      return;
+    }
+    setMarkingDeliveredId(order.id);
+    try {
+      await updateShippingStatus(order.id, 'delivered');
+      toast.success('تم تأكيد تسليم السلعة بنجاح! تم إشعار التاجر للتقييم 🌟');
+    } catch (err) {
+      console.error(err);
+      toast.error('حدث خطأ أثناء تأكيد تسليم السلعة');
+    } finally {
+      setMarkingDeliveredId(null);
     }
   };
 
@@ -373,7 +397,7 @@ export default function SupplierOrders() {
             {order.status === 'accepted' && (
               <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">تحديث حالة الشحن والتوصيل (انقر لتحديث الحالة)</label>
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-4">
                   <OrderProgressBar
                     bidId={order.id}
                     currentStatus={order.shipping_status || (order.custom_requests?.request_type === 'direct' ? 'processing' : 'pending_in_china')}
@@ -382,6 +406,57 @@ export default function SupplierOrders() {
                     isDirectOrder={order.custom_requests?.request_type === 'direct'}
                   />
                 </div>
+
+                {/* زر تسليم السلعة الحصري للمورد بعد دفع العربون */}
+                {order.shipping_status !== 'delivered' ? (
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 dark:border-emerald-500/20">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm">
+                        <PackageCheck size={18} className="text-emerald-600 dark:text-emerald-400" />
+                        <span>تأكيد إتمام المعاملة وتسليم البضاعة للتاجر</span>
+                      </div>
+                      <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80 leading-relaxed">
+                        عند تسليم البضاعة للتاجر، اضغط على الزر لتأكيد اكتمال الطلبية وفتح إمكانية التقييم للتاجر لرفع تصنيف حسابك.
+                      </p>
+                      <button
+                        onClick={() => handleConfirmDelivery(order)}
+                        disabled={markingDeliveredId === order.id}
+                        className="mt-2 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-3 px-4 rounded-xl shadow-md shadow-emerald-600/20 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50"
+                      >
+                        {markingDeliveredId === order.id ? (
+                          <>
+                            <Loader2 size={18} className="animate-spin" />
+                            <span>جاري تأكيد التسليم...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={18} />
+                            <span>تم تسليم السلعة (اكتمال الطلبية)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-700/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">
+                        <CheckCircle2 size={18} />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-sm text-emerald-900 dark:text-emerald-200">
+                          تم تسليم السلعة بنجاح ✓
+                        </p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                          الطلبية مكتملة ومتاحة لتقييم التاجر
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-xs whitespace-nowrap">
+                      مكتملة
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 

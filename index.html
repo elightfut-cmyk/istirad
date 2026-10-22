@@ -26,11 +26,22 @@
   </head>
   <body>
     <div id="root">
-      <div style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background-color: #040c1e; overflow: hidden; margin: 0; padding: 0;">
-        <div style="position: relative; width: 100%; height: 100%; max-width: 448px; margin: 0 auto; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-          <img src="/splash-screen.png" alt="Jiibha" style="width: 100%; height: 100%; object-fit: cover; display: block; user-select: none;" />
+      <div style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #040c1e; overflow: hidden; margin: 0; padding: 0;">
+        <div style="position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; inset: -8px; border-radius: 50%; border: 3px solid rgba(212, 175, 55, 0.2); border-top-color: #D4AF37; animation: jiibhaSpin 1.2s linear infinite;"></div>
+          <div style="width: 110px; height: 110px; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, #FFDF73 0%, #D4AF37 50%, #8C6D1F 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);">
+            <div style="width: 100%; height: 100%; border-radius: 50%; background: #070d1e; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img src="/app-logo.png" alt="Jiibha" style="width: 82%; height: 82%; object-fit: contain; display: block;" />
+            </div>
+          </div>
         </div>
       </div>
+      <style>
+        @keyframes jiibhaSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
     </div>
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>

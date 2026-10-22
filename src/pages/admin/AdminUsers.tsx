@@ -1,14 +1,35 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet, Ticket, Award, Video } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  ShoppingBag, 
+  Users, 
+  Search, 
+  Ban, 
+  CheckCircle, 
+  Trash2, 
+  ShieldAlert, 
+  MessageSquare, 
+  BadgeCheck, 
+  Wallet, 
+  Ticket, 
+  Award, 
+  Video,
+  ShieldCheck,
+  Gem,
+  Star,
+  Shield,
+  ExternalLink
+} from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import SupplierBadge from '../../components/SupplierBadge';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'suppliers' | 'merchants'>('all');
 
   useEffect(() => {
     fetchUsers();
@@ -25,11 +46,21 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version, supplier_tier')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version, supplier_tier, total_reviews, average_rating')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      const enrichedUsers = (data || []).map((u: any) => {
+        let tier = u.supplier_tier;
+        if (!tier) {
+          if (u.verification_badge === 'platinum') tier = 'PLATINUM';
+          else if (u.verification_badge === 'gold') tier = 'GOLD';
+          else if (u.verification_badge === 'silver' || u.verification_badge === 'blue') tier = 'SILVER';
+          else tier = 'NEW';
+        }
+        return { ...u, supplier_tier: tier };
+      });
+      setUsers(enrichedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -53,10 +84,14 @@ export default function AdminUsers() {
   };
 
   const handleToggleBadge = async (userId: string, currentBadge: string) => {
-    const nextBadge = currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'none' : 'blue';
+    const nextBadge = currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'platinum' : currentBadge === 'platinum' ? 'none' : 'blue';
     try {
-      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge } : u));
-      const { error } = await supabase.from('users').update({ verification_badge: nextBadge }).eq('id', userId);
+      const tierMap: Record<string, string> = { platinum: 'PLATINUM', gold: 'GOLD', blue: 'SILVER', none: 'NEW' };
+      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge, supplier_tier: tierMap[nextBadge] || 'NEW' } : u));
+      const { error } = await supabase.from('users').update({ 
+        verification_badge: nextBadge,
+        supplier_tier: tierMap[nextBadge] || 'NEW'
+      }).eq('id', userId);
       if (error) throw error;
       toast.success(`تم تغيير شارة التوثيق إلى: ${nextBadge}`);
     } catch (error) {
@@ -68,13 +103,30 @@ export default function AdminUsers() {
 
   const handleChangeSupplierTier = async (userId: string, newTier: string) => {
     try {
-      setUsers(users.map(u => u.id === userId ? { ...u, supplier_tier: newTier } : u));
-      const { error } = await supabase.from('users').update({ supplier_tier: newTier }).eq('id', userId);
+      const badgeValue = newTier === 'PLATINUM' ? 'platinum' : newTier === 'GOLD' ? 'gold' : newTier === 'SILVER' ? 'silver' : 'none';
+      setUsers(users.map(u => u.id === userId ? { ...u, supplier_tier: newTier, verification_badge: badgeValue } : u));
+      const { error } = await supabase.from('users').update({ 
+        supplier_tier: newTier, 
+        verification_badge: badgeValue 
+      }).eq('id', userId);
       if (error) throw error;
-      toast.success(`تم تغيير تصنيف المورد إلى: ${newTier}`);
-    } catch (error) {
+      toast.success(`تم تحديث تصنيف المورد إلى: ${newTier} وتحديث الشارة بنجاح`);
+    } catch (error: any) {
       console.error('Error updating supplier tier:', error);
-      toast.error('حدث خطأ أثناء تغيير التصنيف');
+      toast.error('حدث خطأ أثناء تغيير التصنيف: ' + (error.message || ''));
+      fetchUsers();
+    }
+  };
+
+  const handleSetVerificationBadge = async (userId: string, newBadge: string) => {
+    try {
+      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: newBadge } : u));
+      const { error } = await supabase.from('users').update({ verification_badge: newBadge }).eq('id', userId);
+      if (error) throw error;
+      toast.success('تم تحديث شارة التوثيق بنجاح');
+    } catch (error: any) {
+      console.error('Error updating verification badge:', error);
+      toast.error('حدث خطأ أثناء تحديث التوثيق: ' + (error.message || ''));
       fetchUsers();
     }
   };
@@ -193,13 +245,19 @@ export default function AdminUsers() {
     const matchesSearch = (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (u.company_name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = filterRole === 'all' || u.role === filterRole;
-    return matchesSearch && matchesRole;
+    if (activeTab === 'suppliers') return matchesSearch && u.role === 'supplier';
+    if (activeTab === 'merchants') return matchesSearch && u.role === 'merchant';
+    return matchesSearch;
   });
+
+  const suppliersList = users.filter(u => u.role === 'supplier');
+  const platinumCount = suppliersList.filter(u => (u.supplier_tier === 'PLATINUM' || u.verification_badge === 'platinum')).length;
+  const goldCount = suppliersList.filter(u => (u.supplier_tier === 'GOLD' || u.verification_badge === 'gold')).length;
+  const silverCount = suppliersList.filter(u => (u.supplier_tier === 'SILVER' || u.verification_badge === 'blue' || u.verification_badge === 'silver')).length;
 
   return (
     <DashboardLayout
-      title="إدارة المستخدمين"
+      title="إدارة المستخدمين والتصنيفات"
       sidebarLinks={[
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
@@ -209,187 +267,401 @@ export default function AdminUsers() {
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-          <div className="relative w-full md:w-96">
-            <input
-              type="text"
-              placeholder="ابحث بالاسم، الإيميل، أو الشركة..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
-            />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+      <div className="space-y-6">
+
+        {/* ── Navigation Tabs ── */}
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                activeTab === 'all' 
+                  ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <Users size={16} />
+              <span>كافة الحسابات</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold">
+                {users.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('suppliers')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                activeTab === 'suppliers' 
+                  ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <ShieldCheck size={16} className="text-amber-500" />
+              <span>تصنيف وتوثيق الموردين</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black">
+                {suppliersList.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('merchants')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                activeTab === 'merchants' 
+                  ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              <ShoppingBag size={16} />
+              <span>التجار</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold">
+                {users.filter(u => u.role === 'merchant').length}
+              </span>
+            </button>
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
-            <select 
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-            >
-              <option value="all">كل الأدوار</option>
-              <option value="merchant">التجار</option>
-              <option value="supplier">الموردين</option>
-            </select>
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              placeholder={activeTab === 'suppliers' ? 'ابحث في الموردين بالاسم أو الشركة...' : 'ابحث بالاسم، الإيميل، أو الشركة...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm bg-gray-50 dark:bg-gray-900"
+            />
+            <Search className="absolute left-3 top-3 text-gray-400" size={17} />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المستخدم</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الشركة</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الدور / التصنيف</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الرصيد / النقاط</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
+        {/* ── Specialized Supplier Tiers Header Cards (When Suppliers tab is active) ── */}
+        {activeTab === 'suppliers' && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-amber-500/10 border border-amber-300/40 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-right">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={24} className="text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-black text-gray-900 dark:text-white text-base">لوحة تصنيف وتوثيق الموردين يدوياً</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                    يمكنك ترقية أي مورد يدوياً إلى (بلاتيني 💎، ذهبي 🥇، فضي 🥈، أو جديد 🥉) وتحديد شارة التوثيق. تظهر الرتبة للتجار في عروض الأسعار ولبقية الموردين في المناقصات.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-900 text-cyan-300">
+                  <Gem size={20} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">مورد بلاتيني</p>
+                  <p className="text-xl font-black text-cyan-500">{platinumCount}</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">مورد ذهبي</p>
+                  <p className="text-xl font-black text-amber-600">{goldCount}</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">مورد فضي</p>
+                  <p className="text-xl font-black text-slate-700 dark:text-slate-300">{silverCount}</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600">
+                  <Users size={20} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">إجمالي الموردين</p>
+                  <p className="text-xl font-black text-emerald-600">{suppliersList.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Users Table ── */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المستخدم / الشركة</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الدور</th>
+                  {activeTab === 'suppliers' ? (
+                    <>
+                      <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التصنيف الحالي (الرتبة)</th>
+                      <th className="p-4 font-bold text-gray-700 dark:text-gray-200">شارة التوثيق الرسمية</th>
+                      <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التقييمات</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الرصيد / النقاط</th>
+                      <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التصنيف / التوثيق</th>
+                    </>
+                  )}
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200">حالة الحساب</th>
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">الإجراءات</th>
                 </tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على مستخدمين.</td>
-                </tr>
-              ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
-                    <td className="p-4">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-bold text-gray-800 dark:text-gray-100">{u.name}</p>
-                          {u.verification_badge === 'blue' && (
-                            <BadgeCheck size={18} className="text-blue-500" fill="currentColor" color="white" />
-                          )}
-                          {u.verification_badge === 'gold' && (
-                            <BadgeCheck size={18} className="text-yellow-500" fill="currentColor" color="white" />
-                          )}
-                          {u.current_app_version && u.current_app_version > 1 ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title={`يعمل بتطبيق الهاتف - كود: ${u.current_app_version}`}>
-                              📱 تطبيق #{u.current_app_version}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title="متصفح الويب">
-                              🌐 ويب
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{u.email}</p>
-                        <p className="text-xs text-gray-400">{u.phone}</p>
-                      </div>
-                    </td>
-                    <td className="p-4 text-gray-600 dark:text-gray-300">{u.company_name || '-'}</td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          u.role === 'merchant' ? 'bg-blue-50 text-blue-700' : 
-                          u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
-                        }`}>
-                          {u.role === 'merchant' ? 'تاجر' : u.role === 'supplier' ? 'مورد' : 'أدمن'}
-                        </span>
-                        {u.role === 'supplier' && (
-                          <select
-                            value={u.supplier_tier || 'NEW'}
-                            onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
-                            className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <option value="NEW">🆕 جديد</option>
-                            <option value="SILVER">🥈 فضي</option>
-                            <option value="GOLD">🥇 ذهبي</option>
-                            <option value="PLATINUM">💎 بلاتيني</option>
-                          </select>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      {u.role === 'merchant' ? (
-                        <div className="flex flex-col gap-1 text-sm">
-                          <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md inline-block text-center">{u.wallet_balance || 0} دج</span>
-                          <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md inline-block text-center">{u.loyalty_points || 0} نقطة</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        u.status === 'banned' ? 'bg-red-50 text-red-700' : 
-                        u.status === 'pending' ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
-                      }`}>
-                        {u.status === 'banned' ? 'محظور' : u.status === 'pending' ? 'قيد المراجعة' : 'نشط'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {u.role !== 'admin' && (
-                          <>
-                            <button 
-                              onClick={() => handleToggleStatus(u.id, u.status)}
-                              className={`p-2 rounded-xl transition-colors ${
-                                (u.status === 'banned' || u.status === 'pending')
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                                  : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                              }`}
-                              title={(u.status === 'banned' || u.status === 'pending') ? 'تفعيل الحساب' : 'حظر الحساب'}
-                            >
-                              {(u.status === 'banned' || u.status === 'pending') ? <CheckCircle size={18} /> : <Ban size={18} />}
-                            </button>
-                            {u.role === 'supplier' && (
-                              <button 
-                                onClick={() => handleToggleBadge(u.id, u.verification_badge || 'none')}
-                                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
-                                title="تغيير توثيق المورد (أزرق / ذهبي / بلا)"
-                              >
-                                <BadgeCheck size={18} />
-                              </button>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
+                  </tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على نتائج تطابق البحث.</td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((u) => {
+                    const isSupplier = u.role === 'supplier';
+                    const currentTier = u.supplier_tier || 'NEW';
+
+                    return (
+                      <tr key={u.id} className="hover:bg-gray-50 dark:bg-gray-900/50 transition-colors">
+                        
+                        {/* Name, Company & Contacts */}
+                        <td className="p-4">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{u.name}</p>
+                              {u.verification_badge === 'platinum' && (
+                                <span title="موثق بشارة بلاتينية"><BadgeCheck size={17} className="text-cyan-500" fill="currentColor" color="white" /></span>
+                              )}
+                              {u.verification_badge === 'gold' && (
+                                <span title="موثق بشارة ذهبية"><BadgeCheck size={17} className="text-amber-500" fill="currentColor" color="white" /></span>
+                              )}
+                              {(u.verification_badge === 'blue' || u.verification_badge === 'silver') && (
+                                <span title="موثق بشارة زرقاء"><BadgeCheck size={17} className="text-blue-500" fill="currentColor" color="white" /></span>
+                              )}
+                              {u.current_app_version && u.current_app_version > 1 ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" title={`تطبيق الهاتف v${u.current_app_version}`}>
+                                  📱 v{u.current_app_version}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title="متصفح الويب">
+                                  🌐 ويب
+                                </span>
+                              )}
+                            </div>
+                            {u.company_name && (
+                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mt-0.5">شركة: {u.company_name}</p>
                             )}
-                            {u.role === 'merchant' && (
+                            <p className="text-xs text-gray-400 mt-0.5">{u.email} {u.phone && `• ${u.phone}`}</p>
+                          </div>
+                        </td>
+
+                        {/* Role */}
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            u.role === 'merchant' ? 'bg-blue-50 text-blue-700' : 
+                            u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
+                          }`}>
+                            {u.role === 'merchant' ? 'تاجر' : u.role === 'supplier' ? 'مورد' : 'أدمن'}
+                          </span>
+                        </td>
+
+                        {/* Supplier Specific Columns */}
+                        {activeTab === 'suppliers' ? (
+                          <>
+                            {/* Current Tier & Changer */}
+                            <td className="p-4">
+                              <div className="flex flex-col gap-1.5">
+                                <div className="mb-1">
+                                  <SupplierBadge
+                                    supplierId={u.id}
+                                    name={u.name}
+                                    companyName={u.company_name}
+                                    tier={currentTier}
+                                    rating={u.average_rating || 0}
+                                    totalReviews={u.total_reviews || 0}
+                                    size="xs"
+                                    clickable={false}
+                                  />
+                                </div>
+                                <select
+                                  value={currentTier}
+                                  onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
+                                  className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                                >
+                                  <option value="NEW">🥉 جديد (NEW)</option>
+                                  <option value="SILVER">🥈 فضي (SILVER)</option>
+                                  <option value="GOLD">🥇 ذهبي (GOLD)</option>
+                                  <option value="PLATINUM">💎 بلاتيني (PLATINUM)</option>
+                                </select>
+                              </div>
+                            </td>
+
+                            {/* Verification Badge Switcher */}
+                            <td className="p-4">
+                              <div className="flex flex-col gap-1.5">
+                                <select
+                                  value={u.verification_badge || 'none'}
+                                  onChange={(e) => handleSetVerificationBadge(u.id, e.target.value)}
+                                  className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                                >
+                                  <option value="none">❌ غير موثق (بدون شارة)</option>
+                                  <option value="blue">🛡️ شارة زرقاء (معتمد)</option>
+                                  <option value="gold">🥇 شارة ذهبية (مميز)</option>
+                                  <option value="platinum">💎 شارة بلاتينية (أعلى موثوقية)</option>
+                                </select>
+                                <span className="text-[10px] text-gray-400">
+                                  {u.verification_badge && u.verification_badge !== 'none' ? 'موثق رسمياً من المنصة' : 'غير موثق'}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Ratings & Reviews */}
+                            <td className="p-4">
+                              <div className="text-xs">
+                                <span className="font-black text-amber-500 flex items-center gap-1">
+                                  <Star size={13} className="fill-amber-400 text-amber-400" />
+                                  {Number(u.average_rating || 0).toFixed(1)} / 5
+                                </span>
+                                <span className="text-gray-400 text-[11px] block mt-0.5">
+                                  {u.total_reviews || 0} تقييم مسجل
+                                </span>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            {/* Wallet / Loyalty for merchants */}
+                            <td className="p-4">
+                              {u.role === 'merchant' ? (
+                                <div className="flex flex-col gap-1 text-xs">
+                                  <span className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md text-center">{u.wallet_balance || 0} دج</span>
+                                  <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md text-center">{u.loyalty_points || 0} نقطة</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-xs">-</span>
+                              )}
+                            </td>
+
+                            {/* Classification / Badge preview in all users table */}
+                            <td className="p-4">
+                              {isSupplier ? (
+                                <select
+                                  value={currentTier}
+                                  onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
+                                  className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold"
+                                >
+                                  <option value="NEW">🥉 جديد</option>
+                                  <option value="SILVER">🥈 فضي</option>
+                                  <option value="GOLD">🥇 ذهبي</option>
+                                  <option value="PLATINUM">💎 بلاتيني</option>
+                                </select>
+                              ) : (
+                                <span className="text-gray-400 text-xs">-</span>
+                              )}
+                            </td>
+                          </>
+                        )}
+
+                        {/* Account Status */}
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                            u.status === 'banned' ? 'bg-red-50 text-red-700' : 
+                            u.status === 'pending' ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'
+                          }`}>
+                            {u.status === 'banned' ? 'محظور' : u.status === 'pending' ? 'قيد المراجعة' : 'نشط'}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            {u.role !== 'admin' && (
                               <>
                                 <button 
-                                  onClick={() => handleClearWallet(u.id, u.name)}
-                                  className="p-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors"
-                                  title="تصفير المحفظة"
+                                  onClick={() => handleToggleStatus(u.id, u.status)}
+                                  className={`p-2 rounded-xl transition-colors ${
+                                    (u.status === 'banned' || u.status === 'pending')
+                                      ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                      : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                  }`}
+                                  title={(u.status === 'banned' || u.status === 'pending') ? 'تفعيل الحساب' : 'حظر الحساب'}
                                 >
-                                  <Wallet size={18} />
+                                  {(u.status === 'banned' || u.status === 'pending') ? <CheckCircle size={16} /> : <Ban size={16} />}
+                                </button>
+
+                                {isSupplier && (
+                                  <>
+                                    <button 
+                                      onClick={() => handleToggleBadge(u.id, u.verification_badge || 'none')}
+                                      className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                                      title="تبديل شارة التوثيق تلقائياً"
+                                    >
+                                      <BadgeCheck size={16} />
+                                    </button>
+                                    <a
+                                      href={`/supplier/profile/${u.id}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="p-2 bg-slate-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-slate-200 transition-colors"
+                                      title="عرض الملف العام للمورد"
+                                    >
+                                      <ExternalLink size={16} />
+                                    </a>
+                                  </>
+                                )}
+
+                                {u.role === 'merchant' && (
+                                  <>
+                                    <button 
+                                      onClick={() => handleClearWallet(u.id, u.name)}
+                                      className="p-2 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors"
+                                      title="تصفير المحفظة"
+                                    >
+                                      <Wallet size={16} />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleClearPoints(u.id, u.name)}
+                                      className="p-2 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 transition-colors"
+                                      title="تصفير نقاط الولاء"
+                                    >
+                                      <Award size={16} />
+                                    </button>
+                                  </>
+                                )}
+
+                                <button 
+                                  onClick={() => handlePromoteToAdmin(u.id, u.name)}
+                                  className="p-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                                  title="ترقية إلى مسؤول (أدمن)"
+                                >
+                                  <ShieldAlert size={16} />
                                 </button>
                                 <button 
-                                  onClick={() => handleClearPoints(u.id, u.name)}
-                                  className="p-2 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 transition-colors"
-                                  title="تصفير نقاط الولاء"
+                                  onClick={() => handleDeleteUser(u.id)}
+                                  className="p-2 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors"
+                                  title="حذف الحساب نهائياً"
                                 >
-                                  <Award size={18} />
+                                  <Trash2 size={16} />
                                 </button>
                               </>
                             )}
-                            <button 
-                              onClick={() => handlePromoteToAdmin(u.id, u.name)}
-                              className="p-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
-                              title="ترقية إلى مسؤول (أدمن)"
-                            >
-                              <ShieldAlert size={18} />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteUser(u.id)}
-                              className="p-2 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors"
-                              title="حذف الحساب نهائياً"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </DashboardLayout>

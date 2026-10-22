@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle , Package , Lightbulb , Search , Video } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, FileText, HelpCircle, AlertTriangle, Eye, CheckCircle, XCircle  , Lightbulb  , Video } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendNotification } from '../../store/useNotificationStore';
 
@@ -93,16 +93,13 @@ export default function AdminComplaints() {
       sidebarLinks={[
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
-        { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
-        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
+        { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
         { label: 'الصفحات', href: '/admin/pages', icon: <FileText size={20} /> },
         { label: 'الأسئلة الشائعة', href: '/admin/faqs', icon: <HelpCircle size={20} /> },
         { label: 'الشكاوى', href: '/admin/complaints', icon: <AlertTriangle size={20} /> },
         { label: 'الاقتراحات', href: '/admin/suggestions', icon: <Lightbulb size={20} /> },
-        { label: 'الاستيراد الذكي', href: '/admin/smart-import', icon: <Search size={20} /> },
-        { label: 'بحث علي بابا', href: '/admin/alibaba-search', icon: <Search size={20} /> },
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
       ]}
     >

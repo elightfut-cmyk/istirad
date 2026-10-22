@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, Search, Plus, Edit, Trash2, CheckCircle, Ban , Package  , Video } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, MessageSquare, Ticket, Search, Plus, Edit, Trash2, CheckCircle, Ban   , Video } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -115,8 +115,7 @@ export default function AdminCoupons() {
       sidebarLinks={[
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
-        { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
-        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
+        { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'الإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },

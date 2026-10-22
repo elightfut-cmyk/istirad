@@ -98,10 +98,10 @@ export default function AppVersionModal({ previewMode, previewData, onClosePrevi
           return;
         }
 
-        const latestCode = Math.max(Number(settings.latest_version_code) || 0, 16);
-        const latestName = (Number(settings.latest_version_code) || 0) >= 16 
-          ? (settings.latest_version_name || '1.3.3') 
-          : '1.3.3';
+        const latestCode = Math.max(Number(settings.latest_version_code) || 0, 17);
+        const latestName = (Number(settings.latest_version_code) || 0) >= 17 
+          ? (settings.latest_version_name || '1.3.4') 
+          : '1.3.4';
 
         // 5. Compare versions: Show modal if local versionCode is smaller than server
         if (currentVersionCode < latestCode || isTestingParam) {

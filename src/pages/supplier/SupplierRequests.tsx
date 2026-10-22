@@ -15,6 +15,7 @@ import {
   notifyMerchantSupplierInterest,
 } from '../../services/emailService';
 import TenderAppPromptModal from '../../components/TenderAppPromptModal';
+import SupplierBadge from '../../components/SupplierBadge';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
@@ -75,7 +76,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
           merchant:users!merchant_id(name, company_name, phone, address, email),
-          supplier_bids (*, supplier:users!supplier_id(name, company_name)),
+          supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge, supplier_tier, average_rating, total_reviews)),
           supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
@@ -409,16 +410,38 @@ export default function SupplierRequests() {
                     </div>
                   )}
 {(req.supplier_bids?.length > 0 || activeInterests.length > 0) && (
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-col gap-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {req.supplier_bids?.length > 0 && (
+                          <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
+                            <Gavel size={14} /> {req.supplier_bids.length} مورد(ين) قدموا عروضاً
+                          </span>
+                        )}
+                        {activeInterests.length > 0 && (
+                          <span className="text-xs font-bold bg-orange-50 text-orange-700 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1">
+                            <Eye size={14} /> {activeInterests.length} مورد(ين) يبحثون عن المنتج
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Competing suppliers classification display */}
                       {req.supplier_bids?.length > 0 && (
-                        <span className="text-xs font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100 flex items-center gap-1">
-                          <Gavel size={14} /> {req.supplier_bids.length} مورد(ين) قدموا عروضاً
-                        </span>
-                      )}
-                      {activeInterests.length > 0 && (
-                        <span className="text-xs font-bold bg-orange-50 text-orange-700 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1">
-                          <Eye size={14} /> {activeInterests.length} مورد(ين) يبحثون عن المنتج
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5 p-2 bg-gray-50/80 dark:bg-gray-750/50 rounded-xl border border-gray-100 dark:border-gray-700/60">
+                          <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold">الموردون المتنافسون:</span>
+                          {req.supplier_bids.map((b: any) => {
+                            const badge = b.supplier?.verification_badge;
+                            const tierInfo = badge === 'platinum' ? { label: 'بلاتيني 🏅', cls: 'bg-purple-100 text-purple-800 border-purple-200' }
+                              : badge === 'gold' ? { label: 'ذهبي 🥇', cls: 'bg-amber-100 text-amber-800 border-amber-200' }
+                              : (badge === 'silver' || badge === 'blue') ? { label: 'فضي 🥈', cls: 'bg-slate-100 text-slate-800 border-slate-200' }
+                              : { label: 'جديد 🥉', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                            return (
+                              <span key={b.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${tierInfo.cls}`}>
+                                <span>{b.supplier?.company_name || b.supplier?.name || 'مورد'}</span>
+                                <span>({tierInfo.label})</span>
+                              </span>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   )}
@@ -454,6 +477,48 @@ export default function SupplierRequests() {
                       </a>
                     )}
                   </div>
+
+                  {/* Competing Suppliers & Tiers on this Tender */}
+                  {req.supplier_bids && req.supplier_bids.length > 0 && (
+                    <div className="mt-4 pt-3.5 border-t border-gray-100 dark:border-gray-700/60">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Gavel size={14} className="text-[#4f46e5]" />
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                          الموردين المشاركون بتصنيفاتهم في هذه المناقصة ({req.supplier_bids.length}):
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {req.supplier_bids.map((b: any) => {
+                          const isMe = b.supplier_id === user?.id;
+                          const sTier = b.supplier?.supplier_tier || (
+                            b.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
+                            b.supplier?.verification_badge === 'gold' ? 'GOLD' :
+                            (b.supplier?.verification_badge === 'silver' || b.supplier?.verification_badge === 'blue') ? 'SILVER' :
+                            'NEW'
+                          );
+                          return (
+                            <div key={b.id} className="inline-flex items-center gap-1">
+                              <SupplierBadge
+                                supplierId={b.supplier_id}
+                                name={b.supplier?.name}
+                                companyName={b.supplier?.company_name}
+                                tier={sTier}
+                                rating={b.supplier?.average_rating}
+                                totalReviews={b.supplier?.total_reviews}
+                                size="xs"
+                                clickable={!isMe}
+                              />
+                              {isMe && (
+                                <span className="text-[10px] bg-indigo-600 text-white font-black px-1.5 py-0.5 rounded-md">
+                                  عرضك
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 md:w-1/3 bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center text-center">

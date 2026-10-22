@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useThemeStore } from './store/useThemeStore';
@@ -48,8 +48,13 @@ function App() {
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
-  // Show splash screen ONLY in native mobile application, not in web browser
-  const [showSplash, setShowSplash] = useState(() => Capacitor.isNativePlatform());
+  // Show splash on native mobile application OR mobile web browser viewport
+  const [showSplash, setShowSplash] = useState(() => {
+    if (Capacitor.isNativePlatform()) return true;
+    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const hasSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jiibha_splash_seen');
+    return Boolean(isMobileViewport && !hasSeen);
+  });
 
   // Global notification listener: Ensure every notification entering the bell alerts the user immediately across any page
   useEffect(() => {
@@ -185,7 +190,17 @@ function App() {
   }, []);
 
   if (showSplash) {
-    return <AppSplashScreen minDurationMs={2600} onFinish={() => setShowSplash(false)} />;
+    return (
+      <AppSplashScreen 
+        minDurationMs={2600} 
+        onFinish={() => {
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('jiibha_splash_seen', '1');
+          }
+          setShowSplash(false);
+        }} 
+      />
+    );
   }
 
   return (
@@ -230,6 +245,9 @@ function App() {
               <AdminOrders />
             </ProtectedRoute>
           } />
+          
+          {/* Redirect old requests route to unified admin orders & tenders page */}
+          <Route path="/admin/requests" element={<Navigate to="/admin/orders" replace />} />
           
           <Route path="/admin/notifications" element={
             <ProtectedRoute allowedRoles={['admin']}>

@@ -961,15 +961,25 @@ export default function MerchantOrders() {
                         <div className="w-px h-6 bg-gray-200"></div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">المورد:</span>
-                          <SupplierBadge
-                            supplierId={bid?.supplier_id}
-                            name={bid?.supplier?.name}
-                            companyName={bid?.supplier?.company_name}
-                            tier={bid?.supplier?.supplier_tier}
-                            rating={bid?.supplier?.average_rating}
-                            totalReviews={bid?.supplier?.total_reviews}
-                            size="xs"
-                          />
+                          {(() => {
+                            const dTier = bid?.supplier?.supplier_tier || (
+                              bid?.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
+                              bid?.supplier?.verification_badge === 'gold' ? 'GOLD' :
+                              (bid?.supplier?.verification_badge === 'silver' || bid?.supplier?.verification_badge === 'blue') ? 'SILVER' :
+                              'NEW'
+                            );
+                            return (
+                              <SupplierBadge
+                                supplierId={bid?.supplier_id}
+                                name={bid?.supplier?.name}
+                                companyName={bid?.supplier?.company_name}
+                                tier={dTier}
+                                rating={bid?.supplier?.average_rating}
+                                totalReviews={bid?.supplier?.total_reviews}
+                                size="xs"
+                              />
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1266,15 +1276,25 @@ export default function MerchantOrders() {
                             <div className="absolute top-3 left-3 text-green-600"><CheckCircle2 size={24} /></div>
                           )}
                           <div className="mb-3">
-                            <SupplierBadge
-                              supplierId={bid.supplier_id}
-                              name={bid.supplier?.name}
-                              companyName={bid.supplier?.company_name}
-                              tier={bid.supplier?.supplier_tier}
-                              rating={bid.supplier?.average_rating}
-                              totalReviews={bid.supplier?.total_reviews}
-                              size="sm"
-                            />
+                            {(() => {
+                              const sTier = bid.supplier?.supplier_tier || (
+                                bid.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
+                                bid.supplier?.verification_badge === 'gold' ? 'GOLD' :
+                                (bid.supplier?.verification_badge === 'silver' || bid.supplier?.verification_badge === 'blue') ? 'SILVER' :
+                                'NEW'
+                              );
+                              return (
+                                <SupplierBadge
+                                  supplierId={bid.supplier_id}
+                                  name={bid.supplier?.name}
+                                  companyName={bid.supplier?.company_name}
+                                  tier={sTier}
+                                  rating={bid.supplier?.average_rating}
+                                  totalReviews={bid.supplier?.total_reviews}
+                                  size="sm"
+                                />
+                              );
+                            })()}
                           </div>
 
                           {/* Interactive Quantity Tiers Selector if supplier offered multiple tiers */}

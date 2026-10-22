@@ -41,8 +41,8 @@ interface AppSettings {
 export default function AppUsersTrackerTab() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    latest_version_code: 16,
-    latest_version_name: '1.3.3',
+    latest_version_code: 17,
+    latest_version_name: '1.3.4',
     apk_download_url: '/jiibha-app.apk'
   });
   const [loading, setLoading] = useState(true);
@@ -63,8 +63,8 @@ export default function AppUsersTrackerTab() {
   // App Version Management State
   const [savingSettings, setSavingSettings] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
-  const [newVersionCode, setNewVersionCode] = useState(16);
-  const [newVersionName, setNewVersionName] = useState('1.3.3');
+  const [newVersionCode, setNewVersionCode] = useState(17);
+  const [newVersionName, setNewVersionName] = useState('1.3.4');
   const [newApkUrl, setNewApkUrl] = useState('/jiibha-app.apk');
 
   useEffect(() => {
@@ -82,10 +82,10 @@ export default function AppUsersTrackerTab() {
         .maybeSingle();
 
       if (settingsData) {
-        const vCode = Math.max(Number(settingsData.latest_version_code) || 0, 16);
-        const vName = (Number(settingsData.latest_version_code) || 0) >= 16 
-          ? (settingsData.latest_version_name || '1.3.3') 
-          : '1.3.3';
+        const vCode = Math.max(Number(settingsData.latest_version_code) || 0, 17);
+        const vName = (Number(settingsData.latest_version_code) || 0) >= 17 
+          ? (settingsData.latest_version_name || '1.3.4') 
+          : '1.3.4';
         const vUrl = settingsData.apk_download_url || '/jiibha-app.apk';
 
         setAppSettings({

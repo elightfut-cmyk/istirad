@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { sendPushNotification } from '../../services/pushNotificationService';
 
 interface UserRecord {
   id: string;
@@ -41,8 +42,8 @@ interface AppSettings {
 export default function AppUsersTrackerTab() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    latest_version_code: 17,
-    latest_version_name: '1.3.4',
+    latest_version_code: 18,
+    latest_version_name: '1.3.5',
     apk_download_url: '/jiibha-app.apk'
   });
   const [loading, setLoading] = useState(true);
@@ -63,8 +64,8 @@ export default function AppUsersTrackerTab() {
   // App Version Management State
   const [savingSettings, setSavingSettings] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
-  const [newVersionCode, setNewVersionCode] = useState(17);
-  const [newVersionName, setNewVersionName] = useState('1.3.4');
+  const [newVersionCode, setNewVersionCode] = useState(18);
+  const [newVersionName, setNewVersionName] = useState('1.3.5');
   const [newApkUrl, setNewApkUrl] = useState('/jiibha-app.apk');
 
   useEffect(() => {
@@ -82,10 +83,10 @@ export default function AppUsersTrackerTab() {
         .maybeSingle();
 
       if (settingsData) {
-        const vCode = Math.max(Number(settingsData.latest_version_code) || 0, 17);
-        const vName = (Number(settingsData.latest_version_code) || 0) >= 17 
-          ? (settingsData.latest_version_name || '1.3.4') 
-          : '1.3.4';
+        const vCode = Math.max(Number(settingsData.latest_version_code) || 0, 18);
+        const vName = (Number(settingsData.latest_version_code) || 0) >= 18 
+          ? (settingsData.latest_version_name || '1.3.5') 
+          : '1.3.5';
         const vUrl = settingsData.apk_download_url || '/jiibha-app.apk';
 
         setAppSettings({
@@ -208,7 +209,23 @@ export default function AppUsersTrackerTab() {
       const { error } = await supabase.from('notifications').insert(notifications);
       if (error) throw error;
 
-      toast.success(`تم إرسال إشعار التحديث بنجاح إلى ${outdated.length} مستخدم!`);
+      // Dispatch push notification to reach outdated devices in background
+      try {
+        await sendPushNotification({
+          userIds: outdated.map(u => String(u.id)),
+          title: 'تحديث جديد متوفر للتطبيق 📱',
+          message: `يتوفر إصدار جديد لتطبيق جيبها (${appSettings.latest_version_name}). يرجى تحميله للاستفادة من أحدث الميزات واستقرار التنبيهات.`,
+          data: {
+            type: 'app_update',
+            url: appSettings.apk_download_url
+          },
+          skipDbInsert: true
+        });
+      } catch (pushErr) {
+        console.warn('Push notification dispatch notice:', pushErr);
+      }
+
+      toast.success(`تم إرسال إشعار التحديث بنجاح إلى ${outdated.length} مستخدم (الجرس + إشعار هاتف)!`);
     } catch (err: any) {
       console.error('Error notifying outdated users:', err);
       toast.error('حدث خطأ أثناء إرسال الإشعارات: ' + (err.message || ''));
@@ -262,17 +279,40 @@ export default function AppUsersTrackerTab() {
 
       if (!window.confirm(`هل تريد إرسال الإشعار إلى ${targetUsers.length} مستخدم؟`)) return;
 
+      // 1. Insert in notifications table (for in-app bell)
       const notifications = targetUsers.map(u => ({
         user_id: u.id,
-        title: customNotifTitle,
-        message: customNotifMessage,
+        title: customNotifTitle.trim(),
+        message: customNotifMessage.trim(),
         type: 'info',
       }));
 
       const { error } = await supabase.from('notifications').insert(notifications);
-      if (error) throw error;
+      if (error) {
+        console.warn('Notifications table insert notice:', error);
+      }
 
-      toast.success(`✅ تم إرسال الإشعار إلى ${targetUsers.length} مستخدم بنجاح!`);
+      // 2. Dispatch push notification to reach phones in background
+      try {
+        const isAll = customNotifTarget === 'all' && customNotifRole === 'all';
+        const targetIds = targetUsers.map(u => String(u.id));
+        await sendPushNotification({
+          userIds: isAll ? undefined : targetIds,
+          sendToAll: isAll,
+          targetRole: (!isAll && customNotifRole !== 'all') ? customNotifRole : undefined,
+          title: customNotifTitle.trim(),
+          message: customNotifMessage.trim(),
+          data: {
+            type: 'custom_alert',
+            url: '/notifications'
+          },
+          skipDbInsert: true
+        });
+      } catch (pushErr) {
+        console.warn('Push notification dispatch notice:', pushErr);
+      }
+
+      toast.success(`✅ تم إرسال الإشعار بنجاح إلى ${targetUsers.length} مستخدم (الجرس + إشعار الهاتف في الخلفية)!`);
       setCustomNotifTitle('');
       setCustomNotifMessage('');
       setShowCustomNotifPanel(false);
@@ -607,21 +647,22 @@ export default function AppUsersTrackerTab() {
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-gray-400">
-                سيصل الإشعار لجرس المستخدم فوراً داخل لوحة التحكم
-              </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
+              <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-950/40 px-3 py-2 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                <Smartphone size={14} className="shrink-0" />
+                <span>سيصل الإشعار لجرس التنبيهات فوراً، وللخلفية كإشعار هاتف (Push) لجميع من لديهم التطبيق.</span>
+              </div>
               <button
                 onClick={handleSendCustomNotification}
                 disabled={sendingCustom || !customNotifTitle.trim() || !customNotifMessage.trim()}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4f46e5] to-purple-600 hover:opacity-90 text-white rounded-xl text-sm font-bold shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4f46e5] to-purple-600 hover:opacity-90 text-white rounded-xl text-sm font-bold shadow transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 {sendingCustom ? (
                   <RefreshCw size={16} className="animate-spin" />
                 ) : (
                   <Send size={16} />
                 )}
-                إرسال الإشعار
+                إرسال الإشعار (جرس + هاتف)
               </button>
             </div>
           </div>

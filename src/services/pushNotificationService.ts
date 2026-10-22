@@ -117,58 +117,68 @@ export const sendPushNotificationDetailed = async ({
       pushBody.android_channel_id = android_channel_id.trim();
     }
 
-    const { data: resData, error: invokeError } = await supabase.functions.invoke('send-push', {
-      body: pushBody
-    });
+    let resData: any = null;
+    let invokeError: any = null;
 
-    if (invokeError) {
-      let detailedMessage = invokeError.message;
-      try {
-        if ('context' in invokeError && (invokeError as any).context) {
-          const res = (invokeError as any).context as Response;
-          const bodyJson = await res.json().catch(() => null);
-          if (bodyJson) {
-            detailedMessage = extractOneSignalError(bodyJson, res.status) || bodyJson.error || bodyJson.message || JSON.stringify(bodyJson);
-          } else {
-            const text = await res.text().catch(() => '');
-            if (text) {
-              try {
-                const parsed = JSON.parse(text);
-                detailedMessage = extractOneSignalError(parsed, res.status) || parsed.error || parsed.message || text;
-              } catch {
-                detailedMessage = text;
-              }
-            }
-          }
-        }
-      } catch (parseErr) {
-        console.warn('Could not extract detailed error body from invokeError context:', parseErr);
+    try {
+      const resp = await supabase.functions.invoke('send-push', {
+        body: pushBody
+      });
+      resData = resp.data;
+      invokeError = resp.error;
+    } catch (invErr) {
+      invokeError = invErr;
+    }
+
+    if (invokeError || !resData || resData.ok === false || resData.errors || resData.error) {
+      console.warn('Edge Function returned non-success or threw error, trying direct OneSignal fallback...', invokeError, resData);
+      const fallbackResult = await directOneSignalDispatch({
+        title,
+        message,
+        externalIds,
+        validSubIds,
+        sendToAll,
+        targetRole,
+        data,
+        apiKey: pushBody.apiKey
+      });
+
+      if (fallbackResult && fallbackResult.success) {
+        return fallbackResult;
       }
 
-      const errorMsg = `فشل الإرسال: ${detailedMessage || 'خطأ أثناء الاتصال بالخادم السحابي'}`;
-      console.error('send-push invoke error:', invokeError, detailedMessage);
-      throw new Error(errorMsg);
+      if (invokeError) {
+        let detailedMessage = invokeError.message;
+        try {
+          if ('context' in invokeError && (invokeError as any).context) {
+            const res = (invokeError as any).context as Response;
+            const bodyJson = await res.json().catch(() => null);
+            if (bodyJson) {
+              detailedMessage = extractOneSignalError(bodyJson, res.status) || bodyJson.error || bodyJson.message || JSON.stringify(bodyJson);
+            }
+          }
+        } catch {}
+        const errorMsg = `فشل الإرسال: ${detailedMessage || 'خطأ أثناء الاتصال بخادم الإشعارات'}`;
+        console.error('send-push error:', errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      if (!resData) {
+        throw new Error('فشل الإرسال: لم يتم استلام استجابة من خدمة الإشعارات');
+      }
+
+      if (resData.ok === false || resData.errors || resData.error) {
+        const errorReason = extractOneSignalError(resData, resData.status || resData.onesignal_status);
+        throw new Error(`فشل الإرسال: ${errorReason}`);
+      }
     }
 
-    if (!resData) {
-      throw new Error('فشل الإرسال: لم يتم استلام أي استجابة من خادم الإشعارات');
-    }
-
-    // Check if OneSignal or server returned an error payload
-    if (resData.ok === false || resData.errors || resData.error) {
-      const errorReason = extractOneSignalError(resData, resData.status || resData.onesignal_status);
-      const errorMsg = `فشل الإرسال: ${errorReason}`;
-      console.error(errorMsg, resData);
-      throw new Error(errorMsg);
-    }
-
-    const hasValidId = Boolean(resData.id && String(resData.id).trim() !== '');
-    const recipients = typeof resData.recipients === 'number' ? resData.recipients : (hasValidId ? 1 : 0);
+    const hasValidId = Boolean(resData?.id && String(resData.id).trim() !== '');
+    const recipients = typeof resData?.recipients === 'number' ? resData.recipients : (hasValidId ? 1 : 0);
     const isTestPush = data?.type === 'test_push';
 
     if (recipients === 0 && isTestPush) {
-      const errorMsg = 'فشل الإرسال: لم يتم العثور على أي هاتف مشترك نشط حالياً لحسابك';
-      throw new Error(errorMsg);
+      throw new Error('فشل الإرسال: لم يتم العثور على أي هاتف مشترك نشط حالياً لحسابك');
     }
 
     return {
@@ -188,4 +198,77 @@ export const sendPushNotificationDetailed = async ({
     console.error(finalErrorMsg);
     throw new Error(finalErrorMsg);
   }
+};
+
+const directOneSignalDispatch = async ({
+  title,
+  message,
+  externalIds,
+  validSubIds,
+  sendToAll,
+  targetRole,
+  data,
+  apiKey
+}: {
+  title: string;
+  message: string;
+  externalIds: string[];
+  validSubIds: string[];
+  sendToAll: boolean;
+  targetRole?: string | null;
+  data?: Record<string, any>;
+  apiKey?: string;
+}): Promise<PushSendResult | null> => {
+  const restKey = apiKey || (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') || '';
+  const appId = (import.meta as any).env?.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+  if (!restKey) return null;
+
+  try {
+    const payload: Record<string, any> = {
+      app_id: appId,
+      headings: { ar: title, en: title },
+      contents: { ar: message, en: message },
+      url: data?.url || '/notifications',
+      data: { ...data, url: data?.url || '/notifications' },
+      existing_android_channel_id: 'default_notification_channel',
+      priority: 10,
+      android_priority: 10,
+      android_accent_color: 'FF4F46E5',
+      android_visibility: 1
+    };
+
+    if (sendToAll) {
+      payload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
+    } else if (validSubIds.length > 0) {
+      payload.include_player_ids = validSubIds;
+    } else if (targetRole && targetRole !== 'all') {
+      payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
+    } else if (externalIds.length > 0) {
+      payload.target_channel = 'push';
+      payload.include_aliases = { external_id: externalIds };
+    }
+
+    const authHeader = restKey.startsWith('Key ') || restKey.startsWith('Basic ') ? restKey : `Key ${restKey}`;
+    const res = await fetch('https://api.onesignal.com/notifications', {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const resJson = await res.json().catch(() => ({}));
+    if (res.ok && (resJson.id || (typeof resJson.recipients === 'number' && resJson.recipients > 0))) {
+      return {
+        success: true,
+        recipients: resJson.recipients || 1,
+        message: 'تم إرسال الإشعار بنجاح عبر بوابة OneSignal المباشرة',
+        raw: resJson
+      };
+    }
+  } catch (directErr) {
+    console.warn('Direct OneSignal dispatch warning:', directErr);
+  }
+  return null;
 };

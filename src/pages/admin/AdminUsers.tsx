@@ -18,18 +18,27 @@ import {
   Gem,
   Star,
   Shield,
-  ExternalLink
+  ExternalLink,
+  Bell,
+  Smartphone
 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import SupplierBadge from '../../components/SupplierBadge';
+import { sendNotification } from '../../store/useNotificationStore';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'suppliers' | 'merchants'>('all');
+
+  // Direct user notification modal state
+  const [notifModalUser, setNotifModalUser] = useState<any | null>(null);
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [sendingNotif, setSendingNotif] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -238,6 +247,28 @@ export default function AdminUsers() {
       console.error('Error clearing points:', error);
       toast.error('حدث خطأ أثناء تصفير النقاط.');
       fetchUsers();
+    }
+  };
+
+  const handleSendUserNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifModalUser) return;
+    if (!notifTitle.trim() || !notifMessage.trim()) {
+      toast.error('يرجى ملء عنوان ونصف الإشعار');
+      return;
+    }
+    setSendingNotif(true);
+    try {
+      await sendNotification(notifModalUser.id, notifTitle.trim(), notifMessage.trim(), 'info');
+      toast.success(`تم إرسال الإشعار بنجاح إلى ${notifModalUser.name} (الجرس + هاتف بالخلفية)!`);
+      setNotifModalUser(null);
+      setNotifTitle('');
+      setNotifMessage('');
+    } catch (err: any) {
+      console.error('Error sending user notification:', err);
+      toast.error('حدث خطأ أثناء إرسال الإشعار');
+    } finally {
+      setSendingNotif(false);
     }
   };
 
@@ -597,6 +628,18 @@ export default function AdminUsers() {
                                   {(u.status === 'banned' || u.status === 'pending') ? <CheckCircle size={16} /> : <Ban size={16} />}
                                 </button>
 
+                                <button
+                                  onClick={() => {
+                                    setNotifModalUser(u);
+                                    setNotifTitle('');
+                                    setNotifMessage('');
+                                  }}
+                                  className="p-2 bg-indigo-50 text-[#4f46e5] rounded-xl hover:bg-indigo-100 transition-colors"
+                                  title="إرسال إشعار مخصص (جرس + هاتف بالخلفية)"
+                                >
+                                  <Bell size={16} />
+                                </button>
+
                                 {isSupplier && (
                                   <>
                                     <button 
@@ -664,6 +707,79 @@ export default function AdminUsers() {
           </div>
         </div>
       </div>
+
+      {/* Direct User Notification Modal */}
+      {notifModalUser && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-gray-100 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-[#4f46e5] flex items-center justify-center font-bold">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white text-base">إرسال إشعار مخصص للمستخدم</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{notifModalUser.name} ({notifModalUser.role === 'merchant' ? 'تاجر' : notifModalUser.role === 'supplier' ? 'مورد' : 'مستخدم'})</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setNotifModalUser(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSendUserNotification} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  required
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  placeholder="مثال: تنبيه بخصوص طلبك أو حسابك..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">نص الإشعار</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  placeholder="اكتب الرسالة التي ستصل للمستخدم..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-indigo-600 dark:text-indigo-400 font-medium bg-indigo-50 dark:bg-indigo-950/50 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                <Smartphone size={16} className="shrink-0" />
+                <span>يصل الإشعار لجرس التنبيهات ولشاشة هاتف المستخدم في الخلفية (Push Notification).</span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setNotifModalUser(null)}
+                  className="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={sendingNotif}
+                  className="px-6 py-2.5 bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  {sendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار الآن'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

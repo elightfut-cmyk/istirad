@@ -301,8 +301,10 @@ export default function AdminNotifications() {
           userIds,
           title: pushTitle.trim(),
           message: pushMessage.trim(),
-          data: { type: pushType },
-          sendToAll: pushTarget === 'all'
+          data: { type: pushType, url: '/notifications' },
+          sendToAll: pushTarget === 'all',
+          targetRole: pushTarget !== 'all' ? pushTarget : undefined,
+          skipDbInsert: true
         });
         toast.success(`تم إرسال الإشعار بنجاح إلى ${users.length} مستخدم (جرس + هاتف)!`);
         setPushTitle('');
@@ -516,6 +518,18 @@ export default function AdminNotifications() {
           >
             <Smartphone size={17} className="shrink-0" />
             <span>تنبيه مناقصات (تطبيق)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('push')}
+            className={`py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'push'
+                ? 'bg-[#4f46e5] text-white shadow-md shadow-indigo-500/25'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/60 bg-gray-50/80 dark:bg-gray-750'
+            }`}
+          >
+            <Smartphone size={17} className="shrink-0" />
+            <span>إشعار فوري للجوال (Push)</span>
           </button>
 
           <button

@@ -83,7 +83,22 @@ serve(async (req) => {
 
     const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
       ? cleanKey
-      : `Key ${cleanKey}`;
+      : (cleanKey.startsWith('os_v2_') ? `Basic ${cleanKey}` : `Key ${cleanKey}`);
+
+    // Action: Save configuration bypass RLS safely
+    if (body.action === 'save-key' || body.action === 'save-config') {
+      const keyToSave = (body.apiKey || body.restApiKey || '').trim();
+      if (keyToSave && supabaseUrl && supabaseServiceRoleKey) {
+        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+        await supabaseAdmin.from('platform_policies').upsert({
+          policy_type: 'ONESIGNAL_CONFIG',
+          content: JSON.stringify({ appId: ONESIGNAL_APP_ID, restApiKey: keyToSave, updatedAt: new Date().toISOString() })
+        }, { onConflict: 'policy_type' });
+      }
+      return new Response(JSON.stringify({ ok: true, message: 'Configuration saved' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Action A: Direct Device FCM Registration (Solves 4G blocking in Algeria)
     // The phone gets its FCM token directly from Google (never blocked) and posts to this Edge function.
@@ -326,6 +341,25 @@ serve(async (req) => {
         oneSignalRes = retryRes;
         resJson = retryJson;
       }
+    // Retry with alternate auth scheme on 401
+    if (oneSignalRes.status === 401) {
+      const cleanRaw = cleanKey.replace(/^(Key|Basic)\s+/i, '').trim();
+      const altHeader = authHeaderValue.startsWith('Basic ') ? `Key ${cleanRaw}` : `Basic ${cleanRaw}`;
+      try {
+        const altRes = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Authorization': altHeader,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(oneSignalPayload)
+        });
+        const altJson = await altRes.json().catch(() => ({}));
+        if (altRes.ok) {
+          oneSignalRes = altRes;
+          resJson = altJson;
+        }
+      } catch {}
     }
 
     // Robust Fallbacks from morning version (80d5e3b):

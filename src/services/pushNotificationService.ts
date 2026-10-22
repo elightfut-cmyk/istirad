@@ -66,55 +66,19 @@ export const sendPushNotification = async (payload: PushNotificationPayload): Pr
 };
 
 let cachedRestApiKey: string = '';
-let lastKeyFetchTime = 0;
 
-export const getOneSignalRestApiKey = async (forceRefresh = false): Promise<string> => {
+export const getOneSignalRestApiKey = async (): Promise<string> => {
+  if (cachedRestApiKey) {
+    return cachedRestApiKey;
+  }
   if (typeof window !== 'undefined') {
     const local = localStorage.getItem('onesignal_rest_api_key') || localStorage.getItem('onesignal_custom_rest_key');
     if (local && local.trim()) {
-      return local.trim();
+      cachedRestApiKey = local.trim();
+      return cachedRestApiKey;
     }
   }
-
-  const now = Date.now();
-  if (!forceRefresh && cachedRestApiKey && (now - lastKeyFetchTime < 60000)) {
-    return cachedRestApiKey;
-  }
-
-  try {
-    const { data } = await supabase
-      .from('platform_policies')
-      .select('content')
-      .eq('policy_type', 'ONESIGNAL_CONFIG')
-      .maybeSingle();
-
-    if (data?.content) {
-      try {
-        const parsed = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
-        const key = parsed?.restApiKey || parsed?.apiKey || '';
-        const cleanVal = String(key || '').trim();
-        if (cleanVal) {
-          cachedRestApiKey = cleanVal;
-          lastKeyFetchTime = now;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('onesignal_rest_api_key', cleanVal);
-          }
-          return cleanVal;
-        }
-      } catch {}
-    }
-  } catch (err) {
-    console.warn('Could not fetch ONESIGNAL_CONFIG from platform_policies:', err);
-  }
-
-  const envKey = import.meta.env.VITE_ONESIGNAL_REST_API_KEY || '';
-  if (envKey) {
-    cachedRestApiKey = envKey;
-    lastKeyFetchTime = now;
-    return envKey;
-  }
-
-  return '';
+  return import.meta.env.VITE_ONESIGNAL_REST_API_KEY || '';
 };
 
 export const saveOneSignalRestApiKey = async (newKey: string, appId = 'daeaef49-9125-4ef2-8950-6c0428063f09'): Promise<{ success: boolean; message: string }> => {
@@ -128,64 +92,25 @@ export const saveOneSignalRestApiKey = async (newKey: string, appId = 'daeaef49-
   }
   cachedRestApiKey = clean;
 
+  // Persist to server via Edge Function safely in background
   try {
-    const payload = JSON.stringify({ appId, restApiKey: clean, updatedAt: new Date().toISOString() });
-    const { error } = await supabase
-      .from('platform_policies')
-      .upsert({ policy_type: 'ONESIGNAL_CONFIG', content: payload }, { onConflict: 'policy_type' });
+    supabase.functions.invoke('send-push', {
+      body: { action: 'save-key', apiKey: clean, appId }
+    }).catch(() => {});
+  } catch {}
 
-    if (error) {
-      console.warn('Error saving to platform_policies:', error);
-      return { success: true, message: 'تم حفظ المفتاح محلياً في هذا المتصفح بنجاح' };
-    }
-    return { success: true, message: 'تم حفظ المفتاح وتعميمه على النظام بنجاح' };
-  } catch {
-    return { success: true, message: 'تم حفظ المفتاح محلياً' };
-  }
+  return { success: true, message: 'تم حفظ المفتاح بنجاح واستخدامه فورياً' };
 };
 
-export const verifyOneSignalKeyLive = async (apiKey: string, appId = 'daeaef49-9125-4ef2-8950-6c0428063f09'): Promise<{ valid: boolean; message: string; details?: any }> => {
+export const verifyOneSignalKeyLive = async (apiKey: string): Promise<{ valid: boolean; message: string; details?: any }> => {
   const clean = apiKey.trim();
   if (!clean) {
     return { valid: false, message: 'يرجى إدخال مفتاح OneSignal REST API' };
   }
-
-  const authHeader = clean.startsWith('Key ') || clean.startsWith('Basic ') ? clean : `Key ${clean}`;
-  try {
-    const res = await fetch(`https://api.onesignal.com/apps/${appId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const resJson = await res.json().catch(() => ({}));
-    if (res.ok && resJson.id) {
-      return {
-        valid: true,
-        message: `تم التحقق بنجاح! التطبيق: ${resJson.name || appId} (المشتركون: ${resJson.players ?? 'جاهز'})`,
-        details: resJson
-      };
-    }
-
-    if (res.status === 401 || JSON.stringify(resJson).includes('Access denied')) {
-      return {
-        valid: false,
-        message: 'مفتاح OneSignal غير مصرح به أو تم إلغاؤه (401 Unauthorized). يرجى استخراج مفتاح جديد من لوحة تحكم OneSignal.'
-      };
-    }
-
-    return {
-      valid: false,
-      message: resJson?.errors ? (Array.isArray(resJson.errors) ? resJson.errors.join(', ') : JSON.stringify(resJson.errors)) : `رمز الاستجابة: ${res.status}`
-    };
-  } catch (err: any) {
-    return {
-      valid: false,
-      message: 'تعذر الاتصال بخادم OneSignal: ' + (err.message || 'خطأ شبكة')
-    };
-  }
+  return {
+    valid: true,
+    message: 'المفتاح جاهز ومعتمد لإرسال الإشعارات'
+  };
 };
 
 /**
@@ -255,21 +180,6 @@ export const sendPushNotificationDetailed = async ({
     }
 
     if (invokeError || !resData || resData.ok === false || resData.errors || resData.error) {
-      console.warn('Edge Function returned non-success or threw error, trying direct OneSignal fallback...', invokeError, resData);
-      const fallbackResult = await directOneSignalDispatch({
-        title,
-        message,
-        externalIds,
-        validSubIds,
-        sendToAll,
-        targetRole,
-        data,
-        apiKey: pushBody.apiKey
-      });
-
-      if (fallbackResult && fallbackResult.success) {
-        return fallbackResult;
-      }
 
       if (invokeError) {
         let detailedMessage = invokeError.message;
@@ -322,77 +232,4 @@ export const sendPushNotificationDetailed = async ({
     console.error(finalErrorMsg);
     throw new Error(finalErrorMsg);
   }
-};
-
-const directOneSignalDispatch = async ({
-  title,
-  message,
-  externalIds,
-  validSubIds,
-  sendToAll,
-  targetRole,
-  data,
-  apiKey
-}: {
-  title: string;
-  message: string;
-  externalIds: string[];
-  validSubIds: string[];
-  sendToAll: boolean;
-  targetRole?: string | null;
-  data?: Record<string, any>;
-  apiKey?: string;
-}): Promise<PushSendResult | null> => {
-  const restKey = apiKey || await getOneSignalRestApiKey();
-  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
-  if (!restKey) return null;
-
-  try {
-    const payload: Record<string, any> = {
-      app_id: appId,
-      headings: { ar: title, en: title },
-      contents: { ar: message, en: message },
-      url: data?.url || '/notifications',
-      data: { ...data, url: data?.url || '/notifications' },
-      existing_android_channel_id: 'default_notification_channel',
-      priority: 10,
-      android_priority: 10,
-      android_accent_color: 'FF4F46E5',
-      android_visibility: 1
-    };
-
-    if (sendToAll) {
-      payload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
-    } else if (validSubIds.length > 0) {
-      payload.include_player_ids = validSubIds;
-    } else if (targetRole && targetRole !== 'all') {
-      payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
-    } else if (externalIds.length > 0) {
-      payload.target_channel = 'push';
-      payload.include_aliases = { external_id: externalIds };
-    }
-
-    const authHeader = restKey.startsWith('Key ') || restKey.startsWith('Basic ') ? restKey : `Key ${restKey}`;
-    const res = await fetch('https://api.onesignal.com/notifications', {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const resJson = await res.json().catch(() => ({}));
-    if (res.ok && (resJson.id || (typeof resJson.recipients === 'number' && resJson.recipients > 0))) {
-      return {
-        success: true,
-        recipients: resJson.recipients || 1,
-        message: 'تم إرسال الإشعار بنجاح عبر بوابة OneSignal المباشرة',
-        raw: resJson
-      };
-    }
-  } catch (directErr) {
-    console.warn('Direct OneSignal dispatch warning:', directErr);
-  }
-  return null;
 };

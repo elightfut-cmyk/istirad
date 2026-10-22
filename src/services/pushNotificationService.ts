@@ -65,6 +65,129 @@ export const sendPushNotification = async (payload: PushNotificationPayload): Pr
   return res.success;
 };
 
+let cachedRestApiKey: string = '';
+let lastKeyFetchTime = 0;
+
+export const getOneSignalRestApiKey = async (forceRefresh = false): Promise<string> => {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('onesignal_rest_api_key') || localStorage.getItem('onesignal_custom_rest_key');
+    if (local && local.trim()) {
+      return local.trim();
+    }
+  }
+
+  const now = Date.now();
+  if (!forceRefresh && cachedRestApiKey && (now - lastKeyFetchTime < 60000)) {
+    return cachedRestApiKey;
+  }
+
+  try {
+    const { data } = await supabase
+      .from('platform_policies')
+      .select('content')
+      .eq('policy_type', 'ONESIGNAL_CONFIG')
+      .maybeSingle();
+
+    if (data?.content) {
+      try {
+        const parsed = typeof data.content === 'string' ? JSON.parse(data.content) : data.content;
+        const key = parsed?.restApiKey || parsed?.apiKey || '';
+        const cleanVal = String(key || '').trim();
+        if (cleanVal) {
+          cachedRestApiKey = cleanVal;
+          lastKeyFetchTime = now;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('onesignal_rest_api_key', cleanVal);
+          }
+          return cleanVal;
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.warn('Could not fetch ONESIGNAL_CONFIG from platform_policies:', err);
+  }
+
+  const envKey = import.meta.env.VITE_ONESIGNAL_REST_API_KEY || '';
+  if (envKey) {
+    cachedRestApiKey = envKey;
+    lastKeyFetchTime = now;
+    return envKey;
+  }
+
+  return '';
+};
+
+export const saveOneSignalRestApiKey = async (newKey: string, appId = 'daeaef49-9125-4ef2-8950-6c0428063f09'): Promise<{ success: boolean; message: string }> => {
+  const clean = newKey.trim();
+  if (typeof window !== 'undefined') {
+    if (clean) {
+      localStorage.setItem('onesignal_rest_api_key', clean);
+    } else {
+      localStorage.removeItem('onesignal_rest_api_key');
+    }
+  }
+  cachedRestApiKey = clean;
+
+  try {
+    const payload = JSON.stringify({ appId, restApiKey: clean, updatedAt: new Date().toISOString() });
+    const { error } = await supabase
+      .from('platform_policies')
+      .upsert({ policy_type: 'ONESIGNAL_CONFIG', content: payload }, { onConflict: 'policy_type' });
+
+    if (error) {
+      console.warn('Error saving to platform_policies:', error);
+      return { success: true, message: 'تم حفظ المفتاح محلياً في هذا المتصفح بنجاح' };
+    }
+    return { success: true, message: 'تم حفظ المفتاح وتعميمه على النظام بنجاح' };
+  } catch {
+    return { success: true, message: 'تم حفظ المفتاح محلياً' };
+  }
+};
+
+export const verifyOneSignalKeyLive = async (apiKey: string, appId = 'daeaef49-9125-4ef2-8950-6c0428063f09'): Promise<{ valid: boolean; message: string; details?: any }> => {
+  const clean = apiKey.trim();
+  if (!clean) {
+    return { valid: false, message: 'يرجى إدخال مفتاح OneSignal REST API' };
+  }
+
+  const authHeader = clean.startsWith('Key ') || clean.startsWith('Basic ') ? clean : `Key ${clean}`;
+  try {
+    const res = await fetch(`https://api.onesignal.com/apps/${appId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const resJson = await res.json().catch(() => ({}));
+    if (res.ok && resJson.id) {
+      return {
+        valid: true,
+        message: `تم التحقق بنجاح! التطبيق: ${resJson.name || appId} (المشتركون: ${resJson.players ?? 'جاهز'})`,
+        details: resJson
+      };
+    }
+
+    if (res.status === 401 || JSON.stringify(resJson).includes('Access denied')) {
+      return {
+        valid: false,
+        message: 'مفتاح OneSignal غير مصرح به أو تم إلغاؤه (401 Unauthorized). يرجى استخراج مفتاح جديد من لوحة تحكم OneSignal.'
+      };
+    }
+
+    return {
+      valid: false,
+      message: resJson?.errors ? (Array.isArray(resJson.errors) ? resJson.errors.join(', ') : JSON.stringify(resJson.errors)) : `رمز الاستجابة: ${res.status}`
+    };
+  } catch (err: any) {
+    return {
+      valid: false,
+      message: 'تعذر الاتصال بخادم OneSignal: ' + (err.message || 'خطأ شبكة')
+    };
+  }
+};
+
 /**
  * Detailed push send function that calls Supabase Edge Function 'send-push'.
  * All secret keys are held strictly in server secrets and are never exposed in client code.
@@ -100,6 +223,7 @@ export const sendPushNotificationDetailed = async ({
   }
 
   try {
+    const resolvedApiKey = await getOneSignalRestApiKey();
     const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
     const pushBody: Record<string, any> = {
       userIds: externalIds,
@@ -111,7 +235,7 @@ export const sendPushNotificationDetailed = async ({
       targetRole: targetRole || undefined,
       existing_android_channel_id: 'default_notification_channel',
       skipDbInsert: Boolean(skipDbInsert),
-      apiKey: (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') || undefined
+      apiKey: resolvedApiKey || undefined
     };
     if (android_channel_id && isUuid(android_channel_id)) {
       pushBody.android_channel_id = android_channel_id.trim();
@@ -219,8 +343,8 @@ const directOneSignalDispatch = async ({
   data?: Record<string, any>;
   apiKey?: string;
 }): Promise<PushSendResult | null> => {
-  const restKey = apiKey || (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') || '';
-  const appId = (import.meta as any).env?.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+  const restKey = apiKey || await getOneSignalRestApiKey();
+  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
   if (!restKey) return null;
 
   try {

@@ -50,11 +50,35 @@ serve(async (req) => {
     // 3. Parse incoming payload
     const body = await req.json().catch(() => ({}));
 
-    const cleanKey = (
+    let cleanKey = (
       body.apiKey ||
       body.restApiKey ||
       rawApiKey
     ).trim();
+
+    // If key is not in body or env, fetch dynamic key from platform_policies (zero git leakage)
+    if (!cleanKey && supabaseUrl && (supabaseServiceRoleKey || supabaseAnonKey)) {
+      try {
+        const clientKey = supabaseServiceRoleKey || supabaseAnonKey;
+        const supabaseAdmin = createClient(supabaseUrl, clientKey);
+        const { data: pol } = await supabaseAdmin
+          .from('platform_policies')
+          .select('content')
+          .eq('policy_type', 'ONESIGNAL_CONFIG')
+          .maybeSingle();
+        if (pol?.content) {
+          try {
+            const parsed = JSON.parse(pol.content);
+            cleanKey = (parsed.restApiKey || parsed.apiKey || pol.content).trim();
+          } catch {
+            cleanKey = pol.content.trim();
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch ONESIGNAL_CONFIG from database:', e);
+      }
+    }
+
     const ONESIGNAL_APP_ID = (rawAppId || body.appId || 'daeaef49-9125-4ef2-8950-6c0428063f09').trim();
 
     const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')

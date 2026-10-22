@@ -252,13 +252,22 @@ export default function AdminUsers() {
     e.preventDefault();
     if (!notifModalUser) return;
     if (!notifTitle.trim() || !notifMessage.trim()) {
-      toast.error('يرجى ملء عنوان ونصف الإشعار');
+      toast.error('يرجى ملء عنوان ونص الإشعار');
       return;
     }
     setSendingNotif(true);
     try {
-      await sendNotification(notifModalUser.id, notifTitle.trim(), notifMessage.trim(), 'info');
-      toast.success(`تم إرسال الإشعار بنجاح إلى ${notifModalUser.name} (الجرس + هاتف بالخلفية)!`);
+      const res = await sendNotification(notifModalUser.id, notifTitle.trim(), notifMessage.trim(), 'info');
+      if (res && res.pushSent) {
+        toast.success(`تم إرسال الإشعار بنجاح إلى ${notifModalUser.name} (وصل للجرس وهاتف المستخدم بالخلفية)!`);
+      } else if (res && res.pushError) {
+        toast(`تم حفظ الإشعار في جرس ${notifModalUser.name} بنجاح، لكن تنبيه الهاتف بالخلفية: ${res.pushError}`, {
+          icon: '⚠️',
+          duration: 7000
+        });
+      } else {
+        toast.success(`تم حفظ الإشعار في جرس المستخدم ${notifModalUser.name} بنجاح!`);
+      }
       setNotifModalUser(null);
       setNotifTitle('');
       setNotifMessage('');

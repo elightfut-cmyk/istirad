@@ -368,7 +368,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   }
 }));
 
-export const sendNotification = async (userId: string, title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+export const sendNotification = async (
+  userId: string, 
+  title: string, 
+  message: string, 
+  type: 'info' | 'success' | 'warning' | 'error' = 'info'
+): Promise<{ success: boolean; pushSent: boolean; pushError?: string }> => {
   try {
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
@@ -400,7 +405,6 @@ export const sendNotification = async (userId: string, title: string, message: s
        }
 
        // 2. Fallback to SECURITY DEFINER RPC for each target user
-       // Completely bypasses RLS policies and works reliably for unauthenticated registration events
        if (!insertedDirectly && targetIds.length > 0) {
          for (const id of targetIds) {
            try {
@@ -417,8 +421,10 @@ export const sendNotification = async (userId: string, title: string, message: s
        }
 
        // 3. Dispatch push notification to all target mobile devices via Edge Function
+       let pushSent = false;
+       let pushError: string | undefined;
        try {
-         await sendPushNotification({
+         const pushRes = await sendPushNotification({
            userIds: targetIds.length > 0 ? targetIds : undefined,
            targetRole: roleToFind,
            title,
@@ -426,10 +432,12 @@ export const sendNotification = async (userId: string, title: string, message: s
            data: { type, role: roleToFind },
            skipDbInsert: true
          });
-       } catch (pushErr) {
+         pushSent = Boolean(pushRes);
+       } catch (pushErr: any) {
+         pushError = pushErr?.message || 'فشل إرسال إشعار الهاتف';
          console.error('OneSignal Push Error (role broadcast):', pushErr);
        }
-       return;
+       return { success: true, pushSent, pushError };
     }
 
     const { error: insertErr } = await supabase.from('notifications').insert({
@@ -450,18 +458,31 @@ export const sendNotification = async (userId: string, title: string, message: s
     }
 
     // Dispatch push notification to target user's mobile via OneSignal API
+    let pushSent = false;
+    let pushError: string | undefined;
     try {
-      await sendPushNotification({
+      const pushRes = await sendPushNotification({
         userIds: [String(userId)],
         title,
         message,
         data: { type },
         skipDbInsert: true
       });
-    } catch (pushErr) {
-      console.error('OneSignal Push Error:', pushErr);
+      pushSent = Boolean(pushRes);
+    } catch (pushErr: any) {
+      pushError = pushErr?.message || 'تعذر إيقاظ الهاتف بالخلفية';
+      console.warn('OneSignal Push Dispatch Warning:', pushErr);
+      if (pushErr?.message && (pushErr.message.includes('401') || pushErr.message.includes('غير مصرح') || pushErr.message.includes('Unauthorized') || pushErr.message.includes('Access denied'))) {
+        toast('وصل التنبيه لجرس الموقع، لكن إشعار الهاتف بالخلفية متوقف (مفتاح OneSignal غير صالح أو منتهي). يمكنك تحديثه من إدارة الإشعارات.', {
+          icon: '⚠️',
+          duration: 8000
+        });
+      }
     }
-  } catch (error) {
+
+    return { success: true, pushSent, pushError };
+  } catch (error: any) {
     console.error('Error sending notification:', error);
+    return { success: false, pushSent: false, pushError: error?.message };
   }
 };

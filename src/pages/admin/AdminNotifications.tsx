@@ -31,7 +31,9 @@ import DashboardAlertModal from '../../components/DashboardAlertModal';
 import SocialLinksAdminTab from '../../components/admin/SocialLinksAdminTab';
 import PollAdminTab from '../../components/admin/PollAdminTab';
 import toast from 'react-hot-toast';
-import { sendPushNotification } from '../../services/pushNotificationService';
+import { sendPushNotification, getOneSignalRestApiKey, saveOneSignalRestApiKey, verifyOneSignalKeyLive } from '../../services/pushNotificationService';
+import { sendNotification } from '../../store/useNotificationStore';
+import { Key, ShieldCheck, EyeOff, CheckCircle } from 'lucide-react';
 import { Smartphone } from 'lucide-react';
 import { Vote } from 'lucide-react';
 import NotificationDiagnosticsModal from '../../components/NotificationDiagnosticsModal';
@@ -53,6 +55,14 @@ export default function AdminNotifications() {
   const [pushType, setPushType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
   const [sendingPush, setSendingPush] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+
+  // OneSignal REST API Key States
+  const [oneSignalKeyInput, setOneSignalKeyInput] = useState('');
+  const [showKeyText, setShowKeyText] = useState(false);
+  const [keyStatus, setKeyStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [keyStatusMessage, setKeyStatusMessage] = useState('');
+  const [savingKey, setSavingKey] = useState(false);
+  const [testingMyDevice, setTestingMyDevice] = useState(false);
 
   // Popup Alert States
   const [currentAlert, setCurrentAlert] = useState<DashboardAlert | null>(null);
@@ -83,6 +93,90 @@ export default function AdminNotifications() {
   useEffect(() => {
     fetchAlert();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'push') {
+      loadAndCheckOneSignalKey();
+    }
+  }, [activeTab]);
+
+  const loadAndCheckOneSignalKey = async () => {
+    setKeyStatus('checking');
+    try {
+      const activeKey = await getOneSignalRestApiKey();
+      if (activeKey) {
+        setOneSignalKeyInput(activeKey);
+        const check = await verifyOneSignalKeyLive(activeKey);
+        if (check.valid) {
+          setKeyStatus('valid');
+          setKeyStatusMessage(check.message);
+        } else {
+          setKeyStatus('invalid');
+          setKeyStatusMessage(check.message);
+        }
+      } else {
+        setKeyStatus('idle');
+        setKeyStatusMessage('لم يتم حفظ أي مفتاح OneSignal REST API حتى الآن. يرجى إدخال المفتاح لتفعيل تنبيهات الخلفية.');
+      }
+    } catch (e: any) {
+      setKeyStatus('invalid');
+      setKeyStatusMessage(e?.message || 'خطأ أثناء فحص المفتاح');
+    }
+  };
+
+  const handleSaveOneSignalKey = async () => {
+    const trimmed = oneSignalKeyInput.trim();
+    if (!trimmed) {
+      toast.error('يرجى إدخال مفتاح REST API');
+      return;
+    }
+    setSavingKey(true);
+    try {
+      const check = await verifyOneSignalKeyLive(trimmed);
+      if (!check.valid) {
+        setKeyStatus('invalid');
+        setKeyStatusMessage(check.message);
+        toast.error(`المفتاح غير مصرح به من OneSignal: ${check.message}`);
+        setSavingKey(false);
+        return;
+      }
+      await saveOneSignalRestApiKey(trimmed);
+      setKeyStatus('valid');
+      setKeyStatusMessage(check.message);
+      toast.success('تم التحقق من المفتاح وحفظه بنجاح! إشعارات خلفية الهواتف مفعلة الآن 100%.');
+    } catch (err: any) {
+      toast.error('خطأ أثناء الحفظ: ' + (err.message || ''));
+    } finally {
+      setSavingKey(false);
+    }
+  };
+
+  const handleTestMyDevicePush = async () => {
+    if (!user?.id) {
+      toast.error('لم يتم العثور على حساب المسؤول الحالي');
+      return;
+    }
+    setTestingMyDevice(true);
+    try {
+      const res = await sendNotification(
+        user.id,
+        '🔔 تجربة إشعار الهاتف',
+        `تنبيه تجريبي: تم إيقاظ هاتفك في الخلفية بنجاح في تمام الساعة ${new Date().toLocaleTimeString('ar-DZ')}`,
+        'info'
+      );
+      if (res && res.pushSent) {
+        toast.success('تم إرسال إشعار الهاتف بنجاح! تحقق من هاتفك الآن.');
+      } else if (res && res.pushError) {
+        toast.error(`فشل إرسال إشعار الهاتف: ${res.pushError}`);
+      } else {
+        toast.success('تم إرسال الإشعار بنجاح');
+      }
+    } catch (err: any) {
+      toast.error('خطأ: ' + err.message);
+    } finally {
+      setTestingMyDevice(false);
+    }
+  };
 
   const fetchAlert = async () => {
     setLoadingAlert(true);
@@ -926,11 +1020,139 @@ export default function AdminNotifications() {
       
       {/* TAB 5: BROADCAST PUSH NOTIFICATION */}
       {activeTab === 'push' && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
-            <Smartphone className="text-[#4f46e5]" />
-            إرسال إشعار مباشر لتطبيق الهاتف والجرس (Push Notification)
-          </h2>
+        <div className="space-y-6 max-w-4xl">
+          {/* Card 1: OneSignal Connection & REST API Key Control */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-[#4f46e5] dark:text-indigo-400 rounded-xl">
+                  <Key size={22} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    حالة ربط خدمة إشعارات الهاتف (OneSignal REST API)
+                    {keyStatus === 'valid' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
+                        <CheckCircle size={12} /> متصل وجاهز
+                      </span>
+                    )}
+                    {keyStatus === 'invalid' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 animate-pulse">
+                        <AlertTriangle size={12} /> بحاجة لمفتاح جديد
+                      </span>
+                    )}
+                    {keyStatus === 'checking' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                        <RefreshCw size={12} className="animate-spin" /> جاري الفحص...
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    هذا المفتاح مخصص لإيقاظ هواتف المستخدمين وإرسال التنبيهات بالصوت في الخلفية (Push Notifications).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={loadAndCheckOneSignalKey}
+                  disabled={keyStatus === 'checking'}
+                  className="px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl flex items-center gap-1.5 transition"
+                >
+                  <RefreshCw size={14} className={keyStatus === 'checking' ? 'animate-spin' : ''} />
+                  <span>فحص الاتصال</span>
+                </button>
+                {user?.id && (
+                  <button
+                    type="button"
+                    onClick={handleTestMyDevicePush}
+                    disabled={testingMyDevice || keyStatus === 'checking'}
+                    className="px-3 py-2 text-xs font-bold text-[#4f46e5] bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-xl flex items-center gap-1.5 transition border border-indigo-200 dark:border-indigo-800"
+                  >
+                    <Smartphone size={14} />
+                    <span>{testingMyDevice ? 'جاري الإرسال...' : 'تجربة تنبيه على هاتفي'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Status message */}
+            {keyStatusMessage && (
+              <div className={`mt-4 p-3.5 rounded-xl text-xs font-medium flex items-center gap-2.5 ${
+                keyStatus === 'valid'
+                  ? 'bg-green-50 dark:bg-green-950/40 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800'
+                  : keyStatus === 'invalid'
+                  ? 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                  : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300'
+              }`}>
+                {keyStatus === 'valid' ? <CheckCircle size={16} className="shrink-0 text-green-600" /> : <AlertOctagon size={16} className="shrink-0 text-red-600" />}
+                <span className="leading-relaxed">{keyStatusMessage}</span>
+              </div>
+            )}
+
+            {/* Input field */}
+            <div className="mt-4 space-y-3">
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                مفتاح OneSignal REST API Key:
+              </label>
+              <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                <div className="relative flex-1 min-w-[260px]">
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    value={oneSignalKeyInput}
+                    onChange={(e) => setOneSignalKeyInput(e.target.value)}
+                    placeholder="الصق مفتاح REST API هنا (مثال: os_v2_app_...)"
+                    className="w-full px-4 py-2.5 pl-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm font-mono focus:ring-2 focus:ring-[#4f46e5] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveOneSignalKey}
+                  disabled={savingKey || !oneSignalKeyInput.trim()}
+                  className="px-5 py-2.5 bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50 shrink-0 w-full sm:w-auto"
+                >
+                  <ShieldCheck size={16} />
+                  <span>{savingKey ? 'جاري الفحص والحفظ...' : 'حفظ وتفعيل التنبيهات'}</span>
+                </button>
+              </div>
+
+              {/* Instructions */}
+              <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/30 text-xs text-blue-900 dark:text-blue-200 space-y-1 leading-relaxed">
+                <p className="font-bold flex items-center gap-1.5">
+                  <HelpCircle size={14} />
+                  كيف تستخرج المفتاح الجديد في ثوانٍ؟
+                </p>
+                <ol className="list-decimal list-inside space-y-1 pr-1 text-gray-600 dark:text-gray-300 text-[11px]">
+                  <li>
+                    ادخل إلى{' '}
+                    <a href="https://dashboard.onesignal.com" target="_blank" rel="noreferrer" className="text-blue-600 underline font-bold inline-flex items-center gap-0.5">
+                      لوحة تحكم OneSignal <ExternalLink size={10} />
+                    </a>
+                  </li>
+                  <li>اختر تطبيق (jiibha) ➡️ اضغط <strong>Settings</strong> من القائمة ➡️ ثم <strong>Keys & IDs</strong>.</li>
+                  <li>انسخ قيمة <strong>REST API Key</strong> والصقها في الحقل أعلاه واضغط على <strong>حفظ وتفعيل التنبيهات</strong>.</li>
+                  <li className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                    🛡️ أمان وحماية: يتم حفظ المفتاح مباشرة في قاعدة البيانات ولن يتم رفعه على GitHub لمنع إيقافه تلقائياً.
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Broadcast Form */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+              <Smartphone className="text-[#4f46e5]" />
+              إرسال إشعار جماعي مباشر لهواتف المستخدمين (Push Notification)
+            </h2>
 
           <div className="space-y-6">
             <div>
@@ -1059,6 +1281,7 @@ export default function AdminNotifications() {
               )}
             </div>
           </div>
+        </div>
         </div>
       )}
 

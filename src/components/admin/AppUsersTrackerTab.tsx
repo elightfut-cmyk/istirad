@@ -42,8 +42,8 @@ interface AppSettings {
 export default function AppUsersTrackerTab() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    latest_version_code: 18,
-    latest_version_name: '1.3.5',
+    latest_version_code: 19,
+    latest_version_name: '1.3.6',
     apk_download_url: '/jiibha-app.apk'
   });
   const [loading, setLoading] = useState(true);
@@ -64,8 +64,8 @@ export default function AppUsersTrackerTab() {
   // App Version Management State
   const [savingSettings, setSavingSettings] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
-  const [newVersionCode, setNewVersionCode] = useState(18);
-  const [newVersionName, setNewVersionName] = useState('1.3.5');
+  const [newVersionCode, setNewVersionCode] = useState(19);
+  const [newVersionName, setNewVersionName] = useState('1.3.6');
   const [newApkUrl, setNewApkUrl] = useState('/jiibha-app.apk');
 
   useEffect(() => {

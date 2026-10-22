@@ -27,6 +27,7 @@ import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import SupplierBadge from '../../components/SupplierBadge';
 import { sendNotification } from '../../store/useNotificationStore';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -55,19 +56,18 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version, supplier_tier, total_reviews, average_rating')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       const enrichedUsers = (data || []).map((u: any) => {
-        let tier = u.supplier_tier;
-        if (!tier) {
-          if (u.verification_badge === 'platinum') tier = 'PLATINUM';
-          else if (u.verification_badge === 'gold') tier = 'GOLD';
-          else if (u.verification_badge === 'silver' || u.verification_badge === 'blue') tier = 'SILVER';
-          else tier = 'NEW';
-        }
-        return { ...u, supplier_tier: tier };
+        const info = getSupplierRatingInfo(u.verification_badge);
+        return { 
+          ...u, 
+          supplier_tier: info.tier,
+          average_rating: info.rating,
+          total_reviews: info.totalReviews
+        };
       });
       setUsers(enrichedUsers);
     } catch (error) {
@@ -98,8 +98,7 @@ export default function AdminUsers() {
       const tierMap: Record<string, string> = { platinum: 'PLATINUM', gold: 'GOLD', blue: 'SILVER', none: 'NEW' };
       setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge, supplier_tier: tierMap[nextBadge] || 'NEW' } : u));
       const { error } = await supabase.from('users').update({ 
-        verification_badge: nextBadge,
-        supplier_tier: tierMap[nextBadge] || 'NEW'
+        verification_badge: nextBadge
       }).eq('id', userId);
       if (error) throw error;
       toast.success(`تم تغيير شارة التوثيق إلى: ${nextBadge}`);
@@ -112,10 +111,9 @@ export default function AdminUsers() {
 
   const handleChangeSupplierTier = async (userId: string, newTier: string) => {
     try {
-      const badgeValue = newTier === 'PLATINUM' ? 'platinum' : newTier === 'GOLD' ? 'gold' : newTier === 'SILVER' ? 'silver' : 'none';
+      const badgeValue = newTier === 'PLATINUM' ? 'platinum' : newTier === 'GOLD' ? 'gold' : newTier === 'SILVER' ? 'blue' : 'none';
       setUsers(users.map(u => u.id === userId ? { ...u, supplier_tier: newTier, verification_badge: badgeValue } : u));
       const { error } = await supabase.from('users').update({ 
-        supplier_tier: newTier, 
         verification_badge: badgeValue 
       }).eq('id', userId);
       if (error) throw error;

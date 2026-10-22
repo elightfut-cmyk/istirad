@@ -25,6 +25,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import toast from 'react-hot-toast';
 import { sendNotification } from '../../store/useNotificationStore';
 import SupplierBadge from '../../components/SupplierBadge';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function AdminOrders() {
   const { formatCurrency, shippingPricePerKilo, bidWindowExchangeRate } = useSettingsStore();
@@ -57,7 +58,7 @@ export default function AdminOrders() {
           merchant:users!merchant_id(name, company_name, phone, email, address),
           supplier_bids(
             id, price, status, created_at, is_fully_paid, advance_percentage, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
-            supplier:users!supplier_id(id, name, company_name, phone, verification_badge, supplier_tier, average_rating, total_reviews)
+            supplier:users!supplier_id(id, name, company_name, phone, verification_badge)
           )
         `)
         .order('created_at', { ascending: false });
@@ -499,20 +500,20 @@ export default function AdminOrders() {
                                   {/* Supplier Info & Tier */}
                                   <div className="flex items-start justify-between gap-2 mb-3">
                                     <div className="flex flex-col gap-1">
-                                      <SupplierBadge
-                                        supplierId={bid.supplier_id}
-                                        name={bid.supplier?.name}
-                                        companyName={bid.supplier?.company_name}
-                                        tier={bid.supplier?.supplier_tier || (
-                                          bid.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
-                                          bid.supplier?.verification_badge === 'gold' ? 'GOLD' :
-                                          (bid.supplier?.verification_badge === 'silver' || bid.supplier?.verification_badge === 'blue') ? 'SILVER' :
-                                          'NEW'
-                                        )}
-                                        rating={bid.supplier?.average_rating}
-                                        totalReviews={bid.supplier?.total_reviews}
-                                        size="xs"
-                                      />
+                                      {(() => {
+                                        const sInfo = getSupplierRatingInfo(bid.supplier?.verification_badge);
+                                        return (
+                                          <SupplierBadge
+                                            supplierId={bid.supplier_id}
+                                            name={bid.supplier?.name}
+                                            companyName={bid.supplier?.company_name}
+                                            tier={sInfo.tier}
+                                            rating={sInfo.rating}
+                                            totalReviews={sInfo.totalReviews}
+                                            size="xs"
+                                          />
+                                        );
+                                      })()}
                                       {bid.supplier?.phone && (
                                         <span className="text-[11px] text-gray-400 font-mono">
                                           {bid.supplier.phone}
@@ -637,17 +638,20 @@ export default function AdminOrders() {
                           <td className="p-4 text-xs">
                             <p className="font-bold text-gray-800 dark:text-gray-200">التاجر: {req.merchant?.name || '-'}</p>
                             <div className="mt-1">
-                              {directBid?.supplier ? (
-                                <SupplierBadge
-                                  supplierId={directBid.supplier_id}
-                                  name={directBid.supplier?.name}
-                                  companyName={directBid.supplier?.company_name}
-                                  tier={directBid.supplier?.supplier_tier || 'NEW'}
-                                  rating={directBid.supplier?.average_rating}
-                                  totalReviews={directBid.supplier?.total_reviews}
-                                  size="xs"
-                                />
-                              ) : (
+                              {directBid?.supplier ? (() => {
+                                const dInfo = getSupplierRatingInfo(directBid.supplier?.verification_badge);
+                                return (
+                                  <SupplierBadge
+                                    supplierId={directBid.supplier_id}
+                                    name={directBid.supplier?.name}
+                                    companyName={directBid.supplier?.company_name}
+                                    tier={dInfo.tier}
+                                    rating={dInfo.rating}
+                                    totalReviews={dInfo.totalReviews}
+                                    size="xs"
+                                  />
+                                );
+                              })() : (
                                 <p className="text-gray-400">مورد غير محدد</p>
                               )}
                             </div>

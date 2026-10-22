@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import ProfitableAirProductsSection from '../../components/ProfitableAirProductsSection';
 import { Plane } from 'lucide-react';
 import SupplierBadge from '../../components/SupplierBadge';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 // We fetch categories dynamically if available, otherwise just use 'الكل'
 
@@ -91,7 +92,7 @@ export default function Marketplace() {
         .from('products')
         .select(`
           id, title, description, price, cost_price, advance_percentage, discount_price, images, moq, stock, supplier_id, created_at, status, category,
-          supplier:users!supplier_id(id, name, company_name, verification_badge, supplier_tier, average_rating, total_reviews)
+          supplier:users!supplier_id(id, name, company_name, verification_badge)
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -331,15 +332,20 @@ export default function Marketplace() {
                       </p>
 
                       <div className="mb-4">
-                        <SupplierBadge
-                          supplierId={product.supplier_id}
-                          name={product.supplier?.name}
-                          companyName={product.supplier?.company_name}
-                          tier={product.supplier?.supplier_tier}
-                          rating={product.supplier?.average_rating}
-                          totalReviews={product.supplier?.total_reviews}
-                          size="xs"
-                        />
+                        {(() => {
+                          const sInfo = getSupplierRatingInfo(product.supplier?.verification_badge);
+                          return (
+                            <SupplierBadge
+                              supplierId={product.supplier_id}
+                              name={product.supplier?.name}
+                              companyName={product.supplier?.company_name}
+                              tier={sInfo.tier}
+                              rating={sInfo.rating}
+                              totalReviews={sInfo.totalReviews}
+                              size="xs"
+                            />
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-end justify-between pt-4 border-t border-gray-50 mt-auto">

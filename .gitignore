@@ -10,3 +10,4 @@ build/
 .npm
 coverage/
 *.log
+*.tsbuildinfo

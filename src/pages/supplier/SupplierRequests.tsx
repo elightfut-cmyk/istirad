@@ -16,6 +16,7 @@ import {
 } from '../../services/emailService';
 import TenderAppPromptModal from '../../components/TenderAppPromptModal';
 import SupplierBadge from '../../components/SupplierBadge';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function SupplierRequests() {
   const { user } = useAuthStore();
@@ -76,7 +77,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
           merchant:users!merchant_id(name, company_name, phone, address, email),
-          supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge, supplier_tier, average_rating, total_reviews)),
+          supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge)),
           supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
@@ -490,21 +491,16 @@ export default function SupplierRequests() {
                       <div className="flex flex-wrap items-center gap-2">
                         {req.supplier_bids.map((b: any) => {
                           const isMe = b.supplier_id === user?.id;
-                          const sTier = b.supplier?.supplier_tier || (
-                            b.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
-                            b.supplier?.verification_badge === 'gold' ? 'GOLD' :
-                            (b.supplier?.verification_badge === 'silver' || b.supplier?.verification_badge === 'blue') ? 'SILVER' :
-                            'NEW'
-                          );
+                          const sInfo = getSupplierRatingInfo(b.supplier?.verification_badge);
                           return (
                             <div key={b.id} className="inline-flex items-center gap-1">
                               <SupplierBadge
                                 supplierId={b.supplier_id}
                                 name={b.supplier?.name}
                                 companyName={b.supplier?.company_name}
-                                tier={sTier}
-                                rating={b.supplier?.average_rating}
-                                totalReviews={b.supplier?.total_reviews}
+                                tier={sInfo.tier}
+                                rating={sInfo.rating}
+                                totalReviews={sInfo.totalReviews}
                                 size="xs"
                                 clickable={!isMe}
                               />

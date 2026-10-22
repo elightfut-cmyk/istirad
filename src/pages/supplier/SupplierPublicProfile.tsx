@@ -12,6 +12,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import SupplierBadge, { SupplierTier } from '../../components/SupplierBadge';
 import SupplierReviewsList from '../../components/SupplierReviewsList';
 import { supplierReviewService, SupplierReview } from '../../services/supplierReviewService';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function SupplierPublicProfile() {
   const { supplierId } = useParams<{ supplierId?: string }>();
@@ -47,10 +48,7 @@ export default function SupplierPublicProfile() {
           phone,
           address,
           created_at,
-          verification_badge,
-          supplier_tier,
-          average_rating,
-          total_reviews
+          verification_badge
         `)
         .eq('id', id)
         .single();
@@ -86,9 +84,12 @@ export default function SupplierPublicProfile() {
     }
   };
 
-  const tier = (supplier?.supplier_tier || 'NEW') as SupplierTier;
-  const avgRating = Number(supplier?.average_rating) || 0;
-  const totalReviews = Number(supplier?.total_reviews) || reviews.length;
+  const ratingInfo = getSupplierRatingInfo(supplier?.verification_badge);
+  const tier = ratingInfo.tier as SupplierTier;
+  const avgRating = reviews.length > 0
+    ? Number((reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length).toFixed(1))
+    : ratingInfo.rating;
+  const totalReviews = reviews.length > 0 ? reviews.length : ratingInfo.totalReviews;
 
   // Rating breakdown
   const ratingCounts = [5, 4, 3, 2, 1].map((stars) => {

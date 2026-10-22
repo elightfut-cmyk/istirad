@@ -8,6 +8,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { calculateFinalPrice, calculateSupplierPriceFromFinal } from '../../utils/profitCalculator';
 import NotificationStatusBanner from '../../components/NotificationStatusBanner';
 import SupplierBadge from '../../components/SupplierBadge';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
@@ -87,15 +88,20 @@ export default function SupplierDashboard() {
     >
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xs">
         <div className="flex items-center gap-3">
-          <SupplierBadge
-            supplierId={user?.id}
-            name={user?.name}
-            companyName={user?.company_name}
-            tier={user?.supplier_tier}
-            rating={user?.average_rating}
-            totalReviews={user?.total_reviews}
-            size="md"
-          />
+          {(() => {
+            const myInfo = getSupplierRatingInfo(user?.verification_badge);
+            return (
+              <SupplierBadge
+                supplierId={user?.id}
+                name={user?.name}
+                companyName={user?.company_name}
+                tier={myInfo.tier}
+                rating={myInfo.rating}
+                totalReviews={myInfo.totalReviews}
+                size="md"
+              />
+            );
+          })()}
         </div>
         <Link
           to={`/supplier/profile/${user?.id}`}

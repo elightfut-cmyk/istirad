@@ -21,6 +21,7 @@ export interface User {
   wallet_balance?: number;
   status?: string;
   has_accepted_tos?: boolean;
+  verification_badge?: string;
   total_reviews?: number;
   average_rating?: number;
   supplier_tier?: 'NEW' | 'SILVER' | 'GOLD' | 'PLATINUM' | string;

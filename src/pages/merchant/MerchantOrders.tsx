@@ -22,6 +22,7 @@ import { isNativePlatform } from '../../lib/onesignal';
 import { tenderAppPromptService } from '../../services/tenderAppPromptService';
 import SupplierBadge from '../../components/SupplierBadge';
 import ReviewModal from '../../components/ReviewModal';
+import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 
 export default function MerchantOrders() {
   const { user } = useAuthStore();
@@ -247,7 +248,7 @@ export default function MerchantOrders() {
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china,
           supplier_bids (
             id, request_id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
-            supplier:users(id, name, company_name, phone, verification_badge, supplier_tier, average_rating, total_reviews)
+            supplier:users(id, name, company_name, phone, verification_badge)
           ),
           supplier_interests(id, supplier_id)
         `)
@@ -962,20 +963,15 @@ export default function MerchantOrders() {
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">المورد:</span>
                           {(() => {
-                            const dTier = bid?.supplier?.supplier_tier || (
-                              bid?.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
-                              bid?.supplier?.verification_badge === 'gold' ? 'GOLD' :
-                              (bid?.supplier?.verification_badge === 'silver' || bid?.supplier?.verification_badge === 'blue') ? 'SILVER' :
-                              'NEW'
-                            );
+                            const dInfo = getSupplierRatingInfo(bid?.supplier?.verification_badge);
                             return (
                               <SupplierBadge
                                 supplierId={bid?.supplier_id}
                                 name={bid?.supplier?.name}
                                 companyName={bid?.supplier?.company_name}
-                                tier={dTier}
-                                rating={bid?.supplier?.average_rating}
-                                totalReviews={bid?.supplier?.total_reviews}
+                                tier={dInfo.tier}
+                                rating={dInfo.rating}
+                                totalReviews={dInfo.totalReviews}
                                 size="xs"
                               />
                             );
@@ -1277,20 +1273,15 @@ export default function MerchantOrders() {
                           )}
                           <div className="mb-3">
                             {(() => {
-                              const sTier = bid.supplier?.supplier_tier || (
-                                bid.supplier?.verification_badge === 'platinum' ? 'PLATINUM' :
-                                bid.supplier?.verification_badge === 'gold' ? 'GOLD' :
-                                (bid.supplier?.verification_badge === 'silver' || bid.supplier?.verification_badge === 'blue') ? 'SILVER' :
-                                'NEW'
-                              );
+                              const sInfo = getSupplierRatingInfo(bid.supplier?.verification_badge);
                               return (
                                 <SupplierBadge
                                   supplierId={bid.supplier_id}
                                   name={bid.supplier?.name}
                                   companyName={bid.supplier?.company_name}
-                                  tier={sTier}
-                                  rating={bid.supplier?.average_rating}
-                                  totalReviews={bid.supplier?.total_reviews}
+                                  tier={sInfo.tier}
+                                  rating={sInfo.rating}
+                                  totalReviews={sInfo.totalReviews}
                                   size="sm"
                                 />
                               );

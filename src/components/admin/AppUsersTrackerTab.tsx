@@ -9,7 +9,14 @@ import {
   Search, 
   Send,
   Phone,
-  Mail
+  Mail,
+  Bell,
+  Users,
+  Target,
+  MessageCircle,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,8 +41,8 @@ interface AppSettings {
 export default function AppUsersTrackerTab() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [appSettings, setAppSettings] = useState<AppSettings>({
-    latest_version_code: 15,
-    latest_version_name: '1.3.2',
+    latest_version_code: 16,
+    latest_version_name: '1.3.3',
     apk_download_url: '/jiibha-app.apk'
   });
   const [loading, setLoading] = useState(true);
@@ -43,6 +50,22 @@ export default function AppUsersTrackerTab() {
   const [filterPlatform, setFilterPlatform] = useState<'all' | 'app_only' | 'outdated' | 'up_to_date' | 'web_only'>('all');
   const [filterRole, setFilterRole] = useState<'all' | 'merchant' | 'supplier'>('all');
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
+  
+  // Custom Notification State
+  const [customNotifTitle, setCustomNotifTitle] = useState('');
+  const [customNotifMessage, setCustomNotifMessage] = useState('');
+  const [customNotifTarget, setCustomNotifTarget] = useState<'all' | 'web_only' | 'app_only' | 'specific'>('all');
+  const [customNotifRole, setCustomNotifRole] = useState<'all' | 'merchant' | 'supplier'>('all');
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [sendingCustom, setSendingCustom] = useState(false);
+  const [showCustomNotifPanel, setShowCustomNotifPanel] = useState(false);
+
+  // App Version Management State
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [newVersionCode, setNewVersionCode] = useState(16);
+  const [newVersionName, setNewVersionName] = useState('1.3.3');
+  const [newApkUrl, setNewApkUrl] = useState('/jiibha-app.apk');
 
   useEffect(() => {
     fetchData();
@@ -59,11 +82,20 @@ export default function AppUsersTrackerTab() {
         .maybeSingle();
 
       if (settingsData) {
+        const vCode = Math.max(Number(settingsData.latest_version_code) || 0, 16);
+        const vName = (Number(settingsData.latest_version_code) || 0) >= 16 
+          ? (settingsData.latest_version_name || '1.3.3') 
+          : '1.3.3';
+        const vUrl = settingsData.apk_download_url || '/jiibha-app.apk';
+
         setAppSettings({
-          latest_version_code: Number(settingsData.latest_version_code) || 15,
-          latest_version_name: settingsData.latest_version_name || '1.3.2',
-          apk_download_url: settingsData.apk_download_url || '/jiibha-app.apk'
+          latest_version_code: vCode,
+          latest_version_name: vName,
+          apk_download_url: vUrl
         });
+        setNewVersionCode(vCode);
+        setNewVersionName(vName);
+        setNewApkUrl(vUrl);
       }
 
       // 2. Fetch Users with current_app_version
@@ -185,6 +217,109 @@ export default function AppUsersTrackerTab() {
     }
   };
 
+  const handleSendCustomNotification = async () => {
+    if (!customNotifTitle.trim() || !customNotifMessage.trim()) {
+      toast.error('يجب ملء عنوان الإشعار ونصه');
+      return;
+    }
+
+    setSendingCustom(true);
+    try {
+      let targetUsers: UserRecord[] = [];
+
+      if (customNotifTarget === 'specific') {
+        if (!selectedUserId) {
+          toast.error('يجب اختيار مستخدم محدد');
+          return;
+        }
+        targetUsers = users.filter(u => u.id === selectedUserId);
+      } else if (customNotifTarget === 'web_only') {
+        targetUsers = users.filter(u => {
+          const ver = u.current_app_version || 0;
+          const isApp = ver > 1;
+          const roleMatch = customNotifRole === 'all' || u.role === customNotifRole;
+          return !isApp && roleMatch && u.role !== 'admin';
+        });
+      } else if (customNotifTarget === 'app_only') {
+        targetUsers = users.filter(u => {
+          const ver = u.current_app_version || 0;
+          const isApp = ver > 1;
+          const roleMatch = customNotifRole === 'all' || u.role === customNotifRole;
+          return isApp && roleMatch && u.role !== 'admin';
+        });
+      } else {
+        // All users
+        targetUsers = users.filter(u => {
+          const roleMatch = customNotifRole === 'all' || u.role === customNotifRole;
+          return roleMatch && u.role !== 'admin';
+        });
+      }
+
+      if (targetUsers.length === 0) {
+        toast('لا يوجد مستخدمون مطابقون للمعايير المحددة', { icon: 'ℹ️' });
+        return;
+      }
+
+      if (!window.confirm(`هل تريد إرسال الإشعار إلى ${targetUsers.length} مستخدم؟`)) return;
+
+      const notifications = targetUsers.map(u => ({
+        user_id: u.id,
+        title: customNotifTitle,
+        message: customNotifMessage,
+        type: 'info',
+      }));
+
+      const { error } = await supabase.from('notifications').insert(notifications);
+      if (error) throw error;
+
+      toast.success(`✅ تم إرسال الإشعار إلى ${targetUsers.length} مستخدم بنجاح!`);
+      setCustomNotifTitle('');
+      setCustomNotifMessage('');
+      setShowCustomNotifPanel(false);
+    } catch (err: any) {
+      console.error('Error sending custom notification:', err);
+      toast.error('حدث خطأ أثناء إرسال الإشعار: ' + (err.message || ''));
+    } finally {
+      setSendingCustom(false);
+    }
+  };
+
+  const handleUpdateAppSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const codeNum = parseInt(String(newVersionCode), 10);
+      if (isNaN(codeNum) || codeNum <= 0) {
+        toast.error('يرجى إدخال رقم كود إصدار صالح');
+        return;
+      }
+
+      const { error } = await supabase.from('app_settings').upsert({
+        id: 1,
+        latest_version_code: codeNum,
+        latest_version_name: newVersionName.trim(),
+        apk_download_url: newApkUrl.trim(),
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+
+      if (error) throw error;
+
+      setAppSettings({
+        latest_version_code: codeNum,
+        latest_version_name: newVersionName.trim(),
+        apk_download_url: newApkUrl.trim()
+      });
+
+      toast.success('تم تحديث إعدادات إصدار التطبيق بنجاح!');
+      setShowVersionModal(false);
+    } catch (err: any) {
+      console.error('Error updating app settings:', err);
+      toast.error('فشل حفظ الإعدادات: ' + (err.message || ''));
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'merchant':
@@ -287,8 +422,17 @@ export default function AppUsersTrackerTab() {
         <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400">محدثون لآخر إصدار</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
-              <CheckCircle2 size={17} />
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowVersionModal(true)}
+                title="تعديل وتحديد أحدث إصدار"
+                className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-emerald-600 rounded-lg transition"
+              >
+                <Edit3 size={15} />
+              </button>
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 size={17} />
+              </div>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
@@ -299,9 +443,17 @@ export default function AppUsersTrackerTab() {
               (v{appSettings.latest_version_name})
             </span>
           </div>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2">
-            كود الإصدار: {appSettings.latest_version_code} (الأحدث)
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              كود الإصدار: {appSettings.latest_version_code} (الأحدث)
+            </p>
+            <button
+              onClick={() => setShowVersionModal(true)}
+              className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+            >
+              تعديل
+            </button>
+          </div>
         </div>
 
         {/* Card 3: Outdated */}
@@ -346,6 +498,134 @@ export default function AppUsersTrackerTab() {
           </p>
         </div>
 
+      </div>
+
+      {/* ── Custom Notification Dispatcher ── */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setShowCustomNotifPanel(!showCustomNotifPanel)}
+          className="w-full flex items-center justify-between p-4 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4f46e5] to-purple-600 text-white flex items-center justify-center shadow">
+              <Bell size={17} />
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-gray-900 dark:text-white text-sm">إرسال إشعار مخصص</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">استهداف مستخدمي الويب، التطبيق، أو مستخدم محدد</p>
+            </div>
+          </div>
+          <span className={`text-xs font-bold px-2 py-1 rounded-lg transition ${showCustomNotifPanel ? 'bg-indigo-100 text-[#4f46e5]' : 'bg-gray-100 text-gray-500'}`}>
+            {showCustomNotifPanel ? '▲ إخفاء' : '▼ فتح'}
+          </span>
+        </button>
+
+        {showCustomNotifPanel && (
+          <div className="p-4 border-t border-indigo-50 dark:border-indigo-900/30 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Target Segment */}
+              <div>
+                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
+                  <Target size={13} className="inline ml-1" />
+                  الفئة المستهدفة
+                </label>
+                <select
+                  value={customNotifTarget}
+                  onChange={(e) => setCustomNotifTarget(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:border-[#4f46e5]"
+                >
+                  <option value="all">🌍 الجميع</option>
+                  <option value="web_only">🌐 مستخدمو الويب فقط</option>
+                  <option value="app_only">📱 مستخدمو التطبيق فقط</option>
+                  <option value="specific">👤 مستخدم محدد</option>
+                </select>
+              </div>
+
+              {/* Role Filter */}
+              {customNotifTarget !== 'specific' && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
+                    <Users size={13} className="inline ml-1" />
+                    الدور
+                  </label>
+                  <select
+                    value={customNotifRole}
+                    onChange={(e) => setCustomNotifRole(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:border-[#4f46e5]"
+                  >
+                    <option value="all">جميع الأدوار</option>
+                    <option value="merchant">التجار فقط</option>
+                    <option value="supplier">الموردون فقط</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Specific User Picker */}
+              {customNotifTarget === 'specific' && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
+                    اختر المستخدم
+                  </label>
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:border-[#4f46e5]"
+                  >
+                    <option value="">-- اختر مستخدماً --</option>
+                    {users.filter(u => u.role !== 'admin').map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.role === 'merchant' ? 'تاجر' : 'مورد'}) — {u.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Notification Content */}
+            <div>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
+                <MessageCircle size={13} className="inline ml-1" />
+                عنوان الإشعار
+              </label>
+              <input
+                type="text"
+                value={customNotifTitle}
+                onChange={(e) => setCustomNotifTitle(e.target.value)}
+                placeholder="مثال: تحديث مهم للتطبيق 📱"
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:border-[#4f46e5]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">نص الإشعار</label>
+              <textarea
+                value={customNotifMessage}
+                onChange={(e) => setCustomNotifMessage(e.target.value)}
+                placeholder="اكتب محتوى الإشعار هنا..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm resize-none focus:outline-none focus:border-[#4f46e5]"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-gray-400">
+                سيصل الإشعار لجرس المستخدم فوراً داخل لوحة التحكم
+              </p>
+              <button
+                onClick={handleSendCustomNotification}
+                disabled={sendingCustom || !customNotifTitle.trim() || !customNotifMessage.trim()}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#4f46e5] to-purple-600 hover:opacity-90 text-white rounded-xl text-sm font-bold shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingCustom ? (
+                  <RefreshCw size={16} className="animate-spin" />
+                ) : (
+                  <Send size={16} />
+                )}
+                إرسال الإشعار
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -556,6 +836,94 @@ export default function AppUsersTrackerTab() {
           </span>
         </div>
       </div>
+
+      {/* App Version Management Modal */}
+      {showVersionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-gray-700 relative">
+            <button
+              onClick={() => setShowVersionModal(false)}
+              className="absolute top-5 left-5 p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center font-bold">
+                <Smartphone size={20} />
+              </div>
+              <div>
+                <h3 className="font-black text-gray-900 dark:text-gray-100 text-lg">تحديد أحدث إصدار للتطبيق</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">أي مستخدم لديه كود إصدار أقل ستظهر له نافذة التحديث</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateAppSettings} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  كود الإصدار (versionCode رقم صحيح متزايد) *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newVersionCode}
+                  onChange={(e) => setNewVersionCode(parseInt(e.target.value) || 0)}
+                  required
+                  placeholder="مثال: 16"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+                <span className="text-[11px] text-gray-400">الإصدار الحالي في الكود: 16</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  اسم الإصدار الظاهر للمستخدمين (versionName) *
+                </label>
+                <input
+                  type="text"
+                  value={newVersionName}
+                  onChange={(e) => setNewVersionName(e.target.value)}
+                  required
+                  placeholder="مثال: 1.3.3"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  رابط تحميل ملف الـ APK المباشر *
+                </label>
+                <input
+                  type="text"
+                  value={newApkUrl}
+                  onChange={(e) => setNewApkUrl(e.target.value)}
+                  required
+                  placeholder="/jiibha-app.apk"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowVersionModal(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-750 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition disabled:opacity-50"
+                >
+                  <Save size={16} />
+                  <span>{savingSettings ? 'جاري الحفظ...' : 'حفظ ونشر التحديث'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

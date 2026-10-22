@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet, Ticket, Award , Package  , Video } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Search, Ban, CheckCircle, Trash2, ShieldAlert, MessageSquare, BadgeCheck, Wallet, Ticket, Award, Video } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -25,7 +25,7 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version, supplier_tier')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -58,9 +58,23 @@ export default function AdminUsers() {
       setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge } : u));
       const { error } = await supabase.from('users').update({ verification_badge: nextBadge }).eq('id', userId);
       if (error) throw error;
+      toast.success(`تم تغيير شارة التوثيق إلى: ${nextBadge}`);
     } catch (error) {
       console.error('Error updating badge:', error);
       toast.error('حدث خطأ أثناء تغيير التوثيق');
+      fetchUsers();
+    }
+  };
+
+  const handleChangeSupplierTier = async (userId: string, newTier: string) => {
+    try {
+      setUsers(users.map(u => u.id === userId ? { ...u, supplier_tier: newTier } : u));
+      const { error } = await supabase.from('users').update({ supplier_tier: newTier }).eq('id', userId);
+      if (error) throw error;
+      toast.success(`تم تغيير تصنيف المورد إلى: ${newTier}`);
+    } catch (error) {
+      console.error('Error updating supplier tier:', error);
+      toast.error('حدث خطأ أثناء تغيير التصنيف');
       fetchUsers();
     }
   };
@@ -189,8 +203,7 @@ export default function AdminUsers() {
       sidebarLinks={[
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
-        { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
-        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
+        { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
@@ -228,7 +241,7 @@ export default function AdminUsers() {
               <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
                 <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المستخدم</th>
                 <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الشركة</th>
-                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الدور</th>
+                <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الدور / التصنيف</th>
                 <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الرصيد / النقاط</th>
                 <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
                 <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">الإجراءات</th>
@@ -272,12 +285,27 @@ export default function AdminUsers() {
                     </td>
                     <td className="p-4 text-gray-600 dark:text-gray-300">{u.company_name || '-'}</td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        u.role === 'merchant' ? 'bg-blue-50 text-blue-700' : 
-                        u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
-                      }`}>
-                        {u.role === 'merchant' ? 'تاجر' : u.role === 'supplier' ? 'مورد' : 'أدمن'}
-                      </span>
+                      <div className="flex flex-col gap-1.5">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          u.role === 'merchant' ? 'bg-blue-50 text-blue-700' : 
+                          u.role === 'supplier' ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
+                        }`}>
+                          {u.role === 'merchant' ? 'تاجر' : u.role === 'supplier' ? 'مورد' : 'أدمن'}
+                        </span>
+                        {u.role === 'supplier' && (
+                          <select
+                            value={u.supplier_tier || 'NEW'}
+                            onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
+                            className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <option value="NEW">🆕 جديد</option>
+                            <option value="SILVER">🥈 فضي</option>
+                            <option value="GOLD">🥇 ذهبي</option>
+                            <option value="PLATINUM">💎 بلاتيني</option>
+                          </select>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       {u.role === 'merchant' ? (

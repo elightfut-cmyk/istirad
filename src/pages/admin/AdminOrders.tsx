@@ -1,516 +1,1119 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Search, Package, CheckCircle2, Clock, ChevronDown, ChevronUp, User, CreditCard, MessageSquare, Ticket  , Video } from 'lucide-react';
+
+import { LayoutDashboard, ShoppingBag, Users, Search, Package, CheckCircle2, Clock, ChevronDown, ChevronUp, User, CreditCard, MessageSquare, Ticket, Video, Trash2 } from 'lucide-react';
+
 import DashboardLayout from '../../layouts/DashboardLayout';
+
 import { supabase } from '../../lib/supabase';
+
 import { useSettingsStore } from '../../store/useSettingsStore';
+
 import toast from 'react-hot-toast';
+
 import { sendNotification } from '../../store/useNotificationStore';
 
+
+
 export default function AdminOrders() {
+
   const { formatCurrency } = useSettingsStore();
+
   const [requests, setRequests] = useState<any[]>([]);
+
   const [manualPayments, setManualPayments] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState('');
+
   const [activeTab, setActiveTab] = useState<'custom' | 'direct' | 'manual'>('custom');
+
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
 
+
+
   useEffect(() => {
+
     fetchRequests();
+
     fetchManualPayments();
 
+
+
     const handleRefresh = () => {
+
       fetchRequests();
+
       fetchManualPayments();
+
     };
+
     window.addEventListener('refresh_data', handleRefresh);
+
     return () => window.removeEventListener('refresh_data', handleRefresh);
+
   }, []);
 
+
+
   const fetchRequests = async () => {
+
     setLoading(true);
+
     try {
+
       const { data, error } = await supabase
+
         .from('custom_requests')
+
         .select(`
+
           id, title, quantity, status, created_at, request_type,
+
           merchant:users!merchant_id(name, company_name),
+
           supplier_bids(
+
             id, price, status, created_at, is_fully_paid, advance_percentage, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
+
             supplier:users!supplier_id(name, company_name)
+
           )
+
         `)
+
         .order('created_at', { ascending: false });
 
+
+
       if (error) throw error;
+
       setRequests(data || []);
+
     } catch (error) {
+
       console.error('Error fetching admin orders:', error);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
+
+
 
   const fetchManualPayments = async () => {
+
     try {
+
       const { data, error } = await supabase
+
         .from('manual_payments')
+
         .select(`
+
           id, amount, payment_method, transaction_id, status, created_at, merchant_id,
+
           merchant:users!merchant_id(name, company_name)
+
         `)
+
         .order('created_at', { ascending: false });
 
+
+
       if (error) throw error;
+
       setManualPayments(data || []);
+
     } catch (error) {
+
       console.error('Error fetching manual payments:', error);
+
     }
+
   };
+
+
 
   const handleApprovePayment = async (payment: any) => {
+
     if (!window.confirm(`هل أنت متأكد من الموافقة على الدفعة بقيمة ${formatCurrency(payment.amount)} وإضافتها لرصيد التاجر؟`)) return;
 
+
+
     try {
+
       const { data, error } = await supabase.rpc('admin_approve_manual_payment', { p_payment_id: payment.id });
+
       if (error) throw error;
+
       if (data && !data.success) throw new Error(data.message);
 
+
+
       sendNotification(payment.merchant_id, 'الموافقة على شحن الرصيد', `تمت الموافقة على طلب الشحن اليدوي بقيمة ${formatCurrency(payment.amount)} وإضافتها لمحفظتك بنجاح.`, 'success');
+
       toast.success('تمت الموافقة على الدفعة بنجاح وإضافة الرصيد للتاجر.');
+
       fetchManualPayments();
+
     } catch (error: any) {
+
       console.error(error);
+
       toast.success('حدث خطأ أثناء معالجة الموافقة: ' + (error.message || ''));
+
     }
+
   };
+
+
 
   const handleRejectPayment = async (paymentId: string) => {
+
     if (!window.confirm('هل أنت متأكد من رفض هذه الدفعة؟')) return;
+
     try {
+
       const { error } = await supabase
+
         .from('manual_payments')
+
         .update({ status: 'rejected' })
+
         .eq('id', paymentId);
+
       if (error) throw error;
+
       fetchManualPayments();
+
     } catch (error) {
+
       console.error(error);
+
       const payment = manualPayments.find(p => p.id === paymentId);
+
       if (payment) {
+
         sendNotification(payment.merchant_id, 'رفض طلب شحن الرصيد', `تم رفض طلب الشحن اليدوي بقيمة ${formatCurrency(payment.amount)}.`, 'error');
+
       }
+
       toast.error('تم رفض الدفعة.');
+
     }
+
   };
+
+
+
+  const handleDeleteRequest = async (requestId: string) => {
+
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً مع جميع عروضه؟')) return;
+
+    try {
+
+      const { error } = await supabase.from('custom_requests').delete().eq('id', requestId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.filter(r => r.id !== requestId));
+
+      setExpandedRequestId(null);
+
+      toast.success('تم حذف الطلب بنجاح.');
+
+    } catch (err: any) {
+
+      toast.error('حدث خطأ أثناء الحذف: ' + (err.message || ''));
+
+    }
+
+  };
+
+
+
+  const handleDeleteBid = async (bidId: string, requestId: string) => {
+
+    if (!window.confirm('هل أنت متأكد من حذف عرض المورد هذا؟')) return;
+
+    try {
+
+      const { error } = await supabase.from('supplier_bids').delete().eq('id', bidId);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.map(r => 
+
+        r.id === requestId 
+
+          ? { ...r, supplier_bids: r.supplier_bids.filter((b: any) => b.id !== bidId) } 
+
+          : r
+
+      ));
+
+      toast.success('تم حذف عرض المورد بنجاح.');
+
+    } catch (err: any) {
+
+      toast.error('حدث خطأ أثناء حذف العرض: ' + (err.message || ''));
+
+    }
+
+  };
+
+
 
   const filteredRequests = requests.filter(req => {
+
     const titleMatch = (req.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+
     const merchantMatch = (req.merchant?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+
                           (req.merchant?.company_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+
     
+
     const matchesSearch = titleMatch || merchantMatch;
+
     // Map db 'request_type' (default is 'custom' if null, otherwise 'direct' or 'custom')
+
     const reqType = req.request_type || 'custom';
+
     const matchesTab = reqType === activeTab;
+
     
+
     return matchesSearch && matchesTab;
+
   });
 
+
+
   const toggleExpand = (id: string) => {
+
     setExpandedRequestId(expandedRequestId === id ? null : id);
+
   };
 
+
+
   return (
+
     <DashboardLayout
+
       title="مراقبة الطلبات والمناقصات"
+
       sidebarLinks={[
+
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
+
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
-        { label: 'الطلبات العامة', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
-        { label: 'سوق الطلبات', href: '/admin/requests', icon: <Package size={20} /> },
+
+        { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
+
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
+
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
+
         { label: 'فيديو الرئيسية', href: '/admin/main-video', icon: <Video size={20} /> },
+
       ]}
+
     >
+
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+
         
+
         {/* Tabs */}
+
         <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+
           <button
+
             onClick={() => { setActiveTab('custom'); setExpandedRequestId(null); }}
+
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
+
               activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
+
             }`}
+
           >
+
             المناقصات (طلبات عامة)
+
           </button>
+
           <button
+
             onClick={() => { setActiveTab('direct'); setExpandedRequestId(null); }}
+
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
+
               activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
+
             }`}
+
           >
+
             الطلبات المباشرة
+
           </button>
+
           <button
+
             onClick={() => { setActiveTab('manual'); setExpandedRequestId(null); }}
+
             className={`px-6 py-4 text-sm font-bold border-b-4 transition-colors ${
+
               activeTab === 'manual' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
+
             }`}
+
           >
+
             طلبات الشحن اليدوي
+
           </button>
+
         </div>
+
+
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+
           <div className="relative w-full md:w-96">
+
             <input
+
               type="text"
+
               placeholder="ابحث باسم الطلب أو التاجر..."
+
               value={searchQuery}
+
               onChange={(e) => setSearchQuery(e.target.value)}
+
               className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4f46e5] text-sm"
+
             />
+
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+
           </div>
+
         </div>
+
+
 
         <div className="overflow-x-auto">
+
           {activeTab === 'custom' ? (
+
             <table className="w-full text-right border-collapse whitespace-nowrap">
+
               <thead>
+
                 <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200 w-12"></th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">عنوان المناقصة</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الكمية المطلوبة</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+
+                  <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">حذف</th>
+
                 </tr>
+
               </thead>
+
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+
                 {loading ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
+
                   </tr>
+
                 ) : filteredRequests.length === 0 ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على أي مناقصات.</td>
+
                   </tr>
+
                 ) : (
+
                   filteredRequests.map((req) => (
+
                     <React.Fragment key={req.id}>
+
                       <tr 
+
                         onClick={() => toggleExpand(req.id)}
+
                         className={`hover:bg-gray-50 dark:bg-gray-900 transition-colors cursor-pointer ${expandedRequestId === req.id ? 'bg-green-50/30' : ''}`}
+
                       >
+
                         <td className="p-4 text-center">
+
                           {expandedRequestId === req.id ? (
+
                             <ChevronUp size={20} className="text-gray-400 mx-auto" />
+
                           ) : (
+
                             <ChevronDown size={20} className="text-gray-400 mx-auto" />
+
                           )}
+
                         </td>
+
                         <td className="p-4">
+
                           <div className="flex items-center gap-3">
+
                             <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+
                               <Package size={20} className="text-gray-500 dark:text-gray-400" />
+
                             </div>
+
                             <div>
+
                               <p className="font-bold text-gray-800 dark:text-gray-100">{req.title}</p>
+
                               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+
                                 {new Date(req.created_at).toLocaleDateString('ar-SA')}
+
                               </p>
+
                             </div>
+
                           </div>
+
                         </td>
+
                         <td className="p-4">
+
                           <p className="font-bold text-gray-700 dark:text-gray-200">{req.merchant?.name || 'غير معروف'}</p>
+
                           <p className="text-xs text-gray-500 dark:text-gray-400">{req.merchant?.company_name || '-'}</p>
+
                         </td>
+
                         <td className="p-4">
+
                           <span className="font-bold text-gray-700 dark:text-gray-200">{req.quantity} وحدة</span>
+
                         </td>
+
                         <td className="p-4">
+
                           <div className="flex flex-col gap-2 items-start">
+
                             {req.status === 'open' ? (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">
+
                                 <Clock size={14} />
+
                                 قيد الانتظار
+
                               </span>
+
                             ) : (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">
+
                                 <CheckCircle2 size={14} />
+
                                 مغلق
+
                               </span>
+
                             )}
+
                             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+
                               {req.supplier_bids?.length || 0} عروض
+
                             </span>
+
                           </div>
+
                         </td>
+
+                        <td className="p-4 text-center">
+
+                          <button
+
+                            onClick={(e) => { e.stopPropagation(); handleDeleteRequest(req.id); }}
+
+                            className="p-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl transition"
+
+                            title="حذف الطلب"
+
+                          >
+
+                            <Trash2 size={16} />
+
+                          </button>
+
+                        </td>
+
                       </tr>
+
                       
+
                       {/* Expanded Bids Section */}
+
                       {expandedRequestId === req.id && (
+
                         <tr className="bg-gray-50 dark:bg-gray-900/50">
+
                           <td colSpan={5} className="p-0">
+
                             <div className="p-6 border-t border-gray-100 dark:border-gray-700">
+
                               <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+
                                 تفاصيل العروض المقدمة
+
                               </h4>
+
                               
+
                               {(!req.supplier_bids || req.supplier_bids.length === 0) ? (
+
                                 <p className="text-sm text-gray-500 dark:text-gray-400 italic">لا توجد عروض مقدمة حتى الآن.</p>
+
                               ) : (
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
                                   {req.supplier_bids.map((bid: any) => (
+
                                     <div 
+
                                       key={bid.id} 
+
                                       className={`p-4 rounded-xl border ${
+
                                         bid.status === 'accepted' 
+
                                           ? 'border-green-200 bg-green-50' 
+
                                           : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+
                                       }`}
+
                                     >
+
                                       <div className="flex justify-between items-start mb-3">
+
                                         <div className="flex items-center gap-2">
+
                                           <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+
                                             <User size={16} className="text-gray-600 dark:text-gray-300" />
+
                                           </div>
+
                                           <div>
+
                                             <p className="font-bold text-sm text-gray-800 dark:text-gray-100">{bid.supplier?.name}</p>
+
                                             <p className="text-xs text-gray-500 dark:text-gray-400">{bid.supplier?.company_name}</p>
+
                                           </div>
+
                                         </div>
+
                                         {bid.status === 'accepted' && (
+
                                           <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-bold flex items-center gap-1">
+
                                             <CheckCircle2 size={12} />
+
                                             مقبول
+
                                           </span>
+
                                         )}
+
                                       </div>
+
+
 
                                       {/* Negotiation Info for Admin */}
+
                                       {(bid.negotiated_by === 'merchant' || bid.negotiated_by === 'supplier_accepted' || bid.negotiated_by === 'supplier_rejected') && (
+
                                         <div className="mt-4 bg-orange-50 p-3 rounded-xl border border-orange-100 text-sm">
+
                                           <p className="font-bold text-orange-800 mb-2">تفاوض التاجر والمورد:</p>
+
                                           <p className="text-gray-700 dark:text-gray-200">اقترح التاجر: <strong className="text-orange-900">{formatCurrency(bid.negotiated_price)}</strong> (بنسبة عربون: <strong>{bid.advance_percentage}%</strong>)</p>
+
                                           {bid.customer_reply && (
+
                                             <p className="text-gray-600 dark:text-gray-300 mt-2 bg-white dark:bg-gray-800 p-2 rounded border border-orange-100 italic">"{bid.customer_reply}"</p>
+
                                           )}
+
                                           {bid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
+
                                           {bid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
+
                                           {bid.negotiated_by === 'merchant' && <p className="text-orange-600 font-bold mt-2">موقف المورد: في انتظار الرد</p>}
+
                                         </div>
+
                                       )}
 
+
+
                                       <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50 flex justify-between items-end">
+
                                         <div>
+
                                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">السعر المعروض (بنسبة عربون {bid.advance_percentage}%):</p>
+
                                           <p className={`font-bold ${bid.status === 'accepted' ? 'text-green-700' : 'text-gray-800 dark:text-gray-100'}`}>
+
                                             {formatCurrency(bid.price)}
+
                                           </p>
+
                                         </div>
+
                                         {bid.status === 'accepted' && (
+
                                           <div className="flex flex-col gap-1 items-end">
+
                                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-100 text-green-700">
+
                                               العربون: مدفوع
+
                                             </span>
+
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${bid.is_fully_paid ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+
                                               المتبقي: {bid.is_fully_paid ? 'مدفوع' : 'بانتظار الدفع'}
+
                                             </span>
+
                                           </div>
+
                                         )}
+
                                       </div>
+
+                                      <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700/40 flex justify-end">
+                                        <button
+                                          onClick={() => handleDeleteBid(bid.id, req.id)}
+                                          className="flex items-center gap-1.5 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-xs font-bold"
+                                          title="حذف هذا العرض"
+                                        >
+                                          <Trash2 size={13} />
+                                          <span>حذف العرض</span>
+                                        </button>
+                                      </div>
+
                                     </div>
+
                                   ))}
+
                                 </div>
+
                               )}
+
                             </div>
+
                           </td>
+
                         </tr>
+
                       )}
+
                     </React.Fragment>
+
                   ))
+
                 )}
+
               </tbody>
+
             </table>
+
           ) : activeTab === 'direct' ? (
+
             <table className="w-full text-right border-collapse whitespace-nowrap">
+
               <thead>
+
                 <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">عنوان الطلب</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر / المورد</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الإجمالي</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">حالة العربون</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">حالة المبلغ المتبقي</th>
+
                 </tr>
+
               </thead>
+
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+
                 {loading ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
+
                   </tr>
+
                 ) : filteredRequests.length === 0 ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لم يتم العثور على طلبات مباشرة.</td>
+
                   </tr>
+
                 ) : (
+
                   filteredRequests.map((req) => {
+
                     const directBid = req.supplier_bids && req.supplier_bids.length > 0 ? req.supplier_bids[0] : null;
+
                     const advancePaid = directBid?.status === 'accepted';
+
                     const remainingPaid = directBid?.is_fully_paid === true;
 
+
+
                     return (
+
                       <React.Fragment key={req.id}>
+
                         <tr className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
+
                           <td className="p-4">
+
                             <div className="flex items-center gap-3">
+
                               <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+
                                 <Package size={20} className="text-gray-500 dark:text-gray-400" />
+
                               </div>
+
                               <div>
+
                                 <p className="font-bold text-gray-800 dark:text-gray-100">{req.title}</p>
+
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">الكمية: {req.quantity}</p>
+
                               </div>
+
                             </div>
+
                           </td>
+
                           <td className="p-4">
+
                             <div className="flex flex-col gap-1">
+
                               <span className="text-sm font-bold text-gray-800 dark:text-gray-100">التاجر: {req.merchant?.name || '-'}</span>
+
                               <span className="text-sm text-gray-600 dark:text-gray-300">المورد: {directBid?.supplier?.name || '-'}</span>
+
                             </div>
+
                           </td>
+
                           <td className="p-4">
+
                             <span className="font-bold text-gray-700 dark:text-gray-200">{directBid ? formatCurrency(directBid.price) : '-'}</span>
+
                           </td>
+
                           <td className="p-4">
+
                             {advancePaid ? (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
+
                                 <CheckCircle2 size={14} />
+
                                 مدفوع
+
                               </span>
+
                             ) : (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-orange-50 text-orange-700">
+
                                 <Clock size={14} />
+
                                 بانتظار الدفع
+
                               </span>
+
                             )}
+
                           </td>
+
                           <td className="p-4">
+
                             {remainingPaid ? (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
+
                                 <CheckCircle2 size={14} />
+
                                 مدفوع
+
                               </span>
+
                             ) : (
+
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+
                                 <CreditCard size={14} />
+
                                 غير مدفوع
+
                               </span>
+
                             )}
+
                           </td>
+
                         </tr>
+
                         {directBid && (directBid.negotiated_by === 'merchant' || directBid.negotiated_by === 'supplier_accepted' || directBid.negotiated_by === 'supplier_rejected') && (
+
                           <tr className="bg-orange-50/50">
+
                             <td colSpan={5} className="p-4 border-t border-orange-100">
+
                               <div className="flex gap-4 items-start">
+
                                 <div className="bg-orange-100 p-2 rounded-lg text-orange-600 shrink-0">
+
                                   <MessageSquare size={16} />
+
                                 </div>
+
                                 <div className="text-sm w-full">
+
                                   <p className="font-bold text-orange-800 mb-1">تفاوض التاجر والمورد:</p>
+
                                   <p className="text-gray-700 dark:text-gray-200">اقترح التاجر سعراً جديداً: <strong>{formatCurrency(directBid.negotiated_price)}</strong> (بنسبة عربون: <strong>{directBid.advance_percentage}%</strong>)</p>
+
                                   {directBid.customer_reply && (
+
                                     <p className="text-gray-600 dark:text-gray-300 mt-2 bg-white dark:bg-gray-800 p-2 rounded border border-orange-100 italic">"{directBid.customer_reply}"</p>
+
                                   )}
+
                                   {directBid.negotiated_by === 'supplier_accepted' && <p className="text-green-600 font-bold mt-2">موقف المورد: قبل السعر</p>}
+
                                   {directBid.negotiated_by === 'supplier_rejected' && <p className="text-red-600 font-bold mt-2">موقف المورد: رفض السعر</p>}
+
                                   {directBid.negotiated_by === 'merchant' && <p className="text-orange-600 font-bold mt-2">موقف المورد: في انتظار الرد</p>}
+
                                 </div>
+
                               </div>
+
                             </td>
+
                           </tr>
+
                         )}
+
                       </React.Fragment>
+
                     );
+
                   })
+
                 )}
+
               </tbody>
+
             </table>
+
           ) : (
+
             <table className="w-full text-right border-collapse whitespace-nowrap">
+
               <thead>
+
                 <tr className="bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-700">
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">التاجر</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">المبلغ / العملة</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">رقم المعاملة (TxID)</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200">الحالة</th>
+
                   <th className="p-4 font-bold text-gray-700 dark:text-gray-200 text-center">إجراءات</th>
+
                 </tr>
+
               </thead>
+
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+
                 {loading ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">جاري التحميل...</td>
+
                   </tr>
+
                 ) : manualPayments.length === 0 ? (
+
                   <tr>
+
                     <td colSpan={5} className="p-8 text-center text-gray-500 dark:text-gray-400">لا توجد طلبات شحن يدوية.</td>
+
                   </tr>
+
                 ) : (
+
                   manualPayments.map((pmt) => (
+
                     <tr key={pmt.id} className="hover:bg-gray-50 dark:bg-gray-900 transition-colors">
+
                       <td className="p-4">
+
                         <p className="font-bold text-gray-800 dark:text-gray-100">{pmt.merchant?.name}</p>
+
                         <p className="text-xs text-gray-500 dark:text-gray-400">{pmt.merchant?.company_name}</p>
+
                       </td>
+
                       <td className="p-4">
+
                         <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(pmt.amount)}</span>
+
                         <p className="text-xs text-gray-500 dark:text-gray-400">{pmt.payment_method}</p>
+
                       </td>
+
                       <td className="p-4 font-mono text-sm text-gray-600 dark:text-gray-300">
+
                         {pmt.transaction_id}
+
                       </td>
+
                       <td className="p-4">
+
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+
                           pmt.status === 'approved' ? 'bg-green-50 text-green-700' :
+
                           pmt.status === 'rejected' ? 'bg-red-50 text-red-700' :
+
                           'bg-orange-50 text-orange-700'
+
                         }`}>
+
                           {pmt.status === 'approved' ? 'مقبول' : pmt.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+
                         </span>
+
                       </td>
+
                       <td className="p-4 text-center">
+
                         {pmt.status === 'pending' ? (
+
                           <div className="flex gap-2 justify-center">
+
                             <button
+
                               onClick={() => handleApprovePayment(pmt)}
+
                               className="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 transition"
+
                             >
+
                               موافقة
+
                             </button>
+
                             <button
+
                               onClick={() => handleRejectPayment(pmt.id)}
+
                               className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold hover:bg-red-200 transition"
+
                             >
+
                               رفض
+
                             </button>
+
                           </div>
+
                         ) : (
+
                           <span className="text-gray-400 text-sm">-</span>
+
                         )}
+
                       </td>
+
                     </tr>
+
                   ))
+
                 )}
+
               </tbody>
+
             </table>
+
           )}
+
         </div>
+
       </div>
+
     </DashboardLayout>
+
   );
+
 }
+

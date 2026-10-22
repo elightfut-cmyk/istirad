@@ -13,14 +13,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminOrders from './pages/admin/AdminOrders';
-import AdminRequests from './pages/admin/AdminRequests';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminPages from './pages/admin/AdminPages';
 import AdminFaqs from './pages/admin/AdminFaqs';
 import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminSuggestions from './pages/admin/AdminSuggestions';
-import AdminSmartImport from './pages/admin/AdminSmartImport';
-import AdminAlibabaSearch from './pages/admin/AdminAlibabaSearch';
 import AdminMainVideo from './pages/admin/AdminMainVideo';
 import MerchantDashboard from './pages/merchant/MerchantDashboard';
 import Marketplace from './pages/merchant/Marketplace';
@@ -228,13 +225,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          <Route path="/admin/requests" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminRequests />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/admin/orders" element={
+          <Route path="/admin/orders" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminOrders />
             </ProtectedRoute>
@@ -267,18 +258,6 @@ function App() {
           <Route path="/admin/suggestions" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminSuggestions />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/admin/smart-import" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminSmartImport />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/admin/alibaba-search" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminAlibabaSearch />
             </ProtectedRoute>
           } />
 

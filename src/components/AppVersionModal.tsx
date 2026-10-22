@@ -98,7 +98,10 @@ export default function AppVersionModal({ previewMode, previewData, onClosePrevi
           return;
         }
 
-        const latestCode = Number(settings.latest_version_code) || 1;
+        const latestCode = Math.max(Number(settings.latest_version_code) || 0, 16);
+        const latestName = (Number(settings.latest_version_code) || 0) >= 16 
+          ? (settings.latest_version_name || '1.3.3') 
+          : '1.3.3';
 
         // 5. Compare versions: Show modal if local versionCode is smaller than server
         if (currentVersionCode < latestCode || isTestingParam) {
@@ -106,8 +109,8 @@ export default function AppVersionModal({ previewMode, previewData, onClosePrevi
             currentVersionCode,
             currentVersionName,
             latestVersionCode: latestCode,
-            latestVersionName: settings.latest_version_name || String(latestCode),
-            apkUrl: settings.apk_download_url || '',
+            latestVersionName: latestName,
+            apkUrl: settings.apk_download_url || '/jiibha-app.apk',
           });
           setIsOpen(true);
         }

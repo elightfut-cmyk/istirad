@@ -23,7 +23,9 @@ import {
   ExternalLink,
   ShieldAlert,
   Share2,
-  Video } from 'lucide-react';
+  Video,
+  User,
+  Search } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { dashboardAlertService, DashboardAlert } from '../../services/dashboardAlertService';
@@ -51,7 +53,12 @@ export default function AdminNotifications() {
   // Push Broadcast States
   const [pushTitle, setPushTitle] = useState('');
   const [pushMessage, setPushMessage] = useState('');
-  const [pushTarget, setPushTarget] = useState<'all' | 'merchant' | 'supplier'>('all');
+  const [pushTarget, setPushTarget] = useState<'all' | 'merchant' | 'supplier' | 'specific'>('all');
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserObj, setSelectedUserObj] = useState<any | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [allUsersList, setAllUsersList] = useState<any[]>([]);
+  const [loadingUsersList, setLoadingUsersList] = useState(false);
   const [pushType, setPushType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
   const [sendingPush, setSendingPush] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -97,8 +104,27 @@ export default function AdminNotifications() {
       getOneSignalRestApiKey().then(k => {
         if (k) setOneSignalKeyInput(k);
       });
+      fetchUsersForPush();
     }
   }, [activeTab]);
+
+  const fetchUsersForPush = async () => {
+    if (allUsersList.length > 0) return;
+    setLoadingUsersList(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, email, phone, role, company_name')
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setAllUsersList(data);
+      }
+    } catch (e) {
+      console.warn('Error fetching users for push notification:', e);
+    } finally {
+      setLoadingUsersList(false);
+    }
+  };
 
   const handleSaveOneSignalKey = async () => {
     const trimmed = oneSignalKeyInput.trim();
@@ -126,16 +152,16 @@ export default function AdminNotifications() {
     try {
       const res = await sendNotification(
         user.id,
-        '🔔 تجربة إشعار الهاتف',
-        `تنبيه تجريبي: تم إيقاظ هاتفك في الخلفية بنجاح في تمام الساعة ${new Date().toLocaleTimeString('ar-DZ')}`,
+        '🔔 تجربة إشعار الحساب',
+        `تنبيه تجريبي: تم وصول التنبيه لحسابك بنجاح في تمام الساعة ${new Date().toLocaleTimeString('ar-DZ')}`,
         'info'
       );
       if (res && res.pushSent) {
         toast.success('تم إرسال إشعار الهاتف بنجاح! تحقق من هاتفك الآن.');
       } else if (res && res.pushError) {
-        toast.error(`فشل إرسال إشعار الهاتف: ${res.pushError}`);
+        // Warning already shown by store if push background service needs key
       } else {
-        toast.success('تم إرسال الإشعار بنجاح');
+        toast.success('تم وصول التنبيه بنجاح');
       }
     } catch (err: any) {
       toast.error('خطأ: ' + err.message);
@@ -341,6 +367,38 @@ export default function AdminNotifications() {
       toast.error('يرجى كتابة العنوان ونص الإشعار');
       return;
     }
+
+    if (pushTarget === 'specific') {
+      if (!selectedUserId) {
+        toast.error('يرجى اختيار المستخدم المستهدف أولاً');
+        return;
+      }
+      setSendingPush(true);
+      try {
+        const res = await sendNotification(
+          selectedUserId,
+          pushTitle.trim(),
+          pushMessage.trim(),
+          pushType
+        );
+        if (res && res.pushSent) {
+          toast.success(`تم إرسال الإشعار الفوري للمستخدم بنجاح (جرس + هاتف)!`);
+        } else if (res && res.pushError) {
+          toast.success('تم وصول الإشعار لجرس حساب المستخدم بنجاح.');
+        } else {
+          toast.success('تم إرسال الإشعار بنجاح!');
+        }
+        setPushTitle('');
+        setPushMessage('');
+      } catch (err: any) {
+        console.error('Error sending user push:', err);
+        toast.error('حدث خطأ أثناء إرسال الإشعار: ' + (err.message || ''));
+      } finally {
+        setSendingPush(false);
+      }
+      return;
+    }
+
     setSendingPush(true);
     try {
       let query = supabase.from('users').select('id');
@@ -1067,7 +1125,7 @@ export default function AdminNotifications() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">الفئة المستهدفة</label>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input 
                     type="radio" 
@@ -1101,7 +1159,164 @@ export default function AdminNotifications() {
                   />
                   <span>الموردون فقط</span>
                 </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="pushTarget" 
+                    value="specific" 
+                    checked={pushTarget === 'specific'} 
+                    onChange={() => setPushTarget('specific')}
+                    className="w-4 h-4 text-[#4f46e5] focus:ring-[#4f46e5]"
+                  />
+                  <span className="font-bold text-[#4f46e5] flex items-center gap-1">
+                    <User size={15} />
+                    مستخدم محدد
+                  </span>
+                </label>
               </div>
+
+              {/* Specific User Picker */}
+              {pushTarget === 'specific' && (
+                <div className="mt-4 bg-gray-50 dark:bg-gray-900/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                      تحديد المستخدم المراد إرسال الإشعار له:
+                    </label>
+                    {selectedUserObj && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedUserId('');
+                          setSelectedUserObj(null);
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-medium transition"
+                      >
+                        <X size={14} />
+                        إلغاء واختيار مستخدم آخر
+                      </button>
+                    )}
+                  </div>
+
+                  {selectedUserObj ? (
+                    <div className="flex items-center justify-between p-3.5 bg-white dark:bg-gray-800 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-[#4f46e5] dark:text-indigo-300 flex items-center justify-center font-bold text-base shrink-0">
+                          {selectedUserObj.name ? selectedUserObj.name.charAt(0) : 'U'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                              {selectedUserObj.name || 'بدون اسم'}
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                              selectedUserObj.role === 'supplier'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                : selectedUserObj.role === 'admin'
+                                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                                : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                            }`}>
+                              {selectedUserObj.role === 'supplier' ? 'مورد' : selectedUserObj.role === 'admin' ? 'مسؤول' : 'تاجر'}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-3 mt-1">
+                            {selectedUserObj.phone && <span>📱 {selectedUserObj.phone}</span>}
+                            {selectedUserObj.company_name && <span>🏢 {selectedUserObj.company_name}</span>}
+                            {selectedUserObj.email && <span>✉️ {selectedUserObj.email}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-green-600 dark:text-green-400 flex items-center gap-1 text-xs font-bold bg-green-50 dark:bg-green-900/30 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 shrink-0">
+                        <Check size={14} />
+                        <span>تم الاختيار</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={userSearchQuery}
+                          onChange={(e) => setUserSearchQuery(e.target.value)}
+                          placeholder="ابحث بالاسم، رقم الهاتف، اسم الشركة أو البريد..."
+                          className="w-full px-4 py-2.5 pl-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-[#4f46e5] focus:outline-none"
+                        />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      </div>
+
+                      {/* Filtered Users List */}
+                      <div className="max-h-56 overflow-y-auto space-y-1.5 p-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-inner">
+                        {loadingUsersList ? (
+                          <div className="py-6 text-center text-xs text-gray-400">جاري تحميل قائمة المستخدمين...</div>
+                        ) : (
+                          (() => {
+                            const q = userSearchQuery.trim().toLowerCase();
+                            const filtered = allUsersList.filter(u => {
+                              if (!q) return true;
+                              return (
+                                (u.name && u.name.toLowerCase().includes(q)) ||
+                                (u.phone && u.phone.includes(q)) ||
+                                (u.company_name && u.company_name.toLowerCase().includes(q)) ||
+                                (u.email && u.email.toLowerCase().includes(q))
+                              );
+                            }).slice(0, 25);
+
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="py-6 text-center text-xs text-gray-400">
+                                  لم يتم العثور على أي مستخدم يطابق البحث
+                                </div>
+                              );
+                            }
+
+                            return filtered.map(u => (
+                              <div
+                                key={u.id}
+                                onClick={() => {
+                                  setSelectedUserId(u.id);
+                                  setSelectedUserObj(u);
+                                }}
+                                className="flex items-center justify-between p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg cursor-pointer transition border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {u.name ? u.name.charAt(0) : 'U'}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold text-xs text-gray-900 dark:text-gray-100">
+                                        {u.name || 'بدون اسم'}
+                                      </span>
+                                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
+                                        u.role === 'supplier'
+                                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                          : u.role === 'admin'
+                                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+                                          : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                      }`}>
+                                        {u.role === 'supplier' ? 'مورد' : u.role === 'admin' ? 'مسؤول' : 'تاجر'}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-2">
+                                      {u.phone && <span>📱 {u.phone}</span>}
+                                      {u.company_name && <span>🏢 {u.company_name}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="text-xs px-2.5 py-1 bg-[#4f46e5] text-white rounded-md font-medium hover:bg-indigo-700 transition shrink-0"
+                                >
+                                  اختيار
+                                </button>
+                              </div>
+                            ));
+                          })()
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>

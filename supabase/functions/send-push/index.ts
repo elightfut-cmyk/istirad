@@ -81,9 +81,9 @@ serve(async (req) => {
 
     const ONESIGNAL_APP_ID = (rawAppId || body.appId || 'daeaef49-9125-4ef2-8950-6c0428063f09').trim();
 
-    const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
+    const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ') || cleanKey.startsWith('Bearer ')
       ? cleanKey
-      : (cleanKey.startsWith('os_v2_') ? `Basic ${cleanKey}` : `Key ${cleanKey}`);
+      : `Key ${cleanKey}`;
 
     // Action: Save configuration bypass RLS safely
     if (body.action === 'save-key' || body.action === 'save-config') {
@@ -341,10 +341,12 @@ serve(async (req) => {
         oneSignalRes = retryRes;
         resJson = retryJson;
       }
+    }
+
     // Retry with alternate auth scheme on 401
-    if (oneSignalRes.status === 401) {
-      const cleanRaw = cleanKey.replace(/^(Key|Basic)\s+/i, '').trim();
-      const altHeader = authHeaderValue.startsWith('Basic ') ? `Key ${cleanRaw}` : `Basic ${cleanRaw}`;
+    if (oneSignalRes.status === 401 && cleanKey) {
+      const cleanRaw = cleanKey.replace(/^(Key|Basic|Bearer)\s+/i, '').trim();
+      const altHeader = authHeaderValue.startsWith('Key ') ? `Basic ${cleanRaw}` : `Key ${cleanRaw}`;
       try {
         const altRes = await fetch('https://api.onesignal.com/notifications', {
           method: 'POST',

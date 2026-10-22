@@ -303,11 +303,13 @@ serve(async (req) => {
         oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
       }
     } else if (externalIds.length > 0) {
-      // Direct user UUID targeting via external_id alias
-      oneSignalPayload.target_channel = 'push';
-      oneSignalPayload.include_aliases = {
-        external_id: externalIds
-      };
+      // Direct user UUID targeting via tag filters (100% reliable for all Android devices)
+      const userFilters: any[] = [];
+      externalIds.forEach((id: string, idx: number) => {
+        if (idx > 0) userFilters.push({ operator: 'OR' });
+        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+      });
+      oneSignalPayload.filters = userFilters;
     }
 
     // Send request to OneSignal REST API

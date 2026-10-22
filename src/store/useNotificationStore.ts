@@ -372,7 +372,8 @@ export const sendNotification = async (
   userId: string, 
   title: string, 
   message: string, 
-  type: 'info' | 'success' | 'warning' | 'error' = 'info'
+  type: 'info' | 'success' | 'warning' | 'error' = 'info',
+  role?: string
 ): Promise<{ success: boolean; pushSent: boolean; pushError?: string }> => {
   try {
     if (userId === 'all_suppliers' || userId === 'all_admins') {
@@ -463,6 +464,7 @@ export const sendNotification = async (
     try {
       const pushRes = await sendPushNotification({
         userIds: [String(userId)],
+        targetRole: role || undefined,
         title,
         message,
         data: { type },

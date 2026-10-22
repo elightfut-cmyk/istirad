@@ -150,6 +150,18 @@ export const sendPushNotificationDetailed = async ({
   try {
     const resolvedApiKey = await getOneSignalRestApiKey();
     const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
+
+    // Automatically resolve role for recipient if single user and targetRole not passed
+    let effectiveRole = targetRole;
+    if (!effectiveRole && externalIds.length > 0) {
+      try {
+        const { data: userRow } = await supabase.from('users').select('role').eq('id', externalIds[0]).maybeSingle();
+        if (userRow?.role) {
+          effectiveRole = userRow.role;
+        }
+      } catch {}
+    }
+
     const pushBody: Record<string, any> = {
       userIds: externalIds,
       subscriptionIds: validSubIds,
@@ -157,7 +169,7 @@ export const sendPushNotificationDetailed = async ({
       message,
       data,
       sendToAll,
-      targetRole: targetRole || undefined,
+      targetRole: effectiveRole || undefined,
       existing_android_channel_id: 'default_notification_channel',
       skipDbInsert: Boolean(skipDbInsert),
       apiKey: resolvedApiKey || undefined
@@ -179,8 +191,69 @@ export const sendPushNotificationDetailed = async ({
       invokeError = invErr;
     }
 
-    if (invokeError || !resData || resData.ok === false || resData.errors || resData.error) {
+    const hasEdgeError = invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || (resData.error);
+    const hasInvalidAliases = resData && resData.errors && resData.errors.invalid_aliases;
 
+    // Direct OneSignal Tag Filter Fallback if Edge returned error or invalid_aliases
+    if ((hasEdgeError || hasInvalidAliases) && resolvedApiKey) {
+      try {
+        const directFilters: any[] = [];
+        if (!sendToAll && validSubIds.length === 0) {
+          if (externalIds.length > 0) {
+            externalIds.forEach((id, idx) => {
+              if (idx > 0) directFilters.push({ operator: 'OR' });
+              directFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+            });
+          } else if (effectiveRole && effectiveRole !== 'all') {
+            directFilters.push({ field: 'tag', key: 'role', relation: '=', value: String(effectiveRole) });
+          }
+        }
+
+        const directPayload: Record<string, any> = {
+          app_id: 'daeaef49-9125-4ef2-8950-6c0428063f09',
+          headings: { ar: title, en: title },
+          contents: { ar: message, en: message },
+          priority: 10,
+          android_priority: 10,
+          ttl: 259200,
+          existing_android_channel_id: 'default_notification_channel',
+          android_accent_color: 'FF4F46E5',
+          android_visibility: 1,
+          data: { ...data, url: data?.url || '/notifications' }
+        };
+
+        if (sendToAll) {
+          directPayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
+        } else if (validSubIds.length > 0) {
+          directPayload.include_player_ids = validSubIds;
+        } else if (directFilters.length > 0) {
+          directPayload.filters = directFilters;
+        }
+
+        const directRes = await fetch('https://onesignal.com/api/v1/notifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Key ${resolvedApiKey}`
+          },
+          body: JSON.stringify(directPayload)
+        });
+        const directJson = await directRes.json();
+        if (directJson && directJson.id) {
+          console.log('✅ Direct OneSignal Tag Filter dispatch succeeded:', directJson.id);
+          return {
+            success: true,
+            recipients: directJson.recipients || 1,
+            message: 'تم إرسال الإشعار بنجاح إلى الهاتف في الخلفية',
+            raw: directJson
+          };
+        }
+      } catch (directErr) {
+        console.warn('Direct OneSignal dispatch fallback notice:', directErr);
+      }
+    }
+
+    if (invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || resData.error) {
       if (invokeError) {
         let detailedMessage = invokeError.message;
         try {
@@ -201,7 +274,7 @@ export const sendPushNotificationDetailed = async ({
         throw new Error('فشل الإرسال: لم يتم استلام استجابة من خدمة الإشعارات');
       }
 
-      if (resData.ok === false || resData.errors || resData.error) {
+      if (resData.ok === false || (resData.errors && !resData.id) || resData.error) {
         const errorReason = extractOneSignalError(resData, resData.status || resData.onesignal_status);
         throw new Error(`فشل الإرسال: ${errorReason}`);
       }

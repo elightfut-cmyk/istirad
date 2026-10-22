@@ -375,11 +375,13 @@ export default function AdminNotifications() {
       }
       setSendingPush(true);
       try {
+        const targetUserObj = allUsersList.find(u => u.id === selectedUserId);
         const res = await sendNotification(
           selectedUserId,
           pushTitle.trim(),
           pushMessage.trim(),
-          pushType
+          pushType,
+          targetUserObj?.role
         );
         if (res && res.pushSent) {
           toast.success(`تم إرسال الإشعار الفوري للمستخدم بنجاح (جرس + هاتف)!`);

@@ -15,6 +15,7 @@ import DeveloperDiagnosticsModal from '../components/DeveloperDiagnosticsModal';
 import OEMBatteryModal from '../components/OEMBatteryModal';
 import { pollService } from '../services/pollService';
 import { isNativePlatform, openXiaomiAutostart } from '../lib/onesignal';
+import OneSignal from '@onesignal/capacitor-plugin';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -406,6 +407,35 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
                 )}
               </div>
               <div className="absolute top-0 right-0 w-64 h-64 bg-white dark:bg-gray-800 opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+            </div>
+          )}
+
+          {/* الزر الإجباري المؤقت لتفعيل/إصلاح الإشعارات */}
+          {user?.id && (
+            <div className="flex justify-center w-full mb-4">
+              <button 
+                onClick={async () => {
+                  try {
+                    // استخدام user_id الفعلي للمستخدم الذي سجل دخوله
+                    if (isNativePlatform()) {
+                      await OneSignal.login(user.id); 
+                      await OneSignal.Notifications.requestPermission(true);
+                      await OneSignal.User.pushSubscription.optIn();
+                    } else {
+                      window.OneSignalDeferred = window.OneSignalDeferred || [];
+                      window.OneSignalDeferred.push(async function (OS: any) {
+                        if (OS?.login) await OS.login(user.id);
+                      });
+                    }
+                    alert("✅ تم إرسال أمر الربط بنجاح إلى OneSignal!");
+                  } catch (err: any) {
+                    alert("❌ حدث خطأ في الربط: " + (err?.message || err));
+                  }
+                }}
+                className="w-full max-w-xl p-4 m-4 bg-red-500 hover:bg-red-600 active:scale-98 text-white font-bold rounded shadow-lg text-center cursor-pointer transition-all border-2 border-white flex items-center justify-center gap-2 text-base md:text-lg animate-pulse"
+              >
+                🔔 تفعيل/إصلاح الإشعارات إجبارياً
+              </button>
             </div>
           )}
           {children}

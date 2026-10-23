@@ -39,6 +39,7 @@ import AppSplashScreen from './components/AppSplashScreen';
 import AppVersionModal from './components/AppVersionModal';
 import { useNotificationStore } from './store/useNotificationStore';
 import { usePushNotifications } from './hooks/usePushNotifications';
+import OneSignal from '@onesignal/capacitor-plugin';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import SupplierPublicProfile from './pages/supplier/SupplierPublicProfile';
@@ -48,6 +49,35 @@ function App() {
   usePushNotifications();
 
   const { user, checkSession } = useAuthStore();
+
+  // 2. Lifecycle Fix: Unconditional Automatic OneSignal Login on user.id
+  useEffect(() => {
+    const currentUser = user;
+    if (currentUser?.id) {
+      console.log("🔄 محاولة تسجيل الدخول آلياً في OneSignal للمستخدم:", currentUser.id);
+
+      if (Capacitor.isNativePlatform()) {
+        OneSignal.login(currentUser.id).catch(e => console.error("OneSignal Login Error:", e));
+
+        // التحقق من حالة الإشعارات وطلب الصلاحية إذا لم تكن مفعلة
+        OneSignal.User.pushSubscription.getOptedInAsync().then((optedIn) => {
+          if (!optedIn) {
+            OneSignal.Notifications.requestPermission(true).catch(() => {});
+            OneSignal.User.pushSubscription.optIn().catch(() => {});
+          }
+        }).catch(() => {
+          OneSignal.Notifications.requestPermission(true).catch(() => {});
+        });
+      } else {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+          if (typeof OneSignalInstance?.login === 'function') {
+            OneSignalInstance.login(currentUser.id).catch((e: any) => console.error("OneSignal Web Login Error:", e));
+          }
+        });
+      }
+    }
+  }, [user?.id]);
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();

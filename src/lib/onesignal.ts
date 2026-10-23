@@ -437,16 +437,10 @@ export const reauthenticateOneSignalUser = async (
   try {
     console.log('🔄 [OneSignal] Starting re-authentication sequence for:', cleanId);
 
-    // 1. Force complete logout to purge invalid aliases / stale player tokens
-    await logoutOneSignal();
-
-    // 2. Short pause for SDK socket / local state purge
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    // 3. Clear deduplication latch to force login
+    // 1. Clear deduplication latch to force login
     lastLoggedInUserId = null;
 
-    // 4. Fresh official SDK login
+    // 2. Fresh official SDK login
     await loginOneSignal(cleanId, role, userName);
 
     // 5. Ensure push subscription is active and opted in

@@ -321,6 +321,36 @@ export default function Profile() {
                 </div>
               )}
 
+              {/* الزر الإجباري المؤقت لتفعيل/إصلاح الإشعارات */}
+              {user?.id && (
+                <div className="md:col-span-2 my-4">
+                  <button 
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        if (isNativePlatform()) {
+                          const OneSignal = (await import('@onesignal/capacitor-plugin')).default;
+                          await OneSignal.login(user.id); 
+                          await OneSignal.Notifications.requestPermission(true);
+                          await OneSignal.User.pushSubscription.optIn();
+                        } else {
+                          window.OneSignalDeferred = window.OneSignalDeferred || [];
+                          window.OneSignalDeferred.push(async function (OS: any) {
+                            if (OS?.login) await OS.login(user.id);
+                          });
+                        }
+                        alert("✅ تم إرسال أمر الربط بنجاح إلى OneSignal!");
+                      } catch (err: any) {
+                        alert("❌ حدث خطأ في الربط: " + (err?.message || err));
+                      }
+                    }}
+                    className="w-full p-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded shadow-lg text-center cursor-pointer transition-all border-2 border-white text-base md:text-lg animate-pulse"
+                  >
+                    تفعيل/إصلاح الإشعارات إجبارياً
+                  </button>
+                </div>
+              )}
+
             </div>
             
             {/* Actions */}

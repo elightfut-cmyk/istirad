@@ -7,7 +7,6 @@ import {
   isNativePlatform, 
   showExternalNotification,
   loginOneSignal,
-  logoutOneSignal,
   reauthenticateOneSignalUser
 } from '../lib/onesignal';
 
@@ -251,10 +250,6 @@ export function usePushNotifications(): PushNotificationState {
     const cleanUserId = rawUserId ? String(rawUserId).trim() : null;
 
     if (!cleanUserId) {
-      if (lastProcessedUserIdRef.current) {
-        lastProcessedUserIdRef.current = null;
-        logoutOneSignal().catch(() => {});
-      }
       return;
     }
 

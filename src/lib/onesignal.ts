@@ -684,11 +684,11 @@ export const sendPushNotification = async ({
   data?: Record<string, any>;
   skipDbInsert?: boolean;
 }): Promise<any> => {
-  const finalUserIds = (
+  const finalUserIds = [...new Set((
     userIds 
       ? (Array.isArray(userIds) ? userIds : [userIds])
       : (targetUserId ? [targetUserId] : [])
-  ).map(String).filter(Boolean);
+  ).map(String).filter(Boolean))];
 
   const restApiKey = getOneSignalRestApiKey();
 

@@ -379,9 +379,9 @@ export const sendNotification = async (
     if (userId === 'all_suppliers' || userId === 'all_admins') {
        const roleToFind = userId === 'all_suppliers' ? 'supplier' : 'admin';
        const { data: targetUsers } = await supabase.from('users').select('id').eq('role', roleToFind);
-       let targetIds = (targetUsers && targetUsers.length > 0)
+       let targetIds = [...new Set((targetUsers && targetUsers.length > 0)
          ? targetUsers.map(u => String(u.id))
-         : [];
+         : [])];
 
        // Resilient fallback for admin in case anonymous select on users table is restricted
        if (targetIds.length === 0 && roleToFind === 'admin') {
@@ -475,7 +475,7 @@ export const sendNotification = async (
     } else if (isBroadcastSupplier) {
       effectiveTargetRole = 'supplier';
     } else if (userId) {
-      targetUserIds = [String(userId)];
+      targetUserIds = [...new Set([String(userId)])];
       if (!effectiveTargetRole && role) {
         effectiveTargetRole = role;
       }

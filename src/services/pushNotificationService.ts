@@ -131,15 +131,15 @@ export const sendPushNotificationDetailed = async ({
   skipDbInsert
 }: PushNotificationPayload): Promise<PushSendResult> => {
   const rawIds = userIds || (user_id ? [user_id] : []);
-  const externalIds = (Array.isArray(rawIds) ? rawIds : [rawIds])
+  const externalIds = [...new Set((Array.isArray(rawIds) ? rawIds : [rawIds])
     .filter(Boolean)
     .map(String)
-    .filter(id => id !== 'all');
+    .filter(id => id !== 'all'))];
 
   const rawSubIds = subscriptionIds || (subscription_id ? [subscription_id] : []);
-  const validSubIds = (Array.isArray(rawSubIds) ? rawSubIds : [rawSubIds])
+  const validSubIds = [...new Set((Array.isArray(rawSubIds) ? rawSubIds : [rawSubIds])
     .filter(Boolean)
-    .map(String);
+    .map(String))];
 
   if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0 && !targetRole) {
     const errorMsg = 'فشل الإرسال: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه';

@@ -333,11 +333,15 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
   const strId = String(userId).trim();
   if (!strId) return;
 
-  // Prevent duplicate rapid calls with the same user ID
-  if (lastLoggedInUserId === strId) {
+  const currentCachedRole = localStorage.getItem('onesignal_user_role');
+  // Prevent duplicate rapid calls with the same user ID and role
+  if (lastLoggedInUserId === strId && currentCachedRole === (role || '')) {
     return;
   }
   lastLoggedInUserId = strId;
+  if (role) {
+    localStorage.setItem('onesignal_user_role', role);
+  }
 
   localStorage.setItem('onesignal_external_id', strId);
 
@@ -462,8 +466,11 @@ export const loginOneSignalUser = (userId: string | number, role?: string, userN
 export const logoutOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
   lastLoggedInUserId = null;
+  lastSyncedFcmToken = null;
+  lastSyncedTime = 0;
   localStorage.removeItem('onesignal_external_id');
   localStorage.removeItem('onesignal_subscription_id');
+  localStorage.removeItem('onesignal_user_role');
 
   const bridge = getNativeBridge();
   if (bridge?.logoutOneSignal) {

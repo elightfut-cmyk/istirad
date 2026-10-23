@@ -55,9 +55,6 @@ public class MainActivity extends BridgeActivity {
         // Principle 3: Setup Notification Channel with IMPORTANCE_HIGH (Android 8.0+ / Android 13+)
         createDefaultNotificationChannel();
 
-        // Request POST_NOTIFICATIONS runtime permission on Android 13+ (API 33+)
-        requestNotificationRuntimePermission();
-
         // Principle 2: Setup Native Bridge for OEM Battery Management (Xiaomi, Huawei, Oppo, etc.)
         setupNativeBridge();
 
@@ -148,8 +145,10 @@ public class MainActivity extends BridgeActivity {
                         SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
                         prefs.edit().putString("fcm_token", cachedFcmToken).apply();
                         String savedUserId = prefs.getString("user_id", null);
-                        String savedRole = prefs.getString("user_role", "admin");
-                        registerDeviceWithServer(cachedFcmToken, savedUserId, savedRole);
+                        String savedRole = prefs.getString("user_role", null);
+                        if (savedUserId != null && !savedUserId.trim().isEmpty()) {
+                            registerDeviceWithServer(cachedFcmToken, savedUserId.trim(), savedRole != null ? savedRole : "merchant");
+                        }
                     } catch (Exception ignored) {}
                 }
             });
@@ -495,7 +494,7 @@ public class MainActivity extends BridgeActivity {
                     } catch (Exception ignored) {}
 
                     if (context instanceof MainActivity) {
-                        ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, cleanId, role != null ? role : "admin");
+                        ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, cleanId, role != null ? role : "merchant");
                     }
                 }
             } catch (Exception e) {
@@ -509,8 +508,10 @@ public class MainActivity extends BridgeActivity {
                 if (context instanceof MainActivity) {
                     SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
                     String userId = prefs.getString("user_id", null);
-                    String role = prefs.getString("user_role", "admin");
-                    ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, userId, role);
+                    String role = prefs.getString("user_role", null);
+                    if (userId != null && !userId.trim().isEmpty()) {
+                        ((MainActivity) context).registerDeviceWithServer(cachedFcmToken, userId, role != null ? role : "merchant");
+                    }
                 }
             } catch (Exception ignored) {}
         }

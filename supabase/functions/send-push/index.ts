@@ -325,9 +325,12 @@ serve(async (req) => {
 
     let resJson = await oneSignalRes.json().catch(() => ({}));
 
-    // Instant Fallback for externalIds: If tag filter found no subscribers, retry via include_aliases
-    if (externalIds.length > 0 && (!oneSignalRes.ok || !resJson?.id || (resJson?.errors && resJson.errors.length > 0))) {
-      console.log('Tag filter returned no recipients or error, attempting include_aliases fallback...');
+    // Instant Fallback for externalIds: If tag filter found 0 recipients, failed, or returned error, retry via include_aliases
+    const isTagTargetingEmpty = (resJson && typeof resJson.recipients === 'number' && resJson.recipients === 0);
+    const hasTagError = !oneSignalRes.ok || !resJson?.id || (resJson?.errors && resJson.errors.length > 0);
+
+    if (externalIds.length > 0 && (isTagTargetingEmpty || hasTagError)) {
+      console.log('Tag filter returned 0 recipients or error, attempting include_aliases fallback...');
       const aliasFallbackPayload = { ...oneSignalPayload };
       delete aliasFallbackPayload.filters;
       aliasFallbackPayload.target_channel = 'push';

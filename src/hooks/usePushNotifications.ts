@@ -98,26 +98,28 @@ export function usePushNotifications(): PushNotificationState {
           OneSignal.Debug.setLogLevel(LogLevel.Warn);
           await OneSignal.initialize(ONESIGNAL_APP_ID);
 
-          // Non-blocking immediate permission request (does not block React main thread)
-          OneSignal.Notifications.requestPermission(true)
-            .then(async (granted) => {
-              const ok = Boolean(granted);
-              setPermissionGranted(ok);
-              if (ok) {
-                try {
-                  await OneSignal.User.pushSubscription.optIn();
-                  const subId = await OneSignal.User.pushSubscription.getIdAsync();
-                  if (subId) {
-                    setSubscriptionId(subId);
-                    setIsSubscribed(true);
-                    localStorage.setItem('onesignal_subscription_id', subId);
-                  }
-                } catch {}
-              }
-            })
-            .catch((permErr) => {
-              console.warn('[usePushNotifications] Initial permission request notice:', permErr);
-            });
+          // Smooth asynchronous permission request (after initial frame paints cleanly)
+          setTimeout(() => {
+            OneSignal.Notifications.requestPermission(true)
+              .then(async (granted) => {
+                const ok = Boolean(granted);
+                setPermissionGranted(ok);
+                if (ok) {
+                  try {
+                    await OneSignal.User.pushSubscription.optIn();
+                    const subId = await OneSignal.User.pushSubscription.getIdAsync();
+                    if (subId) {
+                      setSubscriptionId(subId);
+                      setIsSubscribed(true);
+                      localStorage.setItem('onesignal_subscription_id', subId);
+                    }
+                  } catch {}
+                }
+              })
+              .catch((permErr) => {
+                console.warn('[usePushNotifications] Initial permission request notice:', permErr);
+              });
+          }, 1500);
 
           // A. Foreground Notification Listener: Display OS banner, play chime, refresh Supabase data
           OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {

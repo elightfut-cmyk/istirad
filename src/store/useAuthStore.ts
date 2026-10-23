@@ -178,7 +178,6 @@ try {
     } else if (event === 'SIGNED_OUT') {
       localStorage.removeItem('jiibha_user_cache');
       useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false });
-      logoutOneSignalUser();
     }
   });
 } catch (e) {

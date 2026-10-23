@@ -6,7 +6,6 @@ import {
   ONESIGNAL_APP_ID, 
   isNativePlatform, 
   showExternalNotification,
-  loginOneSignal,
   reauthenticateOneSignalUser
 } from '../lib/onesignal';
 
@@ -44,7 +43,6 @@ export function usePushNotifications(): PushNotificationState {
     return typeof window !== 'undefined' ? localStorage.getItem('onesignal_subscription_id') : null;
   });
 
-  const lastProcessedUserIdRef = useRef<string | null>(null);
   const isInitializingRef = useRef<boolean>(false);
 
   // ─── 1. Non-Blocking Permission Request ───────────────────────────
@@ -242,47 +240,7 @@ export function usePushNotifications(): PushNotificationState {
     setupOneSignal();
   }, []);
 
-  // ─── 3. Reactive Authentication State Management ─────────────────
-  // Whenever user_id becomes available or changes:
-  // Bind user identity ONCE via official SDK login without loops or manual syncs.
-  useEffect(() => {
-    const rawUserId = user?.id || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_external_id') : null);
-    const cleanUserId = rawUserId ? String(rawUserId).trim() : null;
 
-    if (!cleanUserId) {
-      return;
-    }
-
-    // Skip if already bound to this exact user
-    if (lastProcessedUserIdRef.current === cleanUserId) {
-      return;
-    }
-
-    lastProcessedUserIdRef.current = cleanUserId;
-    localStorage.setItem('onesignal_external_id', cleanUserId);
-
-    // Official SDK login executed once
-    (async () => {
-      try {
-        console.log('🔄 [usePushNotifications] Binding user identity for:', cleanUserId, 'role:', user?.role);
-        await loginOneSignal(cleanUserId, user?.role || undefined, user?.name || undefined);
-
-        if (isNativePlatform()) {
-          try {
-            await OneSignal.User.pushSubscription.optIn();
-            const currentSubId = await OneSignal.User.pushSubscription.getIdAsync();
-            if (currentSubId) {
-              setSubscriptionId(currentSubId);
-              setIsSubscribed(true);
-              localStorage.setItem('onesignal_subscription_id', currentSubId);
-            }
-          } catch {}
-        }
-      } catch (bindErr) {
-        console.error('❌ [usePushNotifications] Error during auth binding:', bindErr);
-      }
-    })();
-  }, [user?.id]);
 
   // ─── 4. Explicit Re-Authentication Helper (Fix for Invalid Aliases) ──
   const reauthenticate = useCallback(async () => {

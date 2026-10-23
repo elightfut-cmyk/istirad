@@ -50,34 +50,54 @@ function App() {
 
   const { user, checkSession } = useAuthStore();
 
-  // 2. Lifecycle Fix: Unconditional Automatic OneSignal Login on user.id
+  // 2. Safe Delay OneSignal Auto-Login (Ghost State Prevention)
   useEffect(() => {
-    const currentUser = user;
-    if (currentUser?.id) {
-      console.log("🔄 محاولة تسجيل الدخول آلياً في OneSignal للمستخدم:", currentUser.id);
+    let isCancelled = false;
 
-      if (Capacitor.isNativePlatform()) {
-        OneSignal.login(currentUser.id).catch(e => console.error("OneSignal Login Error:", e));
+    const initOneSignal = async () => {
+      const currentUser = user;
+      if (currentUser?.id) {
+        try {
+          // تأخير بسيط جداً لمنع الـ Race Condition في الأجهزة الضعيفة أو عند التبديل السريع
+          await new Promise(resolve => setTimeout(resolve, 500));
+          if (isCancelled) return;
 
-        // التحقق من حالة الإشعارات وطلب الصلاحية إذا لم تكن مفعلة
-        OneSignal.User.pushSubscription.getOptedInAsync().then((optedIn) => {
-          if (!optedIn) {
-            OneSignal.Notifications.requestPermission(true).catch(() => {});
-            OneSignal.User.pushSubscription.optIn().catch(() => {});
+          console.log("🔄 [App] محاولة تسجيل الدخول آلياً في OneSignal للمستخدم:", currentUser.id);
+
+          if (Capacitor.isNativePlatform()) {
+            await OneSignal.login(currentUser.id);
+            await OneSignal.User.addTag("role", currentUser.role || 'user');
+            try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+
+            const optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
+              await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
+
+            if (!optedIn) {
+              await OneSignal.Notifications.requestPermission(true);
+            }
+          } else {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+              if (typeof OneSignalInstance?.login === 'function') {
+                await OneSignalInstance.login(currentUser.id).catch((e: any) => console.error("OneSignal Web Login Error:", e));
+              }
+              if (OneSignalInstance?.User?.addTag) {
+                OneSignalInstance.User.addTag("role", currentUser.role || 'user').catch(() => {});
+              }
+            });
           }
-        }).catch(() => {
-          OneSignal.Notifications.requestPermission(true).catch(() => {});
-        });
-      } else {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
-          if (typeof OneSignalInstance?.login === 'function') {
-            OneSignalInstance.login(currentUser.id).catch((e: any) => console.error("OneSignal Web Login Error:", e));
-          }
-        });
+        } catch (error) {
+          console.error("OneSignal Auto-Login Failed:", error);
+        }
       }
-    }
-  }, [user?.id]);
+    };
+
+    initOneSignal();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user?.id, user?.role]);
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();

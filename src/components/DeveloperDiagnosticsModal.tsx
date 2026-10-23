@@ -19,8 +19,7 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { 
   ONESIGNAL_APP_ID, 
-  loginOneSignal,
-  syncDeviceRegistration,
+  reauthenticateOneSignalUser,
   requestNotificationPermission, 
   optInPushSubscription,
   sendPushNotification,
@@ -118,7 +117,7 @@ export default function DeveloperDiagnosticsModal({
 
   const handleSyncDevice = async () => {
     setIsSyncing(true);
-    const toastId = toast.loading('جاري طلب إذن النظام ومزامنة رمز الجهاز مع الحساب...');
+    const toastId = toast.loading('جاري تجديد الهوية وإعادة ربط جهازك بخوادم OneSignal (إصلاح Invalid Aliases)...');
 
     try {
       // 1. Request OS permission
@@ -128,21 +127,19 @@ export default function DeveloperDiagnosticsModal({
       // 2. Explicitly Opt-In push subscription natively
       await optInPushSubscription();
 
-      // 3. Re-login to OneSignal and register directly via Europe Edge Function (neutralizes 4G block)
-      if (effectiveUserId) {
-        await loginOneSignal(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
+      // 3. Official Re-authentication (OneSignal.logout -> OneSignal.login)
+      const res = await reauthenticateOneSignalUser(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
+      if (!res.success) {
+        throw new Error(res.message);
       }
-      const cloudSubId = await syncDeviceRegistration(effectiveUserId, effectiveRole || undefined, authUser?.name || undefined);
 
-      // 4. Poll for fresh subscription ID across multiple iterations to accommodate mobile latency
-      let freshSubId: string | null = cloudSubId || null;
-      if (!freshSubId || freshSubId === 'None') {
-        for (let attempt = 1; attempt <= 5; attempt++) {
-          await new Promise(r => setTimeout(r, 500));
-          freshSubId = await getPushSubscriptionId();
-          if (freshSubId && freshSubId !== 'None' && freshSubId.length > 5) {
-            break;
-          }
+      // 4. Poll for fresh subscription ID across multiple iterations
+      let freshSubId: string | null = null;
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        await new Promise(r => setTimeout(r, 400));
+        freshSubId = await getPushSubscriptionId();
+        if (freshSubId && freshSubId !== 'None' && freshSubId.length > 5) {
+          break;
         }
       }
 
@@ -155,12 +152,12 @@ export default function DeveloperDiagnosticsModal({
 
       toast.success(
         freshSubId && freshSubId !== 'None'
-          ? `✅ تم ربط جهازك واشتراكه بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
-          : 'تم تحديث أذونات الإشعارات وطلب الاشتراك بنجاح', 
+          ? `✅ تم تجديد الهوية وربط الجهاز بنجاح! Subscription: ${freshSubId.slice(0, 8)}...` 
+          : '✅ تم تجديد الهوية وإعادة ربط الجهاز بنجاح بخوادم OneSignal', 
         { id: toastId }
       );
     } catch (err: any) {
-      toast.error(err?.message || 'فشلت عملية المزامنة', { id: toastId });
+      toast.error(err?.message || 'فشلت عملية تجديد الهوية', { id: toastId });
     } finally {
       setIsSyncing(false);
     }
@@ -504,7 +501,7 @@ export default function DeveloperDiagnosticsModal({
                 className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-sans font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
               >
                 {isSyncing ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                <span>مزامنة وربط رمز الجهاز الجديد</span>
+                <span>تجديد الهوية (إصلاح Invalid Aliases)</span>
               </button>
 
               <button

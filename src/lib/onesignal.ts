@@ -372,8 +372,6 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
       }
       console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
 
-      // Cloud Europe bridge sync (bypasses Algeria 4G block, runs non-blocking)
-      syncDeviceRegistration(strId, role, userName).catch(() => {});
       return;
     } catch (e) {
       console.warn('OneSignal native login warning:', e);
@@ -402,61 +400,80 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
       }
     });
   }
-
-  // Cloud Europe bridge sync (bypasses Algeria 4G block, runs non-blocking)
-  syncDeviceRegistration(strId, role, userName).catch(() => {});
 };
 
 /**
- * Direct device registration via Supabase Europe Edge Function.
- * Connects directly to OneSignal REST API in Europe to register the device's live FCM token,
- * completely neutralizing the Algeria 4G carrier block on api.onesignal.com.
+ * Device registration is strictly handled by the official OneSignal client SDK (OneSignal.login).
+ * Manual HTTP calls to register devices have been completely eliminated to prevent alias invalidation.
  */
-let lastSyncedFcmToken: string | null = null;
-let lastSyncedTime = 0;
-
-export const syncDeviceRegistration = async (userId?: string, role?: string, userName?: string): Promise<string | null> => {
-  const fcmToken = getFcmToken();
-  const effectiveId = userId || localStorage.getItem('onesignal_external_id');
-  if (!fcmToken) return null;
-
-  const now = Date.now();
-  const syncKey = `${fcmToken}_${effectiveId || ''}_${role || ''}`;
-  if (lastSyncedFcmToken === syncKey && (now - lastSyncedTime < 300000)) {
-    return localStorage.getItem('onesignal_subscription_id');
-  }
-  lastSyncedFcmToken = syncKey;
-  lastSyncedTime = now;
-
-  const bridge = getNativeBridge();
-  if (bridge?.syncDeviceWithServer) {
-    try { bridge.syncDeviceWithServer(); } catch {}
-  }
-
-  try {
-    const { data: resData } = await supabase.functions.invoke('send-push', {
-      body: {
-        action: 'register-device',
-        fcmToken,
-        userId: effectiveId,
-        role: role || 'admin',
-        name: userName || '',
-        apiKey: getOneSignalRestApiKey()
-      }
-    });
-    if (resData?.id) {
-      localStorage.setItem('onesignal_subscription_id', resData.id);
-      window.dispatchEvent(new CustomEvent('onesignal_subscription_ready', { detail: { subscriptionId: resData.id } }));
-      return resData.id;
-    }
-  } catch (err) {
-    console.warn('Sync device registration notice:', err);
-  }
-  return null;
+export const syncDeviceRegistration = async (_userId?: string, _role?: string, _userName?: string): Promise<string | null> => {
+  return typeof window !== 'undefined' ? localStorage.getItem('onesignal_subscription_id') : null;
 };
 
 export const loginOneSignalUser = (userId: string | number, role?: string, userName?: string) => {
   return loginOneSignal(userId, role, userName);
+};
+
+/**
+ * Re-authenticates the user with OneSignal:
+ * Calls OneSignal.logout() followed by OneSignal.login(user.id).
+ * Purges corrupted/decoupled sessions and reconnects the device to OneSignal servers with valid aliases.
+ */
+export const reauthenticateOneSignalUser = async (
+  userId?: string | number,
+  role?: string,
+  userName?: string
+): Promise<{ success: boolean; message: string }> => {
+  if (typeof window === 'undefined') {
+    return { success: false, message: 'Window is not defined' };
+  }
+
+  const rawId = userId || localStorage.getItem('onesignal_external_id');
+  if (!rawId) {
+    return { success: false, message: 'معرف المستخدم غير متوفر لإعادة التوثيق' };
+  }
+  const cleanId = String(rawId).trim();
+
+  try {
+    console.log('🔄 [OneSignal] Starting re-authentication sequence for:', cleanId);
+
+    // 1. Force complete logout to purge invalid aliases / stale player tokens
+    await logoutOneSignal();
+
+    // 2. Short pause for SDK socket / local state purge
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    // 3. Clear deduplication latch to force login
+    lastLoggedInUserId = null;
+
+    // 4. Fresh official SDK login
+    await loginOneSignal(cleanId, role, userName);
+
+    // 5. Ensure push subscription is active and opted in
+    if (isNativePlatform()) {
+      try {
+        await OneSignal.User.pushSubscription.optIn();
+        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync();
+        if (freshSubId) {
+          localStorage.setItem('onesignal_subscription_id', freshSubId);
+        }
+      } catch (optErr) {
+        console.warn('Re-auth pushSubscription optIn notice:', optErr);
+      }
+    }
+
+    console.log('✅ [OneSignal] Re-authentication completed successfully for user:', cleanId);
+    return {
+      success: true,
+      message: 'تم تجديد الهوية وإعادة ربط جهاز التاجر بخوادم OneSignal بنجاح'
+    };
+  } catch (err: any) {
+    console.error('❌ [OneSignal] Re-authentication failed:', err);
+    return {
+      success: false,
+      message: err?.message || 'فشل تجديد الهوية'
+    };
+  }
 };
 
 /**
@@ -466,8 +483,6 @@ export const loginOneSignalUser = (userId: string | number, role?: string, userN
 export const logoutOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
   lastLoggedInUserId = null;
-  lastSyncedFcmToken = null;
-  lastSyncedTime = 0;
   localStorage.removeItem('onesignal_external_id');
   localStorage.removeItem('onesignal_subscription_id');
   localStorage.removeItem('onesignal_user_role');

@@ -184,7 +184,7 @@ export const sendPushNotificationDetailed = async ({
     const hasInvalidAliases = resData && resData.errors && resData.errors.invalid_aliases;
 
     if (hasInvalidAliases) {
-      throw new Error('فشل الإرسال: لم يتم العثور على جهاز نشط لهذا المستخدم في OneSignal');
+      throw new Error('فشل الإرسال: جهاز التاجر بحاجة لتجديد الهوية (Invalid Aliases). يرجى فتح التطبيق والضغط على تجديد الهوية لإعادة ربطه بخوادم OneSignal.');
     }
 
     const hasEdgeError = invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || (resData.error);

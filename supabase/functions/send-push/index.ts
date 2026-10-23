@@ -100,50 +100,11 @@ serve(async (req) => {
       });
     }
 
-    // Action A: Direct Device FCM Registration (Solves 4G blocking in Algeria)
-    // The phone gets its FCM token directly from Google (never blocked) and posts to this Edge function.
-    // The Edge Function (in Europe) registers the device directly in OneSignal.
-    if (body.action === 'register-device' || body.action === 'sync-token' || (body.fcmToken && !body.title && !body.message)) {
-      const fcmToken = body.fcmToken || body.fcm_token;
-      const uid = body.userId || body.user_id;
-      const role = body.role || body.targetRole || 'admin';
-      const name = body.name || '';
-
-      if (!fcmToken) {
-        return new Response(
-          JSON.stringify({ ok: false, error: 'Missing fcmToken' }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('Registering live FCM device in OneSignal for user:', uid, 'role:', role);
-      const regRes = await fetch('https://api.onesignal.com/players', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeaderValue,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          app_id: ONESIGNAL_APP_ID,
-          device_type: 1, // Android
-          identifier: fcmToken,
-          external_user_id: uid ? String(uid) : undefined,
-          tags: {
-            role: String(role),
-            user_id: uid ? String(uid) : '',
-            name: String(name)
-          },
-          notification_types: 1
-        })
-      });
-      const regJson = await regRes.json().catch(() => ({}));
-
+    // Action A: Manual Device Registration completely removed
+    // Device registration is strictly handled via official OneSignal SDK login: OneSignal.login(user.id).
+    if (body.action === 'register-device' || body.action === 'sync-token') {
       return new Response(
-        JSON.stringify({
-          ok: regRes.ok,
-          status: regRes.status,
-          ...regJson
-        }),
+        JSON.stringify({ ok: true, message: 'Device registration is managed strictly via OneSignal SDK login' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -285,32 +246,25 @@ serve(async (req) => {
       oneSignalPayload.android_channel_id = android_channel_id.trim();
     }
 
-    // Targeting strategy (Proven from morning version 80d5e3b):
+    // Targeting strategy:
+    // When targeting a specific merchant/supplier (externalIds), official OneSignal v5 requires include_aliases
     if (sendToAll) {
       oneSignalPayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
     } else if (validSubIds.length > 0) {
       // Direct device subscription
-      oneSignalPayload.include_player_ids = validSubIds;
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_subscription_ids = validSubIds;
+    } else if (externalIds.length > 0) {
+      // Direct Merchant / Supplier targeting via official OneSignal v5 Aliases
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_aliases = {
+        external_id: externalIds
+      };
     } else if (targetRole && targetRole !== 'all') {
-      // Broadcast to all active devices tagged with this role OR matching userIds
-      const roleFilters: any[] = [
+      // Broadcast to all active devices tagged with this role
+      oneSignalPayload.filters = [
         { field: 'tag', key: 'role', relation: '=', value: String(targetRole) }
       ];
-      if (externalIds.length > 0) {
-        externalIds.forEach((id: string) => {
-          roleFilters.push({ operator: 'OR' });
-          roleFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
-        });
-      }
-      oneSignalPayload.filters = roleFilters;
-    } else if (externalIds.length > 0) {
-      // Direct user targeting via user_id tag (guaranteed to match all devices registered by app/bridge/europe sync)
-      const userFilters: any[] = [];
-      externalIds.forEach((id: string, idx: number) => {
-        if (idx > 0) userFilters.push({ operator: 'OR' });
-        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
-      });
-      oneSignalPayload.filters = userFilters;
     }
 
     // Send request to OneSignal REST API
@@ -325,35 +279,36 @@ serve(async (req) => {
 
     let resJson = await oneSignalRes.json().catch(() => ({}));
 
-    // Instant Fallback for externalIds: If tag filter found 0 recipients, failed, or returned error, retry via include_aliases
-    const isTagTargetingEmpty = (resJson && typeof resJson.recipients === 'number' && resJson.recipients === 0);
-    const hasTagError = !oneSignalRes.ok || !resJson?.id || (resJson?.errors && resJson.errors.length > 0);
-
-    if (externalIds.length > 0 && (isTagTargetingEmpty || hasTagError)) {
-      console.log('Tag filter returned 0 recipients or error, attempting include_aliases fallback...');
-      const aliasFallbackPayload = { ...oneSignalPayload };
-      delete aliasFallbackPayload.filters;
-      aliasFallbackPayload.target_channel = 'push';
-      aliasFallbackPayload.include_aliases = {
-        external_id: externalIds
-      };
+    // Fallback for externalIds: If include_aliases fails due to invalid_aliases or temporary SDK desync, attempt user_id tag fallback
+    const hasAliasError = !oneSignalRes.ok || (resJson?.errors && (resJson.errors.invalid_aliases || JSON.stringify(resJson.errors).includes('invalid_aliases')));
+    if (externalIds.length > 0 && hasAliasError) {
+      console.log('include_aliases returned invalid_aliases or error, attempting user_id tag fallback...');
+      const tagFallbackPayload = { ...oneSignalPayload };
+      delete tagFallbackPayload.include_aliases;
+      delete tagFallbackPayload.target_channel;
+      const userFilters: any[] = [];
+      externalIds.forEach((id: string, idx: number) => {
+        if (idx > 0) userFilters.push({ operator: 'OR' });
+        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+      });
+      tagFallbackPayload.filters = userFilters;
 
       try {
-        const aliasRes = await fetch('https://api.onesignal.com/notifications', {
+        const tagRes = await fetch('https://api.onesignal.com/notifications', {
           method: 'POST',
           headers: {
             'Authorization': authHeaderValue,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(aliasFallbackPayload)
+          body: JSON.stringify(tagFallbackPayload)
         });
-        const aliasJson = await aliasRes.json().catch(() => ({}));
-        if (aliasRes.ok && aliasJson?.id) {
-          oneSignalRes = aliasRes;
-          resJson = aliasJson;
+        const tagJson = await tagRes.json().catch(() => ({}));
+        if (tagRes.ok && tagJson?.id) {
+          oneSignalRes = tagRes;
+          resJson = tagJson;
         }
-      } catch (aliasErr) {
-        console.warn('include_aliases fallback notice:', aliasErr);
+      } catch (tagErr) {
+        console.warn('Tag fallback notice:', tagErr);
       }
     }
 

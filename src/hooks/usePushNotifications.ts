@@ -5,10 +5,10 @@ import { useNotificationStore, playNotificationChime } from '../store/useNotific
 import { 
   ONESIGNAL_APP_ID, 
   isNativePlatform, 
-  syncDeviceRegistration,
   showExternalNotification,
   loginOneSignal,
-  logoutOneSignal
+  logoutOneSignal,
+  reauthenticateOneSignalUser
 } from '../lib/onesignal';
 
 export interface PushNotificationState {
@@ -18,6 +18,7 @@ export interface PushNotificationState {
   subscriptionId: string | null;
   requestPermission: () => Promise<boolean>;
   reLogin: () => Promise<void>;
+  reauthenticate: () => Promise<{ success: boolean; message: string }>;
 }
 
 /**
@@ -244,23 +245,15 @@ export function usePushNotifications(): PushNotificationState {
 
   // ─── 3. Reactive Authentication State Management ─────────────────
   // Whenever user_id becomes available or changes:
-  // Bind user identity and tags immediately WITHOUT destructive session resets.
+  // Bind user identity ONCE via official SDK login without loops or manual syncs.
   useEffect(() => {
     const rawUserId = user?.id || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_external_id') : null);
     const cleanUserId = rawUserId ? String(rawUserId).trim() : null;
 
     if (!cleanUserId) {
-      // User is logged out or unauthenticated
       if (lastProcessedUserIdRef.current) {
         lastProcessedUserIdRef.current = null;
-        (async () => {
-          try {
-            await logoutOneSignal();
-            console.log('🔓 [usePushNotifications] Logged out from OneSignal session');
-          } catch (logoutErr) {
-            console.warn('[usePushNotifications] Logout notice:', logoutErr);
-          }
-        })();
+        logoutOneSignal().catch(() => {});
       }
       return;
     }
@@ -273,12 +266,10 @@ export function usePushNotifications(): PushNotificationState {
     lastProcessedUserIdRef.current = cleanUserId;
     localStorage.setItem('onesignal_external_id', cleanUserId);
 
-    // Asynchronous non-blocking binding sequence
+    // Official SDK login executed once
     (async () => {
       try {
         console.log('🔄 [usePushNotifications] Binding user identity for:', cleanUserId, 'role:', user?.role);
-
-        // Unified login sets: OneSignal.login, tags (user_id, role, name), NativeBridge, and Edge Function sync
         await loginOneSignal(cleanUserId, user?.role || undefined, user?.name || undefined);
 
         if (isNativePlatform()) {
@@ -292,45 +283,20 @@ export function usePushNotifications(): PushNotificationState {
             }
           } catch {}
         }
-
-        // Retry sync at 2s and 5s in case FCM token was being retrieved asynchronously by Google Play Services
-        setTimeout(() => {
-          syncDeviceRegistration(cleanUserId, user?.role || undefined, user?.name || undefined).catch(() => {});
-        }, 2000);
-
-        setTimeout(() => {
-          syncDeviceRegistration(cleanUserId, user?.role || undefined, user?.name || undefined).catch(() => {});
-        }, 5000);
-
       } catch (bindErr) {
         console.error('❌ [usePushNotifications] Error during auth binding:', bindErr);
       }
     })();
+  }, [user?.id]);
+
+  // ─── 4. Explicit Re-Authentication Helper (Fix for Invalid Aliases) ──
+  const reauthenticate = useCallback(async () => {
+    return reauthenticateOneSignalUser(user?.id, user?.role || undefined, user?.name || undefined);
   }, [user?.id, user?.role, user?.name]);
 
-  // ─── 4. Explicit Re-Login Helper ──────────────────────────────────
   const reLogin = useCallback(async () => {
-    const rawId = user?.id || localStorage.getItem('onesignal_external_id');
-    if (!rawId) return;
-    const cleanId = String(rawId).trim();
-
-    try {
-      await loginOneSignal(cleanId, user?.role || undefined, user?.name || undefined);
-      if (isNativePlatform()) {
-        try {
-          await OneSignal.User.pushSubscription.optIn();
-          const subId = await OneSignal.User.pushSubscription.getIdAsync();
-          if (subId) {
-            setSubscriptionId(subId);
-            setIsSubscribed(true);
-          }
-        } catch {}
-      }
-      syncDeviceRegistration(cleanId, user?.role || undefined, user?.name || undefined).catch(() => {});
-    } catch (e) {
-      console.warn('[usePushNotifications] reLogin error:', e);
-    }
-  }, [user?.id, user?.role, user?.name]);
+    await reauthenticate();
+  }, [reauthenticate]);
 
   return {
     isInitialized,
@@ -339,6 +305,7 @@ export function usePushNotifications(): PushNotificationState {
     subscriptionId,
     requestPermission,
     reLogin,
+    reauthenticate,
   };
 }
 

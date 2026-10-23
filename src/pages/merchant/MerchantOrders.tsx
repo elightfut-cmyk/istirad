@@ -775,18 +775,26 @@ export default function MerchantOrders() {
     if (!negotiationBid || negotiatedPrice <= 0) return;
     setNegotiating(true);
     try {
-      const quantity = requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1;
+      const chosenTier = negotiationBid.chosen_tier || negotiationBid.selected_tier;
+      const quantity = chosenTier?.quantity || requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1;
       const supplierNegotiatedPrice = calculateSupplierPriceFromFinal(negotiatedPrice, quantity, profitSettings);
 
-      const { error } = await supabase.from('supplier_bids').update({
+      const updatePayload: any = {
         status: 'pending',
         negotiated_price: supplierNegotiatedPrice,
         negotiated_by: 'merchant',
         customer_reply: customerReply
-      }).eq('id', negotiationBid.id);
+      };
+
+      if (chosenTier) {
+        updatePayload.selected_tier = chosenTier;
+      }
+
+      const { error } = await supabase.from('supplier_bids').update(updatePayload).eq('id', negotiationBid.id);
 
       if (error) throw error;
-      sendNotification(negotiationBid.supplier_id, 'اقتراح سعر جديد', `قام التاجر ${user?.name || ''} باقتراح سعر جديد لعرضك: ${formatCurrency(supplierNegotiatedPrice)} للقطعة الواحدة.`, 'info');
+      const tierNote = chosenTier ? ` على شريحة ${chosenTier.quantity} قطعة` : '';
+      sendNotification(negotiationBid.supplier_id, 'اقتراح سعر جديد', `قام التاجر ${user?.name || ''} باقتراح سعر جديد لعرضك${tierNote}: ${formatCurrency(supplierNegotiatedPrice)} للقطعة الواحدة.`, 'info');
       toast.success('تم إرسال السعر المقترح بنجاح');
       setShowNegotiationModal(false);
       setNegotiationBid(null);
@@ -887,10 +895,10 @@ export default function MerchantOrders() {
         </div>
       </div>
 
-      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto no-scrollbar whitespace-nowrap gap-2">
         <button
           onClick={() => setActiveTab('direct')}
-          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'direct' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
           }`}
         >
@@ -898,7 +906,7 @@ export default function MerchantOrders() {
         </button>
         <button
           onClick={() => setActiveTab('custom')}
-          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+          className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors shrink-0 whitespace-nowrap ${
             activeTab === 'custom' ? 'border-[#4f46e5] text-[#4f46e5]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
           }`}
         >
@@ -1391,7 +1399,7 @@ export default function MerchantOrders() {
                               {bid.negotiated_by !== 'supplier_rejected' && (
                                 <button 
                                   onClick={() => {
-                                    setNegotiationBid(bid);
+                                    setNegotiationBid(effectiveBid);
                                     setShowNegotiationModal(true);
                                   }}
                                   className="flex-1 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg font-bold text-sm hover:bg-orange-100 transition"
@@ -1858,8 +1866,34 @@ export default function MerchantOrders() {
             </button>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">اقتراح سعر جديد</h2>
             
-            <div className="bg-orange-50 p-4 rounded-xl mb-6 text-sm text-orange-800 border border-orange-100">
-              <p>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</p>
+            {negotiationBid.chosen_tier && (
+              <div className="mb-4 p-3.5 bg-indigo-50/90 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 text-right">
+                <div className="flex items-center justify-between text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="flex items-center gap-1.5">
+                    <Layers size={14} className="text-[#4f46e5]" />
+                    الشريحة التي اخترتها للتفاوض:
+                  </span>
+                  <span className="bg-[#4f46e5] text-white px-2.5 py-0.5 rounded-full font-black">
+                    {negotiationBid.chosen_tier.quantity} قطعة
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 mt-1.5 pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
+                  <span>سعر المورد الحالي لهذه الشريحة:</span>
+                  <span className="font-extrabold text-[#4f46e5] dark:text-indigo-400">
+                    {formatCurrency(negotiationBid.chosen_tier.final_item_price || calculateFinalPrice(negotiationBid.chosen_tier.cost_price, negotiationBid.chosen_tier.quantity, profitSettings).finalItemPrice)} للقطعة
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-xl mb-6 text-sm text-orange-800 dark:text-orange-200 border border-orange-100 dark:border-orange-800/40">
+              <p>
+                {negotiationBid.chosen_tier ? (
+                  <>أنت تقترح سعراً جديداً على شريحة <strong className="text-orange-950 dark:text-orange-100 font-bold">{negotiationBid.chosen_tier.quantity} قطعة</strong>. السعر الحالي المعروض للقطعة: <strong>{formatCurrency(getBidFinalPrices(negotiationBid, negotiationBid.chosen_tier.quantity).finalItemPrice)}</strong></>
+                ) : (
+                  <>سعر المورد الحالي: <strong>{formatCurrency(getBidFinalPrices(negotiationBid, (requests.find(r => r.id === negotiationBid.request_id || r.supplier_bids?.some((b:any) => b.id === negotiationBid.id))?.quantity || 1)).finalItemPrice)}</strong> للقطعة الواحدة.</>
+                )}
+              </p>
             </div>
 
             <form onSubmit={handleProposePriceSubmit} className="space-y-4">

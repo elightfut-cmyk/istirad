@@ -1,5 +1,4 @@
 import { Shield, ShieldCheck, Star, Gem } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 export type SupplierTier = 'NEW' | 'SILVER' | 'GOLD' | 'PLATINUM' | string;
 
@@ -22,10 +21,10 @@ export default function SupplierBadge({
   tier = 'NEW',
   rating = 0,
   totalReviews = 0,
-  supplierId,
+  supplierId: _supplierId,
   size = 'sm',
   showName = true,
-  clickable = true,
+  clickable: _clickable = true,
   className = '',
 }: SupplierBadgeProps) {
   const normalizedTier = (tier || 'NEW').toUpperCase();
@@ -111,9 +110,7 @@ export default function SupplierBadge({
 
   const content = (
     <div
-      className={`inline-flex items-center flex-wrap rounded-xl border transition-all duration-200 ${currentTier.bgGradient} ${currentSize.container} ${className} ${
-        clickable && supplierId ? 'hover:scale-[1.02] hover:shadow-md cursor-pointer' : ''
-      }`}
+      className={`inline-flex items-center flex-wrap rounded-xl border transition-all duration-200 ${currentTier.bgGradient} ${currentSize.container} ${className} cursor-default`}
       title={`تصنيف المورد: ${currentTier.label} • التقييم: ${numericRating.toFixed(1)} من 5 (${reviewCount} تقييم)`}
     >
       {/* Supplier Name */}
@@ -146,13 +143,6 @@ export default function SupplierBadge({
     </div>
   );
 
-  if (clickable && supplierId) {
-    return (
-      <Link to={`/supplier/profile/${supplierId}`} className="inline-block no-underline">
-        {content}
-      </Link>
-    );
-  }
-
+  // Note: Profile navigation is disabled for now as requested
   return content;
 }

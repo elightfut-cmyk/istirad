@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Check,
   X,
-  Store
+  Store,
+  Layers
 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -57,7 +58,7 @@ export default function AdminOrders() {
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, approx_weight_grams, avg_price_china, cancellation_reason,
           merchant:users!merchant_id(name, company_name, phone, email, address),
           supplier_bids(
-            id, price, status, created_at, is_fully_paid, advance_percentage, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
+            *,
             supplier:users!supplier_id(id, name, company_name, phone, verification_badge)
           )
         `)
@@ -227,10 +228,10 @@ export default function AdminOrders() {
             </div>
 
             {/* Top 3 Navigation Tabs */}
-            <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap gap-1 w-full md:w-auto">
               <button
                 onClick={() => setActiveTab('custom')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                   activeTab === 'custom' 
                     ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -245,7 +246,7 @@ export default function AdminOrders() {
 
               <button
                 onClick={() => setActiveTab('direct')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                   activeTab === 'direct' 
                     ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -260,7 +261,7 @@ export default function AdminOrders() {
 
               <button
                 onClick={() => setActiveTab('manual')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                   activeTab === 'manual' 
                     ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -295,10 +296,10 @@ export default function AdminOrders() {
             </div>
 
             {activeTab === 'custom' && (
-              <div className="flex bg-gray-100 dark:bg-gray-900 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
+              <div className="flex bg-gray-100 dark:bg-gray-900 rounded-xl p-1 border border-gray-200 dark:border-gray-700 overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap gap-1 w-full md:w-auto">
                 <button
                   onClick={() => setFilterTenderStatus('all')}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition shrink-0 ${
                     filterTenderStatus === 'all' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xs' : 'text-gray-500'
                   }`}
                 >
@@ -306,7 +307,7 @@ export default function AdminOrders() {
                 </button>
                 <button
                   onClick={() => setFilterTenderStatus('open')}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition shrink-0 ${
                     filterTenderStatus === 'open' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xs' : 'text-gray-500'
                   }`}
                 >
@@ -314,7 +315,7 @@ export default function AdminOrders() {
                 </button>
                 <button
                   onClick={() => setFilterTenderStatus('closed')}
-                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition shrink-0 ${
                     filterTenderStatus === 'closed' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xs' : 'text-gray-500'
                   }`}
                 >
@@ -528,10 +529,48 @@ export default function AdminOrders() {
                                     )}
                                   </div>
 
+                                  {/* Quantity Tiers if provided */}
+                                  {Array.isArray(bid.quantity_tiers) && bid.quantity_tiers.length > 0 && (
+                                    <div className="mb-3 space-y-1.5">
+                                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <Layers size={13} className="text-[#4f46e5]" /> شرائح الأسعار المقترحة:
+                                      </span>
+                                      <div className="grid grid-cols-1 gap-1">
+                                        {bid.quantity_tiers.map((tier: any, tIdx: number) => {
+                                          const isSelected = bid.selected_tier && Number(bid.selected_tier.quantity) === Number(tier.quantity);
+                                          return (
+                                            <div
+                                              key={tIdx}
+                                              className={`px-2.5 py-1.5 rounded-lg text-xs flex justify-between items-center border transition ${
+                                                isSelected
+                                                  ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 font-bold'
+                                                  : 'bg-gray-50 dark:bg-gray-900/40 border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300'
+                                              }`}
+                                            >
+                                              <span className="flex items-center gap-1.5">
+                                                <span>{tier.quantity} قطعة</span>
+                                                {isSelected && (
+                                                  <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1.5 py-0.2 rounded font-black">
+                                                    المعتمدة
+                                                  </span>
+                                                )}
+                                              </span>
+                                              <span className="font-mono font-bold text-[#4f46e5] dark:text-indigo-400">
+                                                {formatCurrency(tier.cost_price || tier.price || 0)} / قطعة
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Price and Payment Details */}
                                   <div className="bg-gray-50 dark:bg-gray-900/60 p-3 rounded-xl border border-gray-100 dark:border-gray-700/60 text-xs space-y-1.5 mb-3">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-gray-500">السعر المعروض:</span>
+                                      <span className="text-gray-500">
+                                        {bid.selected_tier ? `السعر الإجمالي (${bid.selected_tier.quantity} قطعة):` : 'السعر المعروض:'}
+                                      </span>
                                       <span className="font-black text-[#4f46e5] text-sm">
                                         {formatCurrency(bid.price)}
                                       </span>
@@ -554,10 +593,17 @@ export default function AdminOrders() {
 
                                   {/* Negotiation Details if any */}
                                   {bid.negotiated_by && (
-                                    <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 text-[11px] mb-3">
-                                      <p className="font-bold text-orange-800 dark:text-orange-300">تفاوض:</p>
+                                    <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 text-[11px] mb-3 space-y-1">
+                                      <div className="flex items-center justify-between font-bold text-orange-800 dark:text-orange-300">
+                                        <span>تفاوض ({bid.negotiated_by === 'merchant' ? 'بانتظار رد المورد' : bid.negotiated_by === 'supplier_accepted' ? 'وافق المورد' : 'رفض المورد'}):</span>
+                                        {bid.selected_tier && (
+                                          <span className="text-[10px] bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-200 px-1.5 py-0.2 rounded font-black">
+                                            شريحة {bid.selected_tier.quantity} قطعة
+                                          </span>
+                                        )}
+                                      </div>
                                       <p className="text-gray-700 dark:text-gray-300">
-                                        السعر المقترح: <strong>{formatCurrency(bid.negotiated_price)}</strong>
+                                        السعر المقترح: <strong>{formatCurrency(bid.negotiated_price)}</strong> / قطعة
                                       </p>
                                       {bid.customer_reply && (
                                         <p className="text-gray-500 italic mt-0.5">"{bid.customer_reply}"</p>

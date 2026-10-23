@@ -239,17 +239,26 @@ export default function SupplierRequests() {
 
   const handleAcceptProposedPrice = async (bid: any, req: any) => {
     try {
-      const reqQuantity = req.quantity || 1;
+      const selectedTier = bid.selected_tier;
+      const reqQuantity = selectedTier?.quantity || req.quantity || 1;
       const merchantId = req.merchant_id;
       const newPriceTotal = bid.negotiated_price * reqQuantity;
-      const { error } = await supabase.from('supplier_bids').update({
+      const updateData: any = {
         price: newPriceTotal,
         cost_price: newPriceTotal,
         price_usd: newPriceTotal / exchangeRate,
         cost_price_usd: newPriceTotal / exchangeRate,
         negotiated_price: null,
         negotiated_by: 'supplier_accepted'
-      }).eq('id', bid.id);
+      };
+      if (selectedTier) {
+        updateData.selected_tier = {
+          ...selectedTier,
+          cost_price: bid.negotiated_price,
+          price: bid.negotiated_price
+        };
+      }
+      const { error } = await supabase.from('supplier_bids').update(updateData).eq('id', bid.id);
       
       if (error) throw error;
       sendNotification(merchantId, 'تم قبول السعر المقترح', `وافق المورد ${user?.company_name || ''} على السعر المقترح، يرجى دفع العربون.`, 'success');
@@ -354,10 +363,10 @@ export default function SupplierRequests() {
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">سوق الطلبات والمناقصات</h2>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">تصفح طلبات التجار الخاصة وقدم أفضل عروضك للفوز بالصفقة.</p>
         </div>
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full sm:w-max">
-          <button onClick={() => setFilterStatus('all')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'all' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>الكل</button>
-          <button onClick={() => setFilterStatus('open')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'open' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مفتوحة</button>
-          <button onClick={() => setFilterStatus('closed')} className={`px-4 py-2 text-sm font-bold rounded-md transition ${filterStatus === 'closed' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مغلقة</button>
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full sm:w-max overflow-x-auto no-scrollbar whitespace-nowrap gap-1">
+          <button onClick={() => setFilterStatus('all')} className={`px-4 py-2 text-sm font-bold rounded-md transition shrink-0 ${filterStatus === 'all' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>الكل</button>
+          <button onClick={() => setFilterStatus('open')} className={`px-4 py-2 text-sm font-bold rounded-md transition shrink-0 ${filterStatus === 'open' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مفتوحة</button>
+          <button onClick={() => setFilterStatus('closed')} className={`px-4 py-2 text-sm font-bold rounded-md transition shrink-0 ${filterStatus === 'closed' ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}>مغلقة</button>
         </div>
       </div>
 
@@ -574,23 +583,67 @@ export default function SupplierRequests() {
                           مرفوض: تم رفض العرض أو الصفقة مع التاجر.
                         </div>
                       ) : myBid.negotiated_by === 'merchant' ? (
-                        <div className="bg-orange-100 text-orange-800 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200">
-                          <p className="mb-3 text-base">التاجر يقترح سعراً جديداً: <strong className="text-orange-900">{formatCurrency(myBid.negotiated_price || (myBid.cost_price / (req.quantity || 1)) || 0)}</strong> للقطعة الواحدة. <span className="text-sm font-normal block mt-1">(ونسبة العربون المطلوبة: <strong>{myBid.advance_percentage}%</strong>)</span></p>
-                          {myBid.customer_reply && (
-                            <div className="mb-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-orange-200 text-gray-700 dark:text-gray-200 font-normal">
-                              <strong>رسالة التاجر:</strong> {myBid.customer_reply}
+                        <div className="bg-orange-50 dark:bg-orange-950/30 text-orange-900 dark:text-orange-200 p-4 rounded-xl font-bold text-sm mb-4 border border-orange-200 dark:border-orange-800 space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-orange-200/60 dark:border-orange-800/60">
+                            <span className="flex items-center gap-1.5 text-orange-800 dark:text-orange-300 font-extrabold">
+                              <DollarSign size={16} />
+                              اقتراح تفاوض من التاجر
+                            </span>
+                            <span className="text-xs bg-orange-200/80 dark:bg-orange-900/60 text-orange-900 dark:text-orange-200 px-2 py-0.5 rounded-full font-bold">
+                              عربون {myBid.advance_percentage}%
+                            </span>
+                          </div>
+
+                          {/* Details about chosen tier if available */}
+                          {myBid.selected_tier && (
+                            <div className="bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-orange-200/80 dark:border-orange-800 text-xs font-normal space-y-1.5">
+                              <div className="font-bold text-gray-800 dark:text-gray-100 flex items-center justify-between">
+                                <span>الشريحة التي اختارها التاجر:</span>
+                                <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-bold">
+                                  {myBid.selected_tier.quantity} قطعة
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-gray-500 dark:text-gray-400">
+                                <span>سعرك الأصلي لهذه الشريحة:</span>
+                                <span className="font-semibold text-gray-700 dark:text-gray-200">
+                                  {formatCurrency(myBid.selected_tier.cost_price || 0)} / قطعة
+                                </span>
+                              </div>
                             </div>
                           )}
-                          <div className="flex gap-2">
+
+                          <div className="bg-orange-100/70 dark:bg-orange-900/40 p-2.5 rounded-lg text-xs space-y-1">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-gray-700 dark:text-gray-300">السعر المقترح من التاجر:</span>
+                              <strong className="text-orange-800 dark:text-orange-300 text-base">
+                                {formatCurrency(myBid.negotiated_price || 0)} <span className="text-xs font-normal">/ قطعة</span>
+                              </strong>
+                            </div>
+                            <div className="flex justify-between items-center text-gray-600 dark:text-gray-400 pt-1 border-t border-orange-200/40 dark:border-orange-800/40">
+                              <span>الإجمالي المقترح:</span>
+                              <strong className="text-gray-900 dark:text-gray-100 font-bold">
+                                {formatCurrency((myBid.negotiated_price || 0) * (myBid.selected_tier?.quantity || req.quantity || 1))}
+                              </strong>
+                            </div>
+                          </div>
+
+                          {myBid.customer_reply && (
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-orange-200 dark:border-orange-800 text-gray-700 dark:text-gray-200 font-normal text-xs">
+                              <strong className="text-gray-900 dark:text-gray-100 block mb-0.5">رسالة وملاحظة التاجر:</strong>
+                              <p className="whitespace-pre-line">{myBid.customer_reply}</p>
+                            </div>
+                          )}
+
+                          <div className="flex gap-2 pt-1">
                             <button 
                               onClick={() => handleAcceptProposedPrice(myBid, req)}
-                              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold text-sm transition shadow-sm"
                             >
                               قبول السعر المقترح
                             </button>
                             <button 
                               onClick={() => handleRejectProposedPrice(myBid.id, req)}
-                              className="flex-1 bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg hover:bg-red-100 transition"
+                              className="flex-1 bg-white dark:bg-gray-800 text-red-600 border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 py-2 rounded-lg font-bold text-sm transition shadow-sm"
                             >
                               رفض العرض
                             </button>

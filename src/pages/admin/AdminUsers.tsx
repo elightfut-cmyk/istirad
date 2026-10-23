@@ -309,10 +309,10 @@ export default function AdminUsers() {
 
         {/* ── Navigation Tabs ── */}
         <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto">
+          <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap gap-1">
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                 activeTab === 'all' 
                   ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -327,7 +327,7 @@ export default function AdminUsers() {
 
             <button
               onClick={() => setActiveTab('suppliers')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                 activeTab === 'suppliers' 
                   ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -342,7 +342,7 @@ export default function AdminUsers() {
 
             <button
               onClick={() => setActiveTab('merchants')}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition ${
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shrink-0 ${
                 activeTab === 'merchants' 
                   ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'

@@ -1,3 +1,5 @@
+// Register top-level evaluation listener to satisfy Chromium ServiceWorker requirements
+self.addEventListener('message', () => {});
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
 const CACHE_NAME = 'jiibha-v4';

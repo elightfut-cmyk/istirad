@@ -145,6 +145,12 @@ export default function MerchantOrders() {
   });
 
   const [paymentNotification, setPaymentNotification] = useState<{ type: 'success' | 'failure', message: string } | null>(null);
+  const [paymentType, setPaymentType] = useState<'advance' | 'remaining'>('advance');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
+  const [existingCouponId, setExistingCouponId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -439,13 +445,6 @@ export default function MerchantOrders() {
       toast.error('حدث خطأ أثناء محاولة الحذف.');
     }
   };
-
-  const [paymentType, setPaymentType] = useState<'advance' | 'remaining'>('advance');
-  const [couponCode, setCouponCode] = useState('');
-  const [couponError, setCouponError] = useState<string | null>(null);
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-  const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
-  const [existingCouponId, setExistingCouponId] = useState<string | null>(null);
 
   const openPaymentModal = (bid: any, reqId: string, type: 'advance' | 'remaining' = 'advance', existingCoupon: string | null = null) => {
     const currentUser = useAuthStore.getState().user;

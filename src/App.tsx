@@ -50,52 +50,78 @@ function App() {
 
   const { user, checkSession } = useAuthStore();
 
-  // 2. Safe Delay OneSignal Auto-Login (Ghost State Prevention)
+  // 2. Strict Session-Switching Protocol for OneSignal (Ghost State Prevention)
   useEffect(() => {
     let isCancelled = false;
 
-    const initOneSignal = async () => {
+    const syncOneSignalSession = async () => {
       const currentUser = user;
       if (currentUser?.id) {
         try {
-          // تأخير بسيط جداً لمنع الـ Race Condition في الأجهزة الضعيفة أو عند التبديل السريع
-          await new Promise(resolve => setTimeout(resolve, 500));
-          if (isCancelled) return;
-
-          console.log("🔄 [App] محاولة تسجيل الدخول آلياً في OneSignal للمستخدم:", currentUser.id);
+          console.log("🔄 [App] بدء بروتوكول تبديل جلسة OneSignal للمستخدم:", currentUser.id);
 
           if (Capacitor.isNativePlatform()) {
-            await OneSignal.login(currentUser.id);
-            await OneSignal.User.addTag("role", currentUser.role || 'user');
-            try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+            // 1. Explicit Logout Order: Purge previous session & native bridge cache
+            await OneSignal.logout().catch(() => {});
 
+            // 2. Short safe delay (400ms) to ensure native bridge clears
+            await new Promise(r => setTimeout(r, 400));
+            if (isCancelled) return;
+
+            // 3. Login with trimmed id and tag role
+            await OneSignal.login(currentUser.id.trim());
+            await OneSignal.User.addTag("role", currentUser.role || 'user');
+
+            // 4. Verify permission & opt-in
             const optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
               await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
 
             if (!optedIn) {
               await OneSignal.Notifications.requestPermission(true);
             }
+            try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+
+            const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
+            if (freshSubId) {
+              localStorage.setItem('onesignal_subscription_id', freshSubId);
+            }
+            console.log("✅ [App] اكتمل تبديل جلسة OneSignal بنجاح، معرف الاشتراك:", freshSubId);
           } else {
+            // Web / PWA fallback
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
-              if (typeof OneSignalInstance?.login === 'function') {
-                await OneSignalInstance.login(currentUser.id).catch((e: any) => console.error("OneSignal Web Login Error:", e));
-              }
-              if (OneSignalInstance?.User?.addTag) {
-                OneSignalInstance.User.addTag("role", currentUser.role || 'user').catch(() => {});
+              try {
+                if (typeof OneSignalInstance?.logout === 'function') {
+                  await OneSignalInstance.logout().catch(() => {});
+                }
+                await new Promise(r => setTimeout(r, 400));
+                if (isCancelled) return;
+
+                if (typeof OneSignalInstance?.login === 'function') {
+                  await OneSignalInstance.login(currentUser.id.trim()).catch((e: any) => console.error("OneSignal Web Login Error:", e));
+                }
+                if (OneSignalInstance?.User?.addTag) {
+                  await OneSignalInstance.User.addTag("role", currentUser.role || 'user').catch(() => {});
+                }
+                if (!OneSignalInstance?.User?.pushSubscription?.optedIn) {
+                  await OneSignalInstance?.Notifications?.requestPermission?.().catch(() => {});
+                }
+              } catch (webErr) {
+                console.error("OneSignal Web Session Error:", webErr);
               }
             });
           }
         } catch (error) {
-          console.error("OneSignal Auto-Login Failed:", error);
+          console.error("OneSignal Session Switching Failed:", error);
         }
       }
     };
 
-    initOneSignal();
+    syncOneSignalSession();
 
     return () => {
       isCancelled = true;
+      // Note: OneSignal.logout() is strictly NEVER called here to prevent Ghost State on unmounts/navigation
     };
   }, [user?.id, user?.role]);
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();

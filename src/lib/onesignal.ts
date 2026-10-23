@@ -258,19 +258,14 @@ export const initOneSignal = async (): Promise<void> => {
         });
       } catch (listenerErr) {}
 
-      // Auto-reconnect identity after fresh reinstall or app relaunch
+      // Check existing subscription state without eager login (handled reactively)
       try {
-        const storedUserId = localStorage.getItem('onesignal_external_id');
-        if (storedUserId) {
-          await OneSignal.login(storedUserId);
-          console.log('🔒 Auto-logged in OneSignal on init with external_id:', storedUserId);
-        }
-        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync();
+        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
         if (freshSubId) {
           localStorage.setItem('onesignal_subscription_id', freshSubId);
         }
       } catch (e) {
-        console.warn('Auto-identity sync notice:', e);
+        console.warn('Subscription sync notice:', e);
       }
 
       isInitialized = true;
@@ -327,6 +322,7 @@ export const initOneSignal = async (): Promise<void> => {
  * Relied upon by Supabase Edge Function to target user without background polling.
  */
 let lastLoggedInUserId: string | null = null;
+let loginMutex: Promise<any> = Promise.resolve();
 
 export const loginOneSignal = async (userId: string | number, role?: string, userName?: string): Promise<void> => {
   if (typeof window === 'undefined' || !userId) return;
@@ -338,68 +334,101 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
   if (lastLoggedInUserId === strId && currentCachedRole === (role || '')) {
     return;
   }
-  lastLoggedInUserId = strId;
-  if (role) {
-    localStorage.setItem('onesignal_user_role', role);
-  }
 
-  localStorage.setItem('onesignal_external_id', strId);
-
-  // Sync with NativeBridge if present (Android Java)
-  const bridge = getNativeBridge();
-  if (bridge?.loginOneSignal) {
+  loginMutex = loginMutex.then(async () => {
     try {
-      bridge.loginOneSignal(strId, role || '');
-    } catch {}
-  }
+      if (isNativePlatform()) {
+        if (!isInitialized) {
+          try {
+            await initOneSignal();
+          } catch {}
+        }
 
-  // Capacitor Native Login
-  if (isNativePlatform()) {
-    if (!isInitialized) {
-      try {
-        await initOneSignal();
-      } catch {}
-    }
-    try {
-      await OneSignal.login(strId);
-      if (role) await OneSignal.User.addTag('role', role);
-      if (userName) await OneSignal.User.addTag('name', userName);
-      await OneSignal.User.addTag('user_id', strId);
-      try { await OneSignal.User.pushSubscription.optIn(); } catch {}
-      const freshSubId = await OneSignal.User.pushSubscription.getIdAsync();
-      if (freshSubId) {
-        localStorage.setItem('onesignal_subscription_id', freshSubId);
+        // 1. Explicit Logout Order to clear native bridge cache & purge ghost state
+        try {
+          await OneSignal.logout();
+        } catch (logErr) {
+          console.warn('OneSignal.logout notice:', logErr);
+        }
+
+        // 2. Short safe delay (400ms) to ensure native bridge clears
+        await new Promise((r) => setTimeout(r, 400));
+
+        lastLoggedInUserId = strId;
+        if (role) {
+          localStorage.setItem('onesignal_user_role', role);
+        }
+        localStorage.setItem('onesignal_external_id', strId);
+
+        // Sync with NativeBridge if present (Android Java)
+        const bridge = getNativeBridge();
+        if (bridge?.loginOneSignal) {
+          try {
+            bridge.loginOneSignal(strId, role || '');
+          } catch {}
+        }
+
+        // 3. Login with trimmed id and tags
+        await OneSignal.login(strId);
+        await OneSignal.User.addTag('role', role || 'user');
+        if (userName) await OneSignal.User.addTag('name', userName);
+        await OneSignal.User.addTag('user_id', strId);
+
+        // 4. Opt-in and permission request
+        const optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
+          await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
+
+        if (!optedIn) {
+          await OneSignal.Notifications.requestPermission(true);
+        }
+        try { await OneSignal.User.pushSubscription.optIn(); } catch {}
+
+        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
+        if (freshSubId) {
+          localStorage.setItem('onesignal_subscription_id', freshSubId);
+        }
+        console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
+        return;
       }
-      console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
 
-      return;
+      // Web Push Deferred Login
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
+        try {
+          if (!OneSignalInstance) return;
+          if (typeof OneSignalInstance.logout === 'function') {
+            await OneSignalInstance.logout().catch(() => {});
+          }
+          await new Promise((r) => setTimeout(r, 400));
+
+          lastLoggedInUserId = strId;
+          if (role) localStorage.setItem('onesignal_user_role', role);
+          localStorage.setItem('onesignal_external_id', strId);
+
+          if (typeof OneSignalInstance.login === 'function') {
+            await OneSignalInstance.login(strId).catch((err: any) => {
+              console.warn('OneSignal Web login non-fatal notice:', err);
+            });
+            console.log('🔒 OneSignal Web logged in with external_id:', strId);
+          }
+          if (OneSignalInstance.User?.addTag) {
+            await OneSignalInstance.User.addTag('role', role || 'user').catch(() => {});
+            if (userName) await OneSignalInstance.User.addTag('name', userName).catch(() => {});
+            await OneSignalInstance.User.addTag('user_id', strId).catch(() => {});
+          }
+          if (!OneSignalInstance.User?.pushSubscription?.optedIn) {
+            await OneSignalInstance.Notifications?.requestPermission?.().catch(() => {});
+          }
+        } catch (e) {
+          console.warn('OneSignal Web login non-fatal notice:', e);
+        }
+      });
     } catch (e) {
-      console.warn('OneSignal native login warning:', e);
+      console.warn('OneSignal login warning:', e);
     }
-  }
+  });
 
-  // Web Push Deferred Login (Safe against internal SDK errors like Qe undefined)
-  if (typeof window !== 'undefined' && !isNativePlatform()) {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
-      try {
-        if (!OneSignalInstance) return;
-        if (typeof OneSignalInstance.login === 'function') {
-          await OneSignalInstance.login(strId).catch((err: any) => {
-            console.warn('OneSignal Web login non-fatal notice:', err);
-          });
-          console.log('🔒 OneSignal Web logged in with external_id:', strId);
-        }
-        if (OneSignalInstance.User?.addTag) {
-          if (role) await OneSignalInstance.User.addTag('role', role).catch(() => {});
-          if (userName) await OneSignalInstance.User.addTag('name', userName).catch(() => {});
-          await OneSignalInstance.User.addTag('user_id', strId).catch(() => {});
-        }
-      } catch (e) {
-        console.warn('OneSignal Web login non-fatal notice:', e);
-      }
-    });
-  }
+  await loginMutex;
 };
 
 /**

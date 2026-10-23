@@ -434,6 +434,11 @@ public class MainActivity extends BridgeActivity {
                     }
                     editor.apply();
 
+                    try {
+                        com.onesignal.OneSignal.logout();
+                        Thread.sleep(200);
+                    } catch (Exception ignored) {}
+
                     com.onesignal.OneSignal.login(cleanId);
                     com.onesignal.OneSignal.getUser().addTag("user_id", cleanId);
                     try {

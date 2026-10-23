@@ -11,11 +11,11 @@ export default function CustomWindowSlider() {
     customWindowSubtitle
   } = useSettingsStore();
 
+  const sliderRef = useRef<HTMLDivElement>(null);
+
   if (!customWindowActive || !customWindowCards || customWindowCards.length === 0) {
     return null;
   }
-
-  const sliderRef = useRef<HTMLDivElement>(null);
   
   const scroll = (direction: 'next' | 'prev') => {
     if (sliderRef.current) {

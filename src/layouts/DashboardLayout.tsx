@@ -410,31 +410,72 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             </div>
           )}
 
-          {/* الزر الإجباري المؤقت لتفعيل/إصلاح الإشعارات */}
+          {/* زر تشخيص وتفعيل الإشعارات لكشف سبب الخطأ بدقة */}
           {user?.id && (
             <div className="flex justify-center w-full mb-4">
               <button 
                 onClick={async () => {
+                  const currentUser = user;
                   try {
-                    // استخدام user_id الفعلي للمستخدم الذي سجل دخوله
+                    alert("جاري التحقق من OneSignal...");
+
                     if (isNativePlatform()) {
-                      await OneSignal.login(user.id); 
-                      await OneSignal.Notifications.requestPermission(true);
-                      await OneSignal.User.pushSubscription.optIn();
+                      // 0. ضمان التهيئة السليمة للتطبيق
+                      try {
+                        await OneSignal.initialize('daeaef49-9125-4ef2-8950-6c0428063f09');
+                      } catch (initErr: any) {
+                        console.warn('Init notice:', initErr);
+                      }
+
+                      // 1. تسجيل الدخول
+                      await OneSignal.login(currentUser.id);
+                      
+                      // 2. طلب الصلاحية
+                      const hasPermission = await OneSignal.Notifications.requestPermission(true);
+                      
+                      // 3. تفعيل الاشتراك
+                      try {
+                        await OneSignal.User.pushSubscription.optIn();
+                      } catch (optErr) {}
+
+                      // 4. جلب حالة الاشتراك الحالية
+                      const pushSubscription = OneSignal.User.pushSubscription;
+                      let optedIn = (pushSubscription as any).optedIn;
+                      let pushToken = (pushSubscription as any).token;
+                      let pushId = (pushSubscription as any).id;
+
+                      if (typeof pushSubscription.getOptedInAsync === 'function') {
+                        optedIn = await pushSubscription.getOptedInAsync().catch(() => optedIn);
+                      }
+                      if (typeof pushSubscription.getIdAsync === 'function') {
+                        pushId = await pushSubscription.getIdAsync().catch(() => pushId);
+                      }
+                      if (typeof pushSubscription.getTokenAsync === 'function') {
+                        pushToken = await pushSubscription.getTokenAsync().catch(() => pushToken);
+                      }
+                      
+                      alert(`النتيجة:\nمسجل كـ: ${currentUser.id}\nالصلاحية: ${hasPermission}\nموافق (Opted-in): ${optedIn}\nمعرف الجهاز (ID): ${pushId || "غير متوفر"}`);
                     } else {
                       window.OneSignalDeferred = window.OneSignalDeferred || [];
                       window.OneSignalDeferred.push(async function (OS: any) {
-                        if (OS?.login) await OS.login(user.id);
+                        try {
+                          if (OS?.login) await OS.login(currentUser.id);
+                          const hasPermission = await OS?.Notifications?.requestPermission?.();
+                          const optedIn = OS?.User?.pushSubscription?.optedIn;
+                          const pushId = OS?.User?.pushSubscription?.id;
+                          alert(`النتيجة (ويب):\nمسجل كـ: ${currentUser.id}\nالصلاحية: ${hasPermission}\nموافق (Opted-in): ${optedIn}\nمعرف الجهاز (ID): ${pushId || "غير متوفر"}`);
+                        } catch (webErr: any) {
+                          alert("❌ خطأ قاطع في OneSignal ويب: " + (webErr?.message || webErr));
+                        }
                       });
                     }
-                    alert("✅ تم إرسال أمر الربط بنجاح إلى OneSignal!");
                   } catch (err: any) {
-                    alert("❌ حدث خطأ في الربط: " + (err?.message || err));
+                    alert("❌ خطأ قاطع في OneSignal: " + (err?.message || JSON.stringify(err) || err));
                   }
                 }}
-                className="w-full max-w-xl p-4 m-4 bg-red-500 hover:bg-red-600 active:scale-98 text-white font-bold rounded shadow-lg text-center cursor-pointer transition-all border-2 border-white flex items-center justify-center gap-2 text-base md:text-lg animate-pulse"
+                className="w-full max-w-xl p-4 m-4 bg-purple-600 hover:bg-purple-700 active:scale-98 text-white font-bold rounded shadow-lg text-center cursor-pointer transition-all border-2 border-white flex items-center justify-center gap-2 text-base md:text-lg"
               >
-                🔔 تفعيل/إصلاح الإشعارات إجبارياً
+                تشخيص وتفعيل الإشعارات
               </button>
             </div>
           )}

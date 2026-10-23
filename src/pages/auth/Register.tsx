@@ -61,9 +61,11 @@ export default function Register() {
         }
 
         setSuccess(true);
-        // Send notification to admins
+        // Send notification to admins immediately without blocking screen
         const roleAr = formData.role === 'merchant' ? 'تاجر' : 'مورد';
-        await sendNotification('all_admins', 'مستخدم جديد', `تم تسجيل ${roleAr} جديد باسم ${formData.name}`, 'info');
+        sendNotification('all_admins', 'مستخدم جديد', `تم تسجيل ${roleAr} جديد باسم ${formData.name}`, 'info').catch(err => {
+          console.warn('Admin registration notification notice:', err);
+        });
         setTimeout(() => {
            navigate('/login');
         }, 3000);

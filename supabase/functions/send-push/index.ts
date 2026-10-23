@@ -303,13 +303,11 @@ serve(async (req) => {
         oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
       }
     } else if (externalIds.length > 0) {
-      // Direct user UUID targeting via tag filters (100% reliable for all Android devices)
-      const userFilters: any[] = [];
-      externalIds.forEach((id: string, idx: number) => {
-        if (idx > 0) userFilters.push({ operator: 'OR' });
-        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
-      });
-      oneSignalPayload.filters = userFilters;
+      // Direct user UUID targeting via external_id alias (proven from morning baseline)
+      oneSignalPayload.target_channel = 'push';
+      oneSignalPayload.include_aliases = {
+        external_id: externalIds
+      };
     }
 
     // Send request to OneSignal REST API
@@ -323,6 +321,35 @@ serve(async (req) => {
     });
 
     let resJson = await oneSignalRes.json().catch(() => ({}));
+
+    // Instant Fallback for externalIds: If include_aliases failed or had invalid_aliases, retry via tag filter
+    if (externalIds.length > 0 && (!oneSignalRes.ok || (resJson && resJson.recipients === 0) || JSON.stringify(resJson).includes('invalid_aliases'))) {
+      const tagFallbackPayload = { ...oneSignalPayload };
+      delete tagFallbackPayload.include_aliases;
+      delete tagFallbackPayload.target_channel;
+      const userFilters: any[] = [];
+      externalIds.forEach((id: string, idx: number) => {
+        if (idx > 0) userFilters.push({ operator: 'OR' });
+        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+      });
+      tagFallbackPayload.filters = userFilters;
+
+      try {
+        const tagRes = await fetch('https://api.onesignal.com/notifications', {
+          method: 'POST',
+          headers: {
+            'Authorization': authHeaderValue,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(tagFallbackPayload)
+        });
+        const tagJson = await tagRes.json().catch(() => ({}));
+        if (tagRes.ok && (tagJson.recipients > 0 || tagJson.id)) {
+          oneSignalRes = tagRes;
+          resJson = tagJson;
+        }
+      } catch {}
+    }
 
     // Retry without channel if rejected
     if (!oneSignalRes.ok && JSON.stringify(resJson).includes('android_channel_id')) {
@@ -366,61 +393,21 @@ serve(async (req) => {
       } catch {}
     }
 
-    // Robust Fallbacks from morning version (80d5e3b):
+    // Rapid Admin Guaranteed Delivery Fallback (No slow player scan loops)
     const hasZeroRecipients = resJson && resJson.recipients === 0;
     const isInvalid = !oneSignalRes.ok || hasZeroRecipients || JSON.stringify(resJson).includes('not subscribed') || JSON.stringify(resJson).includes('invalid_aliases');
 
-    if (isInvalid) {
-      // Fallback 1: If role filter failed, try include_aliases or direct player search
-      if (targetRole && targetRole !== 'all') {
-        try {
-          const playersRes = await fetch(`https://api.onesignal.com/players?app_id=${ONESIGNAL_APP_ID}&limit=50`, {
-            headers: { 'Authorization': authHeaderValue }
-          });
-          const pData = await playersRes.json();
-          const activeRolePlayerIds = (pData.players || [])
-            .filter((p: any) => p.tags && p.tags.role === targetRole && !p.invalid_identifier && p.identifier)
-            .map((p: any) => p.id);
+    if (isInvalid && targetRole === 'admin') {
+      const broadPayload = {
+        ...oneSignalPayload,
+        included_segments: ['Total Subscriptions', 'Active Subscriptions']
+      };
+      delete broadPayload.filters;
+      delete broadPayload.include_player_ids;
+      delete broadPayload.include_aliases;
+      delete broadPayload.target_channel;
 
-          if (activeRolePlayerIds.length > 0) {
-            const playerPayload = {
-              ...oneSignalPayload,
-              include_player_ids: activeRolePlayerIds
-            };
-            delete playerPayload.filters;
-            delete playerPayload.included_segments;
-            delete playerPayload.include_aliases;
-            delete playerPayload.target_channel;
-
-            const playerRes = await fetch('https://api.onesignal.com/notifications', {
-              method: 'POST',
-              headers: { 'Authorization': authHeaderValue, 'Content-Type': 'application/json' },
-              body: JSON.stringify(playerPayload)
-            });
-            const playerJson = await playerRes.json().catch(() => ({}));
-            if (playerRes.ok && (playerJson.recipients > 0 || playerJson.id)) {
-              return new Response(
-                JSON.stringify({ ok: true, status: playerRes.status, ...playerJson }),
-                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-              );
-            }
-          }
-        } catch (searchErr) {
-          console.warn('Role player search fallback notice:', searchErr);
-        }
-      }
-
-      // Fallback 2: Broadcast to Total Subscriptions / Active Subscriptions
-      if (targetRole === 'admin') {
-        const broadPayload = {
-          ...oneSignalPayload,
-          included_segments: ['Total Subscriptions', 'Active Subscriptions']
-        };
-        delete broadPayload.filters;
-        delete broadPayload.include_player_ids;
-        delete broadPayload.include_aliases;
-        delete broadPayload.target_channel;
-
+      try {
         const broadRes = await fetch('https://api.onesignal.com/notifications', {
           method: 'POST',
           headers: { 'Authorization': authHeaderValue, 'Content-Type': 'application/json' },
@@ -428,12 +415,10 @@ serve(async (req) => {
         });
         const broadJson = await broadRes.json().catch(() => ({}));
         if (broadRes.ok) {
-          return new Response(
-            JSON.stringify({ ok: true, status: broadRes.status, ...broadJson }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          oneSignalRes = broadRes;
+          resJson = broadJson;
         }
-      }
+      } catch {}
     }
 
     return new Response(

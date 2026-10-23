@@ -141,10 +141,20 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult() != null) {
                     cachedFcmToken = task.getResult();
+                    android.util.Log.d("JiibhaFCM", "FCM Token retrieved successfully: " + cachedFcmToken);
                     try {
                         SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
-                        prefs.edit().putString("fcm_token", cachedFcmToken).apply();
+                        prefs.edit().putString("fcm_token", cachedFcmToken).remove("fcm_error").apply();
                     } catch (Exception ignored) {}
+                } else {
+                    Exception ex = task.getException();
+                    android.util.Log.e("JiibhaFCM", "Failed to retrieve FCM Token", ex);
+                    if (ex != null) {
+                        try {
+                            SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                            prefs.edit().putString("fcm_error", ex.getMessage()).apply();
+                        } catch (Exception ignored) {}
+                    }
                 }
             });
             try {
@@ -489,6 +499,15 @@ public class MainActivity extends BridgeActivity {
             try {
                 SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
                 return prefs.getString("fcm_token", "");
+            } catch (Exception ignored) {}
+            return "";
+        }
+
+        @JavascriptInterface
+        public String getFcmError() {
+            try {
+                SharedPreferences prefs = context.getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);
+                return prefs.getString("fcm_error", "");
             } catch (Exception ignored) {}
             return "";
         }

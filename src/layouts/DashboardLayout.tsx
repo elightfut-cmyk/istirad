@@ -440,21 +440,37 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
 
                       // 4. جلب حالة الاشتراك الحالية
                       const pushSubscription = OneSignal.User.pushSubscription;
-                      let optedIn = (pushSubscription as any).optedIn;
-                      let pushToken = (pushSubscription as any).token;
-                      let pushId = (pushSubscription as any).id;
+                      let optedIn = false;
+                      let pushToken: string | null = null;
+                      let pushId: string | null = null;
 
-                      if (typeof pushSubscription.getOptedInAsync === 'function') {
-                        optedIn = await pushSubscription.getOptedInAsync().catch(() => optedIn);
+                      if (typeof pushSubscription?.getOptedInAsync === 'function') {
+                        optedIn = await pushSubscription.getOptedInAsync().catch(() => false);
                       }
-                      if (typeof pushSubscription.getIdAsync === 'function') {
-                        pushId = await pushSubscription.getIdAsync().catch(() => pushId);
+                      if (typeof pushSubscription?.getIdAsync === 'function') {
+                        pushId = await pushSubscription.getIdAsync().catch(() => null);
                       }
-                      if (typeof pushSubscription.getTokenAsync === 'function') {
-                        pushToken = await pushSubscription.getTokenAsync().catch(() => pushToken);
+                      if (typeof pushSubscription?.getTokenAsync === 'function') {
+                        pushToken = await pushSubscription.getTokenAsync().catch(() => null);
                       }
-                      
-                      alert(`النتيجة:\nمسجل كـ: ${currentUser.id}\nالصلاحية: ${hasPermission}\nموافق (Opted-in): ${optedIn}\nمعرف الجهاز (ID): ${pushId || "غير متوفر"}`);
+
+                      // فحص الجسر الأصلي (NativeBridge) من كود جافا أندرويد
+                      const nativeBridge = (window as any).NativeBridge || (window as any).NativeDeviceBridge;
+                      const bridgeSubId = nativeBridge?.getPushSubscriptionId ? nativeBridge.getPushSubscriptionId() : null;
+                      const bridgeFcmToken = nativeBridge?.getFcmToken ? nativeBridge.getFcmToken() : null;
+                      const bridgeFcmError = nativeBridge?.getFcmError ? nativeBridge.getFcmError() : null;
+
+                      const finalPushId = pushId || bridgeSubId || localStorage.getItem('onesignal_subscription_id');
+                      const finalFcmToken = pushToken || bridgeFcmToken || localStorage.getItem('onesignal_fcm_token');
+
+                      let fcmStatus = 'غير متوفر ⚠️';
+                      if (finalFcmToken && finalFcmToken.length > 10) {
+                        fcmStatus = `✅ متصل (${finalFcmToken.substring(0, 12)}...)`;
+                      } else if (bridgeFcmError) {
+                        fcmStatus = `❌ خطأ في FCM: ${bridgeFcmError}`;
+                      }
+
+                      alert(`النتيجة التفصيلية:\nالمستخدم: ${currentUser.id}\nالصلاحية: ${hasPermission ? 'ممنوحة ✅' : 'مرفوضة ❌'}\nالاشتراك (Opted-in): ${optedIn ? 'مفعل ✅' : 'معطل ❌'}\nمعرف الجهاز (Push ID): ${finalPushId || 'غير متوفر ⚠️'}\nحالة Google FCM: ${fcmStatus}`);
                     } else {
                       window.OneSignalDeferred = window.OneSignalDeferred || [];
                       window.OneSignalDeferred.push(async function (OS: any) {

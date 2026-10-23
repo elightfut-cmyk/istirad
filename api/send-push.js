@@ -60,12 +60,12 @@ export default async function handler(req, res) {
         payload.include_subscription_ids = validSubIds;
         payload.include_player_ids = validSubIds;
       } else if (externalIds.length > 0) {
-        payload.include_aliases = {
-          external_id: externalIds
-        };
-        payload.include_external_user_ids = externalIds;
-        payload.channel_for_external_user_ids = 'push';
-        payload.target_channel = 'push';
+        const filters = [];
+        externalIds.forEach((id, idx) => {
+          if (idx > 0) filters.push({ operator: 'OR' });
+          filters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+        });
+        payload.filters = filters;
       }
     }
 

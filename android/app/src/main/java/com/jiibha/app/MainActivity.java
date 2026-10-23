@@ -185,8 +185,17 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) {}
     }
 
+    private static String lastRegisteredTokenUser = null;
+    private static long lastRegisteredTime = 0;
     public void registerDeviceWithServer(String fcmToken, String userId, String role) {
         if (fcmToken == null || fcmToken.trim().isEmpty()) return;
+        String key = fcmToken + "_" + (userId != null ? userId : "") + "_" + (role != null ? role : "");
+        long now = System.currentTimeMillis();
+        if (key.equals(lastRegisteredTokenUser) && (now - lastRegisteredTime < 300000L)) {
+            return;
+        }
+        lastRegisteredTokenUser = key;
+        lastRegisteredTime = now;
         new Thread(() -> {
             try {
                 java.net.URL url = new java.net.URL("https://mfottmlpvjqonizrqegg.supabase.co/functions/v1/send-push");
@@ -470,6 +479,9 @@ public class MainActivity extends BridgeActivity {
 
                     com.onesignal.OneSignal.login(cleanId);
                     com.onesignal.OneSignal.getUser().addTag("user_id", cleanId);
+                    try {
+                        com.onesignal.OneSignal.getUser().addAlias("external_id", cleanId);
+                    } catch (Exception ignored) {}
                     if (role != null && !role.trim().isEmpty()) {
                         com.onesignal.OneSignal.getUser().addTag("role", role.trim());
                     }

@@ -90,8 +90,12 @@ function apiDevPlugin(env: Record<string, string>): any {
                 payload.target_channel = 'push';
                 payload.include_subscription_ids = validSubIds;
               } else if (externalIds.length > 0) {
-                payload.target_channel = 'push';
-                payload.include_aliases = { external_id: externalIds };
+                const filters: any[] = [];
+                externalIds.forEach((id: string, idx: number) => {
+                  if (idx > 0) filters.push({ operator: 'OR' });
+                  filters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+                });
+                payload.filters = filters;
               }
 
               let oneSignalRes: any;

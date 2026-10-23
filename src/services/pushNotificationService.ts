@@ -151,51 +151,9 @@ export const sendPushNotificationDetailed = async ({
     const resolvedApiKey = await getOneSignalRestApiKey();
     const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 
-    // Automatically resolve role for recipient if single user and targetRole not passed
-    let effectiveRole = targetRole;
-    if (!effectiveRole && externalIds.length > 0) {
-      try {
-        const { data: userRow } = await supabase.from('users').select('role').eq('id', externalIds[0]).maybeSingle();
-        if (userRow?.role) {
-          effectiveRole = userRow.role;
-        }
-      } catch {}
-    }
-
-    const pushBody: Record<string, any> = {
-      userIds: externalIds,
-      subscriptionIds: validSubIds,
-      title,
-      message,
-      data,
-      sendToAll,
-      targetRole: effectiveRole || undefined,
-      existing_android_channel_id: 'default_notification_channel',
-      skipDbInsert: Boolean(skipDbInsert),
-      apiKey: resolvedApiKey || undefined
-    };
-    if (android_channel_id && isUuid(android_channel_id)) {
-      pushBody.android_channel_id = android_channel_id.trim();
-    }
-
-    let resData: any = null;
-    let invokeError: any = null;
-
-    try {
-      const resp = await supabase.functions.invoke('send-push', {
-        body: pushBody
-      });
-      resData = resp.data;
-      invokeError = resp.error;
-    } catch (invErr) {
-      invokeError = invErr;
-    }
-
-    const hasEdgeError = invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || (resData.error);
-    const hasInvalidAliases = resData && resData.errors && resData.errors.invalid_aliases;
-
-    // Direct OneSignal Tag Filter Fallback if Edge returned error or invalid_aliases
-    if ((hasEdgeError || hasInvalidAliases) && resolvedApiKey) {
+    // 1. PRIMARY FAST PATH: Direct OneSignal Tag-Filter REST API Dispatch
+    // (Bypasses old Edge Function deployments, guarantees tag-based delivery with 0ms server queue)
+    if (resolvedApiKey) {
       try {
         const directFilters: any[] = [];
         if (!sendToAll && validSubIds.length === 0) {
@@ -204,8 +162,8 @@ export const sendPushNotificationDetailed = async ({
               if (idx > 0) directFilters.push({ operator: 'OR' });
               directFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
             });
-          } else if (effectiveRole && effectiveRole !== 'all') {
-            directFilters.push({ field: 'tag', key: 'role', relation: '=', value: String(effectiveRole) });
+          } else if (targetRole && targetRole !== 'all') {
+            directFilters.push({ field: 'tag', key: 'role', relation: '=', value: String(targetRole) });
           }
         }
 
@@ -230,30 +188,91 @@ export const sendPushNotificationDetailed = async ({
           directPayload.filters = directFilters;
         }
 
-        const directRes = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Key ${resolvedApiKey}`
-          },
-          body: JSON.stringify(directPayload)
-        });
-        const directJson = await directRes.json();
-        if (directJson && directJson.id) {
-          console.log('✅ Direct OneSignal Tag Filter dispatch succeeded:', directJson.id);
-          return {
-            success: true,
-            recipients: directJson.recipients || 1,
-            message: 'تم إرسال الإشعار بنجاح إلى الهاتف في الخلفية',
-            raw: directJson
-          };
+        let directRes: Response | null = null;
+        try {
+          directRes = await fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Key ${resolvedApiKey}`
+            },
+            body: JSON.stringify(directPayload)
+          });
+        } catch {
+          directRes = await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Key ${resolvedApiKey}`
+            },
+            body: JSON.stringify(directPayload)
+          });
+        }
+
+        if (directRes && directRes.ok) {
+          const directJson = await directRes.json().catch(() => ({}));
+          if (directJson && directJson.id) {
+            // Guarantee database record insertion
+            if (!skipDbInsert) {
+              try {
+                if (externalIds.length > 0) {
+                  await supabase.from('notifications').insert(
+                    externalIds.map(id => ({ user_id: id, title, message, type: data?.type || 'info' }))
+                  );
+                }
+              } catch {}
+            }
+            return {
+              success: true,
+              recipients: directJson.recipients || 1,
+              message: 'تم إرسال الإشعار بنجاح إلى الهاتف في الخلفية',
+              raw: directJson
+            };
+          }
         }
       } catch (directErr) {
-        console.warn('Direct OneSignal dispatch fallback notice:', directErr);
+        console.warn('Direct OneSignal dispatch notice, falling back to Edge Function:', directErr);
       }
     }
 
-    if (invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || resData.error) {
+    // 2. FALLBACK PATH: Supabase Edge Function 'send-push'
+    const pushBody: Record<string, any> = {
+      userIds: externalIds,
+      subscriptionIds: validSubIds,
+      title,
+      message,
+      data,
+      sendToAll,
+      targetRole: targetRole || undefined,
+      existing_android_channel_id: 'default_notification_channel',
+      skipDbInsert: Boolean(skipDbInsert),
+      apiKey: resolvedApiKey || undefined
+    };
+    if (android_channel_id && isUuid(android_channel_id)) {
+      pushBody.android_channel_id = android_channel_id.trim();
+    }
+
+    let resData: any = null;
+    let invokeError: any = null;
+
+    try {
+      const resp = await supabase.functions.invoke('send-push', {
+        body: pushBody
+      });
+      resData = resp.data;
+      invokeError = resp.error;
+    } catch (invErr) {
+      invokeError = invErr;
+    }
+
+    const hasInvalidAliases = resData && resData.errors && resData.errors.invalid_aliases;
+
+    if (hasInvalidAliases) {
+      throw new Error('فشل الإرسال: لم يتم العثور على جهاز نشط لهذا المستخدم في OneSignal');
+    }
+
+    const hasEdgeError = invokeError || !resData || resData.ok === false || (resData.errors && !resData.id) || (resData.error);
+    if (hasEdgeError) {
       if (invokeError) {
         let detailedMessage = invokeError.message;
         try {

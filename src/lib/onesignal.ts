@@ -408,14 +408,26 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
  * Connects directly to OneSignal REST API in Europe to register the device's live FCM token,
  * completely neutralizing the Algeria 4G carrier block on api.onesignal.com.
  */
+let lastSyncedFcmToken: string | null = null;
+let lastSyncedTime = 0;
+
 export const syncDeviceRegistration = async (userId?: string, role?: string, userName?: string): Promise<string | null> => {
   const fcmToken = getFcmToken();
   const effectiveId = userId || localStorage.getItem('onesignal_external_id');
+  if (!fcmToken) return null;
+
+  const now = Date.now();
+  const syncKey = `${fcmToken}_${effectiveId || ''}_${role || ''}`;
+  if (lastSyncedFcmToken === syncKey && (now - lastSyncedTime < 300000)) {
+    return localStorage.getItem('onesignal_subscription_id');
+  }
+  lastSyncedFcmToken = syncKey;
+  lastSyncedTime = now;
+
   const bridge = getNativeBridge();
   if (bridge?.syncDeviceWithServer) {
     try { bridge.syncDeviceWithServer(); } catch {}
   }
-  if (!fcmToken) return null;
 
   try {
     const { data: resData } = await supabase.functions.invoke('send-push', {

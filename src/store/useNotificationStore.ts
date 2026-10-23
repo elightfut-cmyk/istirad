@@ -458,13 +458,28 @@ export const sendNotification = async (
       });
     }
 
+    const isBroadcastAdmin = userId === 'all_admins';
+    const isBroadcastSupplier = userId === 'all_suppliers';
+
+    let effectiveTargetRole: string | undefined = role;
+    let targetUserIds: string[] = [];
+
+    if (isBroadcastAdmin) {
+      effectiveTargetRole = 'admin';
+    } else if (isBroadcastSupplier) {
+      effectiveTargetRole = 'supplier';
+    } else if (userId) {
+      targetUserIds = [String(userId)];
+      effectiveTargetRole = undefined;
+    }
+
     // Dispatch push notification to target user's mobile via OneSignal API
     let pushSent = false;
     let pushError: string | undefined;
     try {
       const pushRes = await sendPushNotification({
-        userIds: [String(userId)],
-        targetRole: role || undefined,
+        userIds: targetUserIds,
+        targetRole: effectiveTargetRole,
         title,
         message,
         data: { type },

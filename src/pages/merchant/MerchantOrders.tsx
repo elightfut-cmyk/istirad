@@ -247,7 +247,7 @@ export default function MerchantOrders() {
         .select(`
           id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china,
           supplier_bids (
-            id, request_id, supplier_id, price, cost_price, advance_percentage, notes, status, shipping_status, created_at, deposit_paid_at, is_fully_paid, allow_negotiation, negotiated_price, negotiated_by, customer_reply,
+            *,
             supplier:users(id, name, company_name, phone, verification_badge)
           ),
           supplier_interests(id, supplier_id)
@@ -1290,36 +1290,52 @@ export default function MerchantOrders() {
 
                           {/* Interactive Quantity Tiers Selector if supplier offered multiple tiers */}
                           {bid.quantity_tiers && Array.isArray(bid.quantity_tiers) && bid.quantity_tiers.length > 0 && (
-                            <div className="mb-3.5 p-2.5 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                            <div className="mb-4 p-3.5 bg-gradient-to-br from-indigo-50/90 to-purple-50/70 dark:from-indigo-950/50 dark:to-purple-950/30 rounded-2xl border border-indigo-200/80 dark:border-indigo-800/60 shadow-xs">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1">
-                                  <Layers size={13} className="text-[#4f46e5]" />
-                                  اختر كمية الصفقة:
+                                <span className="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                                  <Layers size={15} className="text-[#4f46e5] dark:text-indigo-400" />
+                                  شرائح الأسعار والكميات المقترحة:
                                 </span>
-                                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                                  ({bid.quantity_tiers.length} شرائح متاحة)
+                                <span className="text-[11px] bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full">
+                                  {bid.quantity_tiers.length} شرائح متاحة
                                 </span>
                               </div>
-                              <div className="flex flex-wrap gap-1.5">
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-2.5">
+                                {bid.status === 'accepted' ? 'الشريحة المعتمدة في هذه الصفقة:' : 'اضغط على الشريحة المناسبة لك لاختيار الكمية:'}
+                              </p>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {bid.quantity_tiers.map((t: any, tIdx: number) => {
                                   const isSelected = activeTier ? activeTier.quantity === t.quantity : tIdx === 0;
                                   const tierPrice = t.final_item_price || calculateFinalPrice(t.cost_price, t.quantity, profitSettings).finalItemPrice;
+                                  const tierTotal = t.final_total || (tierPrice * t.quantity);
                                   return (
                                     <button
                                       key={tIdx}
                                       type="button"
                                       disabled={bid.status === 'accepted'}
                                       onClick={() => setSelectedBidTiers(prev => ({ ...prev, [bid.id]: t }))}
-                                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex flex-col items-center cursor-pointer border ${
+                                      className={`p-2.5 rounded-xl text-right transition-all flex flex-col justify-between cursor-pointer border-2 relative ${
                                         isSelected 
-                                          ? 'bg-[#4f46e5] text-white border-[#4f46e5] shadow-xs' 
-                                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-indigo-300'
+                                          ? 'bg-white dark:bg-gray-800 border-[#4f46e5] shadow-md ring-2 ring-indigo-500/20' 
+                                          : 'bg-white/80 dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 hover:border-indigo-300 hover:bg-white dark:hover:bg-gray-800'
                                       } disabled:cursor-default`}
                                     >
-                                      <span>{t.quantity} قطعة</span>
-                                      <span className={`text-[10px] font-normal ${isSelected ? 'text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                                        {formatCurrency(tierPrice)}/ق
-                                      </span>
+                                      {isSelected && (
+                                        <div className="absolute top-1.5 left-1.5 bg-[#4f46e5] text-white rounded-full p-0.5">
+                                          <CheckCircle2 size={12} />
+                                        </div>
+                                      )}
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className={`text-xs font-black ${isSelected ? 'text-[#4f46e5] dark:text-indigo-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                                          {t.quantity} قطعة
+                                        </span>
+                                      </div>
+                                      <div className="text-[11px] font-bold text-gray-700 dark:text-gray-300">
+                                        {formatCurrency(tierPrice)} <span className="text-[9px] text-gray-400 font-normal">/قطعة</span>
+                                      </div>
+                                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 pt-1 border-t border-gray-100 dark:border-gray-700">
+                                        الإجمالي: <span className="font-semibold">{formatCurrency(tierTotal)}</span>
+                                      </div>
                                     </button>
                                   );
                                 })}
@@ -1740,6 +1756,26 @@ export default function MerchantOrders() {
               </button>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">طريقة دفع العربون</h2>
             
+            {selectedBidForPayment?.chosen_tier && (
+              <div className="mb-4 p-3.5 bg-indigo-50/90 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-800 text-right">
+                <div className="flex items-center justify-between text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="flex items-center gap-1.5">
+                    <Layers size={14} className="text-[#4f46e5]" />
+                    الشريحة التي تم اختيارها:
+                  </span>
+                  <span className="bg-[#4f46e5] text-white px-2.5 py-0.5 rounded-full font-black">
+                    {selectedBidForPayment.chosen_tier.quantity} قطعة
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 mt-1.5 pt-1.5 border-t border-indigo-100 dark:border-indigo-900/60">
+                  <span>سعر القطعة الواحدة في هذه الشريحة:</span>
+                  <span className="font-extrabold text-[#4f46e5] dark:text-indigo-400">
+                    {formatCurrency(selectedBidForPayment.chosen_tier.final_item_price || calculateFinalPrice(selectedBidForPayment.chosen_tier.cost_price, selectedBidForPayment.chosen_tier.quantity, profitSettings).finalItemPrice)}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl mb-6 text-center">
               <p className="text-gray-500 dark:text-gray-400 mb-1">المبلغ المطلوب {paymentType === 'remaining' ? '(باقي الدفعة)' : ''}</p>
               <p className="text-3xl font-black text-gray-900 dark:text-white">

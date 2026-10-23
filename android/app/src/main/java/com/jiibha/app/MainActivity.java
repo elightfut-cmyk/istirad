@@ -39,6 +39,14 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Ensure Window and WebView backgrounds match brand dark theme (#040c1e) to eliminate white screen flashes
+        try {
+            getWindow().getDecorView().setBackgroundColor(Color.parseColor("#040c1e"));
+            if (this.bridge != null && this.bridge.getWebView() != null) {
+                this.bridge.getWebView().setBackgroundColor(Color.parseColor("#040c1e"));
+            }
+        } catch (Exception ignored) {}
+
         // Immediate restore of cached OneSignal and FCM tokens from SharedPreferences
         try {
             SharedPreferences prefs = getSharedPreferences("jiibha_prefs", Context.MODE_PRIVATE);

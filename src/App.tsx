@@ -35,16 +35,19 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import toast, { Toaster } from 'react-hot-toast';
 import FacebookPixel from './components/FacebookPixel';
-import { initOneSignal, optInPushSubscription, loginOneSignalUser } from './lib/onesignal';
 import AppSplashScreen from './components/AppSplashScreen';
 import AppVersionModal from './components/AppVersionModal';
 import { useNotificationStore } from './store/useNotificationStore';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import SupplierPublicProfile from './pages/supplier/SupplierPublicProfile';
 
 function App() {
-  const { user, checkSession, isLoading } = useAuthStore();
+  // 1. Root-Level Custom Hook: Unconditional OneSignal setup & reactive identity binding
+  usePushNotifications();
+
+  const { user, checkSession } = useAuthStore();
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
@@ -62,15 +65,11 @@ function App() {
       fetchNotifications(user.id);
       const unsub = subscribeToNotifications(user.id);
 
-      // Auto-bind device identity to OneSignal and ensure push subscription is active
-      loginOneSignalUser(user.id, user.role || undefined, user.name || undefined);
-      optInPushSubscription();
-
       return () => {
         unsub();
       };
     }
-  }, [user?.id, user?.role, user?.name, fetchNotifications, subscribeToNotifications]);
+  }, [user?.id, fetchNotifications, subscribeToNotifications]);
 
   // Zero-Background Polling: Halt Supabase Realtime in background, resume when foregrounded
   useEffect(() => {
@@ -116,14 +115,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // OneSignal Native Push Initialization for Android (slight delay to let React finish initial paint)
-    const initTimer = setTimeout(async () => {
-      await initOneSignal();
-      try {
-        await optInPushSubscription();
-      } catch {}
-    }, 600);
-
     // Safety fallback: Ensure splash/loading screen dismisses even on slow mobile networks
     const fallbackTimer = setTimeout(() => {
       const state = useAuthStore.getState();
@@ -133,7 +124,6 @@ function App() {
     }, 4000);
 
     return () => {
-      clearTimeout(initTimer);
       clearTimeout(fallbackTimer);
     };
   }, []);
@@ -155,12 +145,6 @@ function App() {
     document.documentElement.lang = 'ar';
     document.documentElement.dir = 'rtl';
   }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      initOneSignal();
-    }
-  }, [isLoading]);
 
   useEffect(() => {
     // If URL has otp_expired or access_denied hash from email change link
@@ -189,22 +173,20 @@ function App() {
     };
   }, []);
 
-  if (showSplash) {
-    return (
-      <AppSplashScreen 
-        minDurationMs={2600} 
-        onFinish={() => {
-          if (typeof sessionStorage !== 'undefined') {
-            sessionStorage.setItem('jiibha_splash_seen', '1');
-          }
-          setShowSplash(false);
-        }} 
-      />
-    );
-  }
-
   return (
     <Router>
+      {/* Non-blocking splash overlay: allows App tree & OneSignal to mount and register in parallel */}
+      {showSplash && (
+        <AppSplashScreen 
+          minDurationMs={2600} 
+          onFinish={() => {
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.setItem('jiibha_splash_seen', '1');
+            }
+            setShowSplash(false);
+          }} 
+        />
+      )}
       <FacebookPixel />
       <AppVersionModal />
       <Toaster position="top-center" toastOptions={{ duration: 4000, style: { fontFamily: 'Tajawal', padding: '16px', borderRadius: '12px' } }} />

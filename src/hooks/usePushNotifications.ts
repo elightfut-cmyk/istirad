@@ -6,7 +6,9 @@ import {
   ONESIGNAL_APP_ID, 
   isNativePlatform, 
   syncDeviceRegistration,
-  showExternalNotification 
+  showExternalNotification,
+  loginOneSignal,
+  logoutOneSignal
 } from '../lib/onesignal';
 
 export interface PushNotificationState {
@@ -240,7 +242,7 @@ export function usePushNotifications(): PushNotificationState {
 
   // ─── 3. Reactive Authentication State Management ─────────────────
   // Whenever user_id becomes available or changes:
-  // Execute OneSignal.logout() (to clean stale device sessions) then OneSignal.login(user_id)
+  // Bind user identity and tags immediately WITHOUT destructive session resets.
   useEffect(() => {
     const rawUserId = user?.id || (typeof window !== 'undefined' ? localStorage.getItem('onesignal_external_id') : null);
     const cleanUserId = rawUserId ? String(rawUserId).trim() : null;
@@ -249,16 +251,9 @@ export function usePushNotifications(): PushNotificationState {
       // User is logged out or unauthenticated
       if (lastProcessedUserIdRef.current) {
         lastProcessedUserIdRef.current = null;
-        localStorage.removeItem('onesignal_external_id');
-        localStorage.removeItem('onesignal_subscription_id');
-
         (async () => {
           try {
-            if (isNativePlatform()) {
-              await OneSignal.logout();
-            } else if (typeof window !== 'undefined' && (window as any).OneSignal?.logout) {
-              await (window as any).OneSignal.logout();
-            }
+            await logoutOneSignal();
             console.log('🔓 [usePushNotifications] Logged out from OneSignal session');
           } catch (logoutErr) {
             console.warn('[usePushNotifications] Logout notice:', logoutErr);
@@ -268,7 +263,7 @@ export function usePushNotifications(): PushNotificationState {
       return;
     }
 
-    // Skip if already bound to this user
+    // Skip if already bound to this exact user
     if (lastProcessedUserIdRef.current === cleanUserId) {
       return;
     }
@@ -279,59 +274,31 @@ export function usePushNotifications(): PushNotificationState {
     // Asynchronous non-blocking binding sequence
     (async () => {
       try {
-        console.log('🔄 [usePushNotifications] Binding user identity:', cleanUserId);
+        console.log('🔄 [usePushNotifications] Binding user identity for:', cleanUserId, 'role:', user?.role);
+
+        // Unified login sets: OneSignal.login, tags (user_id, role, name), NativeBridge, and Edge Function sync
+        await loginOneSignal(cleanUserId, user?.role || undefined, user?.name || undefined);
 
         if (isNativePlatform()) {
-          // Step A: Logout first to clean up any orphaned or stale player sessions
-          try {
-            await OneSignal.logout();
-            console.log('🧹 [usePushNotifications] Stale session cleaned via OneSignal.logout()');
-          } catch (logoutNotice) {
-            console.warn('[usePushNotifications] Non-fatal logout notice before login:', logoutNotice);
-          }
-
-          // Step B: Login with target user_id
-          await OneSignal.login(cleanUserId);
-          console.log('🔑 [usePushNotifications] Successfully logged in via OneSignal.login(', cleanUserId, ')');
-
-          // Step C: Attach metadata tags
-          await OneSignal.User.addTag('user_id', cleanUserId);
-          if (user?.role) await OneSignal.User.addTag('role', user.role);
-          if (user?.name) await OneSignal.User.addTag('name', user.name);
-
-          // Step D: Ensure active push subscription
           try {
             await OneSignal.User.pushSubscription.optIn();
-          } catch {}
-
-          const currentSubId = await OneSignal.User.pushSubscription.getIdAsync();
-          if (currentSubId) {
-            setSubscriptionId(currentSubId);
-            setIsSubscribed(true);
-            localStorage.setItem('onesignal_subscription_id', currentSubId);
-          }
-        } else {
-          // Web SDK login sequence
-          window.OneSignalDeferred = window.OneSignalDeferred || [];
-          window.OneSignalDeferred.push(async function (OneSignalWeb: any) {
-            try {
-              if (OneSignalWeb?.logout) await OneSignalWeb.logout().catch(() => {});
-              if (OneSignalWeb?.login) await OneSignalWeb.login(cleanUserId).catch(() => {});
-              if (OneSignalWeb?.User?.addTag) {
-                await OneSignalWeb.User.addTag('user_id', cleanUserId).catch(() => {});
-                if (user?.role) await OneSignalWeb.User.addTag('role', user.role).catch(() => {});
-                if (user?.name) await OneSignalWeb.User.addTag('name', user.name).catch(() => {});
-              }
-            } catch (webLoginErr) {
-              console.warn('[usePushNotifications] Web login notice:', webLoginErr);
+            const currentSubId = await OneSignal.User.pushSubscription.getIdAsync();
+            if (currentSubId) {
+              setSubscriptionId(currentSubId);
+              setIsSubscribed(true);
+              localStorage.setItem('onesignal_subscription_id', currentSubId);
             }
-          });
+          } catch {}
         }
 
-        // Step E: Direct Cloud Edge Function Registration (bypasses ISP & Algeria 4G block)
-        syncDeviceRegistration(cleanUserId, user?.role || undefined, user?.name || undefined).catch((syncErr) => {
-          console.warn('[usePushNotifications] Direct Edge Function sync notice:', syncErr);
-        });
+        // Retry sync at 2s and 5s in case FCM token was being retrieved asynchronously by Google Play Services
+        setTimeout(() => {
+          syncDeviceRegistration(cleanUserId, user?.role || undefined, user?.name || undefined).catch(() => {});
+        }, 2000);
+
+        setTimeout(() => {
+          syncDeviceRegistration(cleanUserId, user?.role || undefined, user?.name || undefined).catch(() => {});
+        }, 5000);
 
       } catch (bindErr) {
         console.error('❌ [usePushNotifications] Error during auth binding:', bindErr);
@@ -346,17 +313,16 @@ export function usePushNotifications(): PushNotificationState {
     const cleanId = String(rawId).trim();
 
     try {
+      await loginOneSignal(cleanId, user?.role || undefined, user?.name || undefined);
       if (isNativePlatform()) {
-        await OneSignal.logout().catch(() => {});
-        await OneSignal.login(cleanId);
-        await OneSignal.User.addTag('user_id', cleanId);
-        if (user?.role) await OneSignal.User.addTag('role', user.role);
-        await OneSignal.User.pushSubscription.optIn().catch(() => {});
-        const subId = await OneSignal.User.pushSubscription.getIdAsync();
-        if (subId) {
-          setSubscriptionId(subId);
-          setIsSubscribed(true);
-        }
+        try {
+          await OneSignal.User.pushSubscription.optIn();
+          const subId = await OneSignal.User.pushSubscription.getIdAsync();
+          if (subId) {
+            setSubscriptionId(subId);
+            setIsSubscribed(true);
+          }
+        } catch {}
       }
       syncDeviceRegistration(cleanId, user?.role || undefined, user?.name || undefined).catch(() => {});
     } catch (e) {

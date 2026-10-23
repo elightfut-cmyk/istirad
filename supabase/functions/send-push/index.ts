@@ -229,7 +229,7 @@ serve(async (req) => {
         const notifMessage = message || (contents && (contents.ar || contents.en)) || '';
         const notifType = data?.type || 'info';
 
-        if (targetRole === 'admin' || targetRole === 'supplier') {
+        if (targetRole === 'admin' || targetRole === 'supplier' || targetRole === 'merchant') {
           const { data: roleUsers } = await supabaseAdmin.from('users').select('id').eq('role', targetRole);
           if (roleUsers && roleUsers.length > 0) {
             const inserts = roleUsers.map(u => ({
@@ -293,21 +293,24 @@ serve(async (req) => {
       oneSignalPayload.include_player_ids = validSubIds;
     } else if (targetRole && targetRole !== 'all') {
       // Broadcast to all active devices tagged with this role OR matching userIds
+      const roleFilters: any[] = [
+        { field: 'tag', key: 'role', relation: '=', value: String(targetRole) }
+      ];
       if (externalIds.length > 0) {
-        oneSignalPayload.filters = [
-          { field: 'tag', key: 'role', relation: '=', value: String(targetRole) },
-          { operator: 'OR' },
-          { field: 'tag', key: 'user_id', relation: '=', value: externalIds[0] }
-        ];
-      } else {
-        oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
+        externalIds.forEach((id: string) => {
+          roleFilters.push({ operator: 'OR' });
+          roleFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+        });
       }
+      oneSignalPayload.filters = roleFilters;
     } else if (externalIds.length > 0) {
-      // Direct user UUID targeting via external_id alias (proven from morning baseline)
-      oneSignalPayload.target_channel = 'push';
-      oneSignalPayload.include_aliases = {
-        external_id: externalIds
-      };
+      // Direct user targeting via user_id tag (guaranteed to match all devices registered by app/bridge/europe sync)
+      const userFilters: any[] = [];
+      externalIds.forEach((id: string, idx: number) => {
+        if (idx > 0) userFilters.push({ operator: 'OR' });
+        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
+      });
+      oneSignalPayload.filters = userFilters;
     }
 
     // Send request to OneSignal REST API
@@ -322,33 +325,33 @@ serve(async (req) => {
 
     let resJson = await oneSignalRes.json().catch(() => ({}));
 
-    // Instant Fallback for externalIds: If include_aliases failed or had invalid_aliases, retry via tag filter
-    if (externalIds.length > 0 && (!oneSignalRes.ok || (resJson && resJson.recipients === 0) || JSON.stringify(resJson).includes('invalid_aliases'))) {
-      const tagFallbackPayload = { ...oneSignalPayload };
-      delete tagFallbackPayload.include_aliases;
-      delete tagFallbackPayload.target_channel;
-      const userFilters: any[] = [];
-      externalIds.forEach((id: string, idx: number) => {
-        if (idx > 0) userFilters.push({ operator: 'OR' });
-        userFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: String(id) });
-      });
-      tagFallbackPayload.filters = userFilters;
+    // Instant Fallback for externalIds: If tag filter found no subscribers, retry via include_aliases
+    if (externalIds.length > 0 && (!oneSignalRes.ok || !resJson?.id || (resJson?.errors && resJson.errors.length > 0))) {
+      console.log('Tag filter returned no recipients or error, attempting include_aliases fallback...');
+      const aliasFallbackPayload = { ...oneSignalPayload };
+      delete aliasFallbackPayload.filters;
+      aliasFallbackPayload.target_channel = 'push';
+      aliasFallbackPayload.include_aliases = {
+        external_id: externalIds
+      };
 
       try {
-        const tagRes = await fetch('https://api.onesignal.com/notifications', {
+        const aliasRes = await fetch('https://api.onesignal.com/notifications', {
           method: 'POST',
           headers: {
             'Authorization': authHeaderValue,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(tagFallbackPayload)
+          body: JSON.stringify(aliasFallbackPayload)
         });
-        const tagJson = await tagRes.json().catch(() => ({}));
-        if (tagRes.ok && (tagJson.recipients > 0 || tagJson.id)) {
-          oneSignalRes = tagRes;
-          resJson = tagJson;
+        const aliasJson = await aliasRes.json().catch(() => ({}));
+        if (aliasRes.ok && aliasJson?.id) {
+          oneSignalRes = aliasRes;
+          resJson = aliasJson;
         }
-      } catch {}
+      } catch (aliasErr) {
+        console.warn('include_aliases fallback notice:', aliasErr);
+      }
     }
 
     // Retry without channel if rejected

@@ -768,9 +768,10 @@ export const getPushSubscriptionId = async (): Promise<string | null> => {
 export const getFcmToken = (): string => {
   const bridge = getNativeBridge();
   if (bridge?.getFcmToken) {
-    return bridge.getFcmToken() || '';
+    const token = bridge.getFcmToken();
+    if (token) return token;
   }
-  return '';
+  return (typeof window !== 'undefined' ? localStorage.getItem('onesignal_fcm_token') : '') || '';
 };
 
 export const getPushDiagnosticData = async () => {

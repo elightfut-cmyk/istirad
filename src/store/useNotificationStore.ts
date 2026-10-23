@@ -431,7 +431,7 @@ export const sendNotification = async (
            title,
            message,
            data: { type, role: roleToFind },
-           skipDbInsert: true
+           skipDbInsert: insertedDirectly
          });
          pushSent = Boolean(pushRes);
        } catch (pushErr: any) {
@@ -441,6 +441,7 @@ export const sendNotification = async (
        return { success: true, pushSent, pushError };
     }
 
+    let insertedDbSuccessfully = false;
     const { error: insertErr } = await supabase.from('notifications').insert({
       user_id: userId,
       title,
@@ -450,12 +451,17 @@ export const sendNotification = async (
 
     if (insertErr) {
       console.warn('Direct notification insert failed (trying RPC):', insertErr);
-      await supabase.rpc('send_user_notification', {
+      const { error: rpcErr } = await supabase.rpc('send_user_notification', {
         p_user_id: userId,
         p_title: title,
         p_message: message,
         p_type: type
       });
+      if (!rpcErr) {
+        insertedDbSuccessfully = true;
+      }
+    } else {
+      insertedDbSuccessfully = true;
     }
 
     const isBroadcastAdmin = userId === 'all_admins';
@@ -470,7 +476,9 @@ export const sendNotification = async (
       effectiveTargetRole = 'supplier';
     } else if (userId) {
       targetUserIds = [String(userId)];
-      effectiveTargetRole = undefined;
+      if (!effectiveTargetRole && role) {
+        effectiveTargetRole = role;
+      }
     }
 
     // Dispatch push notification to target user's mobile via OneSignal API
@@ -482,8 +490,8 @@ export const sendNotification = async (
         targetRole: effectiveTargetRole,
         title,
         message,
-        data: { type },
-        skipDbInsert: true
+        data: { type, userId, role: effectiveTargetRole },
+        skipDbInsert: insertedDbSuccessfully
       });
       pushSent = Boolean(pushRes);
     } catch (pushErr: any) {

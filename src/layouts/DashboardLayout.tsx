@@ -14,8 +14,7 @@ import UserPollModal from '../components/UserPollModal';
 import DeveloperDiagnosticsModal from '../components/DeveloperDiagnosticsModal';
 import OEMBatteryModal from '../components/OEMBatteryModal';
 import { pollService } from '../services/pollService';
-import { isNativePlatform, openXiaomiAutostart } from '../lib/onesignal';
-import OneSignal from '@onesignal/capacitor-plugin';
+import { isNativePlatform, openXiaomiAutostart, runOneSignalDiagnostics } from '../lib/onesignal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -414,81 +413,7 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
           {user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
             <div className="flex justify-center w-full mb-4">
               <button 
-                onClick={async () => {
-                  const currentUser = user;
-                  try {
-                    alert("جاري التحقق من OneSignal...");
-
-                    if (isNativePlatform()) {
-                      // 0. ضمان التهيئة السليمة للتطبيق
-                      try {
-                        await OneSignal.initialize('daeaef49-9125-4ef2-8950-6c0428063f09');
-                      } catch (initErr: any) {
-                        console.warn('Init notice:', initErr);
-                      }
-
-                      // 1. تسجيل الدخول
-                      await OneSignal.login(currentUser.id);
-                      
-                      // 2. طلب الصلاحية
-                      const hasPermission = await OneSignal.Notifications.requestPermission(true);
-                      
-                      // 3. تفعيل الاشتراك
-                      try {
-                        await OneSignal.User.pushSubscription.optIn();
-                      } catch (optErr) {}
-
-                      // 4. جلب حالة الاشتراك الحالية
-                      const pushSubscription = OneSignal.User.pushSubscription;
-                      let optedIn = false;
-                      let pushToken: string | null = null;
-                      let pushId: string | null = null;
-
-                      if (typeof pushSubscription?.getOptedInAsync === 'function') {
-                        optedIn = await pushSubscription.getOptedInAsync().catch(() => false);
-                      }
-                      if (typeof pushSubscription?.getIdAsync === 'function') {
-                        pushId = await pushSubscription.getIdAsync().catch(() => null);
-                      }
-                      if (typeof pushSubscription?.getTokenAsync === 'function') {
-                        pushToken = await pushSubscription.getTokenAsync().catch(() => null);
-                      }
-
-                      // فحص الجسر الأصلي (NativeBridge) من كود جافا أندرويد
-                      const nativeBridge = (window as any).NativeBridge || (window as any).NativeDeviceBridge;
-                      const bridgeSubId = nativeBridge?.getPushSubscriptionId ? nativeBridge.getPushSubscriptionId() : null;
-                      const bridgeFcmToken = nativeBridge?.getFcmToken ? nativeBridge.getFcmToken() : null;
-                      const bridgeFcmError = nativeBridge?.getFcmError ? nativeBridge.getFcmError() : null;
-
-                      const finalPushId = pushId || bridgeSubId || localStorage.getItem('onesignal_subscription_id');
-                      const finalFcmToken = pushToken || bridgeFcmToken || localStorage.getItem('onesignal_fcm_token');
-
-                      let fcmStatus = 'غير متوفر ⚠️';
-                      if (finalFcmToken && finalFcmToken.length > 10) {
-                        fcmStatus = `✅ متصل (${finalFcmToken.substring(0, 12)}...)`;
-                      } else if (bridgeFcmError) {
-                        fcmStatus = `❌ خطأ في FCM: ${bridgeFcmError}`;
-                      }
-
-                      alert(`النتيجة التفصيلية:\nالمستخدم: ${currentUser.id}\nالصلاحية: ${hasPermission ? 'ممنوحة ✅' : 'مرفوضة ❌'}\nالاشتراك (Opted-in): ${optedIn ? 'مفعل ✅' : 'معطل ❌'}\nمعرف الجهاز (Push ID): ${finalPushId || 'غير متوفر ⚠️'}\nحالة Google FCM: ${fcmStatus}`);
-                    } else {
-                      window.OneSignalDeferred = window.OneSignalDeferred || [];
-                      window.OneSignalDeferred.push(async function (OS: any) {
-                        try {
-                          if (OS?.login) await OS.login(currentUser.id);
-                          const hasPermission = await OS?.Notifications?.requestPermission?.();
-                          const optedIn = OS?.User?.pushSubscription?.optedIn;
-                          const pushId = OS?.User?.pushSubscription?.id;
-                          alert(`النتيجة (ويب):\nمسجل كـ: ${currentUser.id}\nالصلاحية: ${hasPermission}\nموافق (Opted-in): ${optedIn}\nمعرف الجهاز (ID): ${pushId || "غير متوفر"}`);
-                        } catch (webErr: any) {
-                          alert("❌ خطأ قاطع في OneSignal ويب: " + (webErr?.message || webErr));
-                        }
-                      });
-                    }
-                  } catch (err: any) {
-                    alert("❌ خطأ قاطع في OneSignal: " + (err?.message || JSON.stringify(err) || err));
-                  }
-                }}
+                onClick={() => runOneSignalDiagnostics(user)}
                 className="w-full max-w-xl p-4 m-4 bg-purple-600 hover:bg-purple-700 active:scale-98 text-white font-bold rounded shadow-lg text-center cursor-pointer transition-all border-2 border-white flex items-center justify-center gap-2 text-base md:text-lg"
               >
                 تشخيص وتفعيل الإشعارات

@@ -173,6 +173,12 @@ export function usePushNotifications(): PushNotificationState {
               setSubscriptionId(newId);
               setIsSubscribed(Boolean(optedIn));
               localStorage.setItem('onesignal_subscription_id', newId);
+
+              // Re-affirm identity if a user is currently logged in
+              const activeUserId = user?.id || localStorage.getItem('onesignal_external_id');
+              if (activeUserId) {
+                OneSignal.login(String(activeUserId).trim()).catch(() => {});
+              }
             }
             if (newToken) {
               localStorage.setItem('onesignal_fcm_token', newToken);

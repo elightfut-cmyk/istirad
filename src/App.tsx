@@ -39,10 +39,10 @@ import AppSplashScreen from './components/AppSplashScreen';
 import AppVersionModal from './components/AppVersionModal';
 import { useNotificationStore } from './store/useNotificationStore';
 import { usePushNotifications } from './hooks/usePushNotifications';
-import OneSignal from '@onesignal/capacitor-plugin';
 import { App as CapApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import SupplierPublicProfile from './pages/supplier/SupplierPublicProfile';
+import { loginOneSignalUser } from './lib/onesignal';
 
 function App() {
   // 1. Root-Level Custom Hook: Unconditional OneSignal setup & reactive identity binding
@@ -52,77 +52,9 @@ function App() {
 
   // 2. Strict Session-Switching Protocol for OneSignal (Ghost State Prevention)
   useEffect(() => {
-    let isCancelled = false;
-
-    const syncOneSignalSession = async () => {
-      const currentUser = user;
-      if (currentUser?.id) {
-        try {
-          console.log("🔄 [App] بدء بروتوكول تبديل جلسة OneSignal للمستخدم:", currentUser.id);
-
-          if (Capacitor.isNativePlatform()) {
-            // 1. Explicit Logout Order: Purge previous session & native bridge cache
-            await OneSignal.logout().catch(() => {});
-
-            // 2. Short safe delay (400ms) to ensure native bridge clears
-            await new Promise(r => setTimeout(r, 400));
-            if (isCancelled) return;
-
-            // 3. Login with trimmed id and tag role
-            await OneSignal.login(currentUser.id.trim());
-            await OneSignal.User.addTag("role", currentUser.role || 'user');
-
-            // 4. Verify permission & opt-in
-            const optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
-              await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
-
-            if (!optedIn) {
-              await OneSignal.Notifications.requestPermission(true);
-            }
-            try { await OneSignal.User.pushSubscription.optIn(); } catch {}
-
-            const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
-            if (freshSubId) {
-              localStorage.setItem('onesignal_subscription_id', freshSubId);
-            }
-            console.log("✅ [App] اكتمل تبديل جلسة OneSignal بنجاح، معرف الاشتراك:", freshSubId);
-          } else {
-            // Web / PWA fallback
-            window.OneSignalDeferred = window.OneSignalDeferred || [];
-            window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
-              try {
-                if (typeof OneSignalInstance?.logout === 'function') {
-                  await OneSignalInstance.logout().catch(() => {});
-                }
-                await new Promise(r => setTimeout(r, 400));
-                if (isCancelled) return;
-
-                if (typeof OneSignalInstance?.login === 'function') {
-                  await OneSignalInstance.login(currentUser.id.trim()).catch((e: any) => console.error("OneSignal Web Login Error:", e));
-                }
-                if (OneSignalInstance?.User?.addTag) {
-                  await OneSignalInstance.User.addTag("role", currentUser.role || 'user').catch(() => {});
-                }
-                if (!OneSignalInstance?.User?.pushSubscription?.optedIn) {
-                  await OneSignalInstance?.Notifications?.requestPermission?.().catch(() => {});
-                }
-              } catch (webErr) {
-                console.error("OneSignal Web Session Error:", webErr);
-              }
-            });
-          }
-        } catch (error) {
-          console.error("OneSignal Session Switching Failed:", error);
-        }
-      }
-    };
-
-    syncOneSignalSession();
-
-    return () => {
-      isCancelled = true;
-      // Note: OneSignal.logout() is strictly NEVER called here to prevent Ghost State on unmounts/navigation
-    };
+    if (user?.id) {
+      loginOneSignalUser(user.id, user.role || undefined);
+    }
   }, [user?.id, user?.role]);
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();

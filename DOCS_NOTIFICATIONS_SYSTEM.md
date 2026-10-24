@@ -213,7 +213,6 @@ export const loginOneSignalUser = async (userId: string, role?: string, name?: s
     if (isNative) {
       // 1. استدعاء مكتبة OneSignal الأصلية للـ Capacitor
       await OneSignal.login(userId.trim());
-      await OneSignal.User.addAlias('external_id', userId.trim());
       await OneSignal.User.addTag('user_id', userId.trim());
 
       if (role) {

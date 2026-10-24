@@ -245,12 +245,22 @@ export const initOneSignal = async (): Promise<void> => {
 
       // Listen for push subscription state changes (ID assigned, token assigned)
       try {
-        OneSignal.User.pushSubscription.addEventListener('change', (event: any) => {
+        OneSignal.User.pushSubscription.addEventListener('change', async (event: any) => {
           const newId = event?.current?.id;
           const newToken = event?.current?.token;
           if (newId && newId !== 'null' && newId !== 'None') {
             localStorage.setItem('onesignal_subscription_id', newId);
             window.dispatchEvent(new CustomEvent('onesignal_subscription_ready', { detail: { subscriptionId: newId } }));
+
+            // إذا كان المستخدم مسجلاً للدخول، يعيد التطبيق تأكيد ربط الهوية OneSignal.login لضمان ربط الـ Subscription
+            if (lastLoggedInUserId) {
+              try {
+                console.log('🔄 [OneSignal] Push ID متأخر توفر الآن:', newId, 'جاري تأكيد ربط المستخدم:', lastLoggedInUserId);
+                await OneSignal.login(lastLoggedInUserId);
+              } catch (reErr) {
+                console.warn('OneSignal late Push ID login reaffirm error:', reErr);
+              }
+            }
           }
           if (newToken) {
             localStorage.setItem('onesignal_fcm_token', newToken);
@@ -318,20 +328,21 @@ export const initOneSignal = async (): Promise<void> => {
 
 /**
  * 2. Identity & Subscription Lifecycle:
- * Login user using external_id (UUID) immediately upon authentication.
- * Relied upon by Supabase Edge Function to target user without background polling.
+ * Login user using OneSignal.login(cleanId) without external_id alias.
+ * Ensures permission & optIn are ready first, avoids premature logout on init,
+ * and only logs out if switching away from a previously different user.
  */
 let lastLoggedInUserId: string | null = null;
 let loginMutex: Promise<any> = Promise.resolve();
 
-export const loginOneSignal = async (userId: string | number, role?: string, userName?: string): Promise<void> => {
+export const loginOneSignalUser = async (userId: string | number, role?: string | null, userName?: string): Promise<void> => {
   if (typeof window === 'undefined' || !userId) return;
-  const strId = String(userId).trim();
-  if (!strId) return;
+  const cleanId = String(userId).trim();
+  if (!cleanId) return;
 
   const currentCachedRole = localStorage.getItem('onesignal_user_role');
-  // Prevent duplicate rapid calls with the same user ID and role
-  if (lastLoggedInUserId === strId && currentCachedRole === (role || '')) {
+  // منع تكرار الاستدعاء لنفس المستخدم والدور عند إعادة الرندرة
+  if (lastLoggedInUserId === cleanId && currentCachedRole === (role || '')) {
     return;
   }
 
@@ -344,50 +355,62 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
           } catch {}
         }
 
-        // 1. Explicit Logout Order to clear native bridge cache & purge ghost state
+        // 1. طلب الصلاحية وتفعيل الاشتراك أولاً لضمان توليد Push ID على سيرفر OneSignal
         try {
-          await OneSignal.logout();
-        } catch (logErr) {
-          console.warn('OneSignal.logout notice:', logErr);
+          const hasPermission = typeof (OneSignal.Notifications as any).getPermissionAsync === 'function'
+            ? await (OneSignal.Notifications as any).getPermissionAsync()
+            : await OneSignal.Notifications.hasPermission();
+          if (!hasPermission) {
+            await OneSignal.Notifications.requestPermission(true);
+          }
+        } catch (permErr) {
+          console.warn('OneSignal permission check notice:', permErr);
+        }
+        try {
+          await OneSignal.User.pushSubscription.optIn();
+        } catch (optErr) {}
+
+        // 2. إذا كان هناك مستخدم مختلف مسجل سابقاً على نفس الجهاز، نسجل خروجه أولاً
+        if (lastLoggedInUserId && lastLoggedInUserId !== cleanId) {
+          console.log('🔄 تبديل مستخدم مختلف على نفس الجهاز، جاري تسجيل الخروج أولاً:', lastLoggedInUserId, '->', cleanId);
+          try {
+            await OneSignal.logout();
+            await new Promise((r) => setTimeout(r, 500));
+          } catch (logErr) {
+            console.warn('OneSignal.logout notice:', logErr);
+          }
         }
 
-        // 2. Short safe delay (400ms) to ensure native bridge clears
-        await new Promise((r) => setTimeout(r, 400));
+        // 3. ربط المستخدم الحالي عبر login فقط (بدون addAlias لـ external_id لتجنب الرفض في v5)
+        await OneSignal.login(cleanId);
+        lastLoggedInUserId = cleanId;
 
-        lastLoggedInUserId = strId;
+        // 4. إضافة الوسوم (Tags)
+        await OneSignal.User.addTag('user_id', cleanId);
         if (role) {
+          await OneSignal.User.addTag('role', role.trim());
           localStorage.setItem('onesignal_user_role', role);
         }
-        localStorage.setItem('onesignal_external_id', strId);
-
-        // Sync with NativeBridge if present (Android Java)
-        const bridge = getNativeBridge();
-        if (bridge?.loginOneSignal) {
-          try {
-            bridge.loginOneSignal(strId, role || '');
-          } catch {}
+        if (userName) {
+          await OneSignal.User.addTag('name', userName.trim());
         }
+        localStorage.setItem('onesignal_external_id', cleanId);
 
-        // 3. Login with trimmed id and tags
-        await OneSignal.login(strId);
-        await OneSignal.User.addTag('role', role || 'user');
-        if (userName) await OneSignal.User.addTag('name', userName);
-        await OneSignal.User.addTag('user_id', strId);
-
-        // 4. Opt-in and permission request
-        const optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
-          await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
-
-        if (!optedIn) {
-          await OneSignal.Notifications.requestPermission(true);
-        }
-        try { await OneSignal.User.pushSubscription.optIn(); } catch {}
-
+        // التقاط معرف الاشتراك إن كان متوفراً
         const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
         if (freshSubId) {
           localStorage.setItem('onesignal_subscription_id', freshSubId);
         }
-        console.log('🔒 OneSignal Native logged in with external_id:', strId, 'subId:', freshSubId);
+
+        // مزامنة التفضيلات في الجسر الأصلي (بدون تكرار نداء OneSignal المتضارب في الجافا)
+        const bridge = getNativeBridge();
+        if (bridge?.loginOneSignal) {
+          try {
+            bridge.loginOneSignal(cleanId, role || '');
+          } catch {}
+        }
+
+        console.log('🔒 OneSignal Native login complete for user:', cleanId, 'subId:', freshSubId);
         return;
       }
 
@@ -396,39 +419,186 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
       window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
         try {
           if (!OneSignalInstance) return;
-          if (typeof OneSignalInstance.logout === 'function') {
-            await OneSignalInstance.logout().catch(() => {});
+
+          // 1. طلب الصلاحية وتفعيل الاشتراك
+          if (OneSignalInstance.User?.pushSubscription?.optIn) {
+            await OneSignalInstance.User.pushSubscription.optIn().catch(() => {});
           }
-          await new Promise((r) => setTimeout(r, 400));
+          if (OneSignalInstance.Notifications?.requestPermission) {
+            await OneSignalInstance.Notifications.requestPermission().catch(() => {});
+          }
 
-          lastLoggedInUserId = strId;
-          if (role) localStorage.setItem('onesignal_user_role', role);
-          localStorage.setItem('onesignal_external_id', strId);
+          // 2. إذا كان هناك مستخدم مختلف مسجل سابقاً
+          if (lastLoggedInUserId && lastLoggedInUserId !== cleanId) {
+            if (typeof OneSignalInstance.logout === 'function') {
+              await OneSignalInstance.logout().catch(() => {});
+            }
+            await new Promise((r) => setTimeout(r, 500));
+          }
 
+          // 3. ربط المستخدم الحالي عبر login فقط
           if (typeof OneSignalInstance.login === 'function') {
-            await OneSignalInstance.login(strId).catch((err: any) => {
+            await OneSignalInstance.login(cleanId).catch((err: any) => {
               console.warn('OneSignal Web login non-fatal notice:', err);
             });
-            console.log('🔒 OneSignal Web logged in with external_id:', strId);
+            console.log('🔒 OneSignal Web logged in with external_id:', cleanId);
           }
+          lastLoggedInUserId = cleanId;
+          localStorage.setItem('onesignal_external_id', cleanId);
+          if (role) localStorage.setItem('onesignal_user_role', role);
+
+          // 4. إضافة الوسوم
           if (OneSignalInstance.User?.addTag) {
-            await OneSignalInstance.User.addTag('role', role || 'user').catch(() => {});
-            if (userName) await OneSignalInstance.User.addTag('name', userName).catch(() => {});
-            await OneSignalInstance.User.addTag('user_id', strId).catch(() => {});
-          }
-          if (!OneSignalInstance.User?.pushSubscription?.optedIn) {
-            await OneSignalInstance.Notifications?.requestPermission?.().catch(() => {});
+            await OneSignalInstance.User.addTag('user_id', cleanId).catch(() => {});
+            if (role) await OneSignalInstance.User.addTag('role', role.trim()).catch(() => {});
+            if (userName) await OneSignalInstance.User.addTag('name', userName.trim()).catch(() => {});
           }
         } catch (e) {
           console.warn('OneSignal Web login non-fatal notice:', e);
         }
       });
     } catch (e) {
-      console.warn('OneSignal login warning:', e);
+      console.error('OneSignal login error:', e);
     }
   });
 
   await loginMutex;
+};
+
+export const loginOneSignal = loginOneSignalUser;
+
+/**
+ * دالة تشخيص وتفعيل الإشعارات الشاملة:
+ * إذا كان Push ID غير متوفر رغم أن FCM متصل:
+ * 1. استدعاء OneSignal.User.pushSubscription.optIn()
+ * 2. انتظار 1500ms
+ * 3. استدعاء OneSignal.login(currentUser.id) مجدداً
+ * 4. قراءة وعرض OneSignal.User.pushSubscription.id و token وعرض النتيجة التفصيلية
+ */
+export const runOneSignalDiagnostics = async (currentUser: any): Promise<void> => {
+  if (!currentUser?.id) {
+    alert('⚠️ يرجى تسجيل الدخول أولاً لتشخيص وتفعيل الإشعارات');
+    return;
+  }
+
+  try {
+    alert('جاري التحقق من OneSignal وتحديث الاتصال...');
+
+    if (isNativePlatform()) {
+      // 0. ضمان التهيئة السليمة
+      try {
+        await initOneSignal();
+      } catch (initErr: any) {
+        console.warn('Init notice:', initErr);
+      }
+
+      // 1. طلب الصلاحية وتفعيل الاشتراك
+      let hasPermission = false;
+      try {
+        hasPermission = typeof (OneSignal.Notifications as any).getPermissionAsync === 'function'
+          ? await (OneSignal.Notifications as any).getPermissionAsync()
+          : await OneSignal.Notifications.hasPermission();
+        if (!hasPermission) {
+          hasPermission = await OneSignal.Notifications.requestPermission(true);
+        }
+      } catch (pErr) {
+        console.warn('Permission error:', pErr);
+      }
+
+      try {
+        await OneSignal.User.pushSubscription.optIn();
+      } catch (optErr) {}
+
+      // 2. قراءة القيم الأولية
+      let pushId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
+      let pushToken = await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null);
+      let optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
+        await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
+
+      const nativeBridge = (window as any).NativeBridge || (window as any).NativeDeviceBridge;
+      const bridgeSubId = nativeBridge?.getPushSubscriptionId ? nativeBridge.getPushSubscriptionId() : null;
+      const bridgeFcmToken = nativeBridge?.getFcmToken ? nativeBridge.getFcmToken() : null;
+      const bridgeFcmError = nativeBridge?.getFcmError ? nativeBridge.getFcmError() : null;
+
+      let finalPushId = pushId || bridgeSubId || localStorage.getItem('onesignal_subscription_id');
+      let finalFcmToken = pushToken || bridgeFcmToken || localStorage.getItem('onesignal_fcm_token');
+
+      // 3. إذا كان Push ID غير متوفر رغم أن FCM متصل، ننفذ بروتوكول الإنعاش
+      if (!finalPushId || finalPushId === 'null' || finalPushId === 'None') {
+        console.log('🔄 Push ID غير متوفر حالياً، جاري تنفيذ بروتوكول الإنعاش...');
+        try {
+          await OneSignal.User.pushSubscription.optIn();
+          await new Promise((r) => setTimeout(r, 1500));
+          await OneSignal.login(currentUser.id.trim());
+
+          pushId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
+          pushToken = await OneSignal.User.pushSubscription.getTokenAsync().catch(() => null);
+          optedIn = (OneSignal.User.pushSubscription as any).optedIn ??
+            await OneSignal.User.pushSubscription.getOptedInAsync().catch(() => false);
+
+          finalPushId = pushId || nativeBridge?.getPushSubscriptionId?.() || localStorage.getItem('onesignal_subscription_id');
+          finalFcmToken = pushToken || nativeBridge?.getFcmToken?.() || localStorage.getItem('onesignal_fcm_token');
+        } catch (retryErr: any) {
+          console.error('Retry OneSignal login error:', retryErr);
+        }
+      } else {
+        await OneSignal.login(currentUser.id.trim()).catch(() => {});
+      }
+
+      if (finalPushId) localStorage.setItem('onesignal_subscription_id', finalPushId);
+      if (finalFcmToken) localStorage.setItem('onesignal_fcm_token', finalFcmToken);
+
+      let fcmStatus = 'غير متوفر ⚠️';
+      if (finalFcmToken && finalFcmToken.length > 10) {
+        fcmStatus = `✅ متصل (${finalFcmToken.substring(0, 12)}...)`;
+      } else if (bridgeFcmError) {
+        fcmStatus = `❌ خطأ في FCM: ${bridgeFcmError}`;
+      }
+
+      alert(
+        `النتيجة التفصيلية:\n` +
+        `المستخدم: ${currentUser.id}\n` +
+        `الصلاحية: ${hasPermission ? 'ممنوحة ✅' : 'مرفوضة ❌'}\n` +
+        `الاشتراك (Opted-in): ${optedIn ? 'مفعل ✅' : 'معطل ❌'}\n` +
+        `معرف الجهاز (Push ID): ${finalPushId || 'غير متوفر ⚠️'}\n` +
+        `حالة Google FCM: ${fcmStatus}`
+      );
+    } else {
+      // ويب
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function (OS: any) {
+        try {
+          if (OS?.User?.pushSubscription?.optIn) {
+            await OS.User.pushSubscription.optIn().catch(() => {});
+          }
+          if (OS?.login) await OS.login(currentUser.id.trim());
+          const hasPermission = await OS?.Notifications?.requestPermission?.();
+          const optedIn = OS?.User?.pushSubscription?.optedIn;
+          let pushId = OS?.User?.pushSubscription?.id;
+          const pushToken = OS?.User?.pushSubscription?.token;
+
+          if (!pushId) {
+            await new Promise((r) => setTimeout(r, 1500));
+            if (OS?.login) await OS.login(currentUser.id.trim());
+            pushId = OS?.User?.pushSubscription?.id;
+          }
+
+          alert(
+            `النتيجة (ويب):\n` +
+            `مسجل كـ: ${currentUser.id}\n` +
+            `الصلاحية: ${hasPermission}\n` +
+            `موافق (Opted-in): ${optedIn}\n` +
+            `معرف الجهاز (ID): ${pushId || 'غير متوفر'}\n` +
+            `Token: ${pushToken ? pushToken.substring(0, 15) + '...' : 'غير متوفر'}`
+          );
+        } catch (webErr: any) {
+          alert('❌ خطأ قاطع في OneSignal ويب: ' + (webErr?.message || webErr));
+        }
+      });
+    }
+  } catch (err: any) {
+    alert('❌ خطأ قاطع في OneSignal: ' + (err?.message || JSON.stringify(err) || err));
+  }
 };
 
 /**
@@ -437,10 +607,6 @@ export const loginOneSignal = async (userId: string | number, role?: string, use
  */
 export const syncDeviceRegistration = async (_userId?: string, _role?: string, _userName?: string): Promise<string | null> => {
   return typeof window !== 'undefined' ? localStorage.getItem('onesignal_subscription_id') : null;
-};
-
-export const loginOneSignalUser = (userId: string | number, role?: string, userName?: string) => {
-  return loginOneSignal(userId, role, userName);
 };
 
 /**

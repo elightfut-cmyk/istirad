@@ -434,21 +434,9 @@ public class MainActivity extends BridgeActivity {
                     }
                     editor.apply();
 
+                    // OneSignal.login is handled by the Capacitor JavaScript layer to prevent dual-call collision.
+                    // Here we only cache the subscription ID if available.
                     try {
-                        com.onesignal.OneSignal.logout();
-                        Thread.sleep(200);
-                    } catch (Exception ignored) {}
-
-                    com.onesignal.OneSignal.login(cleanId);
-                    com.onesignal.OneSignal.getUser().addTag("user_id", cleanId);
-                    try {
-                        com.onesignal.OneSignal.getUser().addAlias("external_id", cleanId);
-                    } catch (Exception ignored) {}
-                    if (role != null && !role.trim().isEmpty()) {
-                        com.onesignal.OneSignal.getUser().addTag("role", role.trim());
-                    }
-                    try {
-                        com.onesignal.OneSignal.getUser().getPushSubscription().optIn();
                         String id = com.onesignal.OneSignal.getUser().getPushSubscription().getId();
                         if (id != null && !id.isEmpty()) {
                             cachedSubscriptionId = id;

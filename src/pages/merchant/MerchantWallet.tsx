@@ -4,6 +4,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
+import { sendNotification } from '../../store/useNotificationStore';
 import toast from 'react-hot-toast';
 
 export default function MerchantWallet() {
@@ -80,6 +81,26 @@ export default function MerchantWallet() {
 
       if (error) throw error;
       
+      const merchantName = user.name || user.company_name || user.email || 'تاجر';
+      const formattedAmount = `${topupAmount} ${topupCurrency}`;
+
+      // 1. إرسال إشعار في الجرس وفي الخلفية للأدمن
+      sendNotification(
+        'all_admins',
+        'طلب شحن محفظة جديد 💰',
+        `قام التاجر ${merchantName} بتقديم طلب شحن محفظة بمبلغ ${formattedAmount} عبر ${paymentMethod.toUpperCase()} (معرف المعاملة: ${transactionId.trim()}).`,
+        'info',
+        'admin'
+      ).catch((err) => console.warn('Failed to send admin push notification for topup:', err));
+
+      // 2. إرسال إشعار في الجرس للتاجر لتأكيد استلام الطلب
+      sendNotification(
+        user.id,
+        'تم استلام طلب شحن المحفظة 💳',
+        `تم إرسال طلب شحن محفظتك بمبلغ ${formattedAmount} وهو قيد المراجعة والتدقيق من قبل الإدارة.`,
+        'info'
+      ).catch(() => {});
+
       toast('تم إرسال طلب الشحن للمراجعة من الإدارة. سيتم إضافة الرصيد فور التأكد من التحويل.', { icon: 'ℹ️' });
       setShowTopupModal(false);
       setTopupAmount(0);
@@ -103,15 +124,37 @@ export default function MerchantWallet() {
     if (confirm(`هل أنت متأكد أنك تريد تحويل ${user.loyalty_points} نقطة إلى رصيد في محفظتك؟`)) {
       setProcessing(true);
       try {
+        const pointsToConvert = user.loyalty_points;
         const { data, error } = await supabase.rpc('convert_loyalty_points_to_wallet', { 
           p_user_id: user.id, 
-          p_points: user.loyalty_points 
+          p_points: pointsToConvert 
         });
 
         if (error) throw error;
 
         if (data && data.success) {
           toast.success('تم تحويل النقاط بنجاح!');
+
+          const merchantName = user.name || user.company_name || user.email || 'تاجر';
+          const addedAmountStr = data.added_balance ? formatCurrency(data.added_balance) : '';
+
+          // 1. إرسال إشعار في الجرس وفي الخلفية للأدمن
+          sendNotification(
+            'all_admins',
+            'تحويل نقاط ولاء إلى رصيد 🎁',
+            `قام التاجر ${merchantName} بتحويل ${pointsToConvert} نقطة ولاء إلى رصيد محفظته${addedAmountStr ? ` (بقيمة ${addedAmountStr})` : ''}.`,
+            'info',
+            'admin'
+          ).catch((err) => console.warn('Failed to send admin push notification for points conversion:', err));
+
+          // 2. إرسال إشعار في الجرس للتاجر
+          sendNotification(
+            user.id,
+            'تم تحويل نقاط الولاء بنجاح 🎉',
+            `تم تحويل ${pointsToConvert} نقطة ولاء إلى رصيد محفظتك بنجاح${addedAmountStr ? ` بقيمة ${addedAmountStr}` : ''}.`,
+            'success'
+          ).catch(() => {});
+
           // reload user
           const { data: updatedUser } = await supabase.from('users').select('*').eq('id', user.id).single();
           if (updatedUser) {

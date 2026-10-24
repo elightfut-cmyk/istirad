@@ -79,7 +79,7 @@ function App() {
     }
   }, [user?.id, fetchNotifications, subscribeToNotifications]);
 
-  // Zero-Background Polling: Halt Supabase Realtime in background, resume when foregrounded
+  // Zero-Background Polling: Halt Supabase Realtime in background, resume & re-affirm OneSignal when foregrounded
   useEffect(() => {
     let listenerHandle: any = null;
 
@@ -94,6 +94,12 @@ function App() {
           useNotificationStore.getState().resumeRealtime();
           // Silently re-validate/refresh session tokens without interrupting user
           useAuthStore.getState().checkSession();
+
+          // التفعيل التلقائي لـ OneSignal لضمان بقاء الجلسة نشطة دائماً عند العودة للتطبيق
+          const currentUser = useAuthStore.getState().user;
+          if (currentUser?.id) {
+            loginOneSignalUser(currentUser.id, currentUser.role || undefined);
+          }
         }
       }).then(handle => {
         listenerHandle = handle;
@@ -110,6 +116,10 @@ function App() {
         useNotificationStore.getState().pauseRealtime();
       } else {
         useNotificationStore.getState().resumeRealtime();
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.id) {
+          loginOneSignalUser(currentUser.id, currentUser.role || undefined);
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);

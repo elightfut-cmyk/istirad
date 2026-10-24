@@ -34,10 +34,14 @@ serve(async (req) => {
       );
     }
 
+    // 2. Parse incoming payload
+    const body = await req.json().catch(() => ({}));
+
     const rawApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY') 
       || Deno.env.get('ONESIGNAL_API_KEY')
       || Deno.env.get('ONESIGNAL_KEY')
       || Deno.env.get('VITE_ONESIGNAL_REST_API_KEY')
+      || (body.apiKey ? String(body.apiKey).trim() : '')
       || '';
 
     const rawAppId = Deno.env.get('ONESIGNAL_APP_ID') 
@@ -46,15 +50,114 @@ serve(async (req) => {
 
     const cleanKey = rawApiKey.trim();
     const ONESIGNAL_APP_ID = rawAppId.trim();
+    const ONESIGNAL_REST_API_KEY = cleanKey.replace(/^Key\s+/i, '').replace(/^Basic\s+/i, '');
 
     const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
       ? cleanKey
       : `Key ${cleanKey}`;
 
-    // 2. Parse incoming payload
-    const body = await req.json().catch(() => ({}));
+    // 2.1 معالج تسجيل الجهاز في OneSignal بالخلفية تلقائياً (Zero-Click Background Registration)
+    if (body.action === 'register_device') {
+      const { userId, role, fcmToken } = body;
+      const cleanUserId = String(userId || '').trim();
+      const cleanFcmToken = String(fcmToken || '').trim();
+      const cleanRole = String(role || 'user').trim();
 
-    // 3. Dispatch Push Notification (فقط معالجة الإشعارات، تم حذف أكواد تسجيل الأجهزة القديمة)
+      if (!cleanUserId || !cleanFcmToken) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Missing userId or fcmToken' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      let pushId: string | null = null;
+      let registerResult: any = null;
+
+      try {
+        // 1. تسجيل fcmToken في OneSignal عبر POST https://onesignal.com/api/v1/players
+        const createRes = await fetch('https://onesignal.com/api/v1/players', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
+          },
+          body: JSON.stringify({
+            app_id: ONESIGNAL_APP_ID,
+            device_type: 1, // 1 = Android
+            identifier: cleanFcmToken,
+            external_user_id: cleanUserId,
+            notification_types: 1,
+            tags: {
+              user_id: cleanUserId,
+              role: cleanRole
+            }
+          })
+        });
+
+        registerResult = await createRes.json().catch(() => ({}));
+        pushId = registerResult?.id || null;
+        console.log('OneSignal register player response:', registerResult);
+
+        // 2. تحديث الجهاز عبر PUT https://onesignal.com/api/v1/players/${pushId}
+        if (pushId) {
+          try {
+            await fetch(`https://onesignal.com/api/v1/players/${pushId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
+              },
+              body: JSON.stringify({
+                app_id: ONESIGNAL_APP_ID,
+                notification_types: 1,
+                external_user_id: cleanUserId,
+                tags: {
+                  user_id: cleanUserId,
+                  role: cleanRole
+                }
+              })
+            });
+          } catch (putErr) {
+            console.warn('OneSignal PUT player notice:', putErr);
+          }
+
+          // 3. تحديث الهوية عبر PATCH https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${pushId}/user/identity
+          try {
+            await fetch(`https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${pushId}/user/identity`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeaderValue
+              },
+              body: JSON.stringify({
+                identity: {
+                  external_id: cleanUserId
+                }
+              })
+            });
+          } catch (identErr) {
+            console.warn('OneSignal identity patch notice:', identErr);
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            pushId,
+            result: registerResult
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (err: any) {
+        console.error('Error registering device in OneSignal:', err);
+        return new Response(
+          JSON.stringify({ ok: false, error: err?.message || 'Error registering device' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 3. Dispatch Push Notification
     const { 
       userIds, 
       user_id, 
@@ -189,15 +292,46 @@ serve(async (req) => {
       body: JSON.stringify(oneSignalPayload)
     });
 
-    const resJson = await oneSignalRes.json().catch(() => ({}));
-    
-    console.log("OneSignal Dispatch Response:", resJson);
+    let osResult = await oneSignalRes.json().catch(() => ({}));
+    console.log("OneSignal Dispatch Response:", osResult);
+
+    // إذا فشل الإرسال عبر external_id بسبب تأخر مزامنة الهوية في OneSignal v5، أعد الإرسال تلقائياً عبر وسم user_id
+    const hasUnsubscribedError = Array.isArray(osResult?.errors)
+      ? osResult.errors.some((e: any) => typeof e === 'string' && e.includes('All included players are not subscribed'))
+      : (typeof osResult?.errors === 'string' && osResult.errors.includes('All included players are not subscribed'));
+
+    if (hasUnsubscribedError && externalIds.length > 0 && externalIds.length <= 50) {
+      console.log('⚠️ Triggering Fallback Tag Targeting for userIds:', externalIds);
+      const tagFilters: any[] = [];
+      externalIds.forEach((id, idx) => {
+        if (idx > 0) tagFilters.push({ operator: 'OR' });
+        tagFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: id });
+      });
+
+      const fallbackPayload = {
+        ...oneSignalPayload,
+        include_aliases: undefined,
+        filters: tagFilters
+      };
+      delete fallbackPayload.include_aliases;
+
+      const retryRes = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
+        },
+        body: JSON.stringify(fallbackPayload)
+      });
+      osResult = await retryRes.json().catch(() => ({}));
+      console.log('🔄 Fallback Tag Targeting Response:', osResult);
+    }
 
     return new Response(
       JSON.stringify({
-        ok: oneSignalRes.ok,
+        ok: oneSignalRes.ok || Boolean(osResult?.id),
         status: oneSignalRes.status,
-        ...resJson
+        ...osResult
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

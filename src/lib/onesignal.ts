@@ -171,6 +171,7 @@ export const getNetworkDiagnosticInfo = (): NetworkDiagnosticInfo | null => {
 };
 
 let isInitialized = false;
+let lastLoggedInUserId: string | null = null;
 
 /**
  * 1. Initialize OneSignal (Native Capacitor & Web/PWA)
@@ -332,89 +333,117 @@ export const initOneSignal = async (): Promise<void> => {
  * Ensures permission & optIn are ready first, avoids premature logout on init,
  * and only logs out if switching away from a previously different user.
  */
-let lastLoggedInUserId: string | null = null;
-let loginMutex: Promise<any> = Promise.resolve();
+// دالة مساعدة لجلب FCM Token مع إعادة المحاولة تلقائياً حتى يجهز من الأندرويد
+const waitForFcmToken = async (maxAttempts = 8, delayMs = 1000): Promise<string | null> => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      // 1. محاولة الجلب من الجسر الأصلي للأندرويد أو Capacitor FCM
+      const bridgeToken = (window as any).NativeBridge?.getFcmToken?.() 
+        || (window as any).NativeDeviceBridge?.getFcmToken?.() 
+        || localStorage.getItem('fcm_token')
+        || localStorage.getItem('onesignal_fcm_token');
+      if (bridgeToken && bridgeToken.length > 20) return bridgeToken;
+
+      // 2. محاولة الجلب من OneSignal SDK
+      const osToken = (OneSignal?.User?.pushSubscription as any)?.token;
+      if (osToken && osToken.length > 20) return osToken;
+
+      if (typeof (OneSignal?.User?.pushSubscription as any)?.getTokenAsync === 'function') {
+        const asyncToken = await (OneSignal.User.pushSubscription as any).getTokenAsync().catch(() => null);
+        if (asyncToken && asyncToken.length > 20) return asyncToken;
+      }
+    } catch (_) {}
+
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  return null;
+};
 
 export const loginOneSignalUser = async (userId: string | number, role?: string | null, userName?: string): Promise<void> => {
-  if (typeof window === 'undefined' || !userId) return;
-  const cleanId = String(userId).trim();
+  const cleanId = String(userId || '').trim();
   if (!cleanId) return;
 
-  const currentCachedRole = localStorage.getItem('onesignal_user_role');
-  // منع تكرار الاستدعاء لنفس المستخدم والدور عند إعادة الرندرة
-  if (lastLoggedInUserId === cleanId && currentCachedRole === (role || '')) {
-    return;
-  }
-
-  loginMutex = loginMutex.then(async () => {
-    try {
-      if (isNativePlatform()) {
-        if (!isInitialized) {
-          try {
-            await initOneSignal();
-          } catch {}
-        }
-
-        // 1. طلب الصلاحية وتفعيل الاشتراك أولاً لضمان توليد Push ID على سيرفر OneSignal
+  try {
+    if (isNativePlatform()) {
+      if (!isInitialized) {
         try {
-          const hasPermission = typeof (OneSignal.Notifications as any).getPermissionAsync === 'function'
-            ? await (OneSignal.Notifications as any).getPermissionAsync()
-            : await OneSignal.Notifications.hasPermission();
-          if (!hasPermission) {
-            await OneSignal.Notifications.requestPermission(true);
-          }
-        } catch (permErr) {
-          console.warn('OneSignal permission check notice:', permErr);
-        }
-        try {
-          await OneSignal.User.pushSubscription.optIn();
-        } catch (optErr) {}
-
-        // 2. إذا كان هناك مستخدم مختلف مسجل سابقاً على نفس الجهاز، نسجل خروجه أولاً
-        if (lastLoggedInUserId && lastLoggedInUserId !== cleanId) {
-          console.log('🔄 تبديل مستخدم مختلف على نفس الجهاز، جاري تسجيل الخروج أولاً:', lastLoggedInUserId, '->', cleanId);
-          try {
-            await OneSignal.logout();
-            await new Promise((r) => setTimeout(r, 500));
-          } catch (logErr) {
-            console.warn('OneSignal.logout notice:', logErr);
-          }
-        }
-
-        // 3. ربط المستخدم الحالي عبر login فقط (بدون addAlias لـ external_id لتجنب الرفض في v5)
-        await OneSignal.login(cleanId);
-        lastLoggedInUserId = cleanId;
-
-        // 4. إضافة الوسوم (Tags)
-        await OneSignal.User.addTag('user_id', cleanId);
-        if (role) {
-          await OneSignal.User.addTag('role', role.trim());
-          localStorage.setItem('onesignal_user_role', role);
-        }
-        if (userName) {
-          await OneSignal.User.addTag('name', userName.trim());
-        }
-        localStorage.setItem('onesignal_external_id', cleanId);
-
-        // التقاط معرف الاشتراك إن كان متوفراً
-        const freshSubId = await OneSignal.User.pushSubscription.getIdAsync().catch(() => null);
-        if (freshSubId) {
-          localStorage.setItem('onesignal_subscription_id', freshSubId);
-        }
-
-        // مزامنة التفضيلات في الجسر الأصلي (بدون تكرار نداء OneSignal المتضارب في الجافا)
-        const bridge = getNativeBridge();
-        if (bridge?.loginOneSignal) {
-          try {
-            bridge.loginOneSignal(cleanId, role || '');
-          } catch {}
-        }
-
-        console.log('🔒 OneSignal Native login complete for user:', cleanId, 'subId:', freshSubId);
-        return;
+          await initOneSignal();
+        } catch {}
       }
 
-      // Web Push Deferred Login
+      // 1. طلب صلاحية الإشعارات تلقائياً عند أول دخول
+      let hasPermission = false;
+      try {
+        hasPermission = typeof (OneSignal.Notifications as any)?.getPermissionAsync === 'function'
+          ? await (OneSignal.Notifications as any).getPermissionAsync()
+          : await OneSignal.Notifications.hasPermission();
+      } catch {
+        hasPermission = false;
+      }
+
+      if (!hasPermission) {
+        try {
+          await OneSignal.Notifications.requestPermission(true);
+        } catch {}
+      }
+      try {
+        await OneSignal.User.pushSubscription.optIn();
+      } catch {}
+
+      // إذا كان هناك مستخدم مختلف مسجل سابقاً على نفس الجهاز، نسجل خروجه أولاً
+      if (lastLoggedInUserId && lastLoggedInUserId !== cleanId) {
+        console.log('🔄 تبديل مستخدم مختلف على نفس الجهاز، جاري تسجيل الخروج أولاً:', lastLoggedInUserId, '->', cleanId);
+        try {
+          await OneSignal.logout();
+          await new Promise((r) => setTimeout(r, 400));
+        } catch {}
+      }
+
+      // 2. محاولة الربط المحلي عبر SDK
+      await OneSignal.login(cleanId);
+      lastLoggedInUserId = cleanId;
+      localStorage.setItem('onesignal_external_id', cleanId);
+
+      await OneSignal.User.addTag('user_id', cleanId);
+      if (role) {
+        await OneSignal.User.addTag('role', role.trim());
+        localStorage.setItem('onesignal_user_role', role.trim());
+      }
+      if (userName) {
+        await OneSignal.User.addTag('name', userName.trim());
+      }
+
+      const bridge = getNativeBridge();
+      if (bridge?.loginOneSignal) {
+        try {
+          bridge.loginOneSignal(cleanId, role || '');
+        } catch {}
+      }
+
+      // 3. الربط السحابي الأوتوماتيكي عبر السيرفر (يعمل بصمت في الخلفية 100%)
+      const fcmToken = await waitForFcmToken();
+      if (fcmToken) {
+        const syncKey = `os_synced_${cleanId}_${role || 'user'}_${fcmToken.slice(-10)}`;
+        if (sessionStorage.getItem(syncKey) !== 'true') {
+          const { data } = await supabase.functions.invoke('send-push', {
+            body: {
+              action: 'register_device',
+              userId: cleanId,
+              role: (role || 'user').trim(),
+              fcmToken: fcmToken.trim()
+            }
+          });
+
+          if (data?.pushId) {
+            localStorage.setItem('jiibha_verified_push_id', data.pushId);
+            localStorage.setItem('onesignal_subscription_id', data.pushId);
+            sessionStorage.setItem(syncKey, 'true');
+            console.log('✅ Auto-registered device in background, Push ID:', data.pushId);
+          }
+        }
+      }
+    } else {
+      // Web / PWA Deferred Login
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function (OneSignalInstance: any) {
         try {
@@ -433,15 +462,12 @@ export const loginOneSignalUser = async (userId: string | number, role?: string 
             if (typeof OneSignalInstance.logout === 'function') {
               await OneSignalInstance.logout().catch(() => {});
             }
-            await new Promise((r) => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 400));
           }
 
-          // 3. ربط المستخدم الحالي عبر login فقط
+          // 3. ربط المستخدم الحالي عبر login
           if (typeof OneSignalInstance.login === 'function') {
-            await OneSignalInstance.login(cleanId).catch((err: any) => {
-              console.warn('OneSignal Web login non-fatal notice:', err);
-            });
-            console.log('🔒 OneSignal Web logged in with external_id:', cleanId);
+            await OneSignalInstance.login(cleanId).catch(() => {});
           }
           lastLoggedInUserId = cleanId;
           localStorage.setItem('onesignal_external_id', cleanId);
@@ -457,12 +483,10 @@ export const loginOneSignalUser = async (userId: string | number, role?: string 
           console.warn('OneSignal Web login non-fatal notice:', e);
         }
       });
-    } catch (e) {
-      console.error('OneSignal login error:', e);
     }
-  });
-
-  await loginMutex;
+  } catch (error) {
+    console.error('Silent OneSignal auto-login error:', error);
+  }
 };
 
 export const loginOneSignal = loginOneSignalUser;

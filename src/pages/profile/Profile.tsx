@@ -321,8 +321,8 @@ export default function Profile() {
                 </div>
               )}
 
-              {/* زر تشخيص وتفعيل الإشعارات لكشف سبب الخطأ بدقة (حصر للمطور فقط) */}
-              {user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
+              {/* زر تشخيص وتفعيل الإشعارات (مخفي عن المستخدمين ويظهر فقط في وضع التطوير للمطور) */}
+              {Boolean(import.meta.env.DEV) && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
                 <div className="md:col-span-2 my-4">
                   <button 
                     type="button"
@@ -351,8 +351,8 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Diagnostics Modal (Developer madaniameur26@gmail.com Only) */}
-      {isNativePlatform() && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
+      {/* Diagnostics Modal (Developer Only in Dev Mode) */}
+      {isNativePlatform() && Boolean(import.meta.env.DEV) && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
         <NotificationDiagnosticsModal
           isOpen={showDiagnostics}
           onClose={() => setShowDiagnostics(false)}

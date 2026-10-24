@@ -409,8 +409,8 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
             </div>
           )}
 
-          {/* زر تشخيص وتفعيل الإشعارات لكشف سبب الخطأ بدقة (حصر للمطور madaniameur26@gmail.com فقط) */}
-          {user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
+          {/* زر تشخيص وتفعيل الإشعارات (مخفي عن المستخدمين ويظهر فقط في وضع التطوير للمطور) */}
+          {Boolean(import.meta.env.DEV) && user?.email?.trim().toLowerCase() === 'madaniameur26@gmail.com' && (
             <div className="flex justify-center w-full mb-4">
               <button 
                 onClick={() => runOneSignalDiagnostics(user)}

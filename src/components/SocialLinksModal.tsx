@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { socialLinksAlertService, SocialLinksAlert } from '../services/socialLinksAlertService';
 import { X, Send, Facebook, Sparkles } from 'lucide-react';
@@ -14,6 +14,7 @@ export default function SocialLinksModal({ previewAlert, onClosePreview, canShow
   const [alert, setAlert] = useState<SocialLinksAlert | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
+  const socialAlertCheckedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (previewAlert) {
@@ -27,11 +28,17 @@ export default function SocialLinksModal({ previewAlert, onClosePreview, canShow
       return;
     }
 
+    if (user?.id && socialAlertCheckedUserIdRef.current === user.id) {
+      return;
+    }
+
     const checkAlert = async () => {
       // Only show to merchants and suppliers (not admins)
       if (!user || (user.role !== 'merchant' && user.role !== 'supplier')) {
         return;
       }
+
+      socialAlertCheckedUserIdRef.current = user.id;
 
       const activeAlert = await socialLinksAlertService.getAlert();
       if (!activeAlert || !activeAlert.isActive) {
@@ -51,7 +58,7 @@ export default function SocialLinksModal({ previewAlert, onClosePreview, canShow
     };
 
     checkAlert();
-  }, [user, previewAlert, canShow]);
+  }, [user?.id, user?.role, previewAlert, canShow]);
 
   const handleClose = () => {
     if (previewAlert) {

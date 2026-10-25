@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { pollService, UserPoll } from '../services/pollService';
 import { 
@@ -33,6 +33,7 @@ export default function UserPollModal({
   const [userVotedOptionId, setUserVotedOptionId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const pollLoadedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (previewPoll) {
@@ -49,8 +50,12 @@ export default function UserPollModal({
       return;
     }
 
-    loadPollData();
-  }, [user, previewPoll, isOpenControlled]);
+    if (user?.id) {
+      if (pollLoadedUserIdRef.current === user.id) return;
+      pollLoadedUserIdRef.current = user.id;
+      loadPollData();
+    }
+  }, [user?.id, user?.role, previewPoll, isOpenControlled]);
 
   const loadPollData = async () => {
     // Only merchants and suppliers see automatic popup (admins view in management)

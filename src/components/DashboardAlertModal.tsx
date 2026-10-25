@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { dashboardAlertService, DashboardAlert } from '../services/dashboardAlertService';
 import { 
@@ -34,12 +34,17 @@ export default function DashboardAlertModal({
   const [alert, setAlert] = useState<DashboardAlert | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const alertCheckedUserIdRef = useRef<string | null>(null);
 
   // If in preview mode (used by admin in settings/notifications)
   useEffect(() => {
     if (previewAlert) {
       setAlert(previewAlert);
       setIsOpen(true);
+      return;
+    }
+
+    if (!previewAlert && user?.id && alertCheckedUserIdRef.current === user.id) {
       return;
     }
 
@@ -50,6 +55,8 @@ export default function DashboardAlertModal({
         onAlertNotShown?.();
         return;
       }
+
+      alertCheckedUserIdRef.current = user.id;
 
       const activeAlert = await dashboardAlertService.getAlert();
       if (!activeAlert || !activeAlert.isActive) {
@@ -79,7 +86,7 @@ export default function DashboardAlertModal({
     };
 
     checkAlert();
-  }, [user, previewAlert]);
+  }, [user?.id, user?.role, previewAlert]);
 
   const handleClose = () => {
     if (previewAlert) {

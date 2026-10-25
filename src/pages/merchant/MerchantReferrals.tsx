@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Users, Link as LinkIcon, Copy, CheckCircle2, LayoutDashboard, Store, Package, CreditCard, Heart, AlertTriangle  } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -16,14 +16,23 @@ export default function MerchantReferrals() {
   });
   const [referralsList, setReferralsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const fetchedUserIdRef = useRef<string | null>(null);
 
   const referralLink = `${window.location.origin}/register?ref=${user?.id}`;
 
   useEffect(() => {
-    if (user) {
-      fetchReferralData();
+    if (user?.id) {
+      if (fetchedUserIdRef.current !== user.id) {
+        fetchedUserIdRef.current = user.id;
+        fetchReferralData();
+      }
     }
-  }, [user]);
+    const handleRefresh = () => {
+      if (user?.id) fetchReferralData();
+    };
+    window.addEventListener('refresh_data', handleRefresh);
+    return () => window.removeEventListener('refresh_data', handleRefresh);
+  }, [user?.id]);
 
   const fetchReferralData = async () => {
     try {

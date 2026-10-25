@@ -45,12 +45,16 @@ export const pollService = {
       }
 
       if (!data || !data.content) {
+        cachedPoll = { data: null, timestamp: Date.now() };
         return null;
       }
 
       try {
         const parsed = JSON.parse(data.content) as UserPoll;
-        if (parsed.isDeleted) return null;
+        if (parsed.isDeleted) {
+          cachedPoll = { data: null, timestamp: Date.now() };
+          return null;
+        }
 
         // Try to fetch live votes from poll_votes table if available
         try {
@@ -75,6 +79,7 @@ export const pollService = {
           // If poll_votes table doesn't exist yet, fallback to stored votesCount
         }
 
+        cachedPoll = { data: parsed, timestamp: Date.now() };
         return parsed;
       } catch (err) {
         console.error('Error parsing poll content:', err);

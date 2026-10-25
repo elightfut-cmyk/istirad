@@ -36,6 +36,7 @@ export const socialLinksAlertService = {
       }
 
       if (!data || !data.content) {
+        cachedSocialAlert = { data: null, timestamp: Date.now() };
         return null;
       }
 

@@ -40,6 +40,7 @@ export const dashboardAlertService = {
       }
 
       if (!data || !data.content) {
+        cachedAlert = { data: null, timestamp: Date.now() };
         return null;
       }
 

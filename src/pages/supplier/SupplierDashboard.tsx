@@ -24,16 +24,16 @@ export default function SupplierDashboard() {
   const [calcQty, setCalcQty] = useState<number>(1);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchDashboardData();
     }
     
     const handleRefresh = () => {
-      if (user) fetchDashboardData();
+      if (user?.id) fetchDashboardData();
     };
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
-  }, [user]);
+  }, [user?.id]);
 
   const fetchDashboardData = async () => {
     try {

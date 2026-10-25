@@ -182,10 +182,10 @@ export default function MerchantOrders() {
       // Auto dismiss after 10 seconds
       setTimeout(() => setPaymentNotification(null), 10000);
     }
-  }, [user, searchParams, setSearchParams]);
+  }, [user?.id, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchRequests();
       fetchWalletBalance();
     }
@@ -216,7 +216,7 @@ export default function MerchantOrders() {
     }
     
     const handleRefresh = () => {
-      if (user) {
+      if (user?.id) {
         fetchRequests();
         fetchWalletBalance();
       }
@@ -230,7 +230,7 @@ export default function MerchantOrders() {
         } catch {}
       }
     };
-  }, [user]);
+  }, [user?.id]);
 
   const fetchWalletBalance = async () => {
     if (!user) return;

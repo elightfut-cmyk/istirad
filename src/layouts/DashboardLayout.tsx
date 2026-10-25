@@ -48,15 +48,19 @@ export default function DashboardLayout({ children, title, sidebarLinks }: Dashb
   const socialTimerRef = useRef<any>(null);
 
   // Check if active poll exists for topbar indicator
+  const pollCheckedUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (user && (user.role === 'merchant' || user.role === 'supplier')) {
+    if (user?.id && (user.role === 'merchant' || user.role === 'supplier')) {
+      if (pollCheckedUserIdRef.current === user.id) return;
+      pollCheckedUserIdRef.current = user.id;
+
       pollService.getPoll().then((p) => {
         if (p && p.isActive && (p.targetRole === 'all' || p.targetRole === user.role)) {
           setHasActivePoll(true);
         }
       });
     }
-  }, [user]);
+  }, [user?.id, user?.role]);
 
   // Start 10-second countdown for social links modal
   const handleStartSocialCountdown = () => {

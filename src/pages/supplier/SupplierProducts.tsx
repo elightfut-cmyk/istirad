@@ -63,7 +63,7 @@ export default function SupplierProducts() {
     const handleRefresh = () => fetchProducts();
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
-  }, [user]);
+  }, [user?.id]);
 
   const fetchProducts = async () => {
     if (!user) return;

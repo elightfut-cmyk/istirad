@@ -39,15 +39,15 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchProducts();
-    if (user) fetchWishlist();
+    if (user?.id) fetchWishlist();
     
     const handleRefresh = () => {
       fetchProducts();
-      if (user) fetchWishlist();
+      if (user?.id) fetchWishlist();
     };
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
-  }, [user]);
+  }, [user?.id]);
 
   const fetchWishlist = async () => {
     try {

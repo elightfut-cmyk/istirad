@@ -35,7 +35,7 @@ export default function Profile() {
         telegram_chat_id: user.telegram_chat_id || ''
       });
     }
-  }, [user]);
+  }, [user?.id, user?.name, user?.email, user?.phone, user?.address, user?.company_name, user?.telegram_chat_id]);
 
   const defaultDashboardLink = user?.role === 'admin' 
     ? '/admin' 

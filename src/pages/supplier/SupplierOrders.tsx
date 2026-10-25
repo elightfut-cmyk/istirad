@@ -20,17 +20,17 @@ export default function SupplierOrders() {
   const [markingDeliveredId, setMarkingDeliveredId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchOrders();
     }
 
     const handleRefresh = () => {
-      if (user) fetchOrders();
+      if (user?.id) fetchOrders();
     };
 
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
-  }, [user]);
+  }, [user?.id]);
 
   const fetchOrders = async () => {
     try {

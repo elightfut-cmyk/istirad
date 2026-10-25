@@ -67,7 +67,7 @@ export default function SupplierRequests() {
     const handleRefresh = () => fetchRequests();
     window.addEventListener('refresh_data', handleRefresh);
     return () => window.removeEventListener('refresh_data', handleRefresh);
-  }, [user]);
+  }, [user?.id]);
 
   const fetchRequests = async () => {
     if (!user) return;

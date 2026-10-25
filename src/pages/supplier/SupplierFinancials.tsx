@@ -14,10 +14,15 @@ export default function SupplierFinancials() {
   const [stats, setStats] = useState({ totalSales: 0, platformFees: 0, netEarned: 0, advanceTotal: 0, pending: 0 });
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchFinancials();
     }
-  }, [user]);
+    const handleRefresh = () => {
+      if (user?.id) fetchFinancials();
+    };
+    window.addEventListener('refresh_data', handleRefresh);
+    return () => window.removeEventListener('refresh_data', handleRefresh);
+  }, [user?.id]);
 
   const fetchFinancials = async () => {
     try {

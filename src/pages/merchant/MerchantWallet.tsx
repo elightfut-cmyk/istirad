@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LayoutDashboard, Store, Package, CreditCard, ArrowUpRight, ArrowDownLeft, X, Clock, Heart, Users, Copy, CheckCircle2, AlertTriangle  } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -30,13 +30,25 @@ export default function MerchantWallet() {
 
   // Hardcoded exchange rates for topup simulation
   const EUR_TO_DZD = 150; // Just an example rate for EUR
+  const fetchedUserIdRef = useRef<string | null>(null);
   
   useEffect(() => {
-    fetchTransactions();
-  }, [user]);
+    if (user?.id) {
+      if (fetchedUserIdRef.current !== user.id) {
+        fetchedUserIdRef.current = user.id;
+        fetchTransactions();
+      }
+    }
+
+    const handleRefresh = () => {
+      if (user?.id) fetchTransactions();
+    };
+    window.addEventListener('refresh_data', handleRefresh);
+    return () => window.removeEventListener('refresh_data', handleRefresh);
+  }, [user?.id]);
 
   const fetchTransactions = async () => {
-    if (!user) return;
+    if (!user?.id) return;
     try {
       const { data, error } = await supabase
         .from('wallet_transactions')
@@ -50,10 +62,17 @@ export default function MerchantWallet() {
       }
       setTransactions(data || []);
 
-      // Also refresh the user profile to get the latest wallet balance
+      // Only refresh the user store if wallet balance or loyalty points actually changed
       const { data: updatedUser } = await supabase.from('users').select('*').eq('id', user.id).single();
       if (updatedUser) {
-        useAuthStore.getState().setUser(updatedUser);
+        const currentUser = useAuthStore.getState().user;
+        if (
+          currentUser &&
+          (currentUser.wallet_balance !== updatedUser.wallet_balance ||
+           currentUser.loyalty_points !== updatedUser.loyalty_points)
+        ) {
+          useAuthStore.getState().setUser(updatedUser);
+        }
       }
     } catch (error) {
       console.error(error);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { LayoutDashboard, Store, Package, CreditCard, Plus, Clock, CheckCircle2, XCircle, Link as LinkIcon, Image as ImageIcon, Upload, Wallet, Trash2, MessageCircle, Edit, Heart, AlertTriangle, Gavel, Layers, Star } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -972,15 +972,27 @@ export default function MerchantOrders() {
                           {(() => {
                             const dInfo = getSupplierRatingInfo(bid?.supplier?.verification_badge);
                             return (
-                              <SupplierBadge
-                                supplierId={bid?.supplier_id}
-                                name={bid?.supplier?.name}
-                                companyName={bid?.supplier?.company_name}
-                                tier={dInfo.tier}
-                                rating={dInfo.rating}
-                                totalReviews={dInfo.totalReviews}
-                                size="xs"
-                              />
+                              <div className="flex items-center gap-2">
+                                <SupplierBadge
+                                  supplierId={bid?.supplier_id}
+                                  name={bid?.supplier?.name}
+                                  companyName={bid?.supplier?.company_name}
+                                  tier={dInfo.tier}
+                                  rating={dInfo.rating}
+                                  totalReviews={dInfo.totalReviews}
+                                  size="xs"
+                                />
+                                {bid?.supplier_id && (
+                                  <Link
+                                    to={`/supplier/profile/${bid.supplier_id}?orderId=${bid.id}&orderTitle=${encodeURIComponent(req.title)}`}
+                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                                    title="عرض البروفايل التجاري والمخزن للمورد"
+                                  >
+                                    <Store size={13} />
+                                    <span>البروفايل والمخزن</span>
+                                  </Link>
+                                )}
+                              </div>
                             );
                           })()}
                         </div>
@@ -1282,15 +1294,53 @@ export default function MerchantOrders() {
                             {(() => {
                               const sInfo = getSupplierRatingInfo(bid.supplier?.verification_badge);
                               return (
-                                <SupplierBadge
-                                  supplierId={bid.supplier_id}
-                                  name={bid.supplier?.name}
-                                  companyName={bid.supplier?.company_name}
-                                  tier={sInfo.tier}
-                                  rating={sInfo.rating}
-                                  totalReviews={sInfo.totalReviews}
-                                  size="sm"
-                                />
+                                <div>
+                                  <SupplierBadge
+                                    supplierId={bid.supplier_id}
+                                    name={bid.supplier?.name}
+                                    companyName={bid.supplier?.company_name}
+                                    tier={sInfo.tier}
+                                    rating={sInfo.rating}
+                                    totalReviews={sInfo.totalReviews}
+                                    size="sm"
+                                  />
+                                  <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                                    <Link
+                                      to={`/supplier/profile/${bid.supplier_id}?orderId=${bid.id}&orderTitle=${encodeURIComponent(req.title)}`}
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 px-3 py-1.5 rounded-xl border border-indigo-200/80 dark:border-indigo-800/80 transition shadow-xs"
+                                      title="عرض بروفايل المورد ومخزنه التجاري والتقييمات"
+                                    >
+                                      <Store size={14} className="text-[#4f46e5]" />
+                                      <span>عرض البروفايل والمخزن 👤</span>
+                                    </Link>
+
+                                    {reviewedOrderIds[bid.id] ? (
+                                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                        <CheckCircle2 size={13} className="text-emerald-500" />
+                                        <span>مقيّم ({reviewedOrderIds[bid.id].rating} ⭐)</span>
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setReviewModalData({
+                                            isOpen: true,
+                                            orderId: bid.id,
+                                            supplierId: bid.supplier_id,
+                                            supplierName: bid.supplier?.company_name || bid.supplier?.name,
+                                            orderTitle: req.title,
+                                          });
+                                        }}
+                                        className="inline-flex items-center gap-1 text-xs font-black text-amber-800 dark:text-amber-200 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-950/60 dark:to-yellow-950/60 hover:from-amber-200 hover:to-yellow-200 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 transition shadow-xs cursor-pointer"
+                                        title="تقييم هذا المورد مباشرة"
+                                      >
+                                        <Star size={13} className="fill-amber-400 text-amber-500" />
+                                        <span>تقييم المورد ⭐</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               );
                             })()}
                           </div>

@@ -785,6 +785,9 @@ export default function SupplierRequests() {
                                 {otherBid.supplier?.name || 'مورد'}
                               </span>
                               <SupplierBadge 
+                                supplierId={otherBid.supplier_id}
+                                name={otherBid.supplier?.name}
+                                companyName={otherBid.supplier?.company_name}
                                 tier={otherBid.supplier?.verification_badge}
                                 size="xs" 
                                 rating={otherBid.supplier?.average_rating} 

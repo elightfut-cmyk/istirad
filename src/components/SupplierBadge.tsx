@@ -1,4 +1,5 @@
 import { Shield, ShieldCheck, Star, Gem } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export type SupplierTier = 'NEW' | 'SILVER' | 'GOLD' | 'PLATINUM' | string;
 
@@ -21,12 +22,15 @@ export default function SupplierBadge({
   tier = 'NEW',
   rating = 0,
   totalReviews = 0,
-  supplierId: _supplierId,
+  supplierId,
   size = 'sm',
   showName = true,
-  clickable: _clickable = true,
+  clickable = true,
   className = '',
 }: SupplierBadgeProps) {
+  const navigate = useNavigate();
+  const isClickable = Boolean(supplierId && clickable !== false);
+
   const normalizedTier = (tier || 'NEW').toUpperCase();
   const displayName = companyName || name || 'مورد موثوق';
   const numericRating = Number(rating) || 0;
@@ -108,10 +112,22 @@ export default function SupplierBadge({
 
   const currentSize = sizeClasses[size];
 
-  const content = (
+  const handleClick = (e: React.MouseEvent) => {
+    if (isClickable && supplierId) {
+      e.stopPropagation();
+      navigate(`/supplier/profile/${supplierId}`);
+    }
+  };
+
+  return (
     <div
-      className={`inline-flex items-center flex-wrap rounded-xl border transition-all duration-200 ${currentTier.bgGradient} ${currentSize.container} ${className} cursor-default`}
-      title={`تصنيف المورد: ${currentTier.label} • التقييم: ${numericRating.toFixed(1)} من 5 (${reviewCount} تقييم)`}
+      onClick={handleClick}
+      className={`inline-flex items-center flex-wrap rounded-xl border transition-all duration-200 ${currentTier.bgGradient} ${currentSize.container} ${className} ${
+        isClickable
+          ? 'cursor-pointer hover:scale-[1.02] hover:shadow-md hover:ring-2 hover:ring-indigo-500/20 active:scale-[0.98]'
+          : 'cursor-default'
+      }`}
+      title={isClickable ? `اضغط لعرض البروفايل التجاري والتقييمات للمورد (${displayName})` : `تصنيف المورد: ${currentTier.label} • التقييم: ${numericRating.toFixed(1)} من 5`}
     >
       {/* Supplier Name */}
       {showName && (
@@ -142,7 +158,4 @@ export default function SupplierBadge({
       </div>
     </div>
   );
-
-  // Note: Profile navigation is disabled for now as requested
-  return content;
 }

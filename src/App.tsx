@@ -31,6 +31,8 @@ import SupplierRequests from './pages/supplier/SupplierRequests';
 import SupplierProducts from './pages/supplier/SupplierProducts';
 import SupplierOrders from './pages/supplier/SupplierOrders';
 import SupplierFinancials from './pages/supplier/SupplierFinancials';
+import SupplierVerification from './pages/SupplierVerification';
+import AdminSupplierVerifications from './pages/AdminSupplierVerifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './pages/profile/Profile';
 import toast, { Toaster } from 'react-hot-toast';
@@ -233,6 +235,13 @@ function App() {
               <AdminUsers />
             </ProtectedRoute>
           } />
+
+          <Route path="/admin/verifications" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminSupplierVerifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/supplier-verifications" element={<Navigate to="/admin/verifications" replace />} />
           
           <Route path="/admin/coupons" element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -360,6 +369,13 @@ function App() {
 
           <Route path="/supplier/profile" element={<SupplierPublicProfile />} />
           <Route path="/supplier/profile/:supplierId" element={<SupplierPublicProfile />} />
+
+          <Route path="/supplier/verification" element={
+            <ProtectedRoute allowedRoles={['supplier']}>
+              <SupplierVerification />
+            </ProtectedRoute>
+          } />
+          <Route path="/supplier-verification" element={<Navigate to="/supplier/verification" replace />} />
         </Routes>
       </div>
     </Router>

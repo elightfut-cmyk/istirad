@@ -299,6 +299,7 @@ export default function AdminUsers() {
       sidebarLinks={[
         { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
+        { label: 'توثيقات الموردين', href: '/admin/verifications', icon: <ShieldCheck size={20} /> },
         { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },

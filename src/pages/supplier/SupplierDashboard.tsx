@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, DollarSign, Calculator, Award, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, DollarSign, Calculator, Award, ExternalLink, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -84,6 +84,7 @@ export default function SupplierDashboard() {
         { label: 'الطلبات الواردة', href: '/supplier/orders', icon: <ShoppingBag size={20} /> },
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
         { label: 'بروفايلي وتقييماتي', href: '/supplier/profile', icon: <Award size={20} /> },
+        { label: 'توثيق الحساب', href: '/supplier/verification', icon: <ShieldCheck size={20} /> },
       ]}
     >
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xs">
@@ -111,6 +112,33 @@ export default function SupplierDashboard() {
           <ExternalLink size={14} />
         </Link>
       </div>
+
+      {/* Verification CTA Banner for unverified suppliers */}
+      {!user?.verification_badge && (
+        <div className="mb-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-800 rounded-2xl p-4 sm:p-5 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center shrink-0">
+              <ShieldCheck size={24} className="text-yellow-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black">حسابك غير موثّق بشارة الاعتماد الرسمية</h4>
+                <span className="bg-yellow-400 text-gray-950 text-[10px] font-black px-2 py-0.2 rounded-full">مهم</span>
+              </div>
+              <p className="text-xs text-blue-100 mt-0.5">
+                قدّم طلب التوثيق الآن واعتمد ميثاق جودة الخدمة لتحصل على شارة الموثوقية وتزيد مبيعاتك.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/supplier/verification"
+            className="py-2.5 px-4 rounded-xl text-xs font-black bg-white hover:bg-gray-100 text-[#4f46e5] shadow-xs transition flex items-center gap-1.5 shrink-0"
+          >
+            <Sparkles size={14} className="text-indigo-600" />
+            <span>توثيق الحساب الآن</span>
+          </Link>
+        </div>
+      )}
 
       <div className="mb-6">
         <NotificationStatusBanner />

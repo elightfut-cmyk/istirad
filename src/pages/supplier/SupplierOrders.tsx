@@ -92,7 +92,6 @@ export default function SupplierOrders() {
       const updateData: any = { shipping_status: status };
       if (status === 'delivered') {
         updateData.is_fully_paid = true;
-        updateData.order_status = 'COMPLETED';
         updateData.delivered_at = new Date().toISOString();
       }
 

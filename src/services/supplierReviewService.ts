@@ -164,7 +164,6 @@ export const supplierReviewService = {
       const updateData: any = {
         shipping_status: 'delivered',
         is_fully_paid: true,
-        order_status: 'COMPLETED',
         delivered_at: now,
       };
 

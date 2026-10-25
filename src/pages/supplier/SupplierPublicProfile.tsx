@@ -61,7 +61,7 @@ export default function SupplierPublicProfile() {
         .from('supplier_bids')
         .select('id', { count: 'exact', head: true })
         .eq('supplier_id', id)
-        .or('shipping_status.eq.delivered,order_status.eq.COMPLETED');
+        .or('shipping_status.eq.delivered,status.eq.accepted');
 
       setCompletedOrdersCount(ordersCount || 0);
 
@@ -71,7 +71,7 @@ export default function SupplierPublicProfile() {
 
       // 4. Fetch supplier's listed products in marketplace
       const { data: prods } = await supabase
-        .from('marketplace_products')
+        .from('products')
         .select('*')
         .eq('supplier_id', id)
         .limit(6);

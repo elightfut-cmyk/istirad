@@ -1,348 +1,363 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// تنظيف المفتاح من أي مسافات أو علامات تنصيص أو بادئات مكررة قد تضاف بالخطأ عند النسخ
+function cleanSecret(raw?: string | null): string {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .replace(/^['"]+|['"]+$/g, '')
+    .replace(/^(Basic|Key|Bearer)\s+/i, '')
+    .trim();
+}
+
+// دالة الاتصال بـ OneSignal باستخدام المفتاح السري المحفوظ في البيئة فقط
+async function callOneSignal(
+  url: string,
+  method: string,
+  payload: Record<string, unknown>,
+  apiKey: string
+) {
+  let lastResult: any = { errors: ["Failed to connect to OneSignal"] };
+
+  // المفاتيح الحديثة os_v2_ تستخدم Key، والمفاتيح القديمة تستخدم Basic
+  const prefixes = apiKey.startsWith('os_v2_') ? ['Key', 'Basic'] : ['Basic', 'Key'];
+
+  for (const prefix of prefixes) {
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `${prefix} ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      lastResult = data;
+
+      const errStr = JSON.stringify(data?.errors || '');
+      const isAuthError =
+        res.status === 401 ||
+        res.status === 403 ||
+        errStr.includes('Access denied') ||
+        errStr.includes('valid API key') ||
+        errStr.includes('Authorization');
+
+      if (!isAuthError) {
+        return { data, authFailed: false, usedPrefix: prefix };
+      }
+    } catch (err: any) {
+      lastResult = { errors: [err.message] };
+    }
+  }
+
+  return { data: lastResult, authFailed: true, usedPrefix: null };
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // 1. Verify client authorization
-    const authHeader = req.headers.get('Authorization') || '';
-    const apiKey = req.headers.get('apikey') || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    // 🔒 قراءة المفاتيح حصرياً من Supabase Secrets
+    const ONESIGNAL_APP_ID = cleanSecret(Deno.env.get('ONESIGNAL_APP_ID'));
+    const ONESIGNAL_REST_API_KEY = cleanSecret(Deno.env.get('ONESIGNAL_REST_API_KEY'));
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-
-    const isApiKeyValid = Boolean(apiKey || (token && token.length > 20));
-
-    if (!isApiKeyValid) {
+    if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
+      console.error(
+        `❌ CRITICAL SECURITY ERROR: Missing Secrets! APP_ID: ${
+          ONESIGNAL_APP_ID ? 'OK' : 'MISSING'
+        } | REST_API_KEY: ${ONESIGNAL_REST_API_KEY ? 'OK' : 'MISSING'}`
+      );
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           ok: false,
-          error: 'Unauthorized: Missing or invalid Supabase Authorization token/apikey' 
+          error: 'Server configuration error: OneSignal secrets are missing in Supabase.',
         }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 2. Parse incoming payload
     const body = await req.json().catch(() => ({}));
 
-    const rawApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY') 
-      || Deno.env.get('ONESIGNAL_API_KEY')
-      || Deno.env.get('ONESIGNAL_KEY')
-      || Deno.env.get('VITE_ONESIGNAL_REST_API_KEY')
-      || (body.apiKey ? String(body.apiKey).trim() : '')
-      || '';
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const rawAppId = Deno.env.get('ONESIGNAL_APP_ID') 
-      || Deno.env.get('VITE_ONESIGNAL_APP_ID') 
-      || 'daeaef49-9125-4ef2-8950-6c0428063f09';
+    // =====================================================================
+    // 📱 المسار الأول: تسجيل الهاتف سحابياً (Register Device / Player)
+    // =====================================================================
+    if (
+      body.action === 'register_device' ||
+      body.action === 'register' ||
+      body.type === 'register' ||
+      (body.fcmToken && !body.title && !body.message)
+    ) {
+      const userId = String(body.userId || body.user_id || '').trim();
+      const fcmToken = String(body.fcmToken || body.token || '').trim();
+      const role = String(body.role || 'user').trim();
 
-    const cleanKey = rawApiKey.trim();
-    const ONESIGNAL_APP_ID = rawAppId.trim();
-    const ONESIGNAL_REST_API_KEY = cleanKey.replace(/^Key\s+/i, '').replace(/^Basic\s+/i, '');
-
-    const authHeaderValue = cleanKey.startsWith('Key ') || cleanKey.startsWith('Basic ')
-      ? cleanKey
-      : `Key ${cleanKey}`;
-
-    // 2.1 معالج تسجيل الجهاز في OneSignal بالخلفية تلقائياً (Zero-Click Background Registration)
-    if (body.action === 'register_device') {
-      const { userId, role, fcmToken } = body;
-      const cleanUserId = String(userId || '').trim();
-      const cleanFcmToken = String(fcmToken || '').trim();
-      const cleanRole = String(role || 'user').trim();
-
-      if (!cleanUserId || !cleanFcmToken) {
+      if (!userId || !fcmToken) {
         return new Response(
-          JSON.stringify({ ok: false, error: 'Missing userId or fcmToken' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      let pushId: string | null = null;
-      let registerResult: any = null;
-
-      try {
-        // 1. تسجيل fcmToken في OneSignal عبر POST https://onesignal.com/api/v1/players
-        const createRes = await fetch('https://onesignal.com/api/v1/players', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
-          },
-          body: JSON.stringify({
-            app_id: ONESIGNAL_APP_ID,
-            device_type: 1, // 1 = Android
-            identifier: cleanFcmToken,
-            external_user_id: cleanUserId,
-            notification_types: 1,
-            tags: {
-              user_id: cleanUserId,
-              role: cleanRole
-            }
-          })
-        });
-
-        registerResult = await createRes.json().catch(() => ({}));
-        pushId = registerResult?.id || null;
-        console.log('OneSignal register player response:', registerResult);
-
-        // 2. تحديث الجهاز عبر PUT https://onesignal.com/api/v1/players/${pushId}
-        if (pushId) {
-          try {
-            await fetch(`https://onesignal.com/api/v1/players/${pushId}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
-              },
-              body: JSON.stringify({
-                app_id: ONESIGNAL_APP_ID,
-                notification_types: 1,
-                external_user_id: cleanUserId,
-                tags: {
-                  user_id: cleanUserId,
-                  role: cleanRole
-                }
-              })
-            });
-          } catch (putErr) {
-            console.warn('OneSignal PUT player notice:', putErr);
-          }
-
-          // 3. تحديث الهوية عبر PATCH https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${pushId}/user/identity
-          try {
-            await fetch(`https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${pushId}/user/identity`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authHeaderValue
-              },
-              body: JSON.stringify({
-                identity: {
-                  external_id: cleanUserId
-                }
-              })
-            });
-          } catch (identErr) {
-            console.warn('OneSignal identity patch notice:', identErr);
-          }
-        }
-
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            pushId,
-            result: registerResult
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (err: any) {
-        console.error('Error registering device in OneSignal:', err);
-        return new Response(
-          JSON.stringify({ ok: false, error: err?.message || 'Error registering device' }),
+          JSON.stringify({ ok: false, success: false, error: 'Missing userId or fcmToken' }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-    }
 
-    // 3. Dispatch Push Notification
-    const { 
-      userIds, 
-      user_id, 
-      subscriptionIds, 
-      subscription_id, 
-      title, 
-      message, 
-      headings, 
-      contents, 
-      data = {}, 
-      sendToAll: rawSendToAll = false,
-      targetRole,
-      android_channel_id
-    } = body;
+      const playerPayload = {
+        app_id: ONESIGNAL_APP_ID,
+        device_type: 1, // 1 = Android
+        identifier: fcmToken,
+        external_user_id: userId,
+        notification_types: 1, // Force Subscribed
+        tags: { user_id: userId, role: role },
+      };
 
-    let sendToAll = Boolean(rawSendToAll || targetRole === 'all');
+      const createRes = await fetch('https://onesignal.com/api/v1/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(playerPayload),
+      });
+      const createData = await createRes.json().catch(() => ({}));
+      const pushId = createData?.id;
 
-    const rawIds = userIds || (user_id ? [user_id] : []);
-    
-    // الحل الجذري لتصفية المعرفات المكررة باستخدام Set
-    const externalIds = [...new Set(
-      (Array.isArray(rawIds) ? rawIds : [rawIds])
-        .filter(Boolean)
-        .map(String)
-        .filter(id => id !== 'all')
-    )];
+      if (pushId) {
+        await fetch(`https://onesignal.com/api/v1/players/${pushId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(playerPayload),
+        }).catch(() => {});
 
-    const rawSubIds = subscriptionIds || (subscription_id ? [subscription_id] : []);
-    const validSubIds = [...new Set(
-      (Array.isArray(rawSubIds) ? rawSubIds : [rawSubIds])
-        .filter(Boolean)
-        .map(String)
-    )];
+        await callOneSignal(
+          `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/subscriptions/${pushId}/user/identity`,
+          'PATCH',
+          { identity: { external_id: userId } },
+          ONESIGNAL_REST_API_KEY
+        );
+      }
 
-    if (!sendToAll && externalIds.length === 0 && validSubIds.length === 0 && !targetRole) {
+      console.log(`✅ [Device Registered] Push ID: ${pushId} | User: ${userId} | Role: ${role}`);
       return new Response(
-        JSON.stringify({ 
-          ok: false,
-          error: 'No recipients provided: لم يتم تحديد أي مستخدم أو جهاز لإرسال الإشعار إليه' 
-        }),
+        JSON.stringify({ ok: Boolean(pushId), success: Boolean(pushId), id: pushId, pushId }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 4. Guaranteed Database Notification Insert (Service Role / Zero RLS)
-    if (supabaseUrl && supabaseServiceRoleKey) {
-      try {
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-        const notifTitle = title || (headings && (headings.ar || headings.en)) || 'إشعار جديد';
-        const notifMessage = message || (contents && (contents.ar || contents.en)) || '';
-        const notifType = data?.type || 'info';
+    // =====================================================================
+    // 🔔 المسار الثاني: إرسال كافة تنبيهات التطبيق (الجرس + الخلفية)
+    // =====================================================================
+    const {
+      userIds,
+      user_id,
+      userId,
+      recipientId,
+      recipient_id,
+      title,
+      message,
+      body: msgBody,
+      data = {},
+      sendToAll = false,
+      targetRole,
+      role: bodyRole,
+      skipDbInsert = false,
+    } = body;
 
-        if (targetRole === 'admin' || targetRole === 'supplier') {
-          const { data: roleUsers } = await supabaseAdmin.from('users').select('id').eq('role', targetRole);
-          if (roleUsers && roleUsers.length > 0) {
-            const inserts = roleUsers.map((u: any) => ({
-              user_id: u.id,
-              title: notifTitle,
-              message: notifMessage,
-              type: notifType
-            }));
-            await supabaseAdmin.from('notifications').insert(inserts);
+    const finalTitle = String(title || 'إشعار جديد').trim();
+    const finalMessage = String(message || msgBody || '').trim();
+
+    let actualTargetRole =
+      targetRole || bodyRole ? String(targetRole || bodyRole).trim() : undefined;
+
+    const rawIds = userIds || user_id || userId || recipientId || recipient_id || [];
+    const rawIdsArray = Array.isArray(rawIds) ? rawIds.flat(Infinity) : [rawIds];
+
+    let externalIds = [
+      ...new Set(
+        rawIdsArray
+          .filter(Boolean)
+          .map((id) => String(id).trim())
+          .filter((id) => {
+            const lower = id.toLowerCase();
+            if (lower === 'all') {
+              actualTargetRole = 'all';
+              return false;
+            }
+            if (lower === 'all_suppliers' || lower === 'suppliers' || lower === 'supplier') {
+              actualTargetRole = 'supplier';
+              return false;
+            }
+            if (lower === 'all_merchants' || lower === 'merchants' || lower === 'merchant') {
+              actualTargetRole = 'merchant';
+              return false;
+            }
+            if (lower === 'admin' || lower === 'admins' || lower === 'all_admins') {
+              actualTargetRole = 'admin';
+              return false;
+            }
+            return id !== '' && id !== 'undefined' && id !== 'null';
+          })
+      ),
+    ];
+
+    // جلب معرفات المستخدمين حسب الدور بصلاحية السيرفر لتجاوز RLS
+    if (actualTargetRole && actualTargetRole !== 'all' && externalIds.length === 0) {
+      for (const userTable of ['profiles', 'users']) {
+        try {
+          const { data: roleUsers } = await supabaseAdmin
+            .from(userTable)
+            .select('id')
+            .eq('role', actualTargetRole);
+
+          if (Array.isArray(roleUsers) && roleUsers.length > 0) {
+            externalIds = roleUsers.map((u: any) => String(u.id).trim()).filter(Boolean);
+            break;
           }
-        } else if (externalIds.length > 0 && !data?.test) {
-          const inserts = externalIds.map(id => ({
-            user_id: id,
-            title: notifTitle,
-            message: notifMessage,
-            type: notifType
-          }));
-          await supabaseAdmin.from('notifications').insert(inserts);
-        }
-      } catch (dbErr) {
-        console.warn('Edge function db insert notice:', dbErr);
+        } catch (_) {}
       }
     }
 
-    // 5. Build standard OneSignal Push payload with MAX PRIORITY and target_channel
-    const oneSignalPayload: Record<string, any> = {
-      app_id: ONESIGNAL_APP_ID,
-      target_channel: "push",
-      priority: 10,
-      ttl: 259200,
-      existing_android_channel_id: android_channel_id || "default_notification_channel",
-      android_accent_color: "FF4F46E5",
-      small_icon: "ic_launcher",
-      large_icon: "ic_launcher",
-      android_sound: "default",
-      android_visibility: 1,
-      headings: headings || {
-        en: title || 'New Notification',
-        ar: title || 'إشعار جديد'
-      },
-      contents: contents || {
-        en: message || '',
-        ar: message || ''
-      },
-      data: {
-        ...data,
-        timestamp: Date.now()
+    const isSendToAll = Boolean(sendToAll || actualTargetRole === 'all');
+    console.log(
+      `🎯 [Dispatch Target] Clean IDs: ${externalIds.length} | Role: ${
+        actualTargetRole || 'none'
+      } | Title: ${finalTitle}`
+    );
+
+    // 1. حفظ التنبيه في جرس الموقع (جدول notifications) بصلاحية السيرفر مع منع التكرار
+    if (!skipDbInsert && !isSendToAll && externalIds.length > 0) {
+      const fifteenSecondsAgo = new Date(Date.now() - 15000).toISOString();
+
+      for (const uid of externalIds) {
+        try {
+          const { data: existing } = await supabaseAdmin
+            .from('notifications')
+            .select('id')
+            .eq('user_id', uid)
+            .eq('title', finalTitle)
+            .gte('created_at', fifteenSecondsAgo)
+            .limit(1);
+
+          if (!existing || existing.length === 0) {
+            const fullRow: Record<string, unknown> = {
+              user_id: uid,
+              title: finalTitle,
+              message: finalMessage,
+              type: data?.type || body?.type || 'info',
+              is_read: false,
+            };
+
+            const { error: insertErr } = await supabaseAdmin.from('notifications').insert(fullRow);
+            if (insertErr) {
+              await supabaseAdmin.from('notifications').insert({
+                user_id: uid,
+                title: finalTitle,
+                message: finalMessage,
+                is_read: false,
+              });
+            }
+          }
+        } catch (dbEx: any) {
+          console.warn('⚠️ Bell DB insert warning:', dbEx.message);
+        }
       }
+    }
+
+    // 2. تجهيز حمولة OneSignal
+    const basePayload: Record<string, any> = {
+      app_id: ONESIGNAL_APP_ID,
+      headings: { en: finalTitle, ar: finalTitle },
+      contents: { en: finalMessage, ar: finalMessage },
+      data: data,
     };
 
-    // Targeting strategy
-    if (sendToAll) {
-      oneSignalPayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
-    } else if (validSubIds.length > 0) {
-      oneSignalPayload.include_player_ids = validSubIds;
-    } else if (targetRole && targetRole !== 'all') {
-      if (externalIds.length > 0) {
-        oneSignalPayload.filters = [
-          { field: 'tag', key: 'role', relation: '=', value: String(targetRole) },
-          { operator: 'OR' },
-          { field: 'tag', key: 'user_id', relation: '=', value: externalIds[0] }
-        ];
-      } else {
-        oneSignalPayload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
-      }
+    if (isSendToAll) {
+      basePayload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
     } else if (externalIds.length > 0) {
-      oneSignalPayload.include_aliases = {
-        external_id: externalIds
-      };
+      basePayload.include_aliases = { external_id: externalIds };
+      basePayload.target_channel = 'push';
+    } else if (actualTargetRole) {
+      basePayload.filters = [
+        { field: 'tag', key: 'role', relation: '=', value: String(actualTargetRole) },
+      ];
+    } else {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'No recipients specified' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // 6. Send request to OneSignal
-    const oneSignalRes = await fetch('https://api.onesignal.com/notifications', {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeaderValue,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(oneSignalPayload)
-    });
+    // 3. الإرسال الأساسي إلى OneSignal
+    let { data: osResult, authFailed, usedPrefix } = await callOneSignal(
+      'https://onesignal.com/api/v1/notifications',
+      'POST',
+      basePayload,
+      ONESIGNAL_REST_API_KEY
+    );
 
-    let osResult = await oneSignalRes.json().catch(() => ({}));
-    console.log("OneSignal Dispatch Response:", osResult);
+    console.log(`🚀 [Main Dispatch] AuthPrefix: ${usedPrefix} | Result:`, osResult);
 
-    // إذا فشل الإرسال عبر external_id بسبب تأخر مزامنة الهوية في OneSignal v5، أعد الإرسال تلقائياً عبر وسم user_id
-    const hasUnsubscribedError = Array.isArray(osResult?.errors)
-      ? osResult.errors.some((e: any) => typeof e === 'string' && e.includes('All included players are not subscribed'))
-      : (typeof osResult?.errors === 'string' && osResult.errors.includes('All included players are not subscribed'));
+    // 4. الضمان المزدوج (Auto-Fallback): إذا لم يصل عبر external_id نرسل فوراً عبر الوسم (Tag)
+    const errText = JSON.stringify(osResult?.errors || '');
+    const needsFallback =
+      !authFailed &&
+      (!osResult?.id || errText.includes('All included players are not subscribed'));
 
-    if (hasUnsubscribedError && externalIds.length > 0 && externalIds.length <= 50) {
-      console.log('⚠️ Triggering Fallback Tag Targeting for userIds:', externalIds);
-      const tagFilters: any[] = [];
-      externalIds.forEach((id, idx) => {
-        if (idx > 0) tagFilters.push({ operator: 'OR' });
-        tagFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: id });
-      });
+    if (needsFallback) {
+      const fallbackFilters: any[] = [];
 
-      const fallbackPayload = {
-        ...oneSignalPayload,
-        include_aliases: undefined,
-        filters: tagFilters
-      };
-      delete fallbackPayload.include_aliases;
+      if (externalIds.length > 0 && externalIds.length <= 50) {
+        externalIds.forEach((id, idx) => {
+          if (idx > 0) fallbackFilters.push({ operator: 'OR' });
+          fallbackFilters.push({ field: 'tag', key: 'user_id', relation: '=', value: id });
+        });
+      } else if (actualTargetRole && actualTargetRole !== 'all') {
+        fallbackFilters.push({
+          field: 'tag',
+          key: 'role',
+          relation: '=',
+          value: String(actualTargetRole),
+        });
+      }
 
-      const retryRes = await fetch('https://onesignal.com/api/v1/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
-        },
-        body: JSON.stringify(fallbackPayload)
-      });
-      osResult = await retryRes.json().catch(() => ({}));
-      console.log('🔄 Fallback Tag Targeting Response:', osResult);
+      if (fallbackFilters.length > 0) {
+        const fallbackPayload = { ...basePayload };
+        delete fallbackPayload.include_aliases;
+        delete fallbackPayload.target_channel;
+        fallbackPayload.filters = fallbackFilters;
+
+        const retryCall = await callOneSignal(
+          'https://onesignal.com/api/v1/notifications',
+          'POST',
+          fallbackPayload,
+          ONESIGNAL_REST_API_KEY
+        );
+        osResult = retryCall.data;
+        console.log('🔄 [Fallback Tag Dispatch] Result:', osResult);
+      }
     }
 
     return new Response(
       JSON.stringify({
-        ok: oneSignalRes.ok || Boolean(osResult?.id),
-        status: oneSignalRes.status,
-        ...osResult
+        ok: !authFailed,
+        success: !authFailed,
+        authFailed,
+        id: osResult?.id || null,
+        onesignal: osResult,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error: any) {
+    console.error('❌ [Universal Push Crash]:', error.message);
     return new Response(
-      JSON.stringify({ 
-        ok: false,
-        error: error?.message || 'Internal Server Error' 
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ ok: false, error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -2,10 +2,12 @@ node_modules/
 dist/
 build/
 .env
+.env.local
 .env.*
 *.env
-.env.local
 .env.*.local
+supabase/.env
+supabase/.env.*
 .DS_Store
 .npm
 coverage/

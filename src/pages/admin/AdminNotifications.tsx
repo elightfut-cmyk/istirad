@@ -33,9 +33,9 @@ import DashboardAlertModal from '../../components/DashboardAlertModal';
 import SocialLinksAdminTab from '../../components/admin/SocialLinksAdminTab';
 import PollAdminTab from '../../components/admin/PollAdminTab';
 import toast from 'react-hot-toast';
-import { sendPushNotification, getOneSignalRestApiKey, saveOneSignalRestApiKey } from '../../services/pushNotificationService';
+import { sendPushNotification } from '../../services/pushNotificationService';
 import { sendNotification } from '../../store/useNotificationStore';
-import { Key, ShieldCheck, EyeOff, CheckCircle } from 'lucide-react';
+import { ShieldCheck, CheckCircle } from 'lucide-react';
 import { Smartphone } from 'lucide-react';
 import { Vote } from 'lucide-react';
 import NotificationDiagnosticsModal from '../../components/NotificationDiagnosticsModal';
@@ -63,10 +63,7 @@ export default function AdminNotifications() {
   const [sendingPush, setSendingPush] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
 
-  // OneSignal REST API Key States
-  const [oneSignalKeyInput, setOneSignalKeyInput] = useState('');
-  const [showKeyText, setShowKeyText] = useState(false);
-  const [savingKey, setSavingKey] = useState(false);
+  // Push notification testing state
   const [testingMyDevice, setTestingMyDevice] = useState(false);
 
   // Popup Alert States
@@ -101,9 +98,6 @@ export default function AdminNotifications() {
 
   useEffect(() => {
     if (activeTab === 'push') {
-      getOneSignalRestApiKey().then(k => {
-        if (k) setOneSignalKeyInput(k);
-      });
       fetchUsersForPush();
     }
   }, [activeTab]);
@@ -126,22 +120,7 @@ export default function AdminNotifications() {
     }
   };
 
-  const handleSaveOneSignalKey = async () => {
-    const trimmed = oneSignalKeyInput.trim();
-    if (!trimmed) {
-      toast.error('يرجى إدخال مفتاح REST API');
-      return;
-    }
-    setSavingKey(true);
-    try {
-      await saveOneSignalRestApiKey(trimmed);
-      toast.success('تم حفظ المفتاح بنجاح وسيتم اعتماده أوتوماتيكياً في جميع التنبيهات!');
-    } catch {
-      toast.error('حدث خطأ أثناء الحفظ');
-    } finally {
-      setSavingKey(false);
-    }
-  };
+
 
   const handleTestMyDevicePush = async () => {
     if (!user?.id) {
@@ -1047,22 +1026,22 @@ export default function AdminNotifications() {
       {/* TAB 5: BROADCAST PUSH NOTIFICATION */}
       {activeTab === 'push' && (
         <div className="space-y-6 max-w-4xl">
-          {/* Card 1: OneSignal Key Management (Clean & Instant) */}
+          {/* Card 1: OneSignal Security & Status (Server-Secured via Supabase Secrets) */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-[#4f46e5] dark:text-indigo-400 rounded-xl">
-                  <Key size={20} />
+                <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <ShieldCheck size={20} />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    خدمة إشعارات الهاتف (OneSignal REST API)
+                    خدمة إشعارات الهاتف (OneSignal Push Service)
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                      <CheckCircle size={12} /> تعمل أوتوماتيكياً
+                      <CheckCircle size={12} /> مؤمّنة سحابياً 100%
                     </span>
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    يتم استخدامه أوتوماتيكياً لإيقاظ هواتف الأعضاء وإرسال التنبيهات بالصوت في الخلفية.
+                    يتم إرسال كافة التنبيهات عبر الدالة السحابية المؤمنة (Supabase Edge Function) بمفاتيح سرية معزولة تماماً في Supabase Secrets.
                   </p>
                 </div>
               </div>
@@ -1080,40 +1059,14 @@ export default function AdminNotifications() {
               )}
             </div>
 
-            <div className="mt-4 space-y-2">
-              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                مفتاح REST API Key (تلقائي / مخصص):
-              </label>
-              <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                <div className="relative flex-1 min-w-[260px]">
-                  <input
-                    type={showKeyText ? 'text' : 'password'}
-                    value={oneSignalKeyInput}
-                    onChange={(e) => setOneSignalKeyInput(e.target.value)}
-                    placeholder="مفتاح REST API الافتراضي مفعل تلقائياً..."
-                    className="w-full px-4 py-2.5 pl-10 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-sm font-mono focus:ring-2 focus:ring-[#4f46e5] focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowKeyText(!showKeyText)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSaveOneSignalKey}
-                  disabled={savingKey || !oneSignalKeyInput.trim()}
-                  className="px-5 py-2.5 bg-[#4f46e5] hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50 shrink-0 w-full sm:w-auto"
-                >
-                  <ShieldCheck size={16} />
-                  <span>{savingKey ? 'جاري الحفظ...' : 'حفظ المفتاح'}</span>
-                </button>
+            <div className="mt-4 p-3.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-300 flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>المفاتيح السرية (REST API Key) معزولة بالكامل داخل الخادم السحابي لحمايتها من التسريب أو الإبطال.</span>
               </div>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                ⚡ المفتاح الافتراضي يعمل أوتوماتيكياً عبر الخادم السحابي دون أي فحص متصفح معلق. إذا قمت بتحديث المفتاح، فقط الصقه هنا واضغط حفظ ليتم اعتماده فورياً.
-              </p>
+              <span className="font-mono text-[11px] bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">
+                send-push (Active)
+              </span>
             </div>
           </div>
 

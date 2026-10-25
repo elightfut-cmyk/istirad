@@ -55,7 +55,7 @@ function apiDevPlugin(env: Record<string, string>): any {
             try {
               const parsed = JSON.parse(body || '{}');
               const { userIds, subscriptionIds, title, message, data, sendToAll } = parsed;
-              const apiKey = env.ONESIGNAL_REST_API_KEY || env.VITE_ONESIGNAL_REST_API_KEY;
+              const apiKey = env.ONESIGNAL_REST_API_KEY;
               const appId = env.ONESIGNAL_APP_ID || env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
               if (!apiKey) {

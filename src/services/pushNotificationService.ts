@@ -65,51 +65,22 @@ export const sendPushNotification = async (payload: PushNotificationPayload): Pr
   return res.success;
 };
 
-let cachedRestApiKey: string = '';
-
 export const getOneSignalRestApiKey = async (): Promise<string> => {
-  if (cachedRestApiKey) {
-    return cachedRestApiKey;
-  }
-  if (typeof window !== 'undefined') {
-    const local = localStorage.getItem('onesignal_rest_api_key') || localStorage.getItem('onesignal_custom_rest_key');
-    if (local && local.trim()) {
-      cachedRestApiKey = local.trim();
-      return cachedRestApiKey;
-    }
-  }
-  return import.meta.env.VITE_ONESIGNAL_REST_API_KEY || '';
+  return '';
 };
 
-export const saveOneSignalRestApiKey = async (newKey: string, appId = 'daeaef49-9125-4ef2-8950-6c0428063f09'): Promise<{ success: boolean; message: string }> => {
-  const clean = newKey.trim();
+export const saveOneSignalRestApiKey = async (_newKey: string, _appId?: string): Promise<{ success: boolean; message: string }> => {
   if (typeof window !== 'undefined') {
-    if (clean) {
-      localStorage.setItem('onesignal_rest_api_key', clean);
-    } else {
-      localStorage.removeItem('onesignal_rest_api_key');
-    }
+    localStorage.removeItem('onesignal_rest_api_key');
+    localStorage.removeItem('onesignal_custom_rest_key');
   }
-  cachedRestApiKey = clean;
-
-  // Persist to server via Edge Function safely in background
-  try {
-    supabase.functions.invoke('send-push', {
-      body: { action: 'save-key', apiKey: clean, appId }
-    }).catch(() => {});
-  } catch {}
-
-  return { success: true, message: 'تم حفظ المفتاح بنجاح واستخدامه فورياً' };
+  return { success: true, message: 'مفتاح OneSignal مدار ومؤمن سحابياً في Supabase Secrets' };
 };
 
-export const verifyOneSignalKeyLive = async (apiKey: string): Promise<{ valid: boolean; message: string; details?: any }> => {
-  const clean = apiKey.trim();
-  if (!clean) {
-    return { valid: false, message: 'يرجى إدخال مفتاح OneSignal REST API' };
-  }
+export const verifyOneSignalKeyLive = async (_apiKey: string): Promise<{ valid: boolean; message: string; details?: any }> => {
   return {
     valid: true,
-    message: 'المفتاح جاهز ومعتمد لإرسال الإشعارات'
+    message: 'خدمة OneSignal تعمل أوتوماتيكياً عبر الخادم السحابي'
   };
 };
 
@@ -148,7 +119,6 @@ export const sendPushNotificationDetailed = async ({
   }
 
   try {
-    const resolvedApiKey = await getOneSignalRestApiKey();
     const isUuid = (val?: string) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 
     // Direct invocation to European Edge Function 'send-push' (Zero Algerian 4G blocking, instant <250ms execution)
@@ -161,8 +131,7 @@ export const sendPushNotificationDetailed = async ({
       sendToAll,
       targetRole: targetRole || undefined,
       existing_android_channel_id: 'default_notification_channel',
-      skipDbInsert: Boolean(skipDbInsert),
-      apiKey: resolvedApiKey || undefined
+      skipDbInsert: Boolean(skipDbInsert)
     };
     if (android_channel_id && isUuid(android_channel_id)) {
       pushBody.android_channel_id = android_channel_id.trim();

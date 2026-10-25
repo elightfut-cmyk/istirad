@@ -4,11 +4,7 @@ import { supabase } from './supabase';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
 export const getOneSignalRestApiKey = (): string => {
-  return (
-    (typeof window !== 'undefined' ? localStorage.getItem('onesignal_rest_api_key') : '') ||
-    (import.meta as any).env?.VITE_ONESIGNAL_REST_API_KEY ||
-    ''
-  );
+  return '';
 };
 
 declare global {
@@ -181,6 +177,10 @@ let lastLoggedInUserId: string | null = null;
  */
 export const initOneSignal = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
+  // Security hygiene: Purge any legacy leaked REST keys stored in localStorage
+  localStorage.removeItem('onesignal_rest_api_key');
+  localStorage.removeItem('onesignal_custom_rest_key');
+
   if (isInitialized) return;
 
   // A. Native Mobile Initialization (Capacitor v6)
@@ -903,9 +903,7 @@ export const sendPushNotification = async ({
       : (targetUserId ? [targetUserId] : [])
   ).map(String).filter(Boolean))];
 
-  const restApiKey = getOneSignalRestApiKey();
-
-  // 1. Try Supabase Edge Function first
+  // Dispatched strictly through Supabase Edge Function 'send-push' (where secrets are secured)
   try {
     const { data: responseData, error } = await supabase.functions.invoke('send-push', {
       body: {
@@ -916,8 +914,7 @@ export const sendPushNotification = async ({
         targetRole,
         data: { ...data, url: targetUrl },
         existing_android_channel_id: 'default_notification_channel',
-        skipDbInsert,
-        apiKey: restApiKey || getOneSignalRestApiKey()
+        skipDbInsert
       }
     });
 
@@ -925,57 +922,12 @@ export const sendPushNotification = async ({
     if (isOk) {
       return responseData;
     }
-    console.warn('Edge function returned non-success, attempting direct OneSignal fallback:', responseData || error);
+    console.warn('Edge function returned non-success:', responseData || error);
+    return responseData || { error };
   } catch (err) {
-    console.warn('Edge function invoke skipped, attempting direct OneSignal fallback:', err);
+    console.error('Edge function send-push invoke error:', err);
+    return { error: err };
   }
-
-  // 2. Direct OneSignal REST API Fallback
-  if (restApiKey && ONESIGNAL_APP_ID) {
-    try {
-      const payload: Record<string, any> = {
-        app_id: ONESIGNAL_APP_ID,
-        headings: { ar: title, en: title },
-        contents: { ar: message, en: message },
-        url: targetUrl,
-        data: { ...data, url: targetUrl },
-        existing_android_channel_id: 'default_notification_channel',
-        priority: 10,
-        android_priority: 10,
-        android_accent_color: 'FF4F46E5',
-        android_visibility: 1
-      };
-
-      if (targetSubscriptionId) {
-        payload.include_subscription_ids = [String(targetSubscriptionId)];
-        payload.target_channel = 'push';
-      } else if (finalUserIds.length > 0) {
-        payload.include_aliases = { external_id: finalUserIds };
-        payload.target_channel = 'push';
-      } else if (targetRole && targetRole !== 'all') {
-        payload.filters = [{ field: 'tag', key: 'role', relation: '=', value: String(targetRole) }];
-      } else {
-        payload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
-      }
-
-      const res = await fetch('https://api.onesignal.com/notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Key ${restApiKey}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const resData = await res.json();
-      return resData;
-    } catch (directErr) {
-      console.error('Direct OneSignal dispatch failed:', directErr);
-      return { error: directErr };
-    }
-  }
-
-  return { error: 'No notification dispatcher available' };
 };
 
 export const getPushSubscriptionId = async (): Promise<string | null> => {

@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   try {
     const { userIds, subscriptionIds, title, message, data, sendToAll } = req.body || {};
-    const apiKey = process.env.ONESIGNAL_REST_API_KEY || process.env.VITE_ONESIGNAL_REST_API_KEY;
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
     const appId = process.env.ONESIGNAL_APP_ID || process.env.VITE_ONESIGNAL_APP_ID || 'daeaef49-9125-4ef2-8950-6c0428063f09';
 
     if (!apiKey) {

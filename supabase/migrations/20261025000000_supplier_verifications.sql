@@ -56,25 +56,21 @@ ALTER TABLE public.supplier_verifications ENABLE ROW LEVEL SECURITY;
 
 -- Drop any existing policies to ensure clean state
 DROP POLICY IF EXISTS "Suppliers can view their own verification" ON public.supplier_verifications;
+DROP POLICY IF EXISTS "Suppliers and Admins can view verifications" ON public.supplier_verifications;
+DROP POLICY IF EXISTS "Anyone can view verifications" ON public.supplier_verifications;
 DROP POLICY IF EXISTS "Suppliers can insert their own verification" ON public.supplier_verifications;
 DROP POLICY IF EXISTS "Suppliers can update their own verification" ON public.supplier_verifications;
+DROP POLICY IF EXISTS "Suppliers can update pending or rejected verification" ON public.supplier_verifications;
 DROP POLICY IF EXISTS "Admins can manage all verifications" ON public.supplier_verifications;
 DROP POLICY IF EXISTS "Admins can view all supplier verifications" ON public.supplier_verifications;
 DROP POLICY IF EXISTS "Admins can update all supplier verifications" ON public.supplier_verifications;
 
--- Policy 1: SELECT (Suppliers can view their own, Admins can view all)
-CREATE POLICY "Suppliers and Admins can view verifications"
+-- Policy 1: SELECT (Anyone can view supplier verification details and warehouse info)
+CREATE POLICY "Anyone can view verifications"
     ON public.supplier_verifications
     FOR SELECT
-    TO authenticated
-    USING (
-        auth.uid() = user_id
-        OR
-        EXISTS (
-            SELECT 1 FROM public.users
-            WHERE users.id = auth.uid() AND users.role = 'admin'
-        )
-    );
+    TO public, authenticated
+    USING (true);
 
 -- Policy 2: INSERT (Authenticated suppliers can insert their own request)
 CREATE POLICY "Suppliers can insert their own verification"
@@ -85,22 +81,22 @@ CREATE POLICY "Suppliers can insert their own verification"
         auth.uid() = user_id
     );
 
--- Policy 3: UPDATE (Suppliers can update if pending or rejected to fix data)
-CREATE POLICY "Suppliers can update pending or rejected verification"
+-- Policy 3: UPDATE (Suppliers can update their own verification record at any time)
+CREATE POLICY "Suppliers can update their own verification"
     ON public.supplier_verifications
     FOR UPDATE
     TO authenticated
     USING (
-        auth.uid() = user_id AND status IN ('pending', 'rejected')
+        auth.uid() = user_id
     )
     WITH CHECK (
         auth.uid() = user_id
     );
 
--- Policy 4: UPDATE (Admins can update any verification for approval/rejection)
-CREATE POLICY "Admins can update all supplier verifications"
+-- Policy 4: ALL (Admins can manage, view, update, and delete all verifications)
+CREATE POLICY "Admins can manage all verifications"
     ON public.supplier_verifications
-    FOR UPDATE
+    FOR ALL
     TO authenticated
     USING (
         EXISTS (
@@ -114,3 +110,4 @@ CREATE POLICY "Admins can update all supplier verifications"
             WHERE users.id = auth.uid() AND users.role = 'admin'
         )
     );
+

@@ -215,7 +215,8 @@ export default function SupplierVerification() {
     const saveToast = toast.loading('جاري حفظ طلب التوثيق وإشعار الإدارة...');
 
     try {
-      const payload = {
+      const isAlreadyApproved = existingVerification?.status === 'approved';
+      const payload: any = {
         user_id: user.id,
         business_name: businessName.trim(),
         specialty: specialty.trim(),
@@ -224,8 +225,8 @@ export default function SupplierVerification() {
         social_links: socialLinks.trim() || null,
         images: images,
         charter_agreed: true,
-        status: 'pending',
-        admin_notes: null,
+        status: isAlreadyApproved ? 'approved' : 'pending',
+        admin_notes: isAlreadyApproved ? existingVerification?.admin_notes : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -237,23 +238,30 @@ export default function SupplierVerification() {
 
       if (error) throw error;
 
-      // Notify administration via send-push Edge Function
-      try {
-        await supabase.functions.invoke('send-push', {
-          body: {
-            targetRole: 'admin',
-            title: '📝 طلب توثيق مورد جديد',
-            message: `المورد ${businessName.trim()} أرسل طلب توثيق وموافقة على الميثاق. يرجى المراجعة.`,
-            data: { type: 'supplier_verification_pending', userId: user.id }
-          }
-        });
-      } catch (pushErr) {
-        console.warn('Could not dispatch push notification to admin:', pushErr);
+      // Notify administration via send-push Edge Function only if new/pending
+      if (!isAlreadyApproved) {
+        try {
+          await supabase.functions.invoke('send-push', {
+            body: {
+              targetRole: 'admin',
+              title: '📝 طلب توثيق مورد جديد',
+              message: `المورد ${businessName.trim()} أرسل طلب توثيق وموافقة على الميثاق. يرجى المراجعة.`,
+              data: { type: 'supplier_verification_pending', userId: user.id }
+            }
+          });
+        } catch (pushErr) {
+          console.warn('Could not dispatch push notification to admin:', pushErr);
+        }
       }
 
       setExistingVerification(data);
       setIsEditing(false);
-      toast.success('تم إرسال طلب التوثيق بنجاح! طلبك قيد المراجعة الآن.', { id: saveToast });
+      toast.success(
+        isAlreadyApproved 
+          ? 'تم حفظ وتحديث بيانات بروفايلك بنجاح! 🌟' 
+          : 'تم إرسال طلب التوثيق بنجاح! طلبك قيد المراجعة الآن.', 
+        { id: saveToast }
+      );
     } catch (err: any) {
       console.error('Error submitting verification:', err);
       toast.error('حدث خطأ أثناء حفظ الطلب: ' + (err.message || ''), { id: saveToast });

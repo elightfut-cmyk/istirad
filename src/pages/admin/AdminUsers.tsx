@@ -82,15 +82,29 @@ export default function AdminUsers() {
     if (!window.confirm(`هل أنت متأكد من ${newStatus === 'active' ? 'تفعيل' : 'حظر'} هذا الحساب؟`)) return;
 
     try {
-      setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', userId);
-      if (error) throw error;
-    } catch (error) {
+      await ensureAdminSession();
+
+      // Call secure RPC first
+      const { error: rpcError } = await supabase.rpc('admin_set_user_status', {
+        target_user_id: userId,
+        new_status: newStatus
+      });
+
+      if (rpcError) {
+        console.warn('RPC admin_set_user_status returned error, trying direct update:', rpcError);
+        const { error: directError } = await supabase.from('users').update({ status: newStatus }).eq('id', userId);
+        if (directError) throw directError;
+      }
+
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus } : u));
+      toast.success(newStatus === 'banned' ? 'تم حظر المستخدم بنجاح' : 'تم تفعيل حساب المستخدم بنجاح');
+    } catch (error: any) {
       console.error('Error updating status:', error);
-      toast.error('حدث خطأ أثناء تغيير حالة الحساب');
+      toast.error('حدث خطأ أثناء تغيير حالة الحساب: ' + (error?.message || ''));
       fetchUsers();
     }
   };
+
 
   const handleToggleBadge = async (userId: string, currentBadge: string) => {
     const nextBadge = currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'platinum' : currentBadge === 'platinum' ? 'none' : 'blue';

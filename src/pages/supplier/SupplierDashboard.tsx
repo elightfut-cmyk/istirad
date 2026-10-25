@@ -90,7 +90,7 @@ export default function SupplierDashboard() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xs">
         <div className="flex items-center gap-3">
           {(() => {
-            const myInfo = getSupplierRatingInfo(user?.verification_badge);
+            const myInfo = getSupplierRatingInfo(user?.verification_badge, user?.average_rating, user?.total_reviews);
             return (
               <SupplierBadge
                 supplierId={user?.id}

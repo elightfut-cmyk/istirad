@@ -84,12 +84,12 @@ export default function SupplierPublicProfile() {
     }
   };
 
-  const ratingInfo = getSupplierRatingInfo(supplier?.verification_badge);
-  const tier = ratingInfo.tier as SupplierTier;
+  const totalReviews = reviews.length;
   const avgRating = reviews.length > 0
     ? Number((reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length).toFixed(1))
-    : ratingInfo.rating;
-  const totalReviews = reviews.length > 0 ? reviews.length : ratingInfo.totalReviews;
+    : 0;
+  const ratingInfo = getSupplierRatingInfo(supplier?.verification_badge, avgRating, totalReviews);
+  const tier = ratingInfo.tier as SupplierTier;
 
   // Rating breakdown
   const ratingCounts = [5, 4, 3, 2, 1].map((stars) => {

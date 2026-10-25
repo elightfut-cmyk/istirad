@@ -93,13 +93,23 @@ export default function Login() {
         if (profileError) throw profileError;
 
         if (profile) {
+          if (profile.status === 'banned') {
+            await supabase.auth.signOut();
+            setUser(null);
+            setErrorMsg('عذراً، تم حظر هذا الحساب من قِبل إدارة المنصة. يرجى التواصل مع الدعم الفني.');
+            return;
+          }
           setUser(profile as User);
           navigate(`/${profile.role}`, { replace: true });
         }
       }
     } catch (error: any) {
       console.error('Login error:', error.message);
-      setErrorMsg(error.message === 'Invalid login credentials' ? t('auth.invalid_creds') : t('auth.login_error'));
+      if (error.message && error.message.includes('محظور')) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg(error.message === 'Invalid login credentials' ? t('auth.invalid_creds') : t('auth.login_error'));
+      }
     } finally {
       setLoading(false);
     }

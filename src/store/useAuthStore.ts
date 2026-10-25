@@ -25,6 +25,7 @@ export interface User {
   total_reviews?: number;
   average_rating?: number;
   supplier_tier?: 'NEW' | 'SILVER' | 'GOLD' | 'PLATINUM' | string;
+  is_verified?: boolean;
 }
 
 interface AuthState {

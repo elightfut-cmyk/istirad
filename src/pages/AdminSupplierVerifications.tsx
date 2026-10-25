@@ -20,12 +20,22 @@ import {
   Video,
   FileText,
   HelpCircle,
-  Lightbulb
+  Lightbulb,
+  Plus,
+  Edit2,
+  Trash2,
+  RotateCcw,
+  Ban,
+  Sparkles,
+  ToggleLeft,
+  ToggleRight,
+  ShieldAlert
 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { supplierCharterService, CharterItem, DEFAULT_CHARTER_ITEMS } from '../services/supplierCharterService';
 
 interface VerificationRecord {
   id: string;
@@ -56,6 +66,7 @@ interface VerificationRecord {
 
 export default function AdminSupplierVerifications() {
   const { user: adminUser } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'requests' | 'charter'>('requests');
   const [verifications, setVerifications] = useState<VerificationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,6 +87,20 @@ export default function AdminSupplierVerifications() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessingRejection, setIsProcessingRejection] = useState(false);
 
+  // Revocation Modal State (إلغاء التوثيق)
+  const [revokingItem, setRevokingItem] = useState<VerificationRecord | null>(null);
+  const [revocationReason, setRevocationReason] = useState('');
+  const [isProcessingRevocation, setIsProcessingRevocation] = useState(false);
+
+  // Dynamic Charter Management State
+  const [charterItems, setCharterItems] = useState<CharterItem[]>(DEFAULT_CHARTER_ITEMS);
+  const [loadingCharter, setLoadingCharter] = useState(false);
+  const [editingCharterItem, setEditingCharterItem] = useState<CharterItem | null>(null);
+  const [isAddingCharterItem, setIsAddingCharterItem] = useState(false);
+  const [charterTitleInput, setCharterTitleInput] = useState('');
+  const [charterDescInput, setCharterDescInput] = useState('');
+  const [isCharterSaving, setIsCharterSaving] = useState(false);
+
   const sidebarLinks = [
     { label: 'الرئيسية', href: '/admin', icon: <LayoutDashboard size={20} /> },
     { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
@@ -95,6 +120,7 @@ export default function AdminSupplierVerifications() {
       if (fetchedAdminIdRef.current !== adminUser.id) {
         fetchedAdminIdRef.current = adminUser.id;
         fetchVerifications();
+        fetchCharterItems();
       }
     }
   }, [adminUser?.id]);
@@ -129,7 +155,19 @@ export default function AdminSupplierVerifications() {
     }
   };
 
-  // Filter & Search Logic
+  const fetchCharterItems = async () => {
+    try {
+      setLoadingCharter(true);
+      const items = await supplierCharterService.getCharterItems(true);
+      setCharterItems(items);
+    } catch (err: any) {
+      console.error('Error fetching charter items:', err);
+    } finally {
+      setLoadingCharter(false);
+    }
+  };
+
+  // Filter & Search Logic for verifications
   const filteredVerifications = verifications.filter((v) => {
     const matchesStatus = filterStatus === 'all' ? true : v.status === filterStatus;
     const query = searchQuery.trim().toLowerCase();
@@ -191,8 +229,8 @@ export default function AdminSupplierVerifications() {
         await supabase.functions.invoke('send-push', {
           body: {
             userIds: [supplierId],
-            title: '🎉 تم توثيق حسابك!',
-            message: 'تمت مراجعة طلبك وقبوله. حسابك الآن مفعل كمورد معتمد في منصة جيبها.',
+            title: '🎉 تم توثيق حسابك التجاري!',
+            message: 'تهانينا! تمت مراجعة بياناتك بنجاح وتم اعتمادك كمورد موثق في منصة جيبها.',
             data: { type: 'supplier_verification_approved' }
           }
         });
@@ -284,8 +322,182 @@ export default function AdminSupplierVerifications() {
     }
   };
 
+  // Handle Revoke Verification (إلغاء التوثيق)
+  const handleConfirmRevocation = async () => {
+    if (!revokingItem) return;
+    setIsProcessingRevocation(true);
+    const toastId = toast.loading('جاري إلغاء توثيق الحساب وإشعار المورد...');
+
+    try {
+      const supplierId = revokingItem.user_id;
+      const note = revocationReason.trim() || 'تم إلغاء التوثيق من قبل إدارة المنصة لمخالفة معايير الجودة.';
+
+      // 1. Update supplier_verifications status to rejected with revocation note
+      const { error: vError } = await supabase
+        .from('supplier_verifications')
+        .update({
+          status: 'rejected',
+          admin_notes: `[تم إلغاء التوثيق]: ${note}`,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: adminUser?.id || null
+        })
+        .eq('id', revokingItem.id);
+
+      if (vError) throw vError;
+
+      // 2. Reset user badge & verification status
+      const { error: uError } = await supabase
+        .from('users')
+        .update({
+          verification_badge: 'none',
+          is_verified: false
+        })
+        .eq('id', supplierId);
+
+      if (uError) {
+        console.warn('Could not reset verification badge on users table:', uError);
+      }
+
+      // 3. Dispatch Push Notification to supplier
+      try {
+        await supabase.functions.invoke('send-push', {
+          body: {
+            userIds: [supplierId],
+            title: '⚠️ تم إلغاء توثيق حسابك التجاري',
+            message: `تم إلغاء توثيق حسابك في منصة جيبها للسبب التالي: ${note}. لم تعد قادراً على دخول المناقصات حتى إعادة التوثيق.`,
+            data: { type: 'supplier_verification_revoked' }
+          }
+        });
+      } catch (pushErr) {
+        console.warn('Failed to send push notification to supplier:', pushErr);
+      }
+
+      // 4. Update local state
+      setVerifications(prev => prev.map(item => {
+        if (item.id === revokingItem.id) {
+          return {
+            ...item,
+            status: 'rejected',
+            admin_notes: `[تم إلغاء التوثيق]: ${note}`,
+            user: item.user ? { ...item.user, verification_badge: 'none', is_verified: false } : undefined
+          };
+        }
+        return item;
+      }));
+
+      toast.success(`تم إلغاء توثيق ${revokingItem.business_name} بنجاح`, { id: toastId });
+      setRevokingItem(null);
+      setRevocationReason('');
+    } catch (err: any) {
+      console.error('Revocation failed:', err);
+      toast.error('حدث خطأ أثناء إلغاء التوثيق: ' + (err.message || ''), { id: toastId });
+    } finally {
+      setIsProcessingRevocation(false);
+    }
+  };
+
+  // Charter CRUD Handlers
+  const handleOpenAddCharter = () => {
+    setIsAddingCharterItem(true);
+    setEditingCharterItem(null);
+    setCharterTitleInput('');
+    setCharterDescInput('');
+  };
+
+  const handleOpenEditCharter = (item: CharterItem) => {
+    setEditingCharterItem(item);
+    setIsAddingCharterItem(false);
+    setCharterTitleInput(item.title);
+    setCharterDescInput(item.description);
+  };
+
+  const handleSaveCharterItem = async () => {
+    if (!charterTitleInput.trim() || !charterDescInput.trim()) {
+      toast.error('يرجى كتابة عنوان البند والشرح التوضيحي');
+      return;
+    }
+
+    setIsCharterSaving(true);
+    try {
+      let updated: CharterItem[];
+      if (editingCharterItem) {
+        updated = charterItems.map(item => 
+          item.id === editingCharterItem.id 
+            ? { ...item, title: charterTitleInput.trim(), description: charterDescInput.trim() }
+            : item
+        );
+      } else {
+        const newItem: CharterItem = {
+          id: 'charter_' + Date.now(),
+          title: charterTitleInput.trim(),
+          description: charterDescInput.trim(),
+          isActive: true,
+          order: charterItems.length + 1
+        };
+        updated = [...charterItems, newItem];
+      }
+
+      const res = await supplierCharterService.saveCharterItems(updated);
+      if (!res.success) throw res.error;
+
+      setCharterItems(updated);
+      toast.success(editingCharterItem ? 'تم تعديل البند بنجاح' : 'تمت إضافة البند الجديد بنجاح');
+      setIsAddingCharterItem(false);
+      setEditingCharterItem(null);
+      setCharterTitleInput('');
+      setCharterDescInput('');
+    } catch (err: any) {
+      console.error('Error saving charter item:', err);
+      toast.error('حدث خطأ أثناء حفظ البند: ' + (err.message || ''));
+    } finally {
+      setIsCharterSaving(false);
+    }
+  };
+
+  const handleDeleteCharterItem = async (itemId: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا البند نهائياً من ميثاق الجودة؟')) return;
+    try {
+      const updated = charterItems.filter(item => item.id !== itemId);
+      const res = await supplierCharterService.saveCharterItems(updated);
+      if (!res.success) throw res.error;
+      setCharterItems(updated);
+      toast.success('تم حذف البند بنجاح');
+    } catch (err: any) {
+      console.error('Error deleting charter item:', err);
+      toast.error('فشل في حذف البند');
+    }
+  };
+
+  const handleToggleCharterActive = async (itemId: string) => {
+    try {
+      const updated = charterItems.map(item => 
+        item.id === itemId ? { ...item, isActive: !item.isActive } : item
+      );
+      const res = await supplierCharterService.saveCharterItems(updated);
+      if (!res.success) throw res.error;
+      setCharterItems(updated);
+      toast.success('تم تحديث حالة تفعيل البند');
+    } catch (err: any) {
+      console.error('Error toggling charter item active status:', err);
+      toast.error('فشل في تعديل حالة البند');
+    }
+  };
+
+  const handleResetCharterDefaults = async () => {
+    if (!window.confirm('هل أنت متأكد من استعادة البنود الافتراضية الخمسة لميثاق الجودة؟ سيتم استبدال القائمة الحالية.')) return;
+    try {
+      const res = await supplierCharterService.saveCharterItems(DEFAULT_CHARTER_ITEMS);
+      if (!res.success) throw res.error;
+      setCharterItems(DEFAULT_CHARTER_ITEMS);
+      toast.success('تمت استعادة البنود الافتراضية بنجاح');
+    } catch (err: any) {
+      console.error('Error resetting charter items:', err);
+      toast.error('فشل في استعادة البنود الافتراضية');
+    }
+  };
+
   return (
-    <DashboardLayout title="مراجعة وتوثيق حسابات الموردين" sidebarLinks={sidebarLinks}>
+    <DashboardLayout title="مراجعة وتوثيق حسابات الموردين وميثاق الجودة" sidebarLinks={sidebarLinks}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
         {/* Top Header */}
@@ -296,298 +508,501 @@ export default function AdminSupplierVerifications() {
                 <ShieldCheck size={24} />
               </div>
               <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                طلبات توثيق الموردين وميثاق الجودة
+                توثيق الموردين وإدارة ميثاق الجودة
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-              مراجعة بيانات الأنشطة التجارية للموردين، التحقق من المخازن، وتفعيل شارة الاعتماد الرسمية.
+              مراجعة طلبات التوثيق، إلغاء التوثيق عند المخالفة، والتحكم ببنود ميثاق الجودة التي يلتزم بها الموردون.
             </p>
           </div>
 
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {activeTab === 'requests' ? (
+              <button
+                onClick={fetchVerifications}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition"
+              >
+                تحديث الطلبات 🔄
+              </button>
+            ) : (
+              <button
+                onClick={handleOpenAddCharter}
+                className="px-4 py-2.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition flex items-center gap-1.5"
+              >
+                <Plus size={16} />
+                <span>إضافة بند جديد لميثاق الجودة</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* View Switcher: Requests vs Quality Charter */}
+        <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
           <button
-            onClick={fetchVerifications}
-            className="self-start sm:self-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition"
+            onClick={() => setActiveTab('requests')}
+            className={`py-2.5 px-5 rounded-xl text-sm font-black transition flex items-center gap-2 ${
+              activeTab === 'requests'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700'
+            }`}
           >
-            تحديث القائمة 🔄
+            <ShieldCheck size={18} />
+            <span>طلبات توثيق الموردين</span>
+            {pendingCount > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                activeTab === 'requests' ? 'bg-white text-indigo-700' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+              }`}>
+                {pendingCount} جديد
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('charter')}
+            className={`py-2.5 px-5 rounded-xl text-sm font-black transition flex items-center gap-2 ${
+              activeTab === 'charter'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            <FileCheck size={18} />
+            <span>إدارة ميثاق الجودة (البنود والشروط)</span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+              activeTab === 'charter' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+            }`}>
+              {charterItems.filter(i => i.isActive).length} بند نشط
+            </span>
           </button>
         </div>
 
-        {/* Stats & Filter Tabs */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto">
-            <button
-              onClick={() => setFilterStatus('pending')}
-              className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
-                filterStatus === 'pending'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Clock size={14} />
-              <span>قيد الانتظار</span>
-              {pendingCount > 0 && (
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                  filterStatus === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
-                }`}>
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setFilterStatus('approved')}
-              className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
-                filterStatus === 'approved'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <CheckCircle2 size={14} />
-              <span>المعتمدة ({approvedCount})</span>
-            </button>
-
-            <button
-              onClick={() => setFilterStatus('rejected')}
-              className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
-                filterStatus === 'rejected'
-                  ? 'bg-red-600 text-white shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <XCircle size={14} />
-              <span>المرفوضة ({rejectedCount})</span>
-            </button>
-
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
-                filterStatus === 'all'
-                  ? 'bg-gray-800 dark:bg-gray-700 text-white shadow-xs'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <span>الكل ({verifications.length})</span>
-            </button>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative min-w-[260px]">
-            <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث بالاسم التجاري، المورد، التخصص..."
-              className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-hidden transition"
-            />
-          </div>
-        </div>
-
-        {/* Content List */}
-        {loading ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse">
-            <Clock size={40} className="mx-auto text-indigo-500 mb-3 animate-spin" />
-            <p className="text-gray-500 dark:text-gray-400 font-bold">جاري تحميل طلبات التوثيق...</p>
-          </div>
-        ) : filteredVerifications.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm">
-            <ShieldCheck size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
-            <h3 className="text-base font-bold text-gray-700 dark:text-gray-200 mb-1">لا توجد طلبات توثيق تطابق الفلتر الحالي</h3>
-            <p className="text-xs text-gray-400">أي طلبات جديدة يقدمها الموردون ستظهر هنا فورياً.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-5">
-            {filteredVerifications.map((item) => {
-              const isPending = item.status === 'pending';
-              const isApproved = item.status === 'approved';
-              const isRejected = item.status === 'rejected';
-
-              return (
-                <div
-                  key={item.id}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border transition-all shadow-xs ${
-                    isPending 
-                      ? 'border-amber-300 dark:border-amber-900/60' 
-                      : isApproved 
-                        ? 'border-emerald-200 dark:border-emerald-900/40' 
-                        : 'border-red-200 dark:border-red-900/40'
+        {/* =================================================================== */}
+        {/* TAB 1: VERIFICATION REQUESTS                                        */}
+        {/* =================================================================== */}
+        {activeTab === 'requests' && (
+          <div className="space-y-6">
+            {/* Stats & Filter Tabs */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              <div className="flex items-center gap-1.5 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto">
+                <button
+                  onClick={() => setFilterStatus('pending')}
+                  className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
+                    filterStatus === 'pending'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
-                  {/* Card Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center font-black shrink-0">
-                        <Store size={22} />
+                  <Clock size={14} />
+                  <span>قيد الانتظار</span>
+                  {pendingCount > 0 && (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                      filterStatus === 'pending' ? 'bg-white text-amber-600' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300'
+                    }`}>
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus('approved')}
+                  className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
+                    filterStatus === 'approved'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <CheckCircle2 size={14} />
+                  <span>المعتمدة ({approvedCount})</span>
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus('rejected')}
+                  className={`py-2 px-3.5 rounded-lg text-xs font-black transition flex items-center gap-2 whitespace-nowrap ${
+                    filterStatus === 'rejected'
+                      ? 'bg-red-600 text-white shadow-xs'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <XCircle size={14} />
+                  <span>المرفوضة والملغاة ({rejectedCount})</span>
+                </button>
+
+                <button
+                  onClick={() => setFilterStatus('all')}
+                  className={`py-2 px-3.5 rounded-lg text-xs font-black transition whitespace-nowrap ${
+                    filterStatus === 'all'
+                      ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 shadow-xs'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  الكل ({verifications.length})
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative w-full md:w-80">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ابحث بالاسم التجاري، التخصص، الهاتف..."
+                  className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden transition"
+                />
+                <Search size={16} className="absolute right-3.5 top-3 text-gray-400" />
+              </div>
+            </div>
+
+            {/* List / Grid of Verification Cards */}
+            {loading ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+                <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs text-gray-500 dark:text-gray-400">جاري تحميل طلبات التوثيق...</p>
+              </div>
+            ) : filteredVerifications.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+                <FileCheck size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">لا توجد طلبات توثيق</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">لم يتم العثور على أي نتائج مطابقة للتصفية الحالية.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5">
+                {filteredVerifications.map((item) => {
+                  const isApproved = item.status === 'approved';
+                  const isRejected = item.status === 'rejected';
+                  const isPending = item.status === 'pending';
+
+                  return (
+                    <div 
+                      key={item.id}
+                      className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition space-y-5"
+                    >
+                      {/* Card Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-[#4f46e5] dark:text-indigo-400 flex items-center justify-center shrink-0 font-black">
+                            <Store size={24} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-base font-black text-gray-900 dark:text-white">
+                                {item.business_name}
+                              </h3>
+                              {item.user?.verification_badge && item.user.verification_badge !== 'none' && (
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                                  item.user.verification_badge === 'platinum' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' :
+                                  item.user.verification_badge === 'gold' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' :
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                                }`}>
+                                  <BadgeCheck size={12} />
+                                  شارة {item.user.verification_badge.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {item.specialty} • {item.location}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-2 self-start">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
+                            isApproved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                            isRejected ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300' :
+                            'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                          }`}>
+                            {isApproved && <CheckCircle2 size={13} />}
+                            {isRejected && <XCircle size={13} />}
+                            {isPending && <Clock size={13} />}
+                            <span>{isApproved ? 'موثق ومعتمد' : isRejected ? 'مرفوض / ملغى' : 'قيد المراجعة'}</span>
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
-                            {item.business_name}
-                          </h3>
-                          {item.user?.verification_badge && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
-                              <BadgeCheck size={14} />
-                              <span>شارة {item.user.verification_badge}</span>
-                            </span>
+
+                      {/* Card Body - Grid Info */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/60">
+                          <span className="text-gray-400 block mb-1">صاحب الحساب / الهاتف</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200 block">
+                            {item.user?.name || 'غير محدد'}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400 font-mono text-[11px]">
+                            {item.user?.phone || item.user?.email || '-'}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/60">
+                          <span className="text-gray-400 block mb-1">سرعة التجهيز والشحن</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200 block">
+                            {item.prep_time}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/60">
+                          <span className="text-gray-400 block mb-1">ميثاق جودة الخدمة</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 size={13} />
+                            وافق على جميع بنود الميثاق
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/60">
+                          <span className="text-gray-400 block mb-1">تاريخ إرسال الطلب</span>
+                          <span className="font-bold text-gray-800 dark:text-gray-200 block font-mono">
+                            {new Date(item.created_at).toLocaleDateString('ar-EG', { dateStyle: 'medium' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Social Links if any */}
+                      {item.social_links && (
+                        <div className="text-xs flex items-center gap-2 text-gray-600 dark:text-gray-300 bg-indigo-50/50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                          <ExternalLink size={14} className="text-indigo-500 shrink-0" />
+                          <span className="font-bold text-indigo-700 dark:text-indigo-300">روابط السوشيال:</span>
+                          <span className="truncate">{item.social_links}</span>
+                        </div>
+                      )}
+
+                      {/* Images of Store / Goods */}
+                      {item.images && item.images.length > 0 && (
+                        <div>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-2">
+                            صور المحل، المخزن الفعلي والبضاعة ({item.images.length}):
+                          </span>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                            {item.images.map((imgUrl, idx) => (
+                              <div 
+                                key={idx} 
+                                onClick={() => setPreviewImage(imgUrl)}
+                                className="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 cursor-pointer shadow-2xs"
+                              >
+                                <img 
+                                  src={imgUrl} 
+                                  alt={`Document ${idx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                                  <Eye size={18} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Admin Notes if present */}
+                      {item.admin_notes && (
+                        <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 text-xs text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
+                          <strong className="font-bold text-gray-800 dark:text-white">ملاحظات الإدارة: </strong>
+                          <span>{item.admin_notes}</span>
+                        </div>
+                      )}
+
+                      {/* Actions Footer */}
+                      <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-[11px] text-gray-400">
+                          معرّف المورد: <span className="font-mono">{item.user_id.slice(0, 8)}...</span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {isPending ? (
+                            <>
+                              <button
+                                onClick={() => setRejectingItem(item)}
+                                className="py-2 px-4 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 transition flex items-center gap-1.5"
+                              >
+                                <XCircle size={15} />
+                                <span>رفض الطلب</span>
+                              </button>
+
+                              <button
+                                onClick={() => setApprovingItem(item)}
+                                className="py-2 px-5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white shadow-xs transition flex items-center gap-1.5"
+                              >
+                                <CheckCircle2 size={15} />
+                                <span>قبول وتوثيق المورد ✅</span>
+                              </button>
+                            </>
+                          ) : isApproved ? (
+                            <>
+                              {/* زر إلغاء التوثيق المطلوب من المستخدم */}
+                              <button
+                                onClick={() => {
+                                  setRevokingItem(item);
+                                  setRevocationReason('');
+                                }}
+                                className="py-2 px-4 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 transition flex items-center gap-1.5"
+                                title="إلغاء التوثيق وسحب الشارة وإشعار المورد"
+                              >
+                                <Ban size={15} />
+                                <span>إلغاء التوثيق</span>
+                              </button>
+
+                              <button
+                                onClick={() => setApprovingItem(item)}
+                                className="py-2 px-4 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition flex items-center gap-1.5"
+                              >
+                                <BadgeCheck size={15} />
+                                <span>تعديل الشارة</span>
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => setApprovingItem(item)}
+                              className="py-2 px-4 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5"
+                            >
+                              <RotateCcw size={15} />
+                              <span>إعادة اعتماد التوثيق</span>
+                            </button>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
-                          <span>المورد: <strong className="text-gray-800 dark:text-gray-200">{item.user?.name || 'غير معروف'}</strong></span>
-                          <span>•</span>
-                          <span>{item.user?.email}</span>
-                          {item.user?.phone && (
-                            <>
-                              <span>•</span>
-                              <span dir="ltr">{item.user.phone}</span>
-                            </>
-                          )}
-                        </p>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
-                    {/* Status Badge */}
-                    <div className="self-start sm:self-auto">
-                      {isPending && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                          <Clock size={13} />
-                          <span>قيد المراجعة</span>
-                        </span>
-                      )}
-                      {isApproved && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                          <CheckCircle2 size={13} />
-                          <span>موثّق ومعتمد</span>
-                        </span>
-                      )}
-                      {isRejected && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800">
-                          <XCircle size={13} />
-                          <span>مرفوض</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 my-4 text-xs">
-                    <div className="bg-gray-50/70 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-750">
-                      <span className="text-gray-400 block mb-0.5">مجال التخصص</span>
-                      <strong className="text-gray-900 dark:text-white font-bold text-xs">{item.specialty}</strong>
-                    </div>
-
-                    <div className="bg-gray-50/70 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-750">
-                      <span className="text-gray-400 block mb-0.5">الموقع الفعلي للمخزن</span>
-                      <strong className="text-gray-900 dark:text-white font-bold text-xs">{item.location}</strong>
-                    </div>
-
-                    <div className="bg-gray-50/70 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-750">
-                      <span className="text-gray-400 block mb-0.5">الوقت المعتاد للتجهيز</span>
-                      <strong className="text-gray-900 dark:text-white font-bold text-xs">{item.prep_time}</strong>
-                    </div>
-
-                    <div className="bg-gray-50/70 dark:bg-gray-900/40 p-3 rounded-xl border border-gray-100 dark:border-gray-750">
-                      <span className="text-gray-400 block mb-0.5">تاريخ التقديم</span>
-                      <strong className="text-gray-900 dark:text-white font-bold text-xs">
-                        {new Date(item.created_at).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Social Links & Quality Charter Agreement */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-gray-50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <FileCheck size={16} className="text-emerald-500" />
-                      <span className="font-bold text-gray-700 dark:text-gray-300">ميثاق جودة الخدمة:</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                        ✅ وافق على كامل البنود الـ 5
-                      </span>
-                    </div>
-
-                    {item.social_links && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">السوشيال ميديا:</span>
-                        <a
-                          href={item.social_links.startsWith('http') ? item.social_links : `https://${item.social_links}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#4f46e5] dark:text-indigo-400 font-bold hover:underline flex items-center gap-1"
-                        >
-                          <span>{item.social_links}</span>
-                          <ExternalLink size={12} />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Photos Showcase */}
-                  {item.images && item.images.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                          صور المخزن والبضاعة المتوفرة ({item.images.length} صور):
-                        </span>
-                        <span className="text-[11px] text-gray-400">اضغط على أي صورة لتكبيرها</span>
-                      </div>
-                      <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                        {item.images.map((imgUrl, imgIdx) => (
-                          <button
-                            key={imgIdx}
-                            type="button"
-                            onClick={() => setPreviewImage(imgUrl)}
-                            className="relative group w-20 h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shrink-0 bg-gray-100"
-                          >
-                            <img src={imgUrl} alt={`Photo ${imgIdx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-200" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                              <Eye size={18} />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Admin Notes if rejected/approved */}
-                  {item.admin_notes && (
-                    <div className="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-750 text-xs text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
-                      <strong className="font-bold text-gray-800 dark:text-white">ملاحظات الإدارة: </strong>
-                      <span>{item.admin_notes}</span>
-                    </div>
-                  )}
-
-                  {/* Action Buttons for Pending or Re-evaluating */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-end gap-3">
-                    {isPending ? (
-                      <>
-                        <button
-                          onClick={() => setRejectingItem(item)}
-                          className="py-2 px-4 rounded-xl text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800 transition flex items-center gap-1.5"
-                        >
-                          <XCircle size={15} />
-                          <span>رفض الطلب</span>
-                        </button>
-
-                        <button
-                          onClick={() => setApprovingItem(item)}
-                          className="py-2 px-5 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white shadow-xs transition flex items-center gap-1.5"
-                        >
-                          <CheckCircle2 size={15} />
-                          <span>قبول وتوثيق المورد ✅</span>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setApprovingItem(item)}
-                          className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
-                        >
-                          تعديل التوثيق أو الشارة
-                        </button>
-                      </div>
-                    )}
-                  </div>
+        {/* =================================================================== */}
+        {/* TAB 2: QUALITY CHARTER MANAGEMENT (صفحة بنود ميثاق الجودة للأدمن)   */}
+        {/* =================================================================== */}
+        {activeTab === 'charter' && (
+          <div className="space-y-6">
+            {/* Charter Introduction Banner */}
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={20} className="text-indigo-600 dark:text-indigo-400" />
+                  <h3 className="text-base font-black text-indigo-950 dark:text-indigo-200">
+                    ميثاق جودة الخدمة والالتزامات للموردين
+                  </h3>
                 </div>
-              );
-            })}
+                <p className="text-xs text-indigo-800/80 dark:text-indigo-300/80 max-w-2xl leading-relaxed">
+                  هذه البنود تظهر تلقائياً لكل مورد في صفحة التوثيق، ويُشترط عليه الموافقة عليها بالكامل قبل إرسال طلبه. يمكنك إضافة أي بنود جديدة أو تعديل وحذف البنود القائمة بكل حرية.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleResetCharterDefaults}
+                  className="px-3 py-2 rounded-xl text-xs font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 border border-gray-200 dark:border-gray-700 transition flex items-center gap-1.5"
+                  title="استعادة البنود الأصلية الخمسة"
+                >
+                  <RotateCcw size={14} />
+                  <span>استعادة الافتراضي</span>
+                </button>
+
+                <button
+                  onClick={handleOpenAddCharter}
+                  className="px-4 py-2 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition flex items-center gap-1.5"
+                >
+                  <Plus size={15} />
+                  <span>إضافة بند جديد</span>
+                </button>
+              </div>
+            </div>
+
+            {/* List of Charter Items */}
+            {loadingCharter ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+                <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs text-gray-500">جاري تحميل بنود الميثاق...</p>
+              </div>
+            ) : charterItems.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+                <FileCheck size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">لا توجد بنود حالياً</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">انقر على الزر أدناه لإضافة أول بند أو استعادة البنود الافتراضية.</p>
+                <button
+                  onClick={handleResetCharterDefaults}
+                  className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl"
+                >
+                  استعادة البنود الافتراضية 🔄
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {charterItems.map((item, index) => {
+                  const isActive = item.isActive !== false;
+
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`p-5 rounded-2xl border transition bg-white dark:bg-gray-800 ${
+                        isActive 
+                          ? 'border-gray-200 dark:border-gray-700 shadow-xs' 
+                          : 'border-dashed border-gray-300 dark:border-gray-700 opacity-60 bg-gray-50 dark:bg-gray-850'
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-black text-xs ${
+                            isActive 
+                              ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' 
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-sm font-black text-gray-900 dark:text-white">
+                                {item.title}
+                              </h4>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                isActive 
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' 
+                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                              }`}>
+                                {isActive ? 'مفعل ويظهر للمورد' : 'معطل مؤقتاً'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                          {/* Toggle Active Button */}
+                          <button
+                            onClick={() => handleToggleCharterActive(item.id)}
+                            className={`p-2 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                              isActive 
+                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300' 
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                            }`}
+                            title={isActive ? 'تعطيل هذا البند مؤقتاً' : 'تفعيل هذا البند'}
+                          >
+                            {isActive ? <ToggleRight size={18} className="text-emerald-600" /> : <ToggleLeft size={18} />}
+                            <span className="text-[11px]">{isActive ? 'مفعل' : 'معطل'}</span>
+                          </button>
+
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => handleOpenEditCharter(item)}
+                            className="p-2 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 transition"
+                            title="تعديل نص البند"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => handleDeleteCharterItem(item.id)}
+                            className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 transition"
+                            title="حذف البند نهائياً"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -622,7 +1037,7 @@ export default function AdminSupplierVerifications() {
               <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
                 <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-base">
                   <CheckCircle2 size={20} />
-                  <span>قبول وتوثيق المورد</span>
+                  <span>اعتماد وتوثيق المورد</span>
                 </div>
                 <button
                   onClick={() => setApprovingItem(null)}
@@ -635,7 +1050,7 @@ export default function AdminSupplierVerifications() {
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                   أنت على وشك اعتماد وتوثيق المورد: <strong className="text-gray-900 dark:text-white">{approvingItem.business_name}</strong>.
-                  سيتم تفعيل شارة الموثوقية لحسابه وإرسال إشعار فوري له عبر التطبيق.
+                  سيتم تفعيل شارة الموثوقية لحسابه وإتاحة دخول المناقصات وتقديم العروض.
                 </p>
               </div>
 
@@ -648,55 +1063,55 @@ export default function AdminSupplierVerifications() {
                   <button
                     type="button"
                     onClick={() => setSelectedBadge('blue')}
-                    className={`p-2.5 rounded-xl border text-center transition ${
+                    className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                       selectedBadge === 'blue' 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-black' 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shadow-xs' 
                         : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
                     }`}
                   >
-                    <BadgeCheck size={20} className="mx-auto text-blue-500 mb-1" />
-                    <span className="text-[11px] block">شارة زرقاء (أساسي)</span>
+                    <BadgeCheck size={20} className="text-blue-500" />
+                    <span className="text-[11px] font-black">شارة زرقاء (أساسي)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedBadge('gold')}
-                    className={`p-2.5 rounded-xl border text-center transition ${
+                    className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                       selectedBadge === 'gold' 
-                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-black' 
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 shadow-xs' 
                         : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
                     }`}
                   >
-                    <BadgeCheck size={20} className="mx-auto text-amber-500 mb-1" />
-                    <span className="text-[11px] block">شارة ذهبية (VIP)</span>
+                    <BadgeCheck size={20} className="text-amber-500" />
+                    <span className="text-[11px] font-black">شارة ذهبية (مميز)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedBadge('platinum')}
-                    className={`p-2.5 rounded-xl border text-center transition ${
+                    className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                       selectedBadge === 'platinum' 
-                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 font-black' 
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 shadow-xs' 
                         : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
                     }`}
                   >
-                    <BadgeCheck size={20} className="mx-auto text-cyan-500 mb-1" />
-                    <span className="text-[11px] block">بلاتينية (شريك)</span>
+                    <BadgeCheck size={20} className="text-purple-500" />
+                    <span className="text-[11px] font-black">بلاتيني (VIP)</span>
                   </button>
                 </div>
               </div>
 
-              {/* Note / Comment */}
+              {/* Note input */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
-                  ملاحظة للمورد (اختياري):
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  ملاحظات الاعتماد (تظهر للمورد في حسابه):
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   value={approvalNote}
                   onChange={(e) => setApprovalNote(e.target.value)}
-                  placeholder="مثال: مرحباً بك كمورد معتمد في المنصة"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white"
+                  placeholder="مثال: تم تدقيق السجل التجاري والمخزن واعتماد الحساب..."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                 />
               </div>
 
@@ -717,6 +1132,66 @@ export default function AdminSupplierVerifications() {
                   className="py-2 px-5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5"
                 >
                   {isProcessingApproval ? 'جاري التوثيق...' : 'تأكيد التوثيق الآن'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =================================================================== */}
+        {/* Modal: Revoke Supplier Verification (إلغاء التوثيق)                  */}
+        {/* =================================================================== */}
+        {revokingItem && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700 shadow-2xl space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
+                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-black text-base">
+                  <ShieldAlert size={20} />
+                  <span>إلغاء توثيق المورد</span>
+                </div>
+                <button
+                  onClick={() => setRevokingItem(null)}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-xl text-xs text-red-800 dark:text-red-300 leading-relaxed">
+                <strong>تحذير:</strong> أنت على وشك إلغاء شارة التوثيق للمورد: <strong className="underline">{revokingItem.business_name}</strong>. سيؤدي هذا إلى منعه من المشاركة في المناقصات حتى يصحح وضعه.
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  سبب إلغاء التوثيق <span className="text-red-500">*</span> (سيتم إرساله كإشعار فوري للمورد):
+                </label>
+                <textarea
+                  rows={3}
+                  value={revocationReason}
+                  onChange={(e) => setRevocationReason(e.target.value)}
+                  placeholder="مثال: مخالفة بند مطابقة الوصف، أو تلقي شكاوى متكررة من التجار بخصوص تأخر الشحن..."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setRevokingItem(null)}
+                  disabled={isProcessingRevocation}
+                  className="py-2 px-4 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  تراجع
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmRevocation}
+                  disabled={isProcessingRevocation || !revocationReason.trim()}
+                  className={`py-2 px-5 rounded-xl text-xs font-black text-white shadow-xs flex items-center gap-1.5 ${
+                    revocationReason.trim() ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                  }`}
+                >
+                  {isProcessingRevocation ? 'جاري الإلغاء...' : 'تأكيد إلغاء التوثيق'}
                 </button>
               </div>
             </div>
@@ -777,6 +1252,83 @@ export default function AdminSupplierVerifications() {
                   }`}
                 >
                   {isProcessingRejection ? 'جاري الرفض...' : 'تأكيد الرفض وإشعار المورد'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =================================================================== */}
+        {/* Modal: Add or Edit Charter Item (إضافة / تعديل بند ميثاق الجودة)    */}
+        {/* =================================================================== */}
+        {(isAddingCharterItem || editingCharterItem) && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 border border-gray-100 dark:border-gray-700 shadow-2xl space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-base">
+                  <FileCheck size={20} />
+                  <span>{editingCharterItem ? 'تعديل بند في ميثاق الجودة' : 'إضافة بند جديد لميثاق الجودة'}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsAddingCharterItem(false);
+                    setEditingCharterItem(null);
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  عنوان البند <span className="text-red-500">*</span>:
+                </label>
+                <input
+                  type="text"
+                  value={charterTitleInput}
+                  onChange={(e) => setCharterTitleInput(e.target.value)}
+                  placeholder="مثال: الالتزام بالفحص والتغليف المحكم"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  الشرح التوضيحي للالتزام <span className="text-red-500">*</span>:
+                </label>
+                <textarea
+                  rows={4}
+                  value={charterDescInput}
+                  onChange={(e) => setCharterDescInput(e.target.value)}
+                  placeholder="اشرح بدقة ما يلتزم به المورد أمام التاجر والمنصة بخصوص هذا البند..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingCharterItem(false);
+                    setEditingCharterItem(null);
+                  }}
+                  disabled={isCharterSaving}
+                  className="py-2 px-4 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCharterItem}
+                  disabled={isCharterSaving || !charterTitleInput.trim() || !charterDescInput.trim()}
+                  className={`py-2 px-5 rounded-xl text-xs font-black text-white shadow-xs flex items-center gap-1.5 ${
+                    charterTitleInput.trim() && charterDescInput.trim() 
+                      ? 'bg-indigo-600 hover:bg-indigo-700' 
+                      : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                  }`}
+                >
+                  {isCharterSaving ? 'جاري الحفظ...' : editingCharterItem ? 'تحديث البند' : 'إضافة البند الآن'}
                 </button>
               </div>
             </div>

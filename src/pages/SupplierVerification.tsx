@@ -25,6 +25,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
+import { supplierCharterService, CharterItem } from '../services/supplierCharterService';
 
 export default function SupplierVerification() {
   const { user } = useAuthStore();
@@ -45,21 +46,21 @@ export default function SupplierVerification() {
   const [socialLinks, setSocialLinks] = useState('');
   const [images, setImages] = useState<string[]>([]);
 
-  // Section 2: Quality Charter Checklist (5 mandatory items)
-  const [charterChecks, setCharterChecks] = useState({
-    descriptionMatch: false,
-    warrantyCommitment: false,
-    readinessAndSpeed: false,
-    stockTransparency: false,
-    disputeResolution: false,
-  });
+  // Section 2: Dynamic Quality Charter Checklist
+  const [charterItems, setCharterItems] = useState<CharterItem[]>([]);
+  const [agreedCharterIds, setAgreedCharterIds] = useState<Record<string, boolean>>({});
 
+  const activeCharterItems = charterItems.filter(item => item.isActive !== false);
   const allCharterAgreed = 
-    charterChecks.descriptionMatch &&
-    charterChecks.warrantyCommitment &&
-    charterChecks.readinessAndSpeed &&
-    charterChecks.stockTransparency &&
-    charterChecks.disputeResolution;
+    activeCharterItems.length > 0 && 
+    activeCharterItems.every(item => Boolean(agreedCharterIds[item.id]));
+
+  const toggleCharterItem = (id: string) => {
+    setAgreedCharterIds(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   const sidebarLinks = [
     { label: 'الرئيسية', href: '/supplier', icon: <LayoutDashboard size={20} /> },
@@ -94,6 +95,9 @@ export default function SupplierVerification() {
         console.error('Error fetching verification:', error);
       }
 
+      const items = await supplierCharterService.getCharterItems();
+      setCharterItems(items);
+
       if (data) {
         setExistingVerification(data);
         setBusinessName(data.business_name || user.company_name || '');
@@ -103,13 +107,9 @@ export default function SupplierVerification() {
         setSocialLinks(data.social_links || '');
         setImages(data.images || []);
         if (data.charter_agreed) {
-          setCharterChecks({
-            descriptionMatch: true,
-            warrantyCommitment: true,
-            readinessAndSpeed: true,
-            stockTransparency: true,
-            disputeResolution: true,
-          });
+          const agreedMap: Record<string, boolean> = {};
+          items.forEach(it => { agreedMap[it.id] = true; });
+          setAgreedCharterIds(agreedMap);
         }
       } else {
         // Pre-fill from profile
@@ -635,122 +635,48 @@ export default function SupplierVerification() {
               </div>
 
               <div className="space-y-3.5">
-                {/* 1. Description Match */}
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
-                  charterChecks.descriptionMatch 
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                    : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={charterChecks.descriptionMatch}
-                    onChange={(e) => setCharterChecks({ ...charterChecks, descriptionMatch: e.target.checked })}
-                    className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
-                      1. مطابقة الوصف والصور الحقيقية
-                    </span>
-                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                      أتعهد بأن تكون جميع المنتجات مطابقة تماماً للمواصفات المعروضة، بدون أي غش أو اختلاف في الجودة أو المقاسات أو الألوان.
-                    </p>
+                {activeCharterItems.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-gray-500 bg-gray-50 dark:bg-gray-850 rounded-xl">
+                    جاري تحميل بنود ميثاق الجودة...
                   </div>
-                </label>
+                ) : (
+                  activeCharterItems.map((item, index) => {
+                    const isChecked = Boolean(agreedCharterIds[item.id]);
 
-                {/* 2. Warranty & Money Protection */}
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
-                  charterChecks.warrantyCommitment 
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                    : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={charterChecks.warrantyCommitment}
-                    onChange={(e) => setCharterChecks({ ...charterChecks, warrantyCommitment: e.target.checked })}
-                    className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
-                      2. الالتزام بنظام حماية الأموال والضمان
-                    </span>
-                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                      احترام نظام الضمان وحماية الأموال المعتمد في منصة جيبها، وعدم مطالبة التاجر بأي دفع خارجي أو تجاوز المنظومة الآمنة.
-                    </p>
-                  </div>
-                </label>
-
-                {/* 3. Readiness and Speed */}
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
-                  charterChecks.readinessAndSpeed 
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                    : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={charterChecks.readinessAndSpeed}
-                    onChange={(e) => setCharterChecks({ ...charterChecks, readinessAndSpeed: e.target.checked })}
-                    className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
-                      3. الجاهزية وسرعة التغليف والشحن
-                    </span>
-                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                      الالتزام الصارم بتجهيز الطلبيات في الموعد المحدد وتغليفها باحترافية تامة تضمن وصولها للتاجر سليمة دون تلف.
-                    </p>
-                  </div>
-                </label>
-
-                {/* 4. Stock Transparency */}
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
-                  charterChecks.stockTransparency 
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                    : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={charterChecks.stockTransparency}
-                    onChange={(e) => setCharterChecks({ ...charterChecks, stockTransparency: e.target.checked })}
-                    className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
-                      4. شفافية المخزون الفعلي
-                    </span>
-                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                      عدم عرض أي منتج غير متوفر فعلياً في المخزن، وعدم التقدم بعروض أسعار لمناقصات التجار ما لم تكن البضاعة جاهزة للتسليم.
-                    </p>
-                  </div>
-                </label>
-
-                {/* 5. Dispute Resolution */}
-                <label className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
-                  charterChecks.disputeResolution 
-                    ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                    : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={charterChecks.disputeResolution}
-                    onChange={(e) => setCharterChecks({ ...charterChecks, disputeResolution: e.target.checked })}
-                    className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
-                      5. القبول بتحكيم المنصة وحل النزاعات
-                    </span>
-                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
-                      القبول التام بقرارات تحكيم إدارة منصة جيبها في حال حدوث أي نزاع مع التاجر والتعاون الفوري لتسوية الخلاف بودية.
-                    </p>
-                  </div>
-                </label>
+                    return (
+                      <label 
+                        key={item.id}
+                        className={`flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none ${
+                          isChecked 
+                            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
+                            : 'bg-gray-50/60 dark:bg-gray-850 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleCharterItem(item.id)}
+                          className="mt-0.5 w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 border-gray-300 cursor-pointer"
+                        />
+                        <div className="flex-1">
+                          <span className="text-xs sm:text-sm font-black text-gray-900 dark:text-white block">
+                            {index + 1}. {item.title}
+                          </span>
+                          <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </label>
+                    );
+                  })
+                )}
               </div>
 
               {/* Charter Checklist Status Warning */}
               {!allCharterAgreed && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
                   <AlertCircle size={16} className="shrink-0" />
-                  <span>تنبيه: يجب وضع علامة (صح ✅) على جميع البنود الخمسة أعلاه لتفعيل زر إرسال الطلب.</span>
+                  <span>تنبيه: يجب وضع علامة (صح ✅) على جميع بنود الميثاق ({activeCharterItems.length} بنود) لتفعيل زر إرسال الطلب.</span>
                 </div>
               )}
             </div>

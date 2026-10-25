@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye, AlertTriangle, Plus, Trash2, Layers } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Gavel, CheckCircle2, Link as LinkIcon, Image as ImageIcon, DollarSign, Store, User, MapPin, Phone, Eye, AlertTriangle, Plus, Trash2, Layers, ShieldCheck } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -21,6 +21,12 @@ import { getSupplierRatingInfo } from '../../utils/supplierUtils';
 export default function SupplierRequests() {
   const { user } = useAuthStore();
   const [showTenderAppPrompt, setShowTenderAppPrompt] = useState(true);
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
+
+  const isVerifiedSupplier = Boolean(
+    (user?.verification_badge && user.verification_badge !== 'none') || 
+    user?.is_verified
+  );
   const { 
     formatCurrency,
     markupTier1Percentage,
@@ -77,7 +83,7 @@ export default function SupplierRequests() {
         .select(`
           id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
           merchant:users!merchant_id(name, company_name, phone, address, email),
-          supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge)),
+          supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge, average_rating, total_reviews)),
           supplier_interests (supplier_id)
         `)
         .order('created_at', { ascending: false })
@@ -94,6 +100,12 @@ export default function SupplierRequests() {
   };
 
   const handleOpenBidModal = (req: any, existingBid?: any) => {
+    if (!isVerifiedSupplier) {
+      setShowUnverifiedModal(true);
+      toast.error('عذراً، يجب توثيق حسابك التجاري أولاً للمشاركة في المناقصات');
+      return;
+    }
+
     setBiddingRequest(req);
     if (existingBid) {
       let tiers: TierItem[] = [];
@@ -126,6 +138,12 @@ export default function SupplierRequests() {
   const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !biddingRequest) return;
+
+    if (!isVerifiedSupplier) {
+      toast.error('غير مصرح لك بتقديم عروض قبل توثيق حسابك كمورد معتمد');
+      setShowUnverifiedModal(true);
+      return;
+    }
 
     if (!bidForm.tiers || bidForm.tiers.length === 0) {
       toast.error('يرجى إضافة شريحة كمية وسعر واحدة على الأقل');
@@ -313,6 +331,11 @@ export default function SupplierRequests() {
 
   const handleIndicateInterest = async (req: any) => {
     if (!user) return;
+    if (!isVerifiedSupplier) {
+      setShowUnverifiedModal(true);
+      toast.error('عذراً، يجب توثيق حسابك كمورد معتمد أولاً للتفاعل مع المناقصات');
+      return;
+    }
     const requestId = req.id;
     try {
       const { error } = await supabase.from('supplier_interests').insert({
@@ -356,6 +379,7 @@ export default function SupplierRequests() {
         { label: 'سوق الطلبات', href: '/supplier/requests', icon: <Gavel size={20} /> },
         { label: 'الطلبات الواردة', href: '/supplier/orders', icon: <ShoppingBag size={20} /> },
         { label: 'التقارير المالية', href: '/supplier/financials', icon: <DollarSign size={20} /> },
+        { label: 'توثيق الحساب', href: '/supplier/verification', icon: <ShieldCheck size={20} /> },
       ]}
     >
       <div className="mb-6 flex flex-col md:flex-row justify-between md:items-end gap-4">
@@ -371,6 +395,30 @@ export default function SupplierRequests() {
       </div>
 
       <div className="relative">
+        {!isVerifiedSupplier && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800/60 p-4 rounded-2xl mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-2.5 bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 rounded-xl shrink-0">
+                <ShieldCheck size={22} />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-amber-950 dark:text-amber-200">
+                  حسابك غير موثق بعد 🛡️
+                </h4>
+                <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                  للحفاظ على جودة التعاملات وجدية الصفقات، لا يمكن للموردين غير الموثقين المشاركة في المناقصات أو تقديم عروض الأسعار.
+                </p>
+              </div>
+            </div>
+            <a
+              href="/supplier/verification"
+              className="self-start sm:self-auto px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white text-xs font-black rounded-xl transition shadow-xs whitespace-nowrap"
+            >
+              توثيق حسابي الآن 🛡️
+            </a>
+          </div>
+        )}
+
         {user?.status === 'pending' && (
           <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl mb-6 text-orange-800 flex items-center gap-3">
             <Gavel size={24} className="text-orange-600 flex-shrink-0" />
@@ -440,14 +488,14 @@ export default function SupplierRequests() {
                           <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold">الموردون المتنافسون:</span>
                           {req.supplier_bids.map((b: any) => {
                             const badge = b.supplier?.verification_badge;
-                            const tierInfo = badge === 'platinum' ? { label: 'بلاتيني 🏅', cls: 'bg-purple-100 text-purple-800 border-purple-200' }
-                              : badge === 'gold' ? { label: 'ذهبي 🥇', cls: 'bg-amber-100 text-amber-800 border-amber-200' }
-                              : (badge === 'silver' || badge === 'blue') ? { label: 'فضي 🥈', cls: 'bg-slate-100 text-slate-800 border-slate-200' }
-                              : { label: 'جديد 🥉', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+                            const ratingInfo = getSupplierRatingInfo(badge, b.supplier?.average_rating, b.supplier?.total_reviews);
                             return (
-                              <span key={b.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${tierInfo.cls}`}>
+                              <span key={b.id} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${ratingInfo.badgeClass}`}>
                                 <span>{b.supplier?.company_name || b.supplier?.name || 'مورد'}</span>
-                                <span>({tierInfo.label})</span>
+                                <span className="font-extrabold">{ratingInfo.badgeTitle}</span>
+                                {ratingInfo.hasRealRating && (
+                                  <span className="text-[9px] opacity-90">({ratingInfo.ratingText} ★)</span>
+                                )}
                               </span>
                             );
                           })}
@@ -679,7 +727,23 @@ export default function SupplierRequests() {
                   ) : (
                     <div className="w-full flex flex-col gap-2">
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">قدم عرض سعر تنافسي الآن للفوز بهذه الصفقة قبل إغلاقها.</p>
-                      {user?.status === 'pending' ? (
+                      {!isVerifiedSupplier ? (
+                        <div className="w-full bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 p-3.5 rounded-xl text-center space-y-2">
+                          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-amber-800 dark:text-amber-300">
+                            <ShieldCheck size={16} />
+                            <span>المناقصة تتطلب توثيق الحساب</span>
+                          </div>
+                          <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                            تقديم عروض الأسعار متاح حصرياً للموردين المعتمدين والموثقين لضمان الالتزام وحماية التجار.
+                          </p>
+                          <button
+                            onClick={() => setShowUnverifiedModal(true)}
+                            className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-95 text-white text-xs font-black rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
+                          >
+                            <span>توثيق حسابي لدخول المناقصة 🛡️</span>
+                          </button>
+                        </div>
+                      ) : user?.status === 'pending' ? (
                         <div className="w-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 rounded-xl font-bold text-center text-sm border border-gray-200 dark:border-gray-700">
                           تقديم العروض متاح للموردين المعتمدين فقط
                         </div>
@@ -720,6 +784,12 @@ export default function SupplierRequests() {
                                 <Store size={14} className="text-gray-400" />
                                 {otherBid.supplier?.name || 'مورد'}
                               </span>
+                              <SupplierBadge 
+                                tier={otherBid.supplier?.verification_badge}
+                                size="xs" 
+                                rating={otherBid.supplier?.average_rating} 
+                                totalReviews={otherBid.supplier?.total_reviews}
+                              />
                             </div>
                             <div className="flex justify-between items-center mb-1">
                               <span className="text-xs text-gray-500 dark:text-gray-400">سعر القطعة (الخام):</span>
@@ -945,6 +1015,38 @@ export default function SupplierRequests() {
                 </button>
               </div>
             </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unverified Supplier Warning Modal */}
+      {showUnverifiedModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700 shadow-2xl space-y-4 animate-in fade-in duration-200 text-center">
+            <div className="w-14 h-14 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldCheck size={32} />
+            </div>
+            <h3 className="text-lg font-black text-gray-900 dark:text-white">
+              توثيق الحساب مطلوب للمشاركة في المناقصات
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              لضمان سلامة التعاملات وجودة المنتجات للتاجر، يُشترط أن يكون المورد موثقاً ومعتمداً من قبل إدارة منصة جيبها لتقديم عروض الأسعار والتنافس في المناقصات.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <a
+                href="/supplier/verification"
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition shadow-xs text-center"
+              >
+                الذهاب لصفحة توثيق الحساب الآن 🛡️
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowUnverifiedModal(false)}
+                className="w-full sm:w-auto py-2.5 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl transition"
+              >
+                إغلاق
+              </button>
             </div>
           </div>
         </div>

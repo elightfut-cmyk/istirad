@@ -251,7 +251,7 @@ export default function MerchantOrders() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china,
+          id, title, description, quantity, image_url, product_link, notes, status, request_type, created_at, merchant_id, coupon_id, approx_weight_grams, avg_price_china, cancellation_reason,
           supplier_bids (
             *,
             supplier:users(id, name, company_name, phone, verification_badge)
@@ -263,7 +263,10 @@ export default function MerchantOrders() {
         .limit(20);
 
       if (error) throw error;
-      setRequests(data || []);
+      const validRequests = (data || []).filter(
+        req => req.cancellation_reason !== 'تم حذف المناقصة بواسطة إدارة المنصة'
+      );
+      setRequests(validRequests);
 
       // Fetch reviews submitted by this merchant to show rating state
       try {

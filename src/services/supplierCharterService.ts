@@ -50,6 +50,8 @@ export const DEFAULT_CHARTER_ITEMS: CharterItem[] = [
   },
 ];
 
+const LOCAL_STORAGE_KEY = 'jiibha_cached_supplier_charter_items';
+
 export const supplierCharterService = {
   /**
    * Fetch charter items from platform_policies, or return default items
@@ -62,35 +64,53 @@ export const supplierCharterService = {
     try {
       const { data, error } = await supabase
         .from('platform_policies')
-        .select('*')
+        .select('content')
         .eq('policy_type', POLICY_TYPE)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching supplier charter:', error);
-        cachedCharter = { data: DEFAULT_CHARTER_ITEMS, timestamp: Date.now() };
-        return DEFAULT_CHARTER_ITEMS;
-      }
-
-      if (!data || !data.content) {
-        cachedCharter = { data: DEFAULT_CHARTER_ITEMS, timestamp: Date.now() };
-        return DEFAULT_CHARTER_ITEMS;
-      }
-
-      try {
-        const parsed = JSON.parse(data.content) as CharterItem[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          cachedCharter = { data: parsed, timestamp: Date.now() };
-          return parsed;
+      if (!error && data?.content) {
+        try {
+          const parsed = JSON.parse(data.content) as CharterItem[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedCharter = { data: parsed, timestamp: Date.now() };
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, data.content);
+            } catch {}
+            return parsed;
+          }
+        } catch (parseErr) {
+          console.error('Error parsing supplier charter content from DB:', parseErr);
         }
-      } catch (parseErr) {
-        console.error('Error parsing supplier charter content:', parseErr);
+      }
+
+      // Fallback: check local storage cache if network/DB returned empty or error
+      try {
+        const localSaved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (localSaved) {
+          const localParsed = JSON.parse(localSaved) as CharterItem[];
+          if (Array.isArray(localParsed) && localParsed.length > 0) {
+            cachedCharter = { data: localParsed, timestamp: Date.now() };
+            return localParsed;
+          }
+        }
+      } catch (localErr) {
+        console.warn('Error reading charter from localStorage:', localErr);
       }
 
       cachedCharter = { data: DEFAULT_CHARTER_ITEMS, timestamp: Date.now() };
       return DEFAULT_CHARTER_ITEMS;
     } catch (err) {
       console.error('Unexpected error in getCharterItems:', err);
+      // Fallback to localStorage
+      try {
+        const localSaved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (localSaved) {
+          const localParsed = JSON.parse(localSaved) as CharterItem[];
+          if (Array.isArray(localParsed) && localParsed.length > 0) {
+            return localParsed;
+          }
+        }
+      } catch {}
       return DEFAULT_CHARTER_ITEMS;
     }
   },
@@ -99,11 +119,44 @@ export const supplierCharterService = {
    * Save or update the charter items list (Admin only)
    */
   async saveCharterItems(items: CharterItem[]): Promise<{ success: boolean; error?: any }> {
-    cachedCharter = null;
-    try {
-      const content = JSON.stringify(items);
-      const now = new Date().toISOString();
+    const content = JSON.stringify(items);
+    const now = new Date().toISOString();
 
+    // 1. Immediately cache in localStorage and in-memory so UI updates instantly
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, content);
+      cachedCharter = { data: items, timestamp: Date.now() };
+    } catch (e) {
+      console.warn('Failed to cache charter in localStorage:', e);
+    }
+
+    try {
+      // 2. Try calling secure admin RPC function if present
+      const { data: rpcData, error: rpcErr } = await supabase.rpc('admin_save_supplier_charter', {
+        charter_content: content,
+      });
+
+      if (!rpcErr && rpcData?.success) {
+        return { success: true };
+      }
+
+      // 3. Fallback: Direct upsert to platform_policies without 'title' column
+      const { error: upsertErr } = await supabase
+        .from('platform_policies')
+        .upsert(
+          {
+            policy_type: POLICY_TYPE,
+            content,
+            updated_at: now,
+          },
+          { onConflict: 'policy_type' }
+        );
+
+      if (!upsertErr) {
+        return { success: true };
+      }
+
+      // 4. Fallback if upsert failed: check existing row and update or insert
       const { data: existing } = await supabase
         .from('platform_policies')
         .select('id')
@@ -111,27 +164,24 @@ export const supplierCharterService = {
         .maybeSingle();
 
       let opError: any = null;
-
       if (existing) {
-        const { error } = await supabase
+        const { error: updErr } = await supabase
           .from('platform_policies')
           .update({
             content,
-            title: 'ميثاق جودة الخدمة للموردين',
             updated_at: now,
           })
           .eq('policy_type', POLICY_TYPE);
-        opError = error;
+        opError = updErr;
       } else {
-        const { error } = await supabase
+        const { error: insErr } = await supabase
           .from('platform_policies')
           .insert({
             policy_type: POLICY_TYPE,
-            title: 'ميثاق جودة الخدمة للموردين',
             content,
             updated_at: now,
           });
-        opError = error;
+        opError = insErr;
       }
 
       if (opError) {
@@ -139,7 +189,6 @@ export const supplierCharterService = {
         return { success: false, error: opError };
       }
 
-      cachedCharter = { data: items, timestamp: Date.now() };
       return { success: true };
     } catch (err: any) {
       console.error('Unexpected error in saveCharterItems:', err);

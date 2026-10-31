@@ -81,7 +81,7 @@ export default function SupplierRequests() {
       const { data, error } = await supabase
         .from('custom_requests')
         .select(`
-          id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china,
+          id, title, description, quantity, status, created_at, request_type, notes, image_url, product_link, merchant_id, approx_weight_grams, avg_price_china, cancellation_reason,
           merchant:users!merchant_id(name, company_name, phone, address, email),
           supplier_bids (*, supplier:users!supplier_id(id, name, company_name, verification_badge, average_rating, total_reviews)),
           supplier_interests (supplier_id)
@@ -90,7 +90,9 @@ export default function SupplierRequests() {
         .limit(20);
 
       if (error) throw error;
-      const filteredData = (data || []).filter(req => req.request_type !== 'direct');
+      const filteredData = (data || []).filter(
+        req => req.request_type !== 'direct' && req.cancellation_reason !== 'تم حذف المناقصة بواسطة إدارة المنصة'
+      );
       setRequests(filteredData);
     } catch (error) {
       console.error(error);

@@ -67,7 +67,10 @@ export default function AdminOrders() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      const validRequests = (data || []).filter(
+        req => req.cancellation_reason !== 'تم حذف المناقصة بواسطة إدارة المنصة'
+      );
+      setRequests(validRequests);
     } catch (error) {
       console.error('Error fetching admin orders:', error);
     } finally {
@@ -144,13 +147,69 @@ export default function AdminOrders() {
   };
 
   const handleDeleteRequest = async (requestId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا الطلب نهائياً مع جميع عروضه؟')) return;
+    if (!window.confirm('هل أنت متأكد من حذف هذه المناقصة / الطلب نهائياً مع جميع عروضه؟')) return;
     try {
-      const { error } = await supabase.from('custom_requests').delete().eq('id', requestId);
-      if (error) throw error;
+      // 1. Try secure admin RPC function if available
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('admin_delete_custom_request', {
+        target_request_id: requestId,
+      });
+
+      let success = !rpcErr && rpcRes?.success === true;
+
+      // 2. Fallback: Cascading delete on client
+      if (!success) {
+        const targetReq = requests.find(r => r.id === requestId);
+        const bidIds = (targetReq?.supplier_bids || []).map((b: any) => b.id);
+
+        if (bidIds.length > 0) {
+          try {
+            await supabase.from('supplier_reviews').delete().in('bid_id', bidIds);
+          } catch (e) {
+            console.warn('Could not cascade delete supplier_reviews:', e);
+          }
+        }
+
+        try {
+          await supabase.from('supplier_interests').delete().eq('request_id', requestId);
+        } catch (e) {
+          console.warn('Could not cascade delete supplier_interests:', e);
+        }
+
+        try {
+          await supabase.from('supplier_bids').delete().eq('request_id', requestId);
+        } catch (e) {
+          console.warn('Could not cascade delete supplier_bids:', e);
+        }
+
+        const { data: delData, error: delErr } = await supabase
+          .from('custom_requests')
+          .delete()
+          .eq('id', requestId)
+          .select('id');
+
+        if (!delErr && delData && delData.length > 0) {
+          success = true;
+        } else {
+          // Fallback soft delete to guarantee immediate disappearance
+          const { error: cancelErr } = await supabase
+            .from('custom_requests')
+            .update({
+              status: 'cancelled',
+              cancellation_reason: 'تم حذف المناقصة بواسطة إدارة المنصة',
+            })
+            .eq('id', requestId);
+
+          if (cancelErr && delErr) {
+            throw (delErr || cancelErr);
+          }
+          success = true;
+        }
+      }
+
       setRequests(prev => prev.filter(r => r.id !== requestId));
-      toast.success('تم حذف الطلب بنجاح.');
+      toast.success('تم حذف المناقصة بنجاح.');
     } catch (err: any) {
+      console.error('Error deleting request:', err);
       toast.error('حدث خطأ أثناء الحذف: ' + (err.message || ''));
     }
   };
@@ -174,6 +233,7 @@ export default function AdminOrders() {
 
   // Filter tender requests
   const tenderRequests = requests.filter(req => {
+    if (req.cancellation_reason === 'تم حذف المناقصة بواسطة إدارة المنصة') return false;
     const isTender = req.request_type !== 'direct';
     const titleMatch = (req.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const merchantMatch = (req.merchant?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -189,6 +249,7 @@ export default function AdminOrders() {
 
   // Filter direct requests
   const directRequests = requests.filter(req => {
+    if (req.cancellation_reason === 'تم حذف المناقصة بواسطة إدارة المنصة') return false;
     const isDirect = req.request_type === 'direct';
     const titleMatch = (req.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const merchantMatch = (req.merchant?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 

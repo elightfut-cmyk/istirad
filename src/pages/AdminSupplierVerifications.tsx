@@ -36,6 +36,8 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { supplierCharterService, CharterItem, DEFAULT_CHARTER_ITEMS } from '../services/supplierCharterService';
+import WhatsAppIcon from '../components/icons/WhatsAppIcon';
+import { formatWhatsAppUrl } from '../utils/whatsapp';
 
 interface VerificationRecord {
   id: string;
@@ -725,9 +727,22 @@ export default function AdminSupplierVerifications() {
                           <span className="font-bold text-gray-800 dark:text-gray-200 block">
                             {item.user?.name || 'غير محدد'}
                           </span>
-                          <span className="text-gray-500 dark:text-gray-400 font-mono text-[11px]">
-                            {item.user?.phone || item.user?.email || '-'}
-                          </span>
+                          {item.user?.phone ? (
+                            <a
+                              href={formatWhatsAppUrl(item.user.phone, `السلام عليكم ${item.business_name || item.user.name}، بخصوص طلب توثيق حسابكم كمورد في منصة جيبها`)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold font-mono text-[11px] mt-1 group"
+                              title={`مراسلة المورد عبر واتساب (${item.user.phone})`}
+                            >
+                              <WhatsAppIcon size={12} className="text-[#25D366] group-hover:scale-110 transition-transform" />
+                              <span dir="ltr">{item.user.phone}</span>
+                            </a>
+                          ) : (
+                            <span className="text-gray-500 dark:text-gray-400 font-mono text-[11px]">
+                              {item.user?.email || '-'}
+                            </span>
+                          )}
                         </div>
 
                         <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/60">

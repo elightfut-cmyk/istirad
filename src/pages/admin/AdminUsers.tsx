@@ -28,6 +28,8 @@ import toast from 'react-hot-toast';
 import SupplierBadge from '../../components/SupplierBadge';
 import { sendNotification } from '../../store/useNotificationStore';
 import { getSupplierRatingInfo } from '../../utils/supplierUtils';
+import WhatsAppIcon from '../../components/icons/WhatsAppIcon';
+import { formatWhatsAppUrl } from '../../utils/whatsapp';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -296,6 +298,7 @@ export default function AdminUsers() {
   const filteredUsers = users.filter(u => {
     const matchesSearch = (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (u.phone || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (u.company_name || '').toLowerCase().includes(searchQuery.toLowerCase());
     if (activeTab === 'suppliers') return matchesSearch && u.role === 'supplier';
     if (activeTab === 'merchants') return matchesSearch && u.role === 'merchant';
@@ -512,7 +515,38 @@ export default function AdminUsers() {
                             {u.company_name && (
                               <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mt-0.5">شركة: {u.company_name}</p>
                             )}
-                            <p className="text-xs text-gray-400 mt-0.5">{u.email} {u.phone && `• ${u.phone}`}</p>
+                            <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400 mt-1">
+                              <span>{u.email}</span>
+                              {u.phone && (
+                                <>
+                                  <span className="text-gray-300 dark:text-gray-600">•</span>
+                                  {isSupplier ? (
+                                    <a
+                                      href={formatWhatsAppUrl(u.phone, `السلام عليكم، بخصوص حسابكم وتوريداتكم في منصة جيبها`)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all shadow-xs group"
+                                      title={`فتح محادثة واتساب مع المورد (${u.phone})`}
+                                    >
+                                      <WhatsAppIcon size={13} className="text-[#25D366] group-hover:scale-110 transition-transform" />
+                                      <span dir="ltr">{u.phone}</span>
+                                    </a>
+                                  ) : (
+                                    <a
+                                      href={formatWhatsAppUrl(u.phone)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="inline-flex items-center gap-1 text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition-colors font-mono"
+                                      title={`مراسلة عبر واتساب (${u.phone})`}
+                                    >
+                                      <span dir="ltr">{u.phone}</span>
+                                    </a>
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                         </td>
 
@@ -664,6 +698,18 @@ export default function AdminUsers() {
 
                                 {isSupplier && (
                                   <>
+                                    {u.phone && (
+                                      <a
+                                        href={formatWhatsAppUrl(u.phone, `السلام عليكم، بخصوص حسابكم وتوريداتكم في منصة جيبها`)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-xl transition-colors shadow-xs flex items-center justify-center"
+                                        title={`مراسلة المورد عبر واتساب (${u.phone})`}
+                                      >
+                                        <WhatsAppIcon size={16} className="text-[#25D366]" />
+                                      </a>
+                                    )}
                                     <button 
                                       onClick={() => handleToggleBadge(u.id, u.verification_badge || 'none')}
                                       className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"

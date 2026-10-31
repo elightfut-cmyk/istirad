@@ -27,6 +27,8 @@ import toast from 'react-hot-toast';
 import { sendNotification } from '../../store/useNotificationStore';
 import SupplierBadge from '../../components/SupplierBadge';
 import { getSupplierRatingInfo } from '../../utils/supplierUtils';
+import WhatsAppIcon from '../../components/icons/WhatsAppIcon';
+import { formatWhatsAppUrl } from '../../utils/whatsapp';
 
 export default function AdminOrders() {
   const { formatCurrency, shippingPricePerKilo, bidWindowExchangeRate } = useSettingsStore();
@@ -365,7 +367,16 @@ export default function AdminOrders() {
                               {req.merchant?.company_name && ` (${req.merchant.company_name})`}
                             </span>
                             {req.merchant?.phone && (
-                              <span className="text-xs text-gray-400 font-mono">| {req.merchant.phone}</span>
+                              <a
+                                href={formatWhatsAppUrl(req.merchant.phone, `السلام عليكم ${req.merchant.name}، بخصوص مناقصتكم: ${req.title}`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-mono"
+                                title="مراسلة التاجر عبر واتساب"
+                              >
+                                <WhatsAppIcon size={11} className="text-[#25D366]" />
+                                <span dir="ltr">{req.merchant.phone}</span>
+                              </a>
                             )}
                             {req.merchant?.email && (
                               <span className="text-xs text-gray-400">| {req.merchant.email}</span>
@@ -516,9 +527,16 @@ export default function AdminOrders() {
                                         );
                                       })()}
                                       {bid.supplier?.phone && (
-                                        <span className="text-[11px] text-gray-400 font-mono">
-                                          {bid.supplier.phone}
-                                        </span>
+                                        <a
+                                          href={formatWhatsAppUrl(bid.supplier.phone, `السلام عليكم ${bid.supplier.name}، بخصوص عرض السعر المقدم للمناقصة: ${req.title}`)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-mono font-bold mt-0.5"
+                                          title={`مراسلة المورد عبر واتساب (${bid.supplier.phone})`}
+                                        >
+                                          <WhatsAppIcon size={11} className="text-[#25D366]" />
+                                          <span dir="ltr">{bid.supplier.phone}</span>
+                                        </a>
                                       )}
                                     </div>
 

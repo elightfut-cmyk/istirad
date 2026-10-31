@@ -43,6 +43,23 @@ export default function AdminUsers() {
   const [notifMessage, setNotifMessage] = useState('');
   const [sendingNotif, setSendingNotif] = useState(false);
 
+  // Automated WhatsApp template message for suppliers (persisted in localStorage)
+  const [supplierWaMessage, setSupplierWaMessage] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('admin_supplier_wa_message');
+      if (saved !== null && saved !== undefined) return saved;
+    }
+    return 'السلام عليكم {name}، بخصوص حسابكم وتوريداتكم في منصة جيبها';
+  });
+
+  const getSupplierWhatsAppMessage = (supplier: any) => {
+    const template = supplierWaMessage.trim() || 'السلام عليكم {name}، بخصوص حسابكم وتوريداتكم في منصة جيبها';
+    return template
+      .replace(/{name}/g, supplier.name || '')
+      .replace(/{company}/g, supplier.company_name || supplier.name || '')
+      .replace(/{phone}/g, supplier.phone || '');
+  };
+
   useEffect(() => {
     fetchUsers();
 
@@ -444,6 +461,131 @@ export default function AdminUsers() {
                 </div>
               </div>
             </div>
+
+            {/* ── WhatsApp Custom Auto-Message Box for Suppliers ── */}
+            <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border border-emerald-300/50 dark:border-emerald-700/50 p-4 sm:p-5 rounded-2xl shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#25D366]/20 text-[#25D366] flex items-center justify-center shrink-0 shadow-xs">
+                    <WhatsAppIcon size={22} className="text-[#25D366]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-black text-gray-900 dark:text-white text-base">رسالة الواتساب الجاهزة للموردين</h4>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                        تُرسل تلقائياً عند النقر على أي مورد
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                      اكتب الرسالة التي تريد إرسالها، وعند الضغط على زر الواتساب لأي مورد ستظهر هذه الرسالة تلقائياً في المحادثة.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dynamic Placeholder Insertion Chips */}
+                <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto text-xs">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">إدراج متغير:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newMsg = supplierWaMessage + ' {name}';
+                      setSupplierWaMessage(newMsg);
+                      localStorage.setItem('admin_supplier_wa_message', newMsg);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-mono text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                    title="إدراج كود اسم المورد"
+                  >
+                    <span>+ {'{name}'}</span>
+                    <span className="text-[10px] text-gray-400 font-sans font-normal">(الاسم)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newMsg = supplierWaMessage + ' {company}';
+                      setSupplierWaMessage(newMsg);
+                      localStorage.setItem('admin_supplier_wa_message', newMsg);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 hover:bg-emerald-50 dark:hover:bg-emerald-950 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-mono text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                    title="إدراج كود اسم الشركة"
+                  >
+                    <span>+ {'{company}'}</span>
+                    <span className="text-[10px] text-gray-400 font-sans font-normal">(الشركة)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const defaultMsg = 'السلام عليكم {name}، بخصوص حسابكم وتوريداتكم في منصة جيبها';
+                      setSupplierWaMessage(defaultMsg);
+                      localStorage.setItem('admin_supplier_wa_message', defaultMsg);
+                      toast.success('تمت استعادة الرسالة الافتراضية');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-700 dark:text-amber-400 text-xs font-bold transition border border-amber-200 dark:border-amber-800"
+                    title="استعادة نص الرسالة الافتراضية"
+                  >
+                    إعادة تعيين
+                  </button>
+                </div>
+              </div>
+
+              {/* Textarea Input */}
+              <div className="relative">
+                <textarea
+                  rows={2}
+                  value={supplierWaMessage}
+                  onChange={(e) => {
+                    setSupplierWaMessage(e.target.value);
+                    localStorage.setItem('admin_supplier_wa_message', e.target.value);
+                  }}
+                  placeholder="اكتب هنا الرسالة التلقائية للواتساب (مثال: السلام عليكم {name}، بخصوص طلبات التوريد الأخيرة في منصة جيبها...)"
+                  className="w-full px-4 py-2.5 text-sm rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:border-emerald-500 transition shadow-xs resize-none"
+                />
+              </div>
+
+              {/* Quick Template Presets */}
+              <div className="flex items-center gap-2 flex-wrap text-xs pt-0.5">
+                <span className="text-gray-500 dark:text-gray-400 font-bold">قوالب جاهزة سريعة:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = 'السلام عليكم {name}، نود الاستفسار بخصوص منتجاتكم وتوريداتكم في منصة جيبها.';
+                    setSupplierWaMessage(msg);
+                    localStorage.setItem('admin_supplier_wa_message', msg);
+                    toast.success('تم اختيار قالب: استفسار عن المنتجات');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100/70 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 font-bold transition"
+                >
+                  استفسار عن المنتجات
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = 'السلام عليكم {name}، نرجو منكم استكمال توثيق حسابكم التجاري في منصة جيبها للحصول على شارة التوثيق وتوسيع مبيعاتكم.';
+                    setSupplierWaMessage(msg);
+                    localStorage.setItem('admin_supplier_wa_message', msg);
+                    toast.success('تم اختيار قالب: تذكير بالتوثيق');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100/70 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 font-bold transition"
+                >
+                  تذكير بالتوثيق
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const msg = 'السلام عليكم {name}، يرجى تحديث أسعار وتوافر بضائعكم لتلقي طلبات جديدة من التجار.';
+                    setSupplierWaMessage(msg);
+                    localStorage.setItem('admin_supplier_wa_message', msg);
+                    toast.success('تم اختيار قالب: تحديث الأسعار');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-100/70 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 font-bold transition"
+                >
+                  تحديث الأسعار
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -522,7 +664,7 @@ export default function AdminUsers() {
                                   <span className="text-gray-300 dark:text-gray-600">•</span>
                                   {isSupplier ? (
                                     <a
-                                      href={formatWhatsAppUrl(u.phone, `السلام عليكم، بخصوص حسابكم وتوريداتكم في منصة جيبها`)}
+                                      href={formatWhatsAppUrl(u.phone, getSupplierWhatsAppMessage(u))}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
@@ -700,7 +842,7 @@ export default function AdminUsers() {
                                   <>
                                     {u.phone && (
                                       <a
-                                        href={formatWhatsAppUrl(u.phone, `السلام عليكم، بخصوص حسابكم وتوريداتكم في منصة جيبها`)}
+                                        href={formatWhatsAppUrl(u.phone, getSupplierWhatsAppMessage(u))}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}

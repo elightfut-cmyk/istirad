@@ -20,7 +20,8 @@ import {
   Shield,
   ExternalLink,
   Bell,
-  Smartphone
+  Smartphone,
+  Sparkles
 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';

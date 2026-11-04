@@ -138,6 +138,15 @@ export default function Register() {
             </label>
           </div>
 
+          {formData.role === 'supplier' && (
+            <div className="mb-5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs sm:text-sm flex items-center justify-between gap-2 animate-fadeIn">
+              <span>📦 هل أنت مستورد أو صاحب مخزن جملة؟</span>
+              <Link to="/suppliers-join" className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100 shrink-0">
+                بوابة تأهيل الموردين السريعة ←
+              </Link>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Full Name */}
             <div>

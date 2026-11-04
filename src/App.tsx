@@ -5,6 +5,7 @@ import { useSettingsStore } from './store/useSettingsStore';
 import { useThemeStore } from './store/useThemeStore';
 import LandingPage from './pages/public/LandingPage';
 import PageViewer from './pages/public/PageViewer';
+import SupplierLandingFunnel from './pages/public/SupplierLandingFunnel';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -214,6 +215,9 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/page/:slug" element={<PageViewer />} />
+          <Route path="/suppliers-join" element={<SupplierLandingFunnel />} />
+          <Route path="/supplier-join" element={<Navigate to="/suppliers-join" replace />} />
+          <Route path="/suppliers/join" element={<Navigate to="/suppliers-join" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />

@@ -26,11 +26,10 @@ export default function AdminDashboard() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const handleCopyFunnelLink = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://jiibha.com';
-    const link = origin + '/suppliers-join';
+    const link = 'https://jiibha.com/suppliers-join';
     navigator.clipboard.writeText(link).then(() => {
       setCopiedLink(true);
-      toast.success('تم نسخ رابط حملة الموردين بنجاح! جاهز للصق في مدير إعلانات فيسبوك');
+      toast.success('تم نسخ رابط حملة الموردين بنجاح! (https://jiibha.com/suppliers-join)');
       setTimeout(() => setCopiedLink(false), 2500);
     }).catch(() => {
       toast.error('تعذر نسخ الرابط تلقائياً');
@@ -249,7 +248,7 @@ export default function AdminDashboard() {
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-gray-900 text-xs font-mono font-bold text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-xs" dir="ltr">
-                {typeof window !== 'undefined' ? window.location.origin : 'https://jiibha.com'}/suppliers-join
+                https://jiibha.com/suppliers-join
               </span>
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                 ✓ بكسل فيسبوك مشروط

@@ -4,7 +4,7 @@ import {
   Building2, MapPin, ShieldCheck, Star, Award, 
   CheckCircle2, ArrowRight, Store, Clock, ExternalLink,
   LayoutDashboard, ShoppingBag, CreditCard, DollarSign, Users, Package,
-  Sparkles, Layers, Image as ImageIcon, FileCheck, X, Edit3
+  Sparkles, Layers, Image as ImageIcon, FileCheck, X, Edit3, ShieldAlert, AlertCircle
 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
@@ -239,6 +239,13 @@ export default function SupplierPublicProfile() {
   const isMerchantVisitor = !isOwnerViewingSelf && user?.role === 'merchant';
   const hasTransactedBefore = merchantBids.length > 0 || Boolean(paramOrderId);
 
+  // Verification status check: only truly approved suppliers are considered verified
+  const isVerified = Boolean(
+    (verificationData?.status?.toLowerCase() === 'approved') ||
+    (supplier?.verification_badge && supplier.verification_badge !== 'none') ||
+    supplier?.is_verified
+  );
+
   return (
     <DashboardLayout title="بروفايل المورد ومعلومات التوثيق" sidebarLinks={activeSidebarLinks}>
       <div className="max-w-6xl mx-auto space-y-6 font-['Tajawal'] pb-12">
@@ -265,18 +272,45 @@ export default function SupplierPublicProfile() {
 
         {/* Self Preview Notice Banner if Supplier is checking his own profile */}
         {isOwnerViewingSelf && (
-          <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-            <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold">
-              <Sparkles size={18} className="text-[#4f46e5] flex-shrink-0" />
-              <span>هذه معاينة لبروفايلك التجاري والتوثيق كما يراه التجار عند الضغط على اسمك في المناقصات.</span>
+          <div className="space-y-3">
+            {!isVerified && (
+              <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm shadow-xs">
+                <div className="flex items-start gap-3 text-amber-950 dark:text-amber-200 font-bold">
+                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+                    <ShieldAlert size={22} />
+                  </div>
+                  <div>
+                    <span className="block font-black text-base text-amber-950 dark:text-amber-100">
+                      تنبيه: حسابك التجاري غير موثق حالياً 🛡️
+                    </span>
+                    <span className="text-xs font-normal text-amber-900/80 dark:text-amber-300/80 mt-0.5 block leading-relaxed">
+                      للحفاظ على جودة التعاملات وجدية الصفقات، لا يمكن للموردين غير الموثقين تقديم عروض الأسعار في المناقصات. وثّق حسابك الآن لتحصل على شارة "موثق رسمياً في جيبها" وترفع ثقة التجار فيك.
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  to="/supplier/verification"
+                  className="self-start sm:self-auto inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs transition flex-shrink-0 shadow-md active:scale-95"
+                >
+                  <ShieldCheck size={16} />
+                  <span>توثيق حسابي الآن ↗</span>
+                </Link>
+              </div>
+            )}
+
+            <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-bold">
+                <Sparkles size={18} className="text-[#4f46e5] flex-shrink-0" />
+                <span>هذه معاينة لبروفايلك التجاري والتوثيق كما يراه التجار عند الضغط على اسمك في المناقصات.</span>
+              </div>
+              <Link
+                to="/supplier/verification"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#4f46e5] hover:bg-[#4338ca] text-white font-bold text-xs transition flex-shrink-0 shadow-sm"
+              >
+                <Edit3 size={14} />
+                <span>{isVerified ? 'تعديل بيانات التوثيق والمخزن' : 'إكمال بيانات التوثيق'}</span>
+              </Link>
             </div>
-            <Link
-              to="/supplier/verification"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#4f46e5] hover:bg-[#4338ca] text-white font-bold text-xs transition flex-shrink-0 shadow-sm"
-            >
-              <Edit3 size={14} />
-              <span>تعديل بيانات التوثيق والمخزن</span>
-            </Link>
           </div>
         )}
 
@@ -309,10 +343,15 @@ export default function SupplierPublicProfile() {
                       <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
                         {verificationData?.business_name || supplier.company_name || supplier.name}
                       </h2>
-                      {(verificationData?.status === 'APPROVED' || supplier.verification_badge) && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-xs">
-                          <ShieldCheck size={15} className="text-blue-600" />
+                      {isVerified ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                          <ShieldCheck size={15} className="text-emerald-600 dark:text-emerald-400" />
                           <span>موثق رسمياً في جيبها</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-xs">
+                          <AlertCircle size={15} className="text-amber-600 dark:text-amber-400" />
+                          <span>حسابك غير موثق</span>
                         </span>
                       )}
                     </div>
@@ -386,15 +425,20 @@ export default function SupplierPublicProfile() {
                     <h3 className="text-xl font-black text-gray-900 dark:text-white">
                       بيانات النشاط التجاري والمخزن المعتمد
                     </h3>
-                    {verificationData?.status === 'APPROVED' ? (
+                    {isVerified ? (
                       <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
                         <ShieldCheck size={14} className="text-emerald-600" />
                         <span>توثيق معتمد</span>
                       </span>
-                    ) : (
+                    ) : verificationData?.status?.toLowerCase() === 'pending' ? (
                       <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">
                         <Clock size={13} />
-                        <span>بيانات قيد المراجعة</span>
+                        <span>طلب التوثيق قيد المراجعة</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <AlertCircle size={13} className="text-amber-600" />
+                        <span>حسابك غير موثق</span>
                       </span>
                     )}
                   </div>
@@ -432,7 +476,7 @@ export default function SupplierPublicProfile() {
                     المقر الفعلي والمخزن
                   </span>
                   <p className="text-sm font-extrabold text-gray-900 dark:text-white">
-                    {verificationData?.location || supplier.address || 'مقر معتمد لدى المنصة'}
+                    {verificationData?.location || supplier.address || (isVerified ? 'مقر معتمد لدى المنصة' : 'قيد استكمال التوثيق')}
                   </p>
                 </div>
 

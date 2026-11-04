@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Boxes, 
-  Warehouse, 
-  ShoppingCart, 
-  Building2, 
-  User, 
-  Phone, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  MapPin, 
-  ArrowLeft, 
-  ArrowRight, 
-  Sparkles, 
-  Check, 
-  Layers, 
-  BadgeCheck, 
-  DollarSign, 
-  TrendingUp, 
-  ChevronDown, 
+import {
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  Boxes,
+  Warehouse,
+  ShoppingCart,
+  Building2,
+  User,
+  Phone,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  MapPin,
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  Check,
+  Layers,
+  BadgeCheck,
+  DollarSign,
+  TrendingUp,
+  ChevronDown,
   ChevronUp,
   ExternalLink
 } from 'lucide-react';
@@ -318,7 +318,7 @@ export default function SupplierLandingFunnel() {
 
       // Refresh session in auth store silently if session exists
       if (authData.session) {
-        checkSession().catch(() => {});
+        checkSession().catch(() => { });
       }
 
       // Store supplier data for post-registration step
@@ -366,15 +366,15 @@ export default function SupplierLandingFunnel() {
   };
 
   return (
-    <div className="min-h-screen bg-[#040c1e] text-slate-100 font-['Tajawal'] selection:bg-amber-500 selection:text-black antialiased relative overflow-x-hidden">
-      
+    <div className="min-h-screen bg-slate-50 text-gray-900 font-['Tajawal'] selection:bg-amber-400 selection:text-black antialiased relative overflow-x-hidden">
+
       {/* Background ambient light effects */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-indigo-900/20 via-amber-600/10 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-amber-100/50 via-indigo-50/40 to-transparent blur-3xl pointer-events-none -z-10" />
 
       {/* ── 1. TOP WARNING PILL (Pre-Qualification Banner) ── */}
-      <div className="w-full bg-gradient-to-r from-amber-500/15 via-amber-400/20 to-amber-500/15 border-b border-amber-400/30 py-2.5 px-4 text-center sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-amber-300 font-bold text-xs sm:text-sm">
-          <AlertTriangle size={16} className="text-amber-400 shrink-0 animate-bounce" />
+      <div className="w-full bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 border-b border-amber-300/80 py-2.5 px-4 text-center sticky top-0 z-40 backdrop-blur-md shadow-xs">
+        <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-amber-950 font-bold text-xs sm:text-sm">
+          <AlertTriangle size={16} className="text-amber-600 shrink-0" />
           <span>⚠️ بوابة مخصصة للمستوردين من الصين، شركات الاستيراد، وأصحاب مخازن الجملة (Les Dépôts) في الجزائر فقط.</span>
         </div>
       </div>
@@ -382,20 +382,20 @@ export default function SupplierLandingFunnel() {
       {/* ── 2. NAVBAR ── */}
       <header className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition">
-          <img 
-            src="/header-logo.png" 
-            alt="جيبها - Jiibha" 
-            className="h-9 sm:h-11 w-auto object-contain brightness-125" 
+          <img
+            src="/header-logo.png"
+            alt="جيبها - Jiibha"
+            className="h-9 sm:h-11 w-auto object-contain"
           />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-950/80 text-indigo-300 border border-indigo-700/50">
-            <Sparkles size={13} className="text-amber-400" />
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <Sparkles size={13} className="text-amber-500" />
             بوابة الموردين والمستوردين
           </span>
-          <Link 
+          <Link
             to="/login"
-            className="text-xs sm:text-sm font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition"
+            className="text-xs sm:text-sm font-bold text-gray-700 hover:text-gray-900 px-3.5 py-1.5 rounded-xl border border-gray-200 hover:border-gray-300 bg-white transition shadow-xs"
           >
             تسجيل الدخول
           </Link>
@@ -405,37 +405,37 @@ export default function SupplierLandingFunnel() {
       {/* ── 3. HERO SECTION ── */}
       <section className="max-w-4xl mx-auto px-4 pt-6 pb-8 text-center">
         {/* Quality Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-400/30 text-amber-300 text-xs sm:text-sm font-bold mb-4 shadow-sm">
-          <BadgeCheck size={16} className="text-amber-400" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-300 text-amber-800 text-xs sm:text-sm font-bold mb-4 shadow-xs">
+          <BadgeCheck size={16} className="text-amber-600" />
           <span>فرصة استثنائية لموردي الجملة ومستوردي الصين في الجزائر</span>
         </div>
 
         {/* Main H1 Headline */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight sm:leading-snug tracking-tight mb-4">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight sm:leading-snug tracking-tight mb-4">
           عندك سلعة في المخزن أو تشحن من الصين؟ <br className="hidden sm:inline" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-amber-200">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-700 to-amber-600">
             بيع بالجملة لآلاف التجار في الجزائر
           </span>{' '}
           وادفع واستلم بالدينار الجزائري!
         </h1>
 
         {/* Sub-headline */}
-        <p className="text-slate-300 text-sm sm:text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-6 font-medium">
+        <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-6 font-medium">
           سجّل حسابك كمورد معتمد في جيبها، وثّق حسابك مجاناً، واطّلع يومياً على طلبات الشراء الجاهزة (RFQs) من التجار لتقدم عروض أسعارك وتربح بأمان مع نظام الضمان (Escrow).
         </p>
 
         {/* Trust Badges Bar */}
         <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 max-w-3xl mx-auto">
-          <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
             <span>طلبات شراء جملة يومية جاهزة</span>
           </div>
-          <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-amber-400 shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
+            <CheckCircle2 size={16} className="text-amber-600 shrink-0" />
             <span>شارة "مورد موثوق" لرفع مبيعاتك</span>
           </div>
-          <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
             <span>حماية مالية ودفع مضمون بالدينار (DZD)</span>
           </div>
         </div>
@@ -443,29 +443,29 @@ export default function SupplierLandingFunnel() {
 
       {/* ── 4. FUNNEL CONTAINER ── */}
       <main className="max-w-3xl mx-auto px-4 pb-16">
-        
+
         {/* Multi-Step Progress Indicator (Shown during steps 1, 2, 3) */}
         {step < 4 && (
-          <div className="bg-[#0b1733]/90 border border-slate-800 rounded-2xl p-4 sm:p-5 mb-6 backdrop-blur-md shadow-xl">
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
             <div className="flex items-center justify-between mb-3 text-xs sm:text-sm font-bold">
-              <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-400' : 'text-slate-500'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>1</span>
+              <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-700' : 'text-gray-400'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>1</span>
                 <span>تحديد الصفة</span>
               </span>
-              <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-400' : 'text-slate-500'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>2</span>
+              <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-700' : 'text-gray-400'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>2</span>
                 <span>تأهيل المخزون</span>
               </span>
-              <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-400' : 'text-slate-500'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>3</span>
+              <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-700' : 'text-gray-400'}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>3</span>
                 <span>إنشاء الحساب</span>
               </span>
             </div>
 
             {/* Progress bar track */}
-            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-amber-500 to-amber-300 h-full transition-all duration-500 ease-out rounded-full"
+            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-amber-400 to-amber-500 h-full transition-all duration-500 ease-out rounded-full"
                 style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
               />
             </div>
@@ -474,20 +474,20 @@ export default function SupplierLandingFunnel() {
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-red-950/70 border border-red-500/50 text-red-200 text-sm flex items-start gap-3 animate-shake">
-            <AlertTriangle size={18} className="text-red-400 shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3 animate-shake shadow-xs">
+            <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
             <div className="flex-1 font-semibold">{errorMessage}</div>
           </div>
         )}
 
         {/* ── STEP 1: THE GATEKEEPER QUESTION ── */}
         {step === 1 && (
-          <div className="bg-[#0b1733]/90 border border-slate-800/90 rounded-3xl p-5 sm:p-8 backdrop-blur-md shadow-2xl">
+          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
             <div className="text-center mb-6">
-              <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">
                 ما هي صفتك التجارية الحالية؟ (اختر للمتابعة)
               </h2>
-              <p className="text-slate-400 text-xs sm:text-sm">
+              <p className="text-gray-500 text-xs sm:text-sm">
                 الرجاء الاختيار بدقة حتى نوجهك للمسار الصحيح ونمنحك الامتيازات المناسبة لنشاطك
               </p>
             </div>
@@ -497,29 +497,28 @@ export default function SupplierLandingFunnel() {
               <button
                 type="button"
                 onClick={() => handleSelectRole('supplier')}
-                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative group cursor-pointer ${
-                  userType === 'supplier'
-                    ? 'border-amber-400 bg-amber-400/10 shadow-[0_0_25px_rgba(251,191,36,0.2)]'
-                    : 'border-slate-700/80 bg-slate-900/60 hover:border-amber-400/60 hover:bg-slate-900/90'
-                }`}
+                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative group cursor-pointer ${userType === 'supplier'
+                    ? 'border-amber-500 bg-amber-50/70 shadow-md ring-2 ring-amber-400/20'
+                    : 'border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50/20 shadow-xs'
+                  }`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-700 group-hover:scale-105 transition-transform">
                     <Boxes size={26} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-extrabold text-base sm:text-lg text-white">
+                      <span className="font-extrabold text-base sm:text-lg text-gray-900">
                         📦 أنا مستورد من الصين / صاحب مخزن جملة (Dépôt)
                       </span>
-                      <span className="text-xs bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded-full font-bold border border-amber-400/30">
+                      <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold border border-amber-300">
                         مؤهل للموردين
                       </span>
                     </div>
-                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mt-1">
+                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mt-1">
                       لدي سلع وبضاعة جاهزة لبيعها بالجملة للتجار، أو أشحن كونتينرات وطرود DDP بانتظام.
                     </p>
-                    <div className="flex items-center gap-3 mt-3 text-xs text-amber-400/90 font-semibold">
+                    <div className="flex items-center gap-3 mt-3 text-xs text-amber-800 font-bold">
                       <span>✓ بيع بالجملة وكراتين</span>
                       <span>✓ تلبية طلبات الشراء</span>
                       <span>✓ قبض فوري بالدينار</span>
@@ -527,7 +526,7 @@ export default function SupplierLandingFunnel() {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-amber-400">
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-amber-700">
                   <span>انقر هنا للمتابعة إلى الخطوة 2 ←</span>
                   <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                 </div>
@@ -535,26 +534,25 @@ export default function SupplierLandingFunnel() {
 
               {/* Option 2: Merchant / Buyer (Disqualified for supplier ads) */}
               <div
-                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative ${
-                  userType === 'merchant'
-                    ? 'border-indigo-500/70 bg-indigo-950/40'
-                    : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
-                }`}
+                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative ${userType === 'merchant'
+                    ? 'border-indigo-300 bg-indigo-50/60 shadow-xs'
+                    : 'border-gray-200 bg-white hover:border-gray-300 shadow-xs'
+                  }`}
               >
-                <div 
+                <div
                   className="flex items-start gap-4 cursor-pointer"
                   onClick={() => handleSelectRole('merchant')}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0 text-indigo-400">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 text-indigo-600">
                     <ShoppingCart size={24} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-base sm:text-lg text-slate-200">
+                      <span className="font-bold text-base sm:text-lg text-gray-800">
                         🛒 أنا تاجر / صاحب محل وأريد شراء سلع
                       </span>
                     </div>
-                    <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mt-1">
+                    <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mt-1">
                       أبحث عن موردين لشراء بضاعة بالكرتونة أو استيراد طلبيتي الخاصة من الصين.
                     </p>
                   </div>
@@ -562,10 +560,10 @@ export default function SupplierLandingFunnel() {
 
                 {/* Conditional Disqualification Message & Merchant Redirect */}
                 {userType === 'merchant' && (
-                  <div className="mt-4 pt-4 border-t border-indigo-900/60 animate-fadeIn">
-                    <div className="p-4 rounded-xl bg-indigo-950/70 border border-indigo-700/50 text-indigo-100 text-xs sm:text-sm leading-relaxed mb-4">
-                      <p className="font-bold text-indigo-300 mb-1 flex items-center gap-1.5">
-                        <Sparkles size={16} className="text-amber-400" />
+                  <div className="mt-4 pt-4 border-t border-indigo-100 animate-fadeIn">
+                    <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs sm:text-sm leading-relaxed mb-4">
+                      <p className="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+                        <Sparkles size={16} className="text-amber-600" />
                         تنويه هام خاص بالتجار:
                       </p>
                       هذه البوابة مخصصة للموردين وأصحاب المخازن فقط. بصفتك تاجراً يبحث عن سلع، يمكنك التسجيل في فضاء التجار وتقديم طلب الشراء الخاص بك ليتنافس الموردون على توفيره لك بأفضل سعر!
@@ -573,7 +571,7 @@ export default function SupplierLandingFunnel() {
 
                     <Link
                       to="/register?role=merchant"
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 transition shadow-lg active:scale-98"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 transition shadow-md active:scale-98"
                     >
                       <ShoppingCart size={18} />
                       <span>الانتقال إلى فضاء التجار والشراء بالجملة 🛒</span>
@@ -587,16 +585,16 @@ export default function SupplierLandingFunnel() {
 
         {/* ── STEP 2: SUPPLIER QUALIFICATION ── */}
         {step === 2 && (
-          <div className="bg-[#0b1733]/90 border border-slate-800/90 rounded-3xl p-5 sm:p-8 backdrop-blur-md shadow-2xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
               <div>
-                <span className="text-xs text-amber-400 font-bold">الخطوة 2 من 3</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white">تأهيل نشاط المورد ومخزون السلع</h2>
+                <span className="text-xs text-amber-600 font-bold">الخطوة 2 من 3</span>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900">تأهيل نشاط المورد ومخزون السلع</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition"
+                className="text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-xs"
               >
                 <ArrowRight size={14} />
                 <span>رجوع للخطوة 1</span>
@@ -606,10 +604,10 @@ export default function SupplierLandingFunnel() {
             <div className="space-y-6">
               {/* Question 1: Inventory Status */}
               <div>
-                <label className="block text-sm sm:text-base font-extrabold text-white mb-2">
-                  1. ما هي حالة البضاعة لديك حالياً؟ <span className="text-amber-400">*</span>
+                <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
+                  1. ما هي حالة البضاعة لديك حالياً؟ <span className="text-amber-500">*</span>
                 </label>
-                <p className="text-slate-400 text-xs mb-3">اختر الخيار الأنسب لنشاطك التجاري الحالي:</p>
+                <p className="text-gray-500 text-xs mb-3">اختر الخيار الأنسب لنشاطك التجاري الحالي:</p>
 
                 <div className="space-y-2.5">
                   {INVENTORY_OPTIONS.map((opt) => {
@@ -619,27 +617,26 @@ export default function SupplierLandingFunnel() {
                       <div
                         key={opt.id}
                         onClick={() => setStockStatus(opt.id)}
-                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                          isSelected
-                            ? 'border-amber-400 bg-amber-400/10 shadow-sm'
-                            : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900/90'
-                        }`}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${isSelected
+                            ? 'border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-400/20'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                          }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-slate-800 text-slate-400'}`}>
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-gray-100 text-gray-500'}`}>
                             <IconComponent size={20} />
                           </div>
                           <div>
-                            <span className="text-xs sm:text-sm font-bold text-slate-100 block">
+                            <span className="text-xs sm:text-sm font-bold text-gray-900 block">
                               {opt.label}
                             </span>
-                            <span className="text-[11px] text-amber-400/90 font-medium">
+                            <span className="text-[11px] text-amber-700 font-semibold">
                               {opt.badge}
                             </span>
                           </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-400 bg-amber-400' : 'border-slate-600'}`}>
-                          {isSelected && <Check size={12} className="text-slate-950 stroke-[3]" />}
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
+                          {isSelected && <Check size={12} className="text-white stroke-[3]" />}
                         </div>
                       </div>
                     );
@@ -649,10 +646,10 @@ export default function SupplierLandingFunnel() {
 
               {/* Question 2: Product Category */}
               <div>
-                <label className="block text-sm sm:text-base font-extrabold text-white mb-2">
-                  2. ما هو المجال الرئيسي لسلعتك؟ <span className="text-amber-400">*</span>
+                <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
+                  2. ما هو المجال الرئيسي لسلعتك؟ <span className="text-amber-500">*</span>
                 </label>
-                <p className="text-slate-400 text-xs mb-3">حدد التخصص التجاري لتلقي طلبات الشراء ذات الصلة فوراً:</p>
+                <p className="text-gray-500 text-xs mb-3">حدد التخصص التجاري لتلقي طلبات الشراء ذات الصلة فوراً:</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {CATEGORY_OPTIONS.map((cat) => {
@@ -662,14 +659,13 @@ export default function SupplierLandingFunnel() {
                         type="button"
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`p-3.5 rounded-xl border-2 text-right transition-all flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer ${
-                          isSelected
-                            ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-sm'
-                            : 'border-slate-800 bg-slate-900/60 text-slate-300 hover:border-slate-700'
-                        }`}
+                        className={`p-3.5 rounded-xl border-2 text-right transition-all flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer ${isSelected
+                            ? 'border-amber-500 bg-amber-500 text-slate-950 shadow-sm font-black'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
                       >
                         <span>{cat}</span>
-                        {isSelected && <Check size={16} className="text-amber-400 shrink-0" />}
+                        {isSelected && <Check size={16} className="text-slate-950 shrink-0" />}
                       </button>
                     );
                   })}
@@ -682,7 +678,7 @@ export default function SupplierLandingFunnel() {
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
                       placeholder="يرجى كتابة نوع البضاعة بالجملة (مثال: ألعاب أطفال، مواد تغليف...)"
-                      className="w-full bg-slate-900 border border-amber-400/60 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-xs"
                     />
                   </div>
                 )}
@@ -692,7 +688,7 @@ export default function SupplierLandingFunnel() {
               <button
                 type="button"
                 onClick={handleProceedToStep3}
-                className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-110 transition shadow-xl flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <span>متابعة إنشاء الحساب الموثق (الخطوة الأخيرة)</span>
                 <ArrowLeft size={18} />
@@ -703,16 +699,16 @@ export default function SupplierLandingFunnel() {
 
         {/* ── STEP 3: REGISTRATION FORM ── */}
         {step === 3 && (
-          <div className="bg-[#0b1733]/90 border border-slate-800/90 rounded-3xl p-5 sm:p-8 backdrop-blur-md shadow-2xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
               <div>
-                <span className="text-xs text-amber-400 font-bold">الخطوة 3 من 3</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white">بيانات حساب المورد المعتمد</h2>
+                <span className="text-xs text-amber-600 font-bold">الخطوة 3 من 3</span>
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900">بيانات حساب المورد المعتمد</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-slate-500 transition"
+                className="text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-xs"
               >
                 <ArrowRight size={14} />
                 <span>تعديل السلعة/المخزون</span>
@@ -720,13 +716,13 @@ export default function SupplierLandingFunnel() {
             </div>
 
             {/* Summary Chip of Qualification */}
-            <div className="mb-6 p-3.5 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-300 font-bold">
-                <BadgeCheck size={16} className="text-amber-400" />
+            <div className="mb-6 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-800 font-bold">
+                <BadgeCheck size={16} className="text-amber-600" />
                 <span>الصفة: مورد ومستورد مؤهل</span>
               </div>
-              <div className="flex items-center gap-3 text-slate-300 font-semibold">
-                <span>السلعة: <b className="text-white">{selectedCategory === 'مجال آخر (جملة)' ? customCategory : selectedCategory}</b></span>
+              <div className="flex items-center gap-3 text-gray-700 font-semibold">
+                <span>السلعة: <b className="text-gray-900">{selectedCategory === 'مجال آخر (جملة)' ? customCategory : selectedCategory}</b></span>
               </div>
             </div>
 
@@ -734,35 +730,35 @@ export default function SupplierLandingFunnel() {
               {/* Name & Company */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                    الاسم واللقب الكامل <span className="text-amber-400">*</span>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                    الاسم واللقب الكامل <span className="text-amber-500">*</span>
                   </label>
                   <div className="relative">
-                    <User size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <User size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="مثال: أمين بلقاسم"
-                      className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-3 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                    اسم الشركة / المحل / المخزن <span className="text-amber-400">*</span>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                    اسم الشركة / المحل / المخزن <span className="text-amber-500">*</span>
                   </label>
                   <div className="relative">
-                    <Building2 size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Building2 size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       required
                       value={formData.company_name}
                       onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                       placeholder="مثال: مؤسسة النور للاستيراد بالجملة"
-                      className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-3 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                     />
                   </div>
                 </div>
@@ -771,11 +767,11 @@ export default function SupplierLandingFunnel() {
               {/* Phone & Email */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                    رقم الهاتف (الجزائر) <span className="text-amber-400">*</span>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                    رقم الهاتف (الجزائر) <span className="text-amber-500">*</span>
                   </label>
                   <div className="relative">
-                    <Phone size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Phone size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="tel"
                       dir="ltr"
@@ -783,20 +779,20 @@ export default function SupplierLandingFunnel() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="05 / 06 / 07 XX XX XX XX"
-                      className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-3 py-3 text-sm text-white text-right placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 font-mono"
+                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-mono shadow-xs"
                     />
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1 block">
+                  <span className="text-[11px] text-gray-500 mt-1 block">
                     يُفضل ربط الرقم بالواتساب للتواصل السريع والتوثيق
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                    البريد الإلكتروني <span className="text-amber-400">*</span>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                    البريد الإلكتروني <span className="text-amber-500">*</span>
                   </label>
                   <div className="relative">
-                    <Mail size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Mail size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="email"
                       dir="ltr"
@@ -804,7 +800,7 @@ export default function SupplierLandingFunnel() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="supplier@example.com"
-                      className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-3 py-3 text-sm text-white text-right placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                     />
                   </div>
                 </div>
@@ -812,29 +808,29 @@ export default function SupplierLandingFunnel() {
 
               {/* Warehouse Address & Location */}
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                  الولاية + البلدية / المنطقة التجارية للمخزن <span className="text-amber-400">*</span>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                  الولاية + البلدية / المنطقة التجارية للمخزن <span className="text-amber-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <MapPin size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     required
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="مثال: العلمة - سطيف، أو الحميز - الدار البيضاء، أو وهران..."
-                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-3 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                    className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">
-                  كلمة المرور للحساب <span className="text-amber-400">*</span>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                  كلمة المرور للحساب <span className="text-amber-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Lock size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -842,12 +838,12 @@ export default function SupplierLandingFunnel() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder="كلمة مرور قوية (6 خانات على الأقل)"
-                    className="w-full bg-slate-900/90 border border-slate-700 rounded-xl pr-10 pl-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                    className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-11 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -859,7 +855,7 @@ export default function SupplierLandingFunnel() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-110 transition shadow-2xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-98"
+                  className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-98"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -875,7 +871,7 @@ export default function SupplierLandingFunnel() {
                 </button>
               </div>
 
-              <p className="text-center text-xs text-slate-400 pt-2">
+              <p className="text-center text-xs text-gray-500 pt-2">
                 بتسجيلك، أنت توافق على شروط وسياسات منصة جيبها للموردين لحماية المعاملات التجارية.
               </p>
             </form>
@@ -884,43 +880,43 @@ export default function SupplierLandingFunnel() {
 
         {/* ── STEP 4: POST-REGISTRATION SUCCESS & ONBOARDING ── */}
         {step === 4 && registeredSupplier && (
-          <div className="bg-[#0b1733]/95 border-2 border-amber-400/60 rounded-3xl p-6 sm:p-10 backdrop-blur-md shadow-[0_0_50px_rgba(251,191,36,0.15)] text-center animate-fadeIn">
-            
+          <div className="bg-white border-2 border-emerald-400 rounded-3xl p-6 sm:p-10 shadow-lg text-center animate-fadeIn">
+
             {/* Success Celebration Badge */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 to-emerald-400 p-1 mx-auto mb-5 shadow-lg">
-              <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-                <ShieldCheck size={42} className="text-amber-400 animate-pulse" />
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-emerald-400 p-1 mx-auto mb-5 shadow-md">
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                <ShieldCheck size={42} className="text-emerald-600 animate-pulse" />
               </div>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
               🎉 تهانينا! تم إنشاء حسابك كمورد بنجاح
             </h2>
-            <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
-              أهلاً بك يا <b className="text-amber-300">{registeredSupplier.name}</b> في شبكة موردي جيبها المعتمدين. حسابك قيد التفعيل الأولي الآن.
+            <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+              أهلاً بك يا <b className="text-amber-700">{registeredSupplier.name}</b> في شبكة موردي جيبها المعتمدين. حسابك قيد التفعيل الأولي الآن.
             </p>
 
             {/* Account Summary Card */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 text-right mb-6 text-xs sm:text-sm space-y-2 max-w-lg mx-auto">
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400">المؤسسة / المخزن:</span>
-                <span className="font-bold text-white">{registeredSupplier.company_name}</span>
+            <div className="bg-slate-50 border border-gray-200 rounded-2xl p-4 sm:p-5 text-right mb-6 text-xs sm:text-sm space-y-2 max-w-lg mx-auto">
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">المؤسسة / المخزن:</span>
+                <span className="font-bold text-gray-900">{registeredSupplier.company_name}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400">تخصص السلعة:</span>
-                <span className="font-bold text-amber-300">{registeredSupplier.category}</span>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">تخصص السلعة:</span>
+                <span className="font-bold text-amber-700">{registeredSupplier.category}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400">حالة البضاعة:</span>
-                <span className="font-semibold text-slate-200">{registeredSupplier.stockStatus}</span>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">حالة البضاعة:</span>
+                <span className="font-semibold text-gray-800">{registeredSupplier.stockStatus}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400">الهاتف المسجل:</span>
-                <span className="font-mono text-slate-200" dir="ltr">{formatPhoneDisplay(registeredSupplier.phone)}</span>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">الهاتف المسجل:</span>
+                <span className="font-mono text-gray-800" dir="ltr">{formatPhoneDisplay(registeredSupplier.phone)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">المنطقة والموقع:</span>
-                <span className="font-medium text-slate-300">{registeredSupplier.address}</span>
+                <span className="text-gray-500">المنطقة والموقع:</span>
+                <span className="font-medium text-gray-700">{registeredSupplier.address}</span>
               </div>
             </div>
 
@@ -931,13 +927,13 @@ export default function SupplierLandingFunnel() {
                 href={getWhatsAppFastTrackUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-4 px-6 rounded-2xl font-black text-base text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-all shadow-xl flex items-center justify-center gap-2 group cursor-pointer hover:scale-[1.02] active:scale-98"
+                className="w-full py-4 px-6 rounded-2xl font-black text-base text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer hover:scale-[1.02] active:scale-98"
               >
                 <WhatsAppIcon size={24} className="text-white group-hover:scale-110 transition-transform" />
                 <span>⚡ توثيق سريع عبر واتساب فريق جيبها</span>
               </a>
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-gray-500">
                 انقر لمراسلة فريق الدعم والتوثيق على واتساب مع رسالة جاهزة لتوثيق مخزنك في دقائق
               </p>
 
@@ -945,7 +941,7 @@ export default function SupplierLandingFunnel() {
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 <Link
                   to="/supplier/verification"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-amber-300 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/40 transition flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <span>رفع وثائق المخزن والشارة</span>
                   <ExternalLink size={14} />
@@ -953,7 +949,7 @@ export default function SupplierLandingFunnel() {
 
                 <Link
                   to="/supplier"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <span>لوحة تحكم المورد</span>
                   <ArrowLeft size={14} />
@@ -966,41 +962,41 @@ export default function SupplierLandingFunnel() {
       </main>
 
       {/* ── 5. SUPPLIER ADVANTAGES / TRUST SIGNALS ── */}
-      <section className="max-w-5xl mx-auto px-4 py-12 border-t border-slate-800/80">
+      <section className="max-w-5xl mx-auto px-4 py-12 border-t border-gray-200">
         <div className="text-center mb-10">
-          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">لماذا منصة جيبها؟</span>
-          <h3 className="text-xl sm:text-3xl font-extrabold text-white mt-1">
+          <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">لماذا منصة جيبها؟</span>
+          <h3 className="text-xl sm:text-3xl font-extrabold text-gray-900 mt-1">
             مميزات حصرية لموردي الجملة ومستوردي الصين
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-400 mb-4">
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mb-4">
               <DollarSign size={24} />
             </div>
-            <h4 className="text-base font-extrabold text-white mb-2">ضمان مالي ودفع بالدينار (Escrow)</h4>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            <h4 className="text-base font-extrabold text-gray-900 mb-2">ضمان مالي ودفع بالدينار (Escrow)</h4>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
               أموالك مضمونة قبل تسليم البضاعة. يدفع التاجر المبلغ إلى حساب الضمان في جيبها، ويتحول إلى حسابك فور استلام الطلبية دون أي تلاعب أو مماطلة.
             </p>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-emerald-400/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400 mb-4">
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-4">
               <TrendingUp size={24} />
             </div>
-            <h4 className="text-base font-extrabold text-white mb-2">طلبات شراء جاهزة يومياً (RFQs)</h4>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            <h4 className="text-base font-extrabold text-gray-900 mb-2">طلبات شراء جاهزة يومياً (RFQs)</h4>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
               آلاف التجار وأصحاب المحلات في 58 ولاية ينشرون يومياً طلبات شراء كميات وكراتين. كل ما عليك هو تقديم عروض أسعارك ومطابقة كمياتك.
             </p>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4">
+          <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 mb-4">
               <ShieldCheck size={24} />
             </div>
-            <h4 className="text-base font-extrabold text-white mb-2">شارة "مورد موثوق" وعلاقات دائمة</h4>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            <h4 className="text-base font-extrabold text-gray-900 mb-2">شارة "مورد موثوق" وعلاقات دائمة</h4>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
               نوثق مخزنك وسجلك التجاري لنمنحك شارة التوثيق الذهبية، مما يرفع ثقة التجار فيك وتصدرك لقائمة أفضل الموردين المعتمدين في الجزائر.
             </p>
           </div>
@@ -1010,8 +1006,8 @@ export default function SupplierLandingFunnel() {
       {/* ── 6. SUPPLIER FAQ ── */}
       <section className="max-w-3xl mx-auto px-4 pb-16">
         <div className="text-center mb-8">
-          <h3 className="text-lg sm:text-2xl font-black text-white">الأسئلة الشائعة للموردين والمستوردين</h3>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">كل ما تحتاج لمعرفته قبل الانضمام</p>
+          <h3 className="text-lg sm:text-2xl font-black text-gray-900">الأسئلة الشائعة للموردين والمستوردين</h3>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">كل ما تحتاج لمعرفته قبل الانضمام</p>
         </div>
 
         <div className="space-y-3">
@@ -1033,20 +1029,20 @@ export default function SupplierLandingFunnel() {
               a: 'يشترط تقديم صور حقيقية للمخزن أو مقر النشاط، رقم هاتف شغال على واتساب، والالتزام بميثاق جودة الشحن والمصداقية مع التجار.'
             }
           ].map((item, idx) => (
-            <div 
+            <div
               key={idx}
-              className="border border-slate-800 bg-slate-900/50 rounded-2xl overflow-hidden transition"
+              className="border border-gray-200 bg-white rounded-2xl overflow-hidden transition shadow-xs"
             >
               <button
                 type="button"
                 onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                className="w-full p-4 text-right flex items-center justify-between text-xs sm:text-sm font-bold text-slate-200 hover:text-white"
+                className="w-full p-4 text-right flex items-center justify-between text-xs sm:text-sm font-bold text-gray-800 hover:text-gray-950 cursor-pointer"
               >
                 <span>{item.q}</span>
-                {activeFaq === idx ? <ChevronUp size={16} className="text-amber-400" /> : <ChevronDown size={16} className="text-slate-500" />}
+                {activeFaq === idx ? <ChevronUp size={16} className="text-amber-600" /> : <ChevronDown size={16} className="text-gray-400" />}
               </button>
               {activeFaq === idx && (
-                <div className="px-4 pb-4 text-xs sm:text-sm text-slate-400 border-t border-slate-800/80 pt-3 leading-relaxed">
+                <div className="px-4 pb-4 text-xs sm:text-sm text-gray-600 border-t border-gray-100 pt-3 leading-relaxed bg-slate-50/50">
                   {item.a}
                 </div>
               )}
@@ -1056,15 +1052,15 @@ export default function SupplierLandingFunnel() {
       </section>
 
       {/* ── 7. FOOTER ── */}
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-gray-200 py-6 text-center text-xs text-gray-500 bg-white">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
             © {new Date().getFullYear()} منصة جيبها (jiibha.com) - جميع الحقوق محفوظة لشبكة التجارة والاستيراد.
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <Link to="/" className="hover:text-amber-400 transition">الرئيسية</Link>
-            <Link to="/login" className="hover:text-amber-400 transition">تسجيل الدخول</Link>
-            <Link to="/register?role=merchant" className="hover:text-amber-400 transition">فضاء التجار</Link>
+          <div className="flex items-center gap-4 text-gray-600">
+            <Link to="/" className="hover:text-amber-600 transition">الرئيسية</Link>
+            <Link to="/login" className="hover:text-amber-600 transition">تسجيل الدخول</Link>
+            <Link to="/register?role=merchant" className="hover:text-amber-600 transition">فضاء التجار</Link>
           </div>
         </div>
       </footer>

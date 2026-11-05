@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
-  CheckCircle2,
   AlertTriangle,
   Boxes,
   Warehouse,
@@ -380,17 +379,17 @@ export default function SupplierLandingFunnel() {
       </div>
 
       {/* ── 2. NAVBAR ── */}
-      <header className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition">
           <img
             src="/header-logo.png"
             alt="جيبها - Jiibha"
-            className="h-9 sm:h-11 w-auto object-contain"
+            className="h-8 sm:h-11 w-auto object-contain"
           />
         </Link>
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-            <Sparkles size={13} className="text-amber-500" />
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            <Sparkles size={13} className="text-amber-600" />
             بوابة الموردين والمستوردين
           </span>
           <Link
@@ -402,199 +401,198 @@ export default function SupplierLandingFunnel() {
         </div>
       </header>
 
-      {/* ── 3. HERO SECTION ── */}
-      <section className="max-w-4xl mx-auto px-4 pt-6 pb-8 text-center">
-        {/* Quality Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 via-amber-400/15 to-amber-500/10 border border-amber-300 text-amber-800 text-xs sm:text-sm font-bold mb-4 shadow-xs">
-          <BadgeCheck size={16} className="text-amber-600" />
-          <span>فرصة استثنائية لموردي الجملة ومستوردي الصين في الجزائر</span>
+      {/* ── 3. HERO SECTION (Decluttered & Action-Oriented) ── */}
+      <section className="max-w-3xl mx-auto px-4 pt-3 pb-5 text-center">
+        {/* Micro Quality Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-xs sm:text-sm font-bold mb-3 shadow-xs">
+          <BadgeCheck size={16} className="text-amber-600 shrink-0" />
+          <span>فرصة حصرية للمستوردين ومخازن الجملة في الجزائر</span>
         </div>
 
         {/* Main H1 Headline */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight sm:leading-snug tracking-tight mb-4">
-          عندك سلعة في المخزن أو تشحن من الصين؟ <br className="hidden sm:inline" />
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-950 leading-tight tracking-tight mb-3">
+          عندك بضاعة بالجملة أو تشحن من الصين؟ <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-700 to-amber-600">
-            بيع بالجملة لآلاف التجار في الجزائر
+            بيع لآلاف التجار في الجزائر
           </span>{' '}
-          وادفع واستلم بالدينار الجزائري!
+          وادفع واستلم بالدينار (DZD) بأمان!
         </h1>
 
-        {/* Sub-headline */}
-        <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-6 font-medium">
-          سجّل حسابك كمورد معتمد في جيبها، وثّق حسابك مجاناً، واطّلع يومياً على طلبات الشراء الجاهزة (RFQs) من التجار لتقدم عروض أسعارك وتربح بأمان مع نظام الضمان (Escrow).
-        </p>
-
-        {/* Trust Badges Bar */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 max-w-3xl mx-auto">
-          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-            <span>طلبات شراء جملة يومية جاهزة</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-amber-600 shrink-0" />
-            <span>شارة "مورد موثوق" لرفع مبيعاتك</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-200/90 text-gray-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-xs">
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-            <span>حماية مالية ودفع مضمون بالدينار (DZD)</span>
-          </div>
+        {/* Direct Arrow Pointer to Registration Form */}
+        <div className="inline-flex items-center gap-2 bg-white border border-amber-300 text-amber-950 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold shadow-xs">
+          <span className="flex h-2.5 w-2.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span>التسجيل مجاني وفوري عبر الاستمارة المحددة أدناه — ابدأ باختيار صفتك 👇</span>
         </div>
       </section>
 
-      {/* ── 4. FUNNEL CONTAINER ── */}
-      <main className="max-w-3xl mx-auto px-4 pb-16">
+      {/* ── 4. REGISTRATION ACTION ZONE (منطقة التسجيل البارزة للموردين) ── */}
+      <main className="max-w-3xl mx-auto px-4 pb-8">
+        {step < 4 ? (
+          <div className="bg-white border-2 sm:border-3 border-amber-500 rounded-3xl shadow-xl overflow-hidden ring-4 ring-amber-400/15">
 
-        {/* Multi-Step Progress Indicator (Shown during steps 1, 2, 3) */}
-        {step < 4 && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm">
-            <div className="flex items-center justify-between mb-3 text-xs sm:text-sm font-bold">
-              <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-700' : 'text-gray-400'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>1</span>
-                <span>تحديد الصفة</span>
+          {/* Action Zone Header Banner */}
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 sm:px-6 py-3.5 flex items-center justify-between border-b border-amber-500/50">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="flex h-3 w-3 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
-              <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-700' : 'text-gray-400'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>2</span>
-                <span>تأهيل المخزون</span>
-              </span>
-              <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-700' : 'text-gray-400'}`}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}>3</span>
-                <span>إنشاء الحساب</span>
+              <span className="font-black text-sm sm:text-base text-amber-400">
+                استمارة تسجيل الموردين والمستوردين (ابدأ من هنا 👇)
               </span>
             </div>
-
-            {/* Progress bar track */}
-            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-amber-400 to-amber-500 h-full transition-all duration-500 ease-out rounded-full"
-                style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
-              />
-            </div>
+            {step < 4 && (
+              <span className="text-xs bg-amber-400/20 text-amber-300 font-extrabold px-3 py-1 rounded-full border border-amber-400/30">
+                الخطوة {step} من 3
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Global Error Banner */}
-        {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3 animate-shake shadow-xs">
-            <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
-            <div className="flex-1 font-semibold">{errorMessage}</div>
-          </div>
-        )}
-
-        {/* ── STEP 1: THE GATEKEEPER QUESTION ── */}
-        {step === 1 && (
-          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
-            <div className="text-center mb-6">
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">
-                ما هي صفتك التجارية الحالية؟ (اختر للمتابعة)
-              </h2>
-              <p className="text-gray-500 text-xs sm:text-sm">
-                الرجاء الاختيار بدقة حتى نوجهك للمسار الصحيح ونمنحك الامتيازات المناسبة لنشاطك
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {/* Option 1: Qualified Supplier */}
-              <button
-                type="button"
-                onClick={() => handleSelectRole('supplier')}
-                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative group cursor-pointer ${userType === 'supplier'
-                    ? 'border-amber-500 bg-amber-50/70 shadow-md ring-2 ring-amber-400/20'
-                    : 'border-gray-200 bg-white hover:border-amber-400 hover:bg-amber-50/20 shadow-xs'
-                  }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-700 group-hover:scale-105 transition-transform">
-                    <Boxes size={26} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-extrabold text-base sm:text-lg text-gray-900">
-                        📦 أنا مستورد من الصين / صاحب مخزن جملة (Dépôt)
-                      </span>
-                      <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-bold border border-amber-300">
-                        مؤهل للموردين
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mt-1">
-                      لدي سلع وبضاعة جاهزة لبيعها بالجملة للتجار، أو أشحن كونتينرات وطرود DDP بانتظام.
-                    </p>
-                    <div className="flex items-center gap-3 mt-3 text-xs text-amber-800 font-bold">
-                      <span>✓ بيع بالجملة وكراتين</span>
-                      <span>✓ تلبية طلبات الشراء</span>
-                      <span>✓ قبض فوري بالدينار</span>
-                    </div>
-                  </div>
+          <div className="p-4 sm:p-7">
+            {/* Multi-Step Progress Indicator (Shown during steps 1, 2, 3) */}
+            {step < 4 && (
+              <div className="bg-slate-50 border border-gray-200 rounded-2xl p-3 sm:p-4 mb-6 shadow-xs">
+                <div className="flex items-center justify-between mb-2.5 text-xs sm:text-sm font-bold">
+                  <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>1</span>
+                    <span>تحديد صفتك</span>
+                  </span>
+                  <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>2</span>
+                    <span>تأهيل المخزون</span>
+                  </span>
+                  <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>3</span>
+                    <span>بيانات الحساب</span>
+                  </span>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-amber-700">
-                  <span>انقر هنا للمتابعة إلى الخطوة 2 ←</span>
-                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                {/* Progress bar track */}
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-amber-400 to-amber-500 h-full transition-all duration-500 ease-out rounded-full"
+                    style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
+                  />
                 </div>
-              </button>
-
-              {/* Option 2: Merchant / Buyer (Disqualified for supplier ads) */}
-              <div
-                className={`w-full text-right p-5 rounded-2xl border-2 transition-all duration-300 relative ${userType === 'merchant'
-                    ? 'border-indigo-300 bg-indigo-50/60 shadow-xs'
-                    : 'border-gray-200 bg-white hover:border-gray-300 shadow-xs'
-                  }`}
-              >
-                <div
-                  className="flex items-start gap-4 cursor-pointer"
-                  onClick={() => handleSelectRole('merchant')}
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 text-indigo-600">
-                    <ShoppingCart size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-base sm:text-lg text-gray-800">
-                        🛒 أنا تاجر / صاحب محل وأريد شراء سلع
-                      </span>
-                    </div>
-                    <p className="text-gray-500 text-xs sm:text-sm leading-relaxed mt-1">
-                      أبحث عن موردين لشراء بضاعة بالكرتونة أو استيراد طلبيتي الخاصة من الصين.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Conditional Disqualification Message & Merchant Redirect */}
-                {userType === 'merchant' && (
-                  <div className="mt-4 pt-4 border-t border-indigo-100 animate-fadeIn">
-                    <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs sm:text-sm leading-relaxed mb-4">
-                      <p className="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
-                        <Sparkles size={16} className="text-amber-600" />
-                        تنويه هام خاص بالتجار:
-                      </p>
-                      هذه البوابة مخصصة للموردين وأصحاب المخازن فقط. بصفتك تاجراً يبحث عن سلع، يمكنك التسجيل في فضاء التجار وتقديم طلب الشراء الخاص بك ليتنافس الموردون على توفيره لك بأفضل سعر!
-                    </div>
-
-                    <Link
-                      to="/register?role=merchant"
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-sm text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 transition shadow-md active:scale-98"
-                    >
-                      <ShoppingCart size={18} />
-                      <span>الانتقال إلى فضاء التجار والشراء بالجملة 🛒</span>
-                    </Link>
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
-        )}
+            )}
+
+            {/* Global Error Banner */}
+            {errorMessage && (
+              <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-3 animate-shake shadow-xs">
+                <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
+                <div className="flex-1 font-bold">{errorMessage}</div>
+              </div>
+            )}
+
+            {/* ── STEP 1: THE GATEKEEPER QUESTION (CLEAR & UNAMBIGUOUS) ── */}
+            {step === 1 && (
+              <div>
+                <div className="text-center mb-5">
+                  <h2 className="text-lg sm:text-xl font-black text-gray-900 mb-1">
+                    ما هي صفتك التجارية الحالية؟ (اختر للمتابعة)
+                  </h2>
+                  <p className="text-gray-500 text-xs sm:text-sm">
+                    اضغط على الزر الذهبي أدناه إذا كنت مورداً أو صاحب مخزن لبدء التسجيل فوراً:
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Option 1: Qualified Supplier (PRIMARY PROMINENT ACTION CARD) */}
+                  <div
+                    onClick={() => handleSelectRole('supplier')}
+                    className="w-full text-right p-5 sm:p-6 rounded-2xl border-2 sm:border-3 border-amber-500 bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-orange-50/50 hover:bg-amber-100/70 transition-all duration-200 shadow-md cursor-pointer hover:shadow-lg relative group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                        <Boxes size={26} className="stroke-[2.5]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                          <span className="font-black text-base sm:text-lg text-slate-950">
+                            📦 أنا مستورد من الصين / صاحب مخزن جملة (Dépôt)
+                          </span>
+                          <span className="text-xs bg-emerald-500 text-white px-2.5 py-0.5 rounded-full font-black shadow-xs">
+                            ✓ الخيار الصحيح للموردين
+                          </span>
+                        </div>
+                        <p className="text-gray-700 text-xs sm:text-sm leading-relaxed mb-4 font-medium">
+                          لدي بضاعة وسلع متوفرة لبيعها بالجملة للتجار، أو أشحن كونتينرات وطرود DDP من الصين.
+                        </p>
+
+                        {/* Obvious Primary Button inside the card */}
+                        <button
+                          type="button"
+                          className="w-full py-3 px-4 rounded-xl font-black text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.01]"
+                        >
+                          <span>👉 اضغط هنا للبدء في تسجيل حساب المورد (متابعة)</span>
+                          <ArrowLeft size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Option 2: Merchant / Buyer (SECONDARY MUTED CARD) */}
+                  <div className="w-full text-right p-4 sm:p-5 rounded-2xl border border-gray-200 bg-gray-50/80 hover:bg-gray-100/80 transition-all duration-200 shadow-xs">
+                    <div
+                      className="flex items-start gap-3.5 cursor-pointer"
+                      onClick={() => handleSelectRole('merchant')}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-gray-200 text-gray-600 flex items-center justify-center shrink-0">
+                        <ShoppingCart size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-sm sm:text-base text-gray-700">
+                            🛒 لست مورداً (أنا تاجر / صاحب محل وأريد شراء سلعة)
+                          </span>
+                        </div>
+                        <p className="text-gray-500 text-xs leading-relaxed">
+                          أبحث عن موردين لشراء بضاعة بالكرتونة أو استيراد طلبيتي الخاصة من الصين.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Conditional Disqualification Message & Merchant Redirect */}
+                    {userType === 'merchant' && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 animate-fadeIn">
+                        <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs leading-relaxed mb-3">
+                          <p className="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+                            <Sparkles size={15} className="text-amber-600" />
+                            تنويه خاص بالتجار وأصحاب المحلات:
+                          </p>
+                          هذه البوابة مخصصة للموردين وأصحاب المخازن فقط. بصفتك تاجراً يبحث عن سلع، يمكنك التسجيل في فضاء التجار وتقديم طلب الشراء الخاص بك ليتنافس الموردون على توفيره لك بأفضل سعر!
+                        </div>
+
+                        <Link
+                          to="/register?role=merchant"
+                          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm active:scale-98"
+                        >
+                          <ShoppingCart size={16} />
+                          <span>الانتقال إلى فضاء التجار والشراء بالجملة ↗</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
         {/* ── STEP 2: SUPPLIER QUALIFICATION ── */}
         {step === 2 && (
-          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div>
-                <span className="text-xs text-amber-600 font-bold">الخطوة 2 من 3</span>
-                <h2 className="text-xl sm:text-2xl font-black text-gray-900">تأهيل نشاط المورد ومخزون السلع</h2>
+                <span className="text-xs text-amber-600 font-extrabold">الخطوة 2 من 3</span>
+                <h2 className="text-lg sm:text-2xl font-black text-gray-900">تأهيل نشاط المورد ومخزون السلع</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-xs"
+                className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
               >
                 <ArrowRight size={14} />
                 <span>رجوع للخطوة 1</span>
@@ -690,8 +688,7 @@ export default function SupplierLandingFunnel() {
                 onClick={handleProceedToStep3}
                 className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
-                <span>متابعة إنشاء الحساب الموثق (الخطوة الأخيرة)</span>
-                <ArrowLeft size={18} />
+                <span>متابعة إنشاء الحساب الموثق (الخطوة الأخيرة) ←</span>
               </button>
             </div>
           </div>
@@ -699,16 +696,16 @@ export default function SupplierLandingFunnel() {
 
         {/* ── STEP 3: REGISTRATION FORM ── */}
         {step === 3 && (
-          <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div>
-                <span className="text-xs text-amber-600 font-bold">الخطوة 3 من 3</span>
-                <h2 className="text-xl sm:text-2xl font-black text-gray-900">بيانات حساب المورد المعتمد</h2>
+                <span className="text-xs text-amber-600 font-extrabold">الخطوة 3 من 3 (النهائية)</span>
+                <h2 className="text-lg sm:text-2xl font-black text-gray-900">بيانات حساب المورد المعتمد</h2>
               </div>
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-xs"
+                className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
               >
                 <ArrowRight size={14} />
                 <span>تعديل السلعة/المخزون</span>
@@ -716,7 +713,7 @@ export default function SupplierLandingFunnel() {
             </div>
 
             {/* Summary Chip of Qualification */}
-            <div className="mb-6 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 text-amber-800 font-bold">
                 <BadgeCheck size={16} className="text-amber-600" />
                 <span>الصفة: مورد ومستورد مؤهل</span>
@@ -878,91 +875,111 @@ export default function SupplierLandingFunnel() {
           </div>
         )}
 
-        {/* ── STEP 4: POST-REGISTRATION SUCCESS & ONBOARDING ── */}
-        {step === 4 && registeredSupplier && (
-          <div className="bg-white border-2 border-emerald-400 rounded-3xl p-6 sm:p-10 shadow-lg text-center animate-fadeIn">
-
-            {/* Success Celebration Badge */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-emerald-400 p-1 mx-auto mb-5 shadow-md">
-              <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                <ShieldCheck size={42} className="text-emerald-600 animate-pulse" />
-              </div>
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
-              🎉 تهانينا! تم إنشاء حسابك كمورد بنجاح
-            </h2>
-            <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
-              أهلاً بك يا <b className="text-amber-700">{registeredSupplier.name}</b> في شبكة موردي جيبها المعتمدين. حسابك قيد التفعيل الأولي الآن.
-            </p>
-
-            {/* Account Summary Card */}
-            <div className="bg-slate-50 border border-gray-200 rounded-2xl p-4 sm:p-5 text-right mb-6 text-xs sm:text-sm space-y-2 max-w-lg mx-auto">
-              <div className="flex justify-between border-b border-gray-200 pb-2">
-                <span className="text-gray-500">المؤسسة / المخزن:</span>
-                <span className="font-bold text-gray-900">{registeredSupplier.company_name}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-200 pb-2">
-                <span className="text-gray-500">تخصص السلعة:</span>
-                <span className="font-bold text-amber-700">{registeredSupplier.category}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-200 pb-2">
-                <span className="text-gray-500">حالة البضاعة:</span>
-                <span className="font-semibold text-gray-800">{registeredSupplier.stockStatus}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-200 pb-2">
-                <span className="text-gray-500">الهاتف المسجل:</span>
-                <span className="font-mono text-gray-800" dir="ltr">{formatPhoneDisplay(registeredSupplier.phone)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">المنطقة والموقع:</span>
-                <span className="font-medium text-gray-700">{registeredSupplier.address}</span>
-              </div>
-            </div>
-
-            {/* Fast-Track Actions */}
-            <div className="space-y-3 max-w-lg mx-auto">
-              {/* PRIMARY ACTION: WhatsApp Fast-Track */}
-              <a
-                href={getWhatsAppFastTrackUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-4 px-6 rounded-2xl font-black text-base text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer hover:scale-[1.02] active:scale-98"
-              >
-                <WhatsAppIcon size={24} className="text-white group-hover:scale-110 transition-transform" />
-                <span>⚡ توثيق سريع عبر واتساب فريق جيبها</span>
-              </a>
-
-              <p className="text-[11px] text-gray-500">
-                انقر لمراسلة فريق الدعم والتوثيق على واتساب مع رسالة جاهزة لتوثيق مخزنك في دقائق
-              </p>
-
-              {/* SECONDARY ACTION: Portal & Document Upload */}
-              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-                <Link
-                  to="/supplier/verification"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <span>رفع وثائق المخزن والشارة</span>
-                  <ExternalLink size={14} />
-                </Link>
-
-                <Link
-                  to="/supplier"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition flex items-center justify-center gap-1.5 shadow-xs"
-                >
-                  <span>لوحة تحكم المورد</span>
-                  <ArrowLeft size={14} />
-                </Link>
-              </div>
             </div>
           </div>
+        ) : (
+          /* ── STEP 4: POST-REGISTRATION SUCCESS & ONBOARDING ── */
+          registeredSupplier && (
+            <div className="bg-white border-2 border-emerald-400 rounded-3xl p-6 sm:p-10 shadow-lg text-center animate-fadeIn">
+
+              {/* Success Celebration Badge */}
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-emerald-400 p-1 mx-auto mb-5 shadow-md">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                  <ShieldCheck size={42} className="text-emerald-600 animate-pulse" />
+                </div>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+                🎉 تهانينا! تم إنشاء حسابك كمورد بنجاح
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+                أهلاً بك يا <b className="text-amber-700">{registeredSupplier.name}</b> في شبكة موردي جيبها المعتمدين. حسابك قيد التفعيل الأولي الآن.
+              </p>
+
+              {/* Account Summary Card */}
+              <div className="bg-slate-50 border border-gray-200 rounded-2xl p-4 sm:p-5 text-right mb-6 text-xs sm:text-sm space-y-2 max-w-lg mx-auto">
+                <div className="flex justify-between border-b border-gray-200 pb-2">
+                  <span className="text-gray-500">المؤسسة / المخزن:</span>
+                  <span className="font-bold text-gray-900">{registeredSupplier.company_name}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-2">
+                  <span className="text-gray-500">تخصص السلعة:</span>
+                  <span className="font-bold text-amber-700">{registeredSupplier.category}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-2">
+                  <span className="text-gray-500">حالة البضاعة:</span>
+                  <span className="font-semibold text-gray-800">{registeredSupplier.stockStatus}</span>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-2">
+                  <span className="text-gray-500">الهاتف المسجل:</span>
+                  <span className="font-mono text-gray-800" dir="ltr">{formatPhoneDisplay(registeredSupplier.phone)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">المنطقة والموقع:</span>
+                  <span className="font-medium text-gray-700">{registeredSupplier.address}</span>
+                </div>
+              </div>
+
+              {/* Fast-Track Actions */}
+              <div className="space-y-3 max-w-lg mx-auto">
+                {/* PRIMARY ACTION: WhatsApp Fast-Track */}
+                <a
+                  href={getWhatsAppFastTrackUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 px-6 rounded-2xl font-black text-base text-white bg-[#25D366] hover:bg-[#1ebd5a] transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer hover:scale-[1.02] active:scale-98"
+                >
+                  <WhatsAppIcon size={24} className="text-white group-hover:scale-110 transition-transform" />
+                  <span>⚡ توثيق سريع عبر واتساب فريق جيبها</span>
+                </a>
+
+                <p className="text-[11px] text-gray-500">
+                  انقر لمراسلة فريق الدعم والتوثيق على واتساب مع رسالة جاهزة لتوثيق مخزنك في دقائق
+                </p>
+
+                {/* SECONDARY ACTION: Portal & Document Upload */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                  <Link
+                    to="/supplier/verification"
+                    className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <span>رفع وثائق المخزن والشارة</span>
+                    <ExternalLink size={14} />
+                  </Link>
+
+                  <Link
+                    to="/supplier"
+                    className="flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <span>لوحة تحكم المورد</span>
+                    <ArrowLeft size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )
         )}
 
       </main>
 
-      {/* ── 5. SUPPLIER ADVANTAGES / TRUST SIGNALS ── */}
-      <section className="max-w-5xl mx-auto px-4 py-12 border-t border-gray-200">
+      {/* ── 5. EXPLICIT VISUAL SEPARATOR (Distinguishing Registration Form vs Reading Materials) ── */}
+      <div className="max-w-4xl mx-auto px-4 my-8 text-center">
+        <div className="relative flex items-center justify-center">
+          <div className="w-full border-t-2 border-dashed border-gray-300" />
+          <div className="absolute bg-slate-50 px-4">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-200/90 border border-slate-300 text-slate-700 text-xs sm:text-sm font-bold shadow-xs">
+              <Sparkles size={14} className="text-amber-600" />
+              <span>معلومات ومميزات المنصة (للاطلاع والقراءة فقط 📖)</span>
+            </span>
+          </div>
+        </div>
+        <p className="text-gray-500 text-xs mt-3 font-semibold">
+          التسجيل الفوري للموردين يتم حصراً عبر الاستمارة بالأعلى ☝️
+        </p>
+      </div>
+
+      {/* ── 6. SUPPLIER ADVANTAGES / TRUST SIGNALS ── */}
+      <section className="max-w-5xl mx-auto px-4 py-6">
         <div className="text-center mb-10">
           <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">لماذا منصة جيبها؟</span>
           <h3 className="text-xl sm:text-3xl font-extrabold text-gray-900 mt-1">

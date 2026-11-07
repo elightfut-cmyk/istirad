@@ -70,10 +70,21 @@ export default function TenderOnboardingPage() {
   const [imagePreview, setImagePreview] = useState('');
 
   // Step 2 Form Data
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [wilaya, setWilaya] = useState('16 - الجزائر');
+  const [fullName, setFullName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [wilaya, setWilaya] = useState(user?.address || '16 - الجزائر');
   const [password, setPassword] = useState('');
+
+  // Sync user profile into form if already authenticated
+  useEffect(() => {
+    if (user) {
+      if (user.name && !fullName) setFullName(user.name);
+      if (user.email && !email) setEmail(user.email);
+      if (user.phone && !phone) setPhone(user.phone);
+      if (user.address && wilaya === '16 - الجزائر') setWilaya(user.address);
+    }
+  }, [user]);
 
   // Ref guard to prevent duplicate firing of Step 1 Meta Pixel event
   const hasFiredStep1Pixel = useRef(false);
@@ -95,6 +106,10 @@ export default function TenderOnboardingPage() {
           setProductImageUrl(parsed.productImageUrl);
           setImagePreview(parsed.productImageUrl);
         }
+        if (parsed.fullName) setFullName(parsed.fullName);
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.phone) setPhone(parsed.phone);
+        if (parsed.wilaya) setWilaya(parsed.wilaya);
       }
     } catch (e) {
       console.warn('Could not restore draft tender:', e);
@@ -111,6 +126,10 @@ export default function TenderOnboardingPage() {
         shippingPreference,
         productNotes,
         productImageUrl,
+        fullName,
+        email,
+        phone,
+        wilaya,
       };
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
     } catch (e) {
@@ -204,6 +223,11 @@ export default function TenderOnboardingPage() {
     return /^(05|06|07)[0-9]{8}$/.test(clean);
   };
 
+  // Validate Email format
+  const validateEmail = (val: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  };
+
   // Submit Step 2 (Register Merchant + Publish Tender)
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,13 +238,19 @@ export default function TenderOnboardingPage() {
       return;
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !validateEmail(cleanEmail)) {
+      setErrorMsg('يرجى إدخال بريد إلكتروني صحيح (مثال: name@example.com) لتسجيل الدخول إلى حسابك.');
+      return;
+    }
+
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     if (!validateAlgerianPhone(cleanPhone)) {
       setErrorMsg('يرجى إدخال رقم هاتف جزائري صحيح يبدأ بـ 05 أو 06 أو 07 ويتكون من 10 أرقام.');
       return;
     }
 
-    if (!password || password.length < 6) {
+    if (!user && (!password || password.length < 6)) {
       setErrorMsg('كلمة المرور يجب أن تتكون من 6 أحرف أو أرقام على الأقل لحماية حسابك.');
       return;
     }
@@ -228,7 +258,6 @@ export default function TenderOnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      const syntheticEmail = `${cleanPhone}@merchant.jiibha.com`;
       const effectiveQtyTier = customQtyMode ? `${customQuantity.trim()} قطعة` : quantityTier;
       let effectiveQty = 100;
       if (customQtyMode) {
@@ -245,14 +274,15 @@ export default function TenderOnboardingPage() {
 
       let activeUserId = user?.id;
 
-      // 1. If not logged in, Sign Up or Sign In with Phone synthetic email
+      // 1. If not logged in, Sign Up or Sign In with Email + Password
       if (!activeUserId) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: syntheticEmail,
+          email: cleanEmail,
           password: password,
           options: {
             data: {
               name: fullName.trim(),
+              email: cleanEmail,
               phone: cleanPhone,
               company_name: fullName.trim(),
               address: wilaya,
@@ -263,15 +293,15 @@ export default function TenderOnboardingPage() {
         });
 
         if (signUpError) {
-          // If already registered with this phone, attempt sign-in
+          // If already registered with this email, attempt sign-in
           if (signUpError.message?.toLowerCase().includes('already registered')) {
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email: syntheticEmail,
+              email: cleanEmail,
               password: password,
             });
 
             if (signInError) {
-              throw new Error('رقم الهاتف مسجل بالفعل مسبقاً، وكلمة المرور المدخلة غير متطابقة. يرجى تسجيل الدخول أو إدخال كلمة المرور الصحيحة.');
+              throw new Error('هذا البريد الإلكتروني مسجل بالفعل لدينا مسبقاً. إذا كان هذا حسابك، يرجى كتابة كلمة المرور الصحيحة أو التوجه لتسجيل الدخول.');
             }
 
             activeUserId = signInData.user?.id;
@@ -282,8 +312,38 @@ export default function TenderOnboardingPage() {
           activeUserId = signUpData.user?.id;
         }
 
-        // Fetch or hydrate user in store
+        // Ensure active session if signUp didn't immediately create one
+        if (activeUserId && !signUpData?.session) {
+          try {
+            const { data: signInAfterSignUp } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password: password,
+            });
+            if (signInAfterSignUp?.user?.id) {
+              activeUserId = signInAfterSignUp.user.id;
+            }
+          } catch (e) {
+            console.warn('Session sign in notice:', e);
+          }
+        }
+
+        // Sync to public.users table to guarantee all profile fields are saved
         if (activeUserId) {
+          try {
+            await supabase.from('users').update({
+              name: fullName.trim(),
+              email: cleanEmail,
+              phone: cleanPhone,
+              company_name: fullName.trim(),
+              address: wilaya,
+              role: 'merchant',
+              status: 'active',
+            }).eq('id', activeUserId);
+          } catch (uErr) {
+            console.warn('Profile sync note:', uErr);
+          }
+
+          // Fetch and hydrate user in auth store
           const { data: profile } = await supabase
             .from('users')
             .select('*')
@@ -293,6 +353,17 @@ export default function TenderOnboardingPage() {
           if (profile) {
             setUser(profile as User);
           }
+        }
+      } else if (user) {
+        // If already logged in, keep profile updated with phone/wilaya
+        try {
+          await supabase.from('users').update({
+            name: fullName.trim(),
+            phone: cleanPhone,
+            address: wilaya,
+          }).eq('id', activeUserId);
+        } catch (uErr) {
+          console.warn('User profile update note:', uErr);
         }
       }
 
@@ -778,7 +849,7 @@ export default function TenderOnboardingPage() {
                     </p>
                   </div>
 
-                  {/* Minimal 4 Fields */}
+                  {/* Step 2 Input Fields */}
                   <div className="space-y-4">
 
                     {/* Field 1: fullName */}
@@ -796,10 +867,32 @@ export default function TenderOnboardingPage() {
                       />
                     </div>
 
-                    {/* Field 2: phone (WhatsApp) */}
+                    {/* Field 2: email */}
                     <div className="space-y-1.5">
                       <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
-                        رقم الهاتف (واتساب) لاستلام إشعارات العروض <span className="text-red-500">*</span>
+                        البريد الإلكتروني (لتسجيل الدخول إلى حسابك) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errorMsg) setErrorMsg('');
+                        }}
+                        placeholder="name@example.com"
+                        className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 outline-none transition text-sm text-gray-800 placeholder-gray-400 text-left font-mono"
+                        dir="ltr"
+                      />
+                      <p className="text-[11px] text-gray-400">
+                        ستستخدم هذا البريد الإلكتروني مع كلمة المرور لتسجيل الدخول ومتابعة مناقصاتك
+                      </p>
+                    </div>
+
+                    {/* Field 3: phone (WhatsApp) */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
+                        رقم الهاتف / واتساب لاستلام إشعارات العروض <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="tel"
@@ -818,7 +911,7 @@ export default function TenderOnboardingPage() {
                       </p>
                     </div>
 
-                    {/* Field 3: wilaya */}
+                    {/* Field 4: wilaya */}
                     <div className="space-y-1.5">
                       <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
                         الولاية التي يتواجد بها مخزنك أو متجرك <span className="text-red-500">*</span>
@@ -836,7 +929,7 @@ export default function TenderOnboardingPage() {
                       </select>
                     </div>
 
-                    {/* Field 4: password */}
+                    {/* Field 5: password */}
                     <div className="space-y-1.5">
                       <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
                         كلمة المرور لحسابك <span className="text-red-500">*</span>
@@ -941,10 +1034,22 @@ export default function TenderOnboardingPage() {
                       <span className="text-gray-500">طريقة الشحن:</span>
                       <span className="font-bold text-gray-900">شحن جوي سريع ✈️ (DDP)</span>
                     </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                      <span className="text-gray-500">البريد الإلكتروني للحساب:</span>
+                      <span className="font-bold font-mono text-[#5818B8] dir-ltr">{email.trim().toLowerCase()}</span>
+                    </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-500">إشعارات الواتساب على:</span>
                       <span className="font-bold font-mono text-[#5818B8]">{phone}</span>
                     </div>
+                  </div>
+
+                  {/* Account Login Credentials Alert */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 text-right flex items-center gap-2.5">
+                    <span className="text-base shrink-0">🔐</span>
+                    <p className="leading-relaxed">
+                      تم تفعيل حسابك كتاجر وتسجيل دخولك تلقائياً! استخدم بريدك الإلكتروني <strong className="font-mono text-emerald-800">{email.trim().toLowerCase()}</strong> وكلمة المرور لتسجيل الدخول إلى حسابك في أي وقت.
+                    </p>
                   </div>
 
                   {/* Direct Action Button */}

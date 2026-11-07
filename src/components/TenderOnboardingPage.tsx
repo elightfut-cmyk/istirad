@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Plane, 
-  Ship, 
-  UploadCloud, 
-  CheckCircle2, 
-  ArrowLeft, 
-  ShieldCheck, 
-  Eye, 
-  EyeOff, 
-  Sparkles, 
+import {
+  Plane,
+  UploadCloud,
+  CheckCircle2,
+  ArrowLeft,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Sparkles,
   AlertCircle,
   Clock,
   Coins
@@ -20,7 +19,7 @@ import { sendNotification } from '../store/useNotificationStore';
 import { trackTenderStep1, trackRegistrationStep2 } from '../utils/metaPixel';
 import toast from 'react-hot-toast';
 
-// 58 Algerian Wilayas
+// 69 Algerian Wilayas (التقسيم الإداري الرسمي للجزائر 69 ولاية)
 const ALGERIAN_WILAYAS = [
   '01 - أدرار', '02 - الشلف', '03 - الأغواط', '04 - أم البواقي', '05 - باتنة',
   '06 - بجاية', '07 - بسكرة', '08 - بشار', '09 - البليدة', '10 - البويرة',
@@ -33,7 +32,10 @@ const ALGERIAN_WILAYAS = [
   '41 - سوق أهراس', '42 - تيبازة', '43 - ميلة', '44 - عين الدفلى', '45 - النعامة',
   '46 - عين تموشنت', '47 - غرداية', '48 - غليزان', '49 - تيميمون', '50 - برج باجي مختار',
   '51 - أولاد جلال', '52 - بني عباس', '53 - عين صالح', '54 - عين قزام', '55 - تقرت',
-  '56 - جانت', '57 - المغير', '58 - المنيعة'
+  '56 - جانت', '57 - المغير', '58 - المنيعة',
+  '59 - آفلو', '60 - بريكة', '61 - القنطرة', '62 - بئر العاتر', '63 - العريشة',
+  '64 - قصر الشلالة', '65 - عين وسارة', '66 - مسعد', '67 - قصر البخاري', '68 - بوسعادة',
+  '69 - الأبيض سيدي الشيخ'
 ];
 
 const QUANTITY_PRESETS = [
@@ -62,7 +64,7 @@ export default function TenderOnboardingPage() {
   const [productTitleOrLink, setProductTitleOrLink] = useState('');
   const [quantityTier, setQuantityTier] = useState('50 - 200 قطعة');
   const [customQuantity, setCustomQuantity] = useState('');
-  const [shippingPreference, setShippingPreference] = useState<'air' | 'sea'>('air');
+  const shippingPreference = 'air';
   const [productNotes, setProductNotes] = useState('');
   const [productImageUrl, setProductImageUrl] = useState('');
   const [imagePreview, setImagePreview] = useState('');
@@ -88,7 +90,6 @@ export default function TenderOnboardingPage() {
           setCustomQuantity(parsed.customQuantity);
           setCustomQtyMode(true);
         }
-        if (parsed.shippingPreference) setShippingPreference(parsed.shippingPreference);
         if (parsed.productNotes) setProductNotes(parsed.productNotes);
         if (parsed.productImageUrl) {
           setProductImageUrl(parsed.productImageUrl);
@@ -186,7 +187,7 @@ export default function TenderOnboardingPage() {
     // Fire Meta Pixel Step 1 Event (Guarded against duplicate calls)
     if (!hasFiredStep1Pixel.current && !isAdmin) {
       trackTenderStep1({
-        shippingPreference: shippingPreference === 'air' ? 'شحن جوي سريع' : 'شحن بحري اقتصادي',
+        shippingPreference: 'شحن جوي سريع',
         productTitleOrLink: productTitleOrLink.trim(),
         quantityTier: effectiveQtyTier,
       });
@@ -302,8 +303,8 @@ export default function TenderOnboardingPage() {
       // 2. Prepare & Insert Custom Request (Tender) payload into Supabase
       const isProductLink = productTitleOrLink.trim().startsWith('http://') || productTitleOrLink.trim().startsWith('https://');
       const tenderTitle = isProductLink ? 'طلب استيراد بضاعة من رابط مباشر' : productTitleOrLink.trim();
-      const shippingLabel = shippingPreference === 'air' ? 'شحن جوي سريع' : 'شحن بحري اقتصادي';
-      
+      const shippingLabel = 'شحن جوي سريع';
+
       const tenderPayload = {
         merchant_id: activeUserId,
         title: tenderTitle,
@@ -335,18 +336,18 @@ export default function TenderOnboardingPage() {
 
       // 4. Notify suppliers & platform admins
       sendNotification(
-        'all_suppliers', 
-        'مناقصة جديدة من تاجر', 
-        `طرح التاجر ${fullName.trim()} مناقصة جديدة: ${tenderTitle} (${effectiveQtyTier})`, 
+        'all_suppliers',
+        'مناقصة جديدة من تاجر',
+        `طرح التاجر ${fullName.trim()} مناقصة جديدة: ${tenderTitle} (${effectiveQtyTier})`,
         'info'
-      ).catch(() => {});
+      ).catch(() => { });
 
       sendNotification(
-        'all_admins', 
-        'تسجيل تاجر ومناقصة جديدة', 
-        `سجل التاجر ${fullName.trim()} من ${wilaya} وطرح مناقصة: ${tenderTitle}`, 
+        'all_admins',
+        'تسجيل تاجر ومناقصة جديدة',
+        `سجل التاجر ${fullName.trim()} من ${wilaya} وطرح مناقصة: ${tenderTitle}`,
         'info'
-      ).catch(() => {});
+      ).catch(() => { });
 
       // 5. Clear draft & show Celebratory Confirmation State
       try {
@@ -368,9 +369,9 @@ export default function TenderOnboardingPage() {
   };
 
   return (
-    <div 
-      dir="rtl" 
-      lang="ar" 
+    <div
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-[#12062E] text-white font-['Tajawal'] relative overflow-x-hidden selection:bg-[#7C3AED] selection:text-white pb-16"
       style={{
         backgroundImage: 'radial-gradient(ellipse 90% 60% at 50% -10%, #2C0C60 0%, #12062E 70%, #0B031C 100%)',
@@ -392,27 +393,24 @@ export default function TenderOnboardingPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${
-                step === 1 ? 'bg-[#7C3AED] text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-              }`}
+              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${step === 1 ? 'bg-[#7C3AED] text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
             >
               الخطوة 1: تفاصيل المناقصة
             </button>
             <button
               type="button"
               onClick={() => setStep(2)}
-              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${
-                step === 2 ? 'bg-[#7C3AED] text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-              }`}
+              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${step === 2 ? 'bg-[#7C3AED] text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
             >
               الخطوة 2: التسجيل السريع
             </button>
             <button
               type="button"
               onClick={() => setStep(3)}
-              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${
-                step === 3 ? 'bg-emerald-600 text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
-              }`}
+              className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${step === 3 ? 'bg-emerald-600 text-white shadow' : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}
             >
               الخطوة 3: شاشة النجاح
             </button>
@@ -429,10 +427,10 @@ export default function TenderOnboardingPage() {
       {/* ── Minimal Top Header (Zero Leakage) ── */}
       <header className="max-w-5xl mx-auto px-4 pt-6 pb-4 flex items-center justify-between">
         <Link to="/" className="inline-flex items-center gap-2 group transition" title="منصة جيبها">
-          <img 
-            src="/header-logo.png" 
-            alt="JIIBHA - جيبها" 
-            className="h-9 sm:h-11 object-contain brightness-110 drop-shadow-[0_2px_12px_rgba(124,58,237,0.4)]" 
+          <img
+            src="/header-logo.png"
+            alt="JIIBHA - جيبها"
+            className="h-9 sm:h-11 object-contain brightness-110 drop-shadow-[0_2px_12px_rgba(124,58,237,0.4)]"
           />
         </Link>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-[#7C3AED]/30 backdrop-blur-md shadow-xs text-xs sm:text-sm font-semibold text-purple-200">
@@ -444,7 +442,7 @@ export default function TenderOnboardingPage() {
       {/* ── Main Content Area ── */}
       <main className="max-w-5xl mx-auto px-4 pt-3 sm:pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Secondary Column on Large Screens: Trust Highlights (No external links) */}
           <aside className="hidden lg:block lg:col-span-5 order-2 lg:order-1 pt-6 space-y-6">
             <div className="space-y-3">
@@ -511,7 +509,7 @@ export default function TenderOnboardingPage() {
               </div>
               <div className="h-6 w-px bg-white/10"></div>
               <div className="text-center">
-                <p className="text-base font-black text-purple-300">58 ولاية</p>
+                <p className="text-base font-black text-purple-300">69 ولاية</p>
                 <p>تغطية توصيل شاملة</p>
               </div>
             </div>
@@ -519,10 +517,10 @@ export default function TenderOnboardingPage() {
 
           {/* Primary Column: The Elevated Form Card (Hero Element) */}
           <div className="w-full lg:col-span-7 order-1 lg:order-2">
-            
+
             {/* Spotlight Container Card */}
             <div className="bg-white text-gray-900 rounded-3xl p-6 sm:p-8 md:p-9 shadow-[0_25px_70px_-15px_rgba(124,58,237,0.45)] border-2 border-[#7C3AED]/40 relative overflow-hidden transition-all duration-300">
-              
+
               {/* Top Accent Gradient Bar */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#5818B8] via-[#7C3AED] to-[#10B981]"></div>
 
@@ -539,7 +537,7 @@ export default function TenderOnboardingPage() {
               {/* ────────────────────────────────────────────────────────── */}
               {step === 1 && (
                 <form onSubmit={handleProceedToStep2} className="space-y-6">
-                  
+
                   {/* Step Progress & Indicator */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs font-bold text-[#5818B8]">
@@ -606,11 +604,10 @@ export default function TenderOnboardingPage() {
                               key={tier}
                               type="button"
                               onClick={() => setQuantityTier(tier)}
-                              className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all cursor-pointer text-center ${
-                                isSelected
-                                  ? 'bg-[#5818B8]/10 border-[#5818B8] text-[#5818B8] shadow-xs'
-                                  : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
-                              }`}
+                              className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all cursor-pointer text-center ${isSelected
+                                ? 'bg-[#5818B8]/10 border-[#5818B8] text-[#5818B8] shadow-xs'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
+                                }`}
                             >
                               {tier}
                             </button>
@@ -634,63 +631,28 @@ export default function TenderOnboardingPage() {
                     )}
                   </div>
 
-                  {/* Field 3: shippingPreference (Selectable Radio Cards) */}
-                  <div className="space-y-2">
+                  {/* Field 3: Shipping Method (Fast Air Freight Dedicated) */}
+                  <div className="space-y-1.5">
                     <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
-                      طريقة الشحن المفضلة <span className="text-red-500">*</span>
+                      طريقة الشحن المعتمدة
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setShippingPreference('air')}
-                        className={`p-3.5 rounded-xl border-2 text-right transition cursor-pointer flex items-start gap-3 ${
-                          shippingPreference === 'air'
-                            ? 'bg-[#5818B8]/10 border-[#5818B8] shadow-xs'
-                            : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg shrink-0 ${
-                          shippingPreference === 'air' ? 'bg-[#5818B8] text-white' : 'bg-gray-200 text-gray-600'
-                        }`}>
-                          <Plane size={18} />
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className={`text-xs sm:text-sm font-bold ${
-                            shippingPreference === 'air' ? 'text-[#5818B8]' : 'text-gray-800'
-                          }`}>
-                            شحن جوي سريع
+                    <div className="p-3.5 rounded-xl border-2 border-[#5818B8] bg-[#5818B8]/5 flex items-start sm:items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-[#5818B8] text-white shrink-0 shadow-sm">
+                        <Plane size={20} />
+                      </div>
+                      <div className="space-y-0.5 text-right flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs sm:text-sm font-black text-[#5818B8]">
+                            شحن جوي سريع ✈️ (DDP من الباب إلى الباب)
                           </p>
-                          <p className="text-[11px] text-gray-500">
-                            توصيل سريع ومناسب لطلبات المتاجر العاجلة
-                          </p>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">
+                            معتمد للمناقصات
+                          </span>
                         </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setShippingPreference('sea')}
-                        className={`p-3.5 rounded-xl border-2 text-right transition cursor-pointer flex items-start gap-3 ${
-                          shippingPreference === 'sea'
-                            ? 'bg-[#5818B8]/10 border-[#5818B8] shadow-xs'
-                            : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg shrink-0 ${
-                          shippingPreference === 'sea' ? 'bg-[#5818B8] text-white' : 'bg-gray-200 text-gray-600'
-                        }`}>
-                          <Ship size={18} />
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className={`text-xs sm:text-sm font-bold ${
-                            shippingPreference === 'sea' ? 'text-[#5818B8]' : 'text-gray-800'
-                          }`}>
-                            شحن بحري اقتصادي
-                          </p>
-                          <p className="text-[11px] text-gray-500">
-                            أفضل سعر تكلفة للشحنات الكبيرة والمتوسطة
-                          </p>
-                        </div>
-                      </button>
+                        <p className="text-[11px] text-gray-600">
+                          شحن جوي مباشر من الصين إلى الجزائر حتى باب محلك أو مخزنك شاملاً الجمارك والتوصيل السريع.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -767,7 +729,7 @@ export default function TenderOnboardingPage() {
               {/* ────────────────────────────────────────────────────────── */}
               {step === 2 && (
                 <form onSubmit={handleFinalSubmit} className="space-y-6">
-                  
+
                   {/* Dynamic Tender Summary Banner at Top */}
                   <div className="bg-[#D1FAE5]/60 border border-[#10B981] rounded-2xl p-3.5 flex items-center justify-between gap-3 text-right">
                     <div className="flex items-start gap-2.5 min-w-0">
@@ -779,7 +741,7 @@ export default function TenderOnboardingPage() {
                           طلب مناقصتك جاهز للنشر: <span className="font-extrabold text-emerald-700">{productTitleOrLink}</span>
                         </p>
                         <p className="text-[11px] text-emerald-800">
-                          الكمية: {customQtyMode ? `${customQuantity} قطعة` : quantityTier} • الشحن: {shippingPreference === 'air' ? 'جوي' : 'بحري'}
+                          الكمية: {customQtyMode ? `${customQuantity} قطعة` : quantityTier} • الشحن: جوي سريع ✈️
                         </p>
                       </div>
                     </div>
@@ -818,7 +780,7 @@ export default function TenderOnboardingPage() {
 
                   {/* Minimal 4 Fields */}
                   <div className="space-y-4">
-                    
+
                     {/* Field 1: fullName */}
                     <div className="space-y-1.5">
                       <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
@@ -946,7 +908,7 @@ export default function TenderOnboardingPage() {
               {/* ────────────────────────────────────────────────────────── */}
               {step === 3 && (
                 <div className="text-center py-6 sm:py-8 space-y-6">
-                  
+
                   {/* Celebration Glow Icon */}
                   <div className="relative mx-auto w-24 h-24">
                     <div className="absolute inset-0 rounded-full bg-emerald-400/30 animate-ping"></div>
@@ -977,7 +939,7 @@ export default function TenderOnboardingPage() {
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-gray-200">
                       <span className="text-gray-500">طريقة الشحن:</span>
-                      <span className="font-bold text-gray-900">{shippingPreference === 'air' ? 'شحن جوي سريع' : 'شحن بحري اقتصادي'}</span>
+                      <span className="font-bold text-gray-900">شحن جوي سريع ✈️ (DDP)</span>
                     </div>
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-500">إشعارات الواتساب على:</span>

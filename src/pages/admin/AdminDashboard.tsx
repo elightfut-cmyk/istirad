@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket  , Lightbulb  , Video, ShieldCheck, Sparkles, ExternalLink, Copy, Check, Package } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket, Lightbulb, Video, ShieldCheck, Sparkles, ExternalLink, Copy, Check, Package } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -15,12 +15,12 @@ export default function AdminDashboard() {
   const [platformProfits, setPlatformProfits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [payingDues, setPayingDues] = useState(false);
-  
+
   const [users, setUsers] = useState<any[]>([]);
   const [allBids, setAllBids] = useState<any[]>([]);
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [platformSettings, setPlatformSettings] = useState<any>(null);
-  
+
   const [selectedRole, setSelectedRole] = useState<'supplier' | 'merchant'>('supplier');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-    
+
     const handleRefresh = () => {
       fetchStats();
     };
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         walletSum = usersData.reduce((acc, user) => acc + (user.wallet_balance || 0), 0);
         pointsSum = usersData.reduce((acc, user) => acc + (user.loyalty_points || 0), 0);
       }
-      
+
       const { data: settingsData } = await supabase.from('platform_settings').select('loyalty_points_to_dzd_ratio, markup_tier1_percentage, markup_tier2_percentage, markup_tier3_percentage, markup_tier4_percentage, order_fixed_fee').single();
       setPlatformSettings(settingsData);
       const pointsDues = pointsSum * (settingsData?.loyalty_points_to_dzd_ratio || 10);
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
       // Fetch supplier dues and platform profits
       const { data: bidsData, error: bidsError } = await supabase.from('supplier_bids').select('id, supplier_id, request_id, price, cost_price, status, advance_percentage, is_fully_paid, is_paid_to_supplier, custom_requests(quantity)');
       const { data: reqData } = await supabase.from('custom_requests').select('id, merchant_id, status');
-      
+
       let supplierSum = 0;
       let profitsSum = 0;
       if (bidsData && !bidsError) {
@@ -112,12 +112,12 @@ export default function AdminDashboard() {
           const price = bid.price || 0; // supplier total price
           const quantity = (bid.custom_requests as any)?.quantity || 1;
           const advancePct = bid.advance_percentage || 20;
-          
+
           const profitDetails = calculateFinalPrice(price / quantity, quantity, profitSettings);
           const totalFee = profitDetails.platformProfit;
           const percentage = profitDetails.markupPercentage * 100;
           const advancePaid = (profitDetails.finalTotal * advancePct) / 100;
-          
+
           if (bid.status === 'cancelled') {
             const fee = totalFee * (advancePct / 100); // Only keep advance portion of fee
             profitsSum += fee;
@@ -132,9 +132,9 @@ export default function AdminDashboard() {
           }
         });
       }
-      
+
       setPlatformProfits(profitsSum);
-      
+
       setObligations({ supplierDues: supplierSum, walletDues: walletSum, pointsDues: pointsDues });
 
     } catch (error) {
@@ -150,9 +150,9 @@ export default function AdminDashboard() {
     try {
       // Find all unpaid bids for this supplier that have dues
       const unpaidBids = allBids.filter(b => b.supplier_id === supplierId && !b.is_paid_to_supplier && (b.status === 'accepted' || b.status === 'delivered' || b.status === 'completed' || b.is_fully_paid));
-      
+
       const ids = unpaidBids.map(b => b.id);
-      
+
       if (ids.length > 0) {
         const { error } = await supabase.from('supplier_bids').update({ is_paid_to_supplier: true }).in('id', ids);
         if (error) throw error;
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
 
   const getDetailedStats = () => {
     if (!selectedUserId) return null;
-    
+
     const user = users.find(u => u.id === selectedUserId);
     if (!user) return null;
 
@@ -185,20 +185,20 @@ export default function AdminDashboard() {
       const userBids = allBids.filter(b => b.supplier_id === user.id);
       let totalSales = 0;
       let totalDues = 0;
-      
+
       userBids.forEach(bid => {
         if (bid.status === 'accepted' || bid.status === 'delivered' || bid.status === 'completed' || bid.is_fully_paid) {
           totalSales += (bid.price || 0);
-          
+
           const price = bid.price || 0;
           const advancePct = bid.advance_percentage || 20;
           const quantity = (bid.custom_requests as any)?.quantity || 1;
-          
+
           const profitDetails = calculateFinalPrice(price / quantity, quantity, profitSettings);
           const totalFee = profitDetails.platformProfit;
           const percentage = profitDetails.markupPercentage * 100;
           const advancePaid = (profitDetails.finalTotal * advancePct) / 100;
-          
+
           if (bid.is_fully_paid || bid.status === 'delivered' || bid.status === 'completed') {
             const fee = totalFee;
             if (!bid.is_paid_to_supplier) totalDues += (price - fee);
@@ -214,12 +214,12 @@ export default function AdminDashboard() {
       const userRequests = allRequests.filter(r => r.merchant_id === user.id);
       const requestIds = userRequests.map(r => r.id);
       const userPurchases = allBids.filter(b => requestIds.includes(b.request_id) && (b.status === 'accepted' || b.status === 'delivered' || b.status === 'completed' || b.is_fully_paid));
-      
+
       let totalPurchases = 0;
       userPurchases.forEach(bid => {
         totalPurchases += (bid.price || 0);
       });
-      
+
       return { totalPurchases, walletBalance: user.wallet_balance || 0, loyaltyPoints: user.loyalty_points || 0 };
     }
   };
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
               استراتيجية تحويل عالية تعتمد على حث التاجر على ملء تفاصيل السلعة والكمية أولاً (حدث <span className="font-mono font-bold text-purple-600 dark:text-purple-400">Lead</span>)، ثم تفعيل الحساب ونشر المناقصة (حدث <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">CompleteRegistration</span>). مجهزة ببيكسل فيسبوك مشروط وحماية تامة من التشتيت.
             </p>
-            
+
             {/* Ad URL input & UTM switch */}
             <div className="pt-1.5 space-y-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -409,25 +409,25 @@ export default function AdminDashboard() {
       {/* Detailed User Statistics */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
         <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-gray-100">إحصاءات المستخدمين التفصيلية</h2>
-        
+
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-full md:w-max">
-            <button 
+            <button
               onClick={() => { setSelectedRole('supplier'); setSelectedUserId(''); }}
               className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'supplier' ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
             >
               الموردين
             </button>
-            <button 
+            <button
               onClick={() => { setSelectedRole('merchant'); setSelectedUserId(''); }}
               className={`flex-1 px-6 py-2 text-sm font-bold rounded-md transition ${selectedRole === 'merchant' ? 'bg-white dark:bg-gray-800 text-[#4f46e5] shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'}`}
             >
               التجار
             </button>
           </div>
-          
-          <select 
-            value={selectedUserId} 
+
+          <select
+            value={selectedUserId}
             onChange={e => setSelectedUserId(e.target.value)}
             className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-[#4f46e5] focus:border-[#4f46e5] bg-gray-50 dark:bg-gray-900 text-sm"
           >
@@ -443,7 +443,7 @@ export default function AdminDashboard() {
             <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
               سجل {selectedRole === 'supplier' ? 'المورد' : 'التاجر'}: {users.find(u => u.id === selectedUserId)?.name}
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {selectedRole === 'supplier' ? (
                 <>
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">المستحقات (الأرباح المستحقة الدفع)</p>
                     <p className="text-xl font-bold text-orange-600">{formatCurrency((detailedStats as any).totalDues || 0)}</p>
                     {(detailedStats as any).totalDues > 0 && (
-                      <button 
+                      <button
                         onClick={() => handlePaySupplierDues(selectedUserId)}
                         disabled={payingDues}
                         className="mt-3 w-full bg-[#4f46e5] text-white py-2 rounded-lg text-sm font-bold hover:bg-[#4338ca] transition disabled:opacity-50"
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800 dark:text-gray-100">
           <Settings size={24} className="text-[#4f46e5]" />

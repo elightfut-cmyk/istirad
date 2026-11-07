@@ -18,7 +18,7 @@ export default function Login() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotError, setForgotError] = useState('');
-  
+
   const { user, isAuthenticated, setUser } = useAuthStore();
   const { t } = useLanguageStore();
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export default function Login() {
     e.preventDefault();
     setErrorMsg('');
     setLoading(true);
-    
+
     try {
       let cleanEmail = email.trim().toLowerCase();
       const phoneDigits = cleanEmail.replace(/[^0-9]/g, '');

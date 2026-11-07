@@ -1004,7 +1004,7 @@ export default function SupplierLandingFunnel() {
             </div>
             <h4 className="text-base font-extrabold text-gray-900 mb-2">طلبات شراء جاهزة يومياً (RFQs)</h4>
             <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-              آلاف التجار وأصحاب المحلات في 58 ولاية ينشرون يومياً طلبات شراء كميات وكراتين. كل ما عليك هو تقديم عروض أسعارك ومطابقة كمياتك.
+              آلاف التجار وأصحاب المحلات في 69 ولاية ينشرون يومياً طلبات شراء كميات وكراتين. كل ما عليك هو تقديم عروض أسعارك ومطابقة كمياتك.
             </p>
           </div>
 

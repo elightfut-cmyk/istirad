@@ -6,6 +6,7 @@ import { useThemeStore } from './store/useThemeStore';
 import LandingPage from './pages/public/LandingPage';
 import PageViewer from './pages/public/PageViewer';
 import SupplierLandingFunnel from './pages/public/SupplierLandingFunnel';
+import TenderOnboardingPage from './components/TenderOnboardingPage';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ResetPassword from './pages/auth/ResetPassword';
@@ -218,6 +219,9 @@ function App() {
           <Route path="/suppliers-join" element={<SupplierLandingFunnel />} />
           <Route path="/supplier-join" element={<Navigate to="/suppliers-join" replace />} />
           <Route path="/suppliers/join" element={<Navigate to="/suppliers-join" replace />} />
+          <Route path="/ads/merchant-tender" element={<TenderOnboardingPage />} />
+          <Route path="/merchant-tender" element={<Navigate to="/ads/merchant-tender" replace />} />
+          <Route path="/tender-first" element={<Navigate to="/ads/merchant-tender" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />

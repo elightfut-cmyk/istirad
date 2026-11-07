@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket  , Lightbulb  , Video, ShieldCheck, Sparkles, ExternalLink, Copy, Check } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, Settings, MessageSquare, TrendingUp, Ticket  , Lightbulb  , Video, ShieldCheck, Sparkles, ExternalLink, Copy, Check, Package } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { supabase } from '../../lib/supabase';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -24,6 +24,26 @@ export default function AdminDashboard() {
   const [selectedRole, setSelectedRole] = useState<'supplier' | 'merchant'>('supplier');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedTenderLink, setCopiedTenderLink] = useState(false);
+  const [includeUtm, setIncludeUtm] = useState(false);
+
+  const getTenderAdUrl = () => {
+    const base = 'https://jiibha.com/ads/merchant-tender';
+    return includeUtm
+      ? `${base}?utm_source=facebook&utm_medium=paid_social&utm_campaign=ecommerce_tenders`
+      : base;
+  };
+
+  const handleCopyTenderLink = () => {
+    const link = getTenderAdUrl();
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedTenderLink(true);
+      toast.success('تم نسخ رابط إعلان التجار (المناقصة أولاً) بنجاح! 📋');
+      setTimeout(() => setCopiedTenderLink(false), 2500);
+    }).catch(() => {
+      toast.error('تعذر نسخ الرابط تلقائياً');
+    });
+  };
 
   const handleCopyFunnelLink = () => {
     const link = 'https://jiibha.com/suppliers-join';
@@ -214,6 +234,7 @@ export default function AdminDashboard() {
         { label: 'المستخدمين', href: '/admin/users', icon: <Users size={20} /> },
         { label: 'توثيقات الموردين', href: '/admin/verifications', icon: <ShieldCheck size={20} /> },
         { label: 'بوابة إعلانات الموردين', href: '/suppliers-join', icon: <Sparkles size={20} className="text-amber-500" /> },
+        { label: 'إعلانات التجار (المناقصة أولاً)', href: '/ads/merchant-tender', icon: <TrendingUp size={20} className="text-emerald-500" /> },
         { label: 'الطلبات والمناقصات', href: '/admin/orders', icon: <ShoppingBag size={20} /> },
         { label: 'الكوبونات', href: '/admin/coupons', icon: <Ticket size={20} /> },
         { label: 'التنبيهات والإشعارات', href: '/admin/notifications', icon: <MessageSquare size={20} /> },
@@ -280,6 +301,87 @@ export default function AdminDashboard() {
             >
               <ExternalLink size={16} />
               <span>معاينة الصفحة ↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Merchant Tender Ad Campaign Banner / Quick Access ── */}
+      <div className="bg-gradient-to-r from-emerald-500/10 via-purple-500/10 to-emerald-500/10 border border-emerald-500/30 dark:border-emerald-500/40 rounded-2xl p-5 mb-8 shadow-sm">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                <Package size={20} />
+              </span>
+              <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
+                صفحة هبوط إعلانات التجار (المناقصة أولاً ثم التسجيل) - Funnel Ads
+              </h2>
+              <span className="text-xs bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-300 dark:border-emerald-700">
+                جديد حملات التجار
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              استراتيجية تحويل عالية تعتمد على حث التاجر على ملء تفاصيل السلعة والكمية أولاً (حدث <span className="font-mono font-bold text-purple-600 dark:text-purple-400">Lead</span>)، ثم تفعيل الحساب ونشر المناقصة (حدث <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">CompleteRegistration</span>). مجهزة ببيكسل فيسبوك مشروط وحماية تامة من التشتيت.
+            </p>
+            
+            {/* Ad URL input & UTM switch */}
+            <div className="pt-1.5 space-y-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={getTenderAdUrl()}
+                  dir="ltr"
+                  className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-gray-900 text-xs font-mono font-bold text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-xs focus:outline-none select-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyTenderLink}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-[#5818B8] hover:bg-[#7C3AED] text-white transition shadow-sm active:scale-95 cursor-pointer shrink-0"
+                >
+                  {copiedTenderLink ? <Check size={16} className="text-emerald-300" /> : <Copy size={16} />}
+                  <span>{copiedTenderLink ? 'تم نسخ الرابط بنجاح! ✓' : 'نسخ الرابط للإعلان 📋'}</span>
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeUtm}
+                    onChange={(e) => setIncludeUtm(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#7C3AED] border-gray-300 focus:ring-[#7C3AED]"
+                  />
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    تضمين وسوم التتبع الإعلانية (UTM Parameters) لحملات فيسبوك
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    ✓ استراتيجية المناقصة أولاً
+                  </span>
+                  <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1">
+                    ✓ حدث Lead (الخطوة 1)
+                  </span>
+                  <span className="text-[11px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
+                    ✓ تفعيل فوري للحساب
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
+            <a
+              href="/ads/merchant-tender"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white transition shadow-md active:scale-95"
+            >
+              <ExternalLink size={16} />
+              <span>معاينة الصفحة كأدمن ↗</span>
             </a>
           </div>
         </div>

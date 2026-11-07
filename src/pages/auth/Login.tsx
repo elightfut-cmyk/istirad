@@ -59,7 +59,11 @@ export default function Login() {
     setLoading(true);
     
     try {
-      const cleanEmail = email.trim().toLowerCase();
+      let cleanEmail = email.trim().toLowerCase();
+      const phoneDigits = cleanEmail.replace(/[^0-9]/g, '');
+      if (/^(05|06|07)[0-9]{8}$/.test(phoneDigits)) {
+        cleanEmail = `${phoneDigits}@merchant.jiibha.com`;
+      }
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password,

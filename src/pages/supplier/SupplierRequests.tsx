@@ -490,7 +490,12 @@ export default function SupplierRequests() {
                           <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold">الموردون المتنافسون:</span>
                           {req.supplier_bids.map((b: any) => {
                             const badge = b.supplier?.verification_badge;
-                            const ratingInfo = getSupplierRatingInfo(badge, b.supplier?.average_rating, b.supplier?.total_reviews);
+                            const ratingInfo = getSupplierRatingInfo(
+                              badge,
+                              b.supplier?.average_rating,
+                              b.supplier?.total_reviews,
+                              b.supplier?.supplier_tier
+                            );
                             return (
                               <span key={b.id} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${ratingInfo.badgeClass}`}>
                                 <span>{b.supplier?.company_name || b.supplier?.name || 'مورد'}</span>
@@ -550,7 +555,12 @@ export default function SupplierRequests() {
                       <div className="flex flex-wrap items-center gap-2">
                         {req.supplier_bids.map((b: any) => {
                           const isMe = b.supplier_id === user?.id;
-                          const sInfo = getSupplierRatingInfo(b.supplier?.verification_badge);
+                          const sInfo = getSupplierRatingInfo(
+                            b.supplier?.verification_badge,
+                            b.supplier?.average_rating,
+                            b.supplier?.total_reviews,
+                            b.supplier?.supplier_tier
+                          );
                           return (
                             <div key={b.id} className="inline-flex items-center gap-1">
                               <SupplierBadge

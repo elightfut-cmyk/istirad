@@ -65,7 +65,8 @@ export default function SupplierPublicProfile() {
           phone,
           address,
           created_at,
-          verification_badge
+          verification_badge,
+          supplier_tier
         `)
         .eq('id', id)
         .single();
@@ -136,7 +137,7 @@ export default function SupplierPublicProfile() {
   const avgRating = reviews.length > 0
     ? Number((reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length).toFixed(1))
     : 0;
-  const ratingInfo = getSupplierRatingInfo(supplier?.verification_badge, avgRating, totalReviews);
+  const ratingInfo = getSupplierRatingInfo(supplier?.verification_badge, avgRating, totalReviews, (supplier as any)?.supplier_tier);
   const tier = ratingInfo.tier as SupplierTier;
 
   // Rating breakdown

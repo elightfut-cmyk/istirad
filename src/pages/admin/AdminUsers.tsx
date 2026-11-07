@@ -76,15 +76,16 @@ export default function AdminUsers() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, wallet_balance, loyalty_points, current_app_version')
+        .select('id, name, email, phone, company_name, role, status, created_at, verification_badge, is_verified, supplier_tier, total_reviews, average_rating, wallet_balance, loyalty_points, current_app_version')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       const enrichedUsers = (data || []).map((u: any) => {
-        const info = getSupplierRatingInfo(u.verification_badge);
+        const explicitTier = (u.supplier_tier || 'NEW').toUpperCase();
+        const info = getSupplierRatingInfo(u.verification_badge, u.average_rating, u.total_reviews, explicitTier);
         return { 
           ...u, 
-          supplier_tier: info.tier,
+          supplier_tier: explicitTier,
           average_rating: info.rating,
           total_reviews: info.totalReviews
         };
@@ -117,6 +118,7 @@ export default function AdminUsers() {
       }
 
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus } : u));
+      window.dispatchEvent(new CustomEvent('refresh_data'));
       toast.success(newStatus === 'banned' ? 'تم حظر المستخدم بنجاح' : 'تم تفعيل حساب المستخدم بنجاح');
     } catch (error: any) {
       console.error('Error updating status:', error);
@@ -125,49 +127,125 @@ export default function AdminUsers() {
     }
   };
 
-
-  const handleToggleBadge = async (userId: string, currentBadge: string) => {
-    const nextBadge = currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'platinum' : currentBadge === 'platinum' ? 'none' : 'blue';
+  /**
+   * Two-way sync with supplier_verifications table so that verifications done
+   * in AdminUsers are immediately visible in AdminSupplierVerifications and vice versa.
+   */
+  const syncSupplierVerificationTable = async (userId: string, isVerified: boolean, badge: string) => {
     try {
-      const tierMap: Record<string, string> = { platinum: 'PLATINUM', gold: 'GOLD', blue: 'SILVER', none: 'NEW' };
-      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: nextBadge, supplier_tier: tierMap[nextBadge] || 'NEW' } : u));
-      const { error } = await supabase.from('users').update({ 
-        verification_badge: nextBadge
-      }).eq('id', userId);
-      if (error) throw error;
-      toast.success(`تم تغيير شارة التوثيق إلى: ${nextBadge}`);
-    } catch (error) {
-      console.error('Error updating badge:', error);
-      toast.error('حدث خطأ أثناء تغيير التوثيق');
-      fetchUsers();
-    }
-  };
+      const { data: existingV } = await supabase
+        .from('supplier_verifications')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-  const handleChangeSupplierTier = async (userId: string, newTier: string) => {
-    try {
-      const badgeValue = newTier === 'PLATINUM' ? 'platinum' : newTier === 'GOLD' ? 'gold' : newTier === 'SILVER' ? 'blue' : 'none';
-      setUsers(users.map(u => u.id === userId ? { ...u, supplier_tier: newTier, verification_badge: badgeValue } : u));
-      const { error } = await supabase.from('users').update({ 
-        verification_badge: badgeValue 
-      }).eq('id', userId);
-      if (error) throw error;
-      toast.success(`تم تحديث تصنيف المورد إلى: ${newTier} وتحديث الشارة بنجاح`);
-    } catch (error: any) {
-      console.error('Error updating supplier tier:', error);
-      toast.error('حدث خطأ أثناء تغيير التصنيف: ' + (error.message || ''));
-      fetchUsers();
+      if (isVerified) {
+        if (existingV) {
+          await supabase
+            .from('supplier_verifications')
+            .update({
+              status: 'approved',
+              reviewed_at: new Date().toISOString(),
+              admin_notes: `تم اعتماد وتوثيق الحساب (${badge.toUpperCase()}) من لوحة إدارة المستخدمين`
+            })
+            .eq('user_id', userId);
+        } else {
+          const targetUser = users.find(u => u.id === userId);
+          await supabase
+            .from('supplier_verifications')
+            .insert({
+              user_id: userId,
+              business_name: targetUser?.company_name || targetUser?.name || 'مورد موثوق',
+              specialty: 'توريد واستيراد بالجملة',
+              location: targetUser?.address || 'الجزائر',
+              prep_time: 'خلال 24 ساعة',
+              charter_agreed: true,
+              status: 'approved',
+              reviewed_at: new Date().toISOString(),
+              admin_notes: `تم اعتماد التوثيق (${badge.toUpperCase()}) مباشرة من إدارة المستخدمين`
+            });
+        }
+      } else {
+        if (existingV) {
+          await supabase
+            .from('supplier_verifications')
+            .update({
+              status: 'rejected',
+              reviewed_at: new Date().toISOString(),
+              admin_notes: 'تم إلغاء التوثيق من لوحة إدارة المستخدمين'
+            })
+            .eq('user_id', userId);
+        }
+      }
+    } catch (syncErr) {
+      console.warn('Sync to supplier_verifications warning:', syncErr);
     }
   };
 
   const handleSetVerificationBadge = async (userId: string, newBadge: string) => {
+    const isVerified = Boolean(newBadge && newBadge !== 'none');
     try {
-      setUsers(users.map(u => u.id === userId ? { ...u, verification_badge: newBadge } : u));
-      const { error } = await supabase.from('users').update({ verification_badge: newBadge }).eq('id', userId);
+      // 1. Update local users state (preserving explicit supplier_tier!)
+      setUsers(prev => prev.map(u => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            verification_badge: newBadge,
+            is_verified: isVerified,
+            status: isVerified && u.status === 'pending' ? 'active' : u.status
+          };
+        }
+        return u;
+      }));
+
+      // 2. Prepare payload for users table
+      const updateData: Record<string, any> = {
+        verification_badge: newBadge,
+        is_verified: isVerified
+      };
+      const targetUser = users.find(u => u.id === userId);
+      if (isVerified && targetUser?.status === 'pending') {
+        updateData.status = 'active';
+      }
+
+      const { error } = await supabase.from('users').update(updateData).eq('id', userId);
       if (error) throw error;
-      toast.success('تم تحديث شارة التوثيق بنجاح');
+
+      // 3. Two-way sync to supplier_verifications table
+      await syncSupplierVerificationTable(userId, isVerified, newBadge);
+
+      window.dispatchEvent(new CustomEvent('refresh_data'));
+      const badgeLabel = newBadge === 'platinum' ? 'بلاتينية' : newBadge === 'gold' ? 'ذهبية' : newBadge === 'blue' ? 'زرقاء' : 'بدون شارة';
+      toast.success(isVerified ? `تم توثيق الحساب بنجاح (شارة ${badgeLabel})` : 'تم إلغاء توثيق الحساب');
     } catch (error: any) {
       console.error('Error updating verification badge:', error);
       toast.error('حدث خطأ أثناء تحديث التوثيق: ' + (error.message || ''));
+      fetchUsers();
+    }
+  };
+
+  const handleToggleBadge = async (userId: string, currentBadge: string) => {
+    const nextBadge = currentBadge === 'none' ? 'blue' : currentBadge === 'blue' ? 'gold' : currentBadge === 'gold' ? 'platinum' : 'none';
+    await handleSetVerificationBadge(userId, nextBadge);
+  };
+
+  const handleChangeSupplierTier = async (userId: string, newTier: string) => {
+    try {
+      // Strictly update supplier_tier without tampering with verification_badge!
+      // A newly verified supplier remains NEW until reaching 5 completed orders.
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, supplier_tier: newTier } : u));
+      
+      const { error } = await supabase.from('users').update({ 
+        supplier_tier: newTier 
+      }).eq('id', userId);
+      if (error) throw error;
+
+      window.dispatchEvent(new CustomEvent('refresh_data'));
+      const tierTitle = newTier === 'PLATINUM' ? 'بلاتيني 💎' : newTier === 'GOLD' ? 'ذهبي 🥇' : newTier === 'SILVER' ? 'فضي 🥈' : 'جديد 🥉';
+      toast.success(`تم تحديث تصنيف المورد إلى: ${tierTitle}`);
+    } catch (error: any) {
+      console.error('Error updating supplier tier:', error);
+      toast.error('حدث خطأ أثناء تغيير التصنيف: ' + (error.message || ''));
       fetchUsers();
     }
   };
@@ -324,9 +402,11 @@ export default function AdminUsers() {
   });
 
   const suppliersList = users.filter(u => u.role === 'supplier');
-  const platinumCount = suppliersList.filter(u => (u.supplier_tier === 'PLATINUM' || u.verification_badge === 'platinum')).length;
-  const goldCount = suppliersList.filter(u => (u.supplier_tier === 'GOLD' || u.verification_badge === 'gold')).length;
-  const silverCount = suppliersList.filter(u => (u.supplier_tier === 'SILVER' || u.verification_badge === 'blue' || u.verification_badge === 'silver')).length;
+  const platinumCount = suppliersList.filter(u => (u.supplier_tier || '').toUpperCase() === 'PLATINUM').length;
+  const goldCount = suppliersList.filter(u => (u.supplier_tier || '').toUpperCase() === 'GOLD').length;
+  const silverCount = suppliersList.filter(u => (u.supplier_tier || '').toUpperCase() === 'SILVER').length;
+  const newCount = suppliersList.filter(u => !u.supplier_tier || (u.supplier_tier || '').toUpperCase() === 'NEW').length;
+  const verifiedCount = suppliersList.filter(u => u.verification_badge && u.verification_badge !== 'none').length;
 
   return (
     <DashboardLayout
@@ -422,44 +502,56 @@ export default function AdminUsers() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-slate-900 text-cyan-300">
-                  <Gem size={20} />
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  <Shield size={18} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">مورد بلاتيني</p>
-                  <p className="text-xl font-black text-cyan-500">{platinumCount}</p>
+                  <p className="text-[11px] text-gray-500 font-bold">مورد جديد (0-4 طلبات)</p>
+                  <p className="text-lg font-black text-emerald-600">{newCount}</p>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600">
-                  <ShieldCheck size={20} />
+              <div className="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <Shield size={18} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">مورد ذهبي</p>
-                  <p className="text-xl font-black text-amber-600">{goldCount}</p>
+                  <p className="text-[11px] text-gray-500 font-bold">مورد فضي (5+ طلبات)</p>
+                  <p className="text-lg font-black text-slate-700 dark:text-slate-300">{silverCount}</p>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700">
-                  <Shield size={20} />
+              <div className="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
+                  <ShieldCheck size={18} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">مورد فضي</p>
-                  <p className="text-xl font-black text-slate-700 dark:text-slate-300">{silverCount}</p>
+                  <p className="text-[11px] text-gray-500 font-bold">مورد ذهبي (20+ طلب)</p>
+                  <p className="text-lg font-black text-amber-600">{goldCount}</p>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600">
-                  <Users size={20} />
+              <div className="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-slate-900 text-cyan-300 dark:bg-cyan-950/60 dark:text-cyan-300">
+                  <Gem size={18} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">إجمالي الموردين</p>
-                  <p className="text-xl font-black text-emerald-600">{suppliersList.length}</p>
+                  <p className="text-[11px] text-gray-500 font-bold">مورد بلاتيني (50+ طلب)</p>
+                  <p className="text-lg font-black text-cyan-500">{platinumCount}</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center gap-2.5 col-span-2 sm:col-span-1">
+                <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                  <BadgeCheck size={18} />
+                </div>
+                <div>
+                  <p className="text-[11px] text-gray-500 font-bold">الموثقون / الإجمالي</p>
+                  <p className="text-lg font-black text-[#4f46e5]">
+                    {verifiedCount} <span className="text-xs text-gray-400 font-normal">/ {suppliersList.length}</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -727,10 +819,10 @@ export default function AdminUsers() {
                                   onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
                                   className="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-bold focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
                                 >
-                                  <option value="NEW">🥉 جديد (NEW)</option>
-                                  <option value="SILVER">🥈 فضي (SILVER)</option>
-                                  <option value="GOLD">🥇 ذهبي (GOLD)</option>
-                                  <option value="PLATINUM">💎 بلاتيني (PLATINUM)</option>
+                                  <option value="NEW">🥉 جديد (0-4 طلبات)</option>
+                                  <option value="SILVER">🥈 فضي (5+ طلبات)</option>
+                                  <option value="GOLD">🥇 ذهبي (20+ طلب)</option>
+                                  <option value="PLATINUM">💎 بلاتيني (50+ طلب)</option>
                                 </select>
                               </div>
                             </td>
@@ -784,16 +876,33 @@ export default function AdminUsers() {
                             {/* Classification / Badge preview in all users table */}
                             <td className="p-4">
                               {isSupplier ? (
-                                <select
-                                  value={currentTier}
-                                  onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
-                                  className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold"
-                                >
-                                  <option value="NEW">🥉 جديد</option>
-                                  <option value="SILVER">🥈 فضي</option>
-                                  <option value="GOLD">🥇 ذهبي</option>
-                                  <option value="PLATINUM">💎 بلاتيني</option>
-                                </select>
+                                <div className="flex flex-col gap-1.5 min-w-[140px]">
+                                  {/* Verification Badge Status */}
+                                  <select
+                                    value={u.verification_badge || 'none'}
+                                    onChange={(e) => handleSetVerificationBadge(u.id, e.target.value)}
+                                    className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-bold focus:outline-none focus:ring-1 focus:ring-[#4f46e5]"
+                                    title="تحديد شارة التوثيق"
+                                  >
+                                    <option value="none">❌ غير موثق</option>
+                                    <option value="blue">🛡️ شارة زرقاء (معتمد)</option>
+                                    <option value="gold">🥇 شارة ذهبية</option>
+                                    <option value="platinum">💎 شارة بلاتينية</option>
+                                  </select>
+
+                                  {/* Tier Status */}
+                                  <select
+                                    value={currentTier}
+                                    onChange={(e) => handleChangeSupplierTier(u.id, e.target.value)}
+                                    className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold focus:outline-none focus:ring-1 focus:ring-[#4f46e5]"
+                                    title="تحديد رتبة وتصنيف المورد"
+                                  >
+                                    <option value="NEW">🥉 جديد (0-4 طلبات)</option>
+                                    <option value="SILVER">🥈 فضي (5+ طلبات)</option>
+                                    <option value="GOLD">🥇 ذهبي (20+ طلب)</option>
+                                    <option value="PLATINUM">💎 بلاتيني (50+ طلب)</option>
+                                  </select>
+                                </div>
                               ) : (
                                 <span className="text-gray-400 text-xs">-</span>
                               )}

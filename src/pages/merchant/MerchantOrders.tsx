@@ -973,7 +973,12 @@ export default function MerchantOrders() {
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">المورد:</span>
                           {(() => {
-                            const dInfo = getSupplierRatingInfo(bid?.supplier?.verification_badge);
+                            const dInfo = getSupplierRatingInfo(
+                              bid?.supplier?.verification_badge,
+                              bid?.supplier?.average_rating,
+                              bid?.supplier?.total_reviews,
+                              bid?.supplier?.supplier_tier
+                            );
                             return (
                               <div className="flex items-center gap-2">
                                 <SupplierBadge
@@ -1295,7 +1300,12 @@ export default function MerchantOrders() {
                           )}
                           <div className="mb-3">
                             {(() => {
-                              const sInfo = getSupplierRatingInfo(bid.supplier?.verification_badge);
+                              const sInfo = getSupplierRatingInfo(
+                                bid.supplier?.verification_badge,
+                                bid.supplier?.average_rating,
+                                bid.supplier?.total_reviews,
+                                bid.supplier?.supplier_tier
+                              );
                               return (
                                 <div>
                                   <SupplierBadge

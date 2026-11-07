@@ -574,7 +574,12 @@ export default function AdminOrders() {
                                   <div className="flex items-start justify-between gap-2 mb-3">
                                     <div className="flex flex-col gap-1">
                                       {(() => {
-                                        const sInfo = getSupplierRatingInfo(bid.supplier?.verification_badge);
+                                        const sInfo = getSupplierRatingInfo(
+                                          bid.supplier?.verification_badge,
+                                          bid.supplier?.average_rating,
+                                          bid.supplier?.total_reviews,
+                                          bid.supplier?.supplier_tier
+                                        );
                                         return (
                                           <SupplierBadge
                                             supplierId={bid.supplier_id}
@@ -764,7 +769,12 @@ export default function AdminOrders() {
                             <p className="font-bold text-gray-800 dark:text-gray-200">التاجر: {req.merchant?.name || '-'}</p>
                             <div className="mt-1">
                               {directBid?.supplier ? (() => {
-                                const dInfo = getSupplierRatingInfo(directBid.supplier?.verification_badge);
+                                const dInfo = getSupplierRatingInfo(
+                                  directBid.supplier?.verification_badge,
+                                  directBid.supplier?.average_rating,
+                                  directBid.supplier?.total_reviews,
+                                  directBid.supplier?.supplier_tier
+                                );
                                 return (
                                   <SupplierBadge
                                     supplierId={directBid.supplier_id}

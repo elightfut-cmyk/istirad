@@ -142,6 +142,8 @@ export default function AdminSupplierVerifications() {
             phone,
             company_name,
             verification_badge,
+            is_verified,
+            supplier_tier,
             status,
             created_at
           )
@@ -214,6 +216,7 @@ export default function AdminSupplierVerifications() {
       if (vError) throw vError;
 
       // 2. Update users table with verified badge and active status
+      // (Explicitly preserves supplier_tier without forcing it to SILVER!)
       const { error: uError } = await supabase
         .from('users')
         .update({
@@ -226,6 +229,9 @@ export default function AdminSupplierVerifications() {
       if (uError) {
         console.warn('Could not update users table badge:', uError);
       }
+
+      // 3. Dispatch global sync event so AdminUsers reloads immediately
+      window.dispatchEvent(new CustomEvent('refresh_data'));
 
       // 3. Dispatch Push Notification via Cloud Function
       try {
@@ -288,6 +294,17 @@ export default function AdminSupplierVerifications() {
 
       if (vError) throw vError;
 
+      // Reset user badge if previously assigned
+      await supabase
+        .from('users')
+        .update({
+          verification_badge: 'none',
+          is_verified: false
+        })
+        .eq('id', supplierId);
+
+      window.dispatchEvent(new CustomEvent('refresh_data'));
+
       // 2. Dispatch push notification to supplier
       try {
         await supabase.functions.invoke('send-push', {
@@ -347,6 +364,17 @@ export default function AdminSupplierVerifications() {
         .eq('id', revokingItem.id);
 
       if (vError) throw vError;
+
+      // Reset user badge if previously assigned
+      await supabase
+        .from('users')
+        .update({
+          verification_badge: 'none',
+          is_verified: false
+        })
+        .eq('id', supplierId);
+
+      window.dispatchEvent(new CustomEvent('refresh_data'));
 
       // 2. Reset user badge & verification status
       const { error: uError } = await supabase

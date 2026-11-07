@@ -333,7 +333,12 @@ export default function Marketplace() {
 
                       <div className="mb-4">
                         {(() => {
-                          const sInfo = getSupplierRatingInfo(product.supplier?.verification_badge);
+                          const sInfo = getSupplierRatingInfo(
+                            product.supplier?.verification_badge,
+                            product.supplier?.average_rating,
+                            product.supplier?.total_reviews,
+                            product.supplier?.supplier_tier
+                          );
                           return (
                             <SupplierBadge
                               supplierId={product.supplier_id}

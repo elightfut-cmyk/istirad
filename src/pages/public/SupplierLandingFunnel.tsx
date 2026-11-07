@@ -433,447 +433,447 @@ export default function SupplierLandingFunnel() {
         {step < 4 ? (
           <div className="bg-white border-2 sm:border-3 border-amber-500 rounded-3xl shadow-xl overflow-hidden ring-4 ring-amber-400/15">
 
-          {/* Action Zone Header Banner */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 sm:px-6 py-3.5 flex items-center justify-between border-b border-amber-500/50">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="flex h-3 w-3 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-              <span className="font-black text-sm sm:text-base text-amber-400">
-                استمارة تسجيل الموردين والمستوردين (ابدأ من هنا 👇)
-              </span>
+            {/* Action Zone Header Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-4 sm:px-6 py-3.5 flex items-center justify-between border-b border-amber-500/50">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="flex h-3 w-3 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span className="font-black text-sm sm:text-base text-amber-400">
+                  استمارة تسجيل الموردين والمستوردين (ابدأ من هنا 👇)
+                </span>
+              </div>
+              {step < 4 && (
+                <span className="text-xs bg-amber-400/20 text-amber-300 font-extrabold px-3 py-1 rounded-full border border-amber-400/30">
+                  الخطوة {step} من 3
+                </span>
+              )}
             </div>
-            {step < 4 && (
-              <span className="text-xs bg-amber-400/20 text-amber-300 font-extrabold px-3 py-1 rounded-full border border-amber-400/30">
-                الخطوة {step} من 3
-              </span>
-            )}
-          </div>
 
-          <div className="p-4 sm:p-7">
-            {/* Multi-Step Progress Indicator (Shown during steps 1, 2, 3) */}
-            {step < 4 && (
-              <div className="bg-slate-50 border border-gray-200 rounded-2xl p-3 sm:p-4 mb-6 shadow-xs">
-                <div className="flex items-center justify-between mb-2.5 text-xs sm:text-sm font-bold">
-                  <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>1</span>
-                    <span>تحديد صفتك</span>
-                  </span>
-                  <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>2</span>
-                    <span>تأهيل المخزون</span>
-                  </span>
-                  <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>3</span>
-                    <span>بيانات الحساب</span>
-                  </span>
+            <div className="p-4 sm:p-7">
+              {/* Multi-Step Progress Indicator (Shown during steps 1, 2, 3) */}
+              {step < 4 && (
+                <div className="bg-slate-50 border border-gray-200 rounded-2xl p-3 sm:p-4 mb-6 shadow-xs">
+                  <div className="flex items-center justify-between mb-2.5 text-xs sm:text-sm font-bold">
+                    <span className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>1</span>
+                      <span>تحديد صفتك</span>
+                    </span>
+                    <span className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>2</span>
+                      <span>تأهيل المخزون</span>
+                    </span>
+                    <span className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-800 font-black' : 'text-gray-400'}`}>
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${step >= 3 ? 'bg-amber-500 text-slate-950' : 'bg-gray-200 text-gray-500'}`}>3</span>
+                      <span>بيانات الحساب</span>
+                    </span>
+                  </div>
+
+                  {/* Progress bar track */}
+                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-amber-400 to-amber-500 h-full transition-all duration-500 ease-out rounded-full"
+                      style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
+                    />
+                  </div>
                 </div>
+              )}
 
-                {/* Progress bar track */}
-                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-amber-400 to-amber-500 h-full transition-all duration-500 ease-out rounded-full"
-                    style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
-                  />
+              {/* Global Error Banner */}
+              {errorMessage && (
+                <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-3 animate-shake shadow-xs">
+                  <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 font-bold">{errorMessage}</div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Global Error Banner */}
-            {errorMessage && (
-              <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-start gap-3 animate-shake shadow-xs">
-                <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
-                <div className="flex-1 font-bold">{errorMessage}</div>
-              </div>
-            )}
+              {/* ── STEP 1: THE GATEKEEPER QUESTION (CLEAR & UNAMBIGUOUS) ── */}
+              {step === 1 && (
+                <div>
+                  <div className="text-center mb-5">
+                    <h2 className="text-lg sm:text-xl font-black text-gray-900 mb-1">
+                      ما هي صفتك التجارية الحالية؟ (اختر للمتابعة)
+                    </h2>
+                    <p className="text-gray-500 text-xs sm:text-sm">
+                      اضغط على الزر الذهبي أدناه إذا كنت مورداً أو صاحب مخزن لبدء التسجيل فوراً:
+                    </p>
+                  </div>
 
-            {/* ── STEP 1: THE GATEKEEPER QUESTION (CLEAR & UNAMBIGUOUS) ── */}
-            {step === 1 && (
-              <div>
-                <div className="text-center mb-5">
-                  <h2 className="text-lg sm:text-xl font-black text-gray-900 mb-1">
-                    ما هي صفتك التجارية الحالية؟ (اختر للمتابعة)
-                  </h2>
-                  <p className="text-gray-500 text-xs sm:text-sm">
-                    اضغط على الزر الذهبي أدناه إذا كنت مورداً أو صاحب مخزن لبدء التسجيل فوراً:
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Option 1: Qualified Supplier (PRIMARY PROMINENT ACTION CARD) */}
-                  <div
-                    onClick={() => handleSelectRole('supplier')}
-                    className="w-full text-right p-5 sm:p-6 rounded-2xl border-2 sm:border-3 border-amber-500 bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-orange-50/50 hover:bg-amber-100/70 transition-all duration-200 shadow-md cursor-pointer hover:shadow-lg relative group"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                        <Boxes size={26} className="stroke-[2.5]" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                          <span className="font-black text-base sm:text-lg text-slate-950">
-                            📦 أنا مستورد من الصين / صاحب مخزن جملة (Dépôt)
-                          </span>
-                          <span className="text-xs bg-emerald-500 text-white px-2.5 py-0.5 rounded-full font-black shadow-xs">
-                            ✓ الخيار الصحيح للموردين
-                          </span>
+                  <div className="space-y-4">
+                    {/* Option 1: Qualified Supplier (PRIMARY PROMINENT ACTION CARD) */}
+                    <div
+                      onClick={() => handleSelectRole('supplier')}
+                      className="w-full text-right p-5 sm:p-6 rounded-2xl border-2 sm:border-3 border-amber-500 bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-orange-50/50 hover:bg-amber-100/70 transition-all duration-200 shadow-md cursor-pointer hover:shadow-lg relative group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                          <Boxes size={26} className="stroke-[2.5]" />
                         </div>
-                        <p className="text-gray-700 text-xs sm:text-sm leading-relaxed mb-4 font-medium">
-                          لدي بضاعة وسلع متوفرة لبيعها بالجملة للتجار، أو أشحن كونتينرات وطرود DDP من الصين.
-                        </p>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                            <span className="font-black text-base sm:text-lg text-slate-950">
+                              📦 أنا مستورد من الصين / صاحب مخزن جملة (Dépôt)
+                            </span>
+                            <span className="text-xs bg-emerald-500 text-white px-2.5 py-0.5 rounded-full font-black shadow-xs">
+                              ✓ الخيار الصحيح للموردين
+                            </span>
+                          </div>
+                          <p className="text-gray-700 text-xs sm:text-sm leading-relaxed mb-4 font-medium">
+                            لدي بضاعة وسلع متوفرة لبيعها بالجملة للتجار، أو أشحن كونتينرات وطرود DDP من الصين.
+                          </p>
 
-                        {/* Obvious Primary Button inside the card */}
+                          {/* Obvious Primary Button inside the card */}
+                          <button
+                            type="button"
+                            className="w-full py-3 px-4 rounded-xl font-black text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.01]"
+                          >
+                            <span>👉 اضغط هنا للبدء في تسجيل حساب المورد (متابعة)</span>
+                            <ArrowLeft size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option 2: Merchant / Buyer (SECONDARY MUTED CARD) */}
+                    <div className="w-full text-right p-4 sm:p-5 rounded-2xl border border-gray-200 bg-gray-50/80 hover:bg-gray-100/80 transition-all duration-200 shadow-xs">
+                      <div
+                        className="flex items-start gap-3.5 cursor-pointer"
+                        onClick={() => handleSelectRole('merchant')}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-gray-200 text-gray-600 flex items-center justify-center shrink-0">
+                          <ShoppingCart size={20} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-sm sm:text-base text-gray-700">
+                              🛒 لست مورداً (أنا تاجر / صاحب محل وأريد شراء سلعة)
+                            </span>
+                          </div>
+                          <p className="text-gray-500 text-xs leading-relaxed">
+                            أبحث عن موردين لشراء بضاعة بالكرتونة أو استيراد طلبيتي الخاصة من الصين.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Conditional Disqualification Message & Merchant Redirect */}
+                      {userType === 'merchant' && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 animate-fadeIn">
+                          <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs leading-relaxed mb-3">
+                            <p className="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+                              <Sparkles size={15} className="text-amber-600" />
+                              تنويه خاص بالتجار وأصحاب المحلات:
+                            </p>
+                            هذه البوابة مخصصة للموردين وأصحاب المخازن فقط. بصفتك تاجراً يبحث عن سلع، يمكنك التسجيل في فضاء التجار وتقديم طلب الشراء الخاص بك ليتنافس الموردون على توفيره لك بأفضل سعر!
+                          </div>
+
+                          <Link
+                            to="/register?role=merchant"
+                            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm active:scale-98"
+                          >
+                            <ShoppingCart size={16} />
+                            <span>الانتقال إلى فضاء التجار والشراء بالجملة ↗</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 2: SUPPLIER QUALIFICATION ── */}
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                    <div>
+                      <span className="text-xs text-amber-600 font-extrabold">الخطوة 2 من 3</span>
+                      <h2 className="text-lg sm:text-2xl font-black text-gray-900">تأهيل نشاط المورد ومخزون السلع</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
+                    >
+                      <ArrowRight size={14} />
+                      <span>رجوع للخطوة 1</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Question 1: Inventory Status */}
+                    <div>
+                      <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
+                        1. ما هي حالة البضاعة لديك حالياً؟ <span className="text-amber-500">*</span>
+                      </label>
+                      <p className="text-gray-500 text-xs mb-3">اختر الخيار الأنسب لنشاطك التجاري الحالي:</p>
+
+                      <div className="space-y-2.5">
+                        {INVENTORY_OPTIONS.map((opt) => {
+                          const IconComponent = opt.icon;
+                          const isSelected = stockStatus === opt.id;
+                          return (
+                            <div
+                              key={opt.id}
+                              onClick={() => setStockStatus(opt.id)}
+                              className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${isSelected
+                                ? 'border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-400/20'
+                                : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-gray-100 text-gray-500'}`}>
+                                  <IconComponent size={20} />
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-sm font-bold text-gray-900 block">
+                                    {opt.label}
+                                  </span>
+                                  <span className="text-[11px] text-amber-700 font-semibold">
+                                    {opt.badge}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
+                                {isSelected && <Check size={12} className="text-white stroke-[3]" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Question 2: Product Category */}
+                    <div>
+                      <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
+                        2. ما هو المجال الرئيسي لسلعتك؟ <span className="text-amber-500">*</span>
+                      </label>
+                      <p className="text-gray-500 text-xs mb-3">حدد التخصص التجاري لتلقي طلبات الشراء ذات الصلة فوراً:</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {CATEGORY_OPTIONS.map((cat) => {
+                          const isSelected = selectedCategory === cat;
+                          return (
+                            <button
+                              type="button"
+                              key={cat}
+                              onClick={() => setSelectedCategory(cat)}
+                              className={`p-3.5 rounded-xl border-2 text-right transition-all flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer ${isSelected
+                                ? 'border-amber-500 bg-amber-500 text-slate-950 shadow-sm font-black'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                              <span>{cat}</span>
+                              {isSelected && <Check size={16} className="text-slate-950 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedCategory === 'مجال آخر (جملة)' && (
+                        <div className="mt-3">
+                          <input
+                            type="text"
+                            value={customCategory}
+                            onChange={(e) => setCustomCategory(e.target.value)}
+                            placeholder="يرجى كتابة نوع البضاعة بالجملة (مثال: ألعاب أطفال، مواد تغليف...)"
+                            className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-xs"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Proceed Button */}
+                    <button
+                      type="button"
+                      onClick={handleProceedToStep3}
+                      className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                    >
+                      <span>متابعة إنشاء الحساب الموثق (الخطوة الأخيرة) ←</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 3: REGISTRATION FORM ── */}
+              {step === 3 && (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                    <div>
+                      <span className="text-xs text-amber-600 font-extrabold">الخطوة 3 من 3 (النهائية)</span>
+                      <h2 className="text-lg sm:text-2xl font-black text-gray-900">بيانات حساب المورد المعتمد</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
+                    >
+                      <ArrowRight size={14} />
+                      <span>تعديل السلعة/المخزون</span>
+                    </button>
+                  </div>
+
+                  {/* Summary Chip of Qualification */}
+                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-amber-800 font-bold">
+                      <BadgeCheck size={16} className="text-amber-600" />
+                      <span>الصفة: مورد ومستورد مؤهل</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-700 font-semibold">
+                      <span>السلعة: <b className="text-gray-900">{selectedCategory === 'مجال آخر (جملة)' ? customCategory : selectedCategory}</b></span>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    {/* Name & Company */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                          الاسم واللقب الكامل <span className="text-amber-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <User size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="مثال: أمين بلقاسم"
+                            className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                          اسم الشركة / المحل / المخزن <span className="text-amber-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Building2 size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            required
+                            value={formData.company_name}
+                            onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                            placeholder="مثال: مؤسسة النور للاستيراد بالجملة"
+                            className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Phone & Email */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                          رقم الهاتف (الجزائر) <span className="text-amber-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Phone size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="tel"
+                            dir="ltr"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            placeholder="05 / 06 / 07 XX XX XX XX"
+                            className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-mono shadow-xs"
+                          />
+                        </div>
+                        <span className="text-[11px] text-gray-500 mt-1 block">
+                          يُفضل ربط الرقم بالواتساب للتواصل السريع والتوثيق
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                          البريد الإلكتروني <span className="text-amber-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Mail size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="email"
+                            dir="ltr"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="supplier@example.com"
+                            className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Warehouse Address & Location */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                        الولاية + البلدية / المنطقة التجارية للمخزن <span className="text-amber-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <MapPin size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          required
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          placeholder="مثال: العلمة - سطيف، أو الحميز - الدار البيضاء، أو وهران..."
+                          className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+                        كلمة المرور للحساب <span className="text-amber-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Lock size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          minLength={6}
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          placeholder="كلمة مرور قوية (6 خانات على الأقل)"
+                          className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-11 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                        />
                         <button
                           type="button"
-                          className="w-full py-3 px-4 rounded-xl font-black text-sm text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-sm flex items-center justify-center gap-2 group-hover:scale-[1.01]"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                         >
-                          <span>👉 اضغط هنا للبدء في تسجيل حساب المورد (متابعة)</span>
-                          <ArrowLeft size={16} />
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Option 2: Merchant / Buyer (SECONDARY MUTED CARD) */}
-                  <div className="w-full text-right p-4 sm:p-5 rounded-2xl border border-gray-200 bg-gray-50/80 hover:bg-gray-100/80 transition-all duration-200 shadow-xs">
-                    <div
-                      className="flex items-start gap-3.5 cursor-pointer"
-                      onClick={() => handleSelectRole('merchant')}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-gray-200 text-gray-600 flex items-center justify-center shrink-0">
-                        <ShoppingCart size={20} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-sm sm:text-base text-gray-700">
-                            🛒 لست مورداً (أنا تاجر / صاحب محل وأريد شراء سلعة)
-                          </span>
-                        </div>
-                        <p className="text-gray-500 text-xs leading-relaxed">
-                          أبحث عن موردين لشراء بضاعة بالكرتونة أو استيراد طلبيتي الخاصة من الصين.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Conditional Disqualification Message & Merchant Redirect */}
-                    {userType === 'merchant' && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 animate-fadeIn">
-                        <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs leading-relaxed mb-3">
-                          <p className="font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
-                            <Sparkles size={15} className="text-amber-600" />
-                            تنويه خاص بالتجار وأصحاب المحلات:
-                          </p>
-                          هذه البوابة مخصصة للموردين وأصحاب المخازن فقط. بصفتك تاجراً يبحث عن سلع، يمكنك التسجيل في فضاء التجار وتقديم طلب الشراء الخاص بك ليتنافس الموردون على توفيره لك بأفضل سعر!
-                        </div>
-
-                        <Link
-                          to="/register?role=merchant"
-                          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm active:scale-98"
-                        >
-                          <ShoppingCart size={16} />
-                          <span>الانتقال إلى فضاء التجار والشراء بالجملة ↗</span>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-        {/* ── STEP 2: SUPPLIER QUALIFICATION ── */}
-        {step === 2 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <div>
-                <span className="text-xs text-amber-600 font-extrabold">الخطوة 2 من 3</span>
-                <h2 className="text-lg sm:text-2xl font-black text-gray-900">تأهيل نشاط المورد ومخزون السلع</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
-              >
-                <ArrowRight size={14} />
-                <span>رجوع للخطوة 1</span>
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {/* Question 1: Inventory Status */}
-              <div>
-                <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
-                  1. ما هي حالة البضاعة لديك حالياً؟ <span className="text-amber-500">*</span>
-                </label>
-                <p className="text-gray-500 text-xs mb-3">اختر الخيار الأنسب لنشاطك التجاري الحالي:</p>
-
-                <div className="space-y-2.5">
-                  {INVENTORY_OPTIONS.map((opt) => {
-                    const IconComponent = opt.icon;
-                    const isSelected = stockStatus === opt.id;
-                    return (
-                      <div
-                        key={opt.id}
-                        onClick={() => setStockStatus(opt.id)}
-                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${isSelected
-                            ? 'border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-400/20'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
-                          }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-gray-100 text-gray-500'}`}>
-                            <IconComponent size={20} />
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-bold text-gray-900 block">
-                              {opt.label}
-                            </span>
-                            <span className="text-[11px] text-amber-700 font-semibold">
-                              {opt.badge}
-                            </span>
-                          </div>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-amber-500 bg-amber-500' : 'border-gray-300'}`}>
-                          {isSelected && <Check size={12} className="text-white stroke-[3]" />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Question 2: Product Category */}
-              <div>
-                <label className="block text-sm sm:text-base font-extrabold text-gray-900 mb-2">
-                  2. ما هو المجال الرئيسي لسلعتك؟ <span className="text-amber-500">*</span>
-                </label>
-                <p className="text-gray-500 text-xs mb-3">حدد التخصص التجاري لتلقي طلبات الشراء ذات الصلة فوراً:</p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {CATEGORY_OPTIONS.map((cat) => {
-                    const isSelected = selectedCategory === cat;
-                    return (
+                    {/* Submit CTA */}
+                    <div className="pt-2">
                       <button
-                        type="button"
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`p-3.5 rounded-xl border-2 text-right transition-all flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer ${isSelected
-                            ? 'border-amber-500 bg-amber-500 text-slate-950 shadow-sm font-black'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-98"
                       >
-                        <span>{cat}</span>
-                        {isSelected && <Check size={16} className="text-slate-950 shrink-0" />}
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                            <span>جاري تسجيل وتوثيق الحساب...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span>تأكيد وتسجيل حساب مورد معتمد 🚀</span>
+                            <ArrowLeft size={18} />
+                          </>
+                        )}
                       </button>
-                    );
-                  })}
-                </div>
-
-                {selectedCategory === 'مجال آخر (جملة)' && (
-                  <div className="mt-3">
-                    <input
-                      type="text"
-                      value={customCategory}
-                      onChange={(e) => setCustomCategory(e.target.value)}
-                      placeholder="يرجى كتابة نوع البضاعة بالجملة (مثال: ألعاب أطفال، مواد تغليف...)"
-                      className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 shadow-xs"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Proceed Button */}
-              <button
-                type="button"
-                onClick={handleProceedToStep3}
-                className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-              >
-                <span>متابعة إنشاء الحساب الموثق (الخطوة الأخيرة) ←</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 3: REGISTRATION FORM ── */}
-        {step === 3 && (
-          <div className="space-y-5">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <div>
-                <span className="text-xs text-amber-600 font-extrabold">الخطوة 3 من 3 (النهائية)</span>
-                <h2 className="text-lg sm:text-2xl font-black text-gray-900">بيانات حساب المورد المعتمد</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="text-xs font-bold text-gray-700 hover:text-gray-950 flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 transition shadow-xs cursor-pointer"
-              >
-                <ArrowRight size={14} />
-                <span>تعديل السلعة/المخزون</span>
-              </button>
-            </div>
-
-            {/* Summary Chip of Qualification */}
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-800 font-bold">
-                <BadgeCheck size={16} className="text-amber-600" />
-                <span>الصفة: مورد ومستورد مؤهل</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-700 font-semibold">
-                <span>السلعة: <b className="text-gray-900">{selectedCategory === 'مجال آخر (جملة)' ? customCategory : selectedCategory}</b></span>
-              </div>
-            </div>
-
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              {/* Name & Company */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                    الاسم واللقب الكامل <span className="text-amber-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <User size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="مثال: أمين بلقاسم"
-                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                    اسم الشركة / المحل / المخزن <span className="text-amber-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      required
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      placeholder="مثال: مؤسسة النور للاستيراد بالجملة"
-                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Phone & Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                    رقم الهاتف (الجزائر) <span className="text-amber-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="tel"
-                      dir="ltr"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="05 / 06 / 07 XX XX XX XX"
-                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-mono shadow-xs"
-                    />
-                  </div>
-                  <span className="text-[11px] text-gray-500 mt-1 block">
-                    يُفضل ربط الرقم بالواتساب للتواصل السريع والتوثيق
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                    البريد الإلكتروني <span className="text-amber-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      dir="ltr"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="supplier@example.com"
-                      className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 text-right placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Warehouse Address & Location */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                  الولاية + البلدية / المنطقة التجارية للمخزن <span className="text-amber-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="مثال: العلمة - سطيف، أو الحميز - الدار البيضاء، أو وهران..."
-                    className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-3 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
-                  كلمة المرور للحساب <span className="text-amber-500">*</span>
-                </label>
-                <div className="relative">
-                  <Lock size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="كلمة مرور قوية (6 خانات على الأقل)"
-                    className="w-full bg-white border border-gray-300 rounded-xl pr-10 pl-11 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit CTA */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 px-6 rounded-2xl font-black text-base text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:brightness-105 transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-98"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>جاري تسجيل وتوثيق الحساب...</span>
                     </div>
-                  ) : (
-                    <>
-                      <span>تأكيد وتسجيل حساب مورد معتمد 🚀</span>
-                      <ArrowLeft size={18} />
-                    </>
-                  )}
-                </button>
-              </div>
 
-              <p className="text-center text-xs text-gray-500 pt-2">
-                بتسجيلك، أنت توافق على شروط وسياسات منصة جيبها للموردين لحماية المعاملات التجارية.
-              </p>
-            </form>
-          </div>
-        )}
+                    <p className="text-center text-xs text-gray-500 pt-2">
+                      بتسجيلك، أنت توافق على شروط وسياسات منصة جيبها للموردين لحماية المعاملات التجارية.
+                    </p>
+                  </form>
+                </div>
+              )}
 
             </div>
           </div>

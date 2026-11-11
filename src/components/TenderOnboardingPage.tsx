@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Plane,
@@ -16,7 +16,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuthStore, User } from '../store/useAuthStore';
 import { sendNotification } from '../store/useNotificationStore';
-import { trackTenderStep1, trackRegistrationStep2 } from '../utils/metaPixel';
+import { trackQualifiedMerchantTender } from '../utils/metaPixel';
 import toast from 'react-hot-toast';
 
 // 69 Algerian Wilayas (التقسيم الإداري الرسمي للجزائر 69 ولاية)
@@ -38,12 +38,12 @@ const ALGERIAN_WILAYAS = [
   '69 - الأبيض سيدي الشيخ'
 ];
 
-const QUANTITY_PRESETS = [
-  '50 - 200 قطعة',
-  '200 - 500 قطعة',
-  '500 - 2000 قطعة',
-  '+2000 قطعة'
-];
+export const BUDGET_OPTIONS = [
+  { id: 'under_15m', label: 'أقل من 15 مليون سنتيم (تجريبي)', badge: 'تجريبي' },
+  { id: '15m_50m', label: 'من 15 إلى 50 مليون سنتيم', badge: 'الأكثر طلباً' },
+  { id: '50m_150m', label: 'من 50 إلى 150 مليون سنتيم', badge: 'أولوية قصوى' },
+  { id: 'over_150m', label: 'أكثر من 150 مليون سنتيم', badge: 'VIP كبار التجار' },
+] as const;
 
 const DRAFT_STORAGE_KEY = 'jiibha_draft_tender';
 
@@ -57,17 +57,17 @@ export default function TenderOnboardingPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [customQtyMode, setCustomQtyMode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Step 1 Form Data
-  const [productTitleOrLink, setProductTitleOrLink] = useState('');
-  const [quantityTier, setQuantityTier] = useState('50 - 200 قطعة');
-  const [customQuantity, setCustomQuantity] = useState('');
-  const shippingPreference = 'air';
-  const [productNotes, setProductNotes] = useState('');
+  // Step 1 Form Data (Strict Quality & Wholesale Validation)
+  const [productName, setProductName] = useState('');
+  const [productLink, setProductLink] = useState('');
   const [productImageUrl, setProductImageUrl] = useState('');
   const [imagePreview, setImagePreview] = useState('');
+  const [exactQuantity, setExactQuantity] = useState('100');
+  const [estimatedBudgetDZD, setEstimatedBudgetDZD] = useState<string>('15m_50m');
+  const shippingPreference = 'air';
+  const [productNotes, setProductNotes] = useState('');
 
   // Step 2 Form Data
   const [fullName, setFullName] = useState(user?.name || '');
@@ -86,21 +86,17 @@ export default function TenderOnboardingPage() {
     }
   }, [user]);
 
-  // Ref guard to prevent duplicate firing of Step 1 Meta Pixel event
-  const hasFiredStep1Pixel = useRef(false);
-
   // Restore draft from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.productTitleOrLink) setProductTitleOrLink(parsed.productTitleOrLink);
-        if (parsed.quantityTier) setQuantityTier(parsed.quantityTier);
-        if (parsed.customQuantity) {
-          setCustomQuantity(parsed.customQuantity);
-          setCustomQtyMode(true);
-        }
+        if (parsed.productName) setProductName(parsed.productName);
+        else if (parsed.productTitleOrLink) setProductName(parsed.productTitleOrLink);
+        if (parsed.productLink) setProductLink(parsed.productLink);
+        if (parsed.exactQuantity) setExactQuantity(String(parsed.exactQuantity));
+        if (parsed.estimatedBudgetDZD) setEstimatedBudgetDZD(parsed.estimatedBudgetDZD);
         if (parsed.productNotes) setProductNotes(parsed.productNotes);
         if (parsed.productImageUrl) {
           setProductImageUrl(parsed.productImageUrl);
@@ -120,12 +116,13 @@ export default function TenderOnboardingPage() {
   const saveDraftLocally = () => {
     try {
       const draft = {
-        productTitleOrLink,
-        quantityTier: customQtyMode ? `${customQuantity} قطعة` : quantityTier,
-        customQuantity: customQtyMode ? customQuantity : '',
+        productName,
+        productLink,
+        productImageUrl,
+        exactQuantity,
+        estimatedBudgetDZD,
         shippingPreference,
         productNotes,
-        productImageUrl,
         fullName,
         email,
         phone,
@@ -170,48 +167,70 @@ export default function TenderOnboardingPage() {
       const data = await res.json();
       setProductImageUrl(data.secure_url);
       setImagePreview(data.secure_url);
+      if (errorMsg) setErrorMsg('');
       toast.success('تم رفع صورة المنتج بنجاح');
     } catch (uploadErr) {
       console.error('Image upload failed:', uploadErr);
-      toast.error('تعذر رفع الصورة، يمكنك المتابعة بدونها وسيتواصل معك المورد.');
+      toast.error('تعذر رفع الصورة، يمكنك لصق رابط المنتج في الخانة المخصصة.');
     } finally {
       setIsUploadingImage(false);
     }
   };
 
-  // Validate and Proceed to Step 2
+  // Validate and Proceed to Step 2 (Strict Quality & Minimum 100 Units Check)
   const handleProceedToStep2 = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!productTitleOrLink.trim()) {
-      setErrorMsg('يرجى كتابة اسم المنتج المطلوب أو لصق رابطه من علي إكسبرس أو علي بابا.');
-      toast.error('يرجى إدخال اسم أو رابط المنتج.');
+    // 1. Strict Product Name Check (>= 10 characters describing product & model)
+    const cleanProductName = productName.trim();
+    if (!cleanProductName || cleanProductName.length < 10) {
+      const msg = 'يرجى كتابة اسم وموديل المنتج بدقة (10 أحرف على الأقل).';
+      setErrorMsg(msg);
+      toast.error(msg);
       return;
     }
 
-    if (customQtyMode) {
-      const parsed = parseInt(customQuantity, 10);
-      if (isNaN(parsed) || parsed < 10) {
-        setErrorMsg('الحد الأدنى للكمية المخصصة في مناقصات الجملة هو 10 قطع.');
-        return;
-      }
+    // 2. Strict Product Reference Check (Must provide valid Link OR real Image)
+    const hasLink = Boolean(productLink.trim());
+    const hasImage = Boolean(productImageUrl.trim());
+    if (!hasLink && !hasImage) {
+      const msg = 'يرجى تقديم رابط للمنتج (AliExpress, Alibaba...) أو رفع صورة واضحة له لمطابقة المواصفات بدقة.';
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
     }
 
-    const effectiveQtyTier = customQtyMode ? `${customQuantity.trim()} قطعة` : quantityTier;
+    if (hasLink && !productLink.trim().startsWith('http://') && !productLink.trim().startsWith('https://')) {
+      const msg = 'يرجى إدخال رابط منتج صالح يبدأ بـ https:// أو http://';
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
+    }
 
-    // Persist draft
+    // 3. Exact Numeric Quantity Check (Integer >= 100)
+    const qtyNum = Number(exactQuantity);
+    if (!exactQuantity || !Number.isInteger(qtyNum) || qtyNum < 100) {
+      const msg = 'الحد الأدنى لطلبات الاستيراد بالجملة هو 100 قطعة فما فوق.';
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
+    }
+
+    // 4. Wholesale Budget Check
+    if (!estimatedBudgetDZD) {
+      const msg = 'يرجى اختيار الميزانية التقريبية المخصصة للطلبية.';
+      setErrorMsg(msg);
+      toast.error(msg);
+      return;
+    }
+
+    // Persist draft to localStorage
     saveDraftLocally();
 
-    // Fire Meta Pixel Step 1 Event (Guarded against duplicate calls)
-    if (!hasFiredStep1Pixel.current && !isAdmin) {
-      trackTenderStep1({
-        shippingPreference: 'شحن جوي سريع',
-        productTitleOrLink: productTitleOrLink.trim(),
-        quantityTier: effectiveQtyTier,
-      });
-      hasFiredStep1Pixel.current = true;
-    }
+    // CRITICAL: We DO NOT fire any Meta Pixel conversion event on Step 1 click!
+    // Firing conversion events on Step 1 optimizes ads for curious clickers who drop off before registering.
+    // Pixel will ONLY fire in Step 2 upon verified registration + qualified tender.
 
     setStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -258,19 +277,10 @@ export default function TenderOnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      const effectiveQtyTier = customQtyMode ? `${customQuantity.trim()} قطعة` : quantityTier;
-      let effectiveQty = 100;
-      if (customQtyMode) {
-        effectiveQty = parseInt(customQuantity, 10) || 100;
-      } else if (quantityTier.includes('50 - 200')) {
-        effectiveQty = 100;
-      } else if (quantityTier.includes('200 - 500')) {
-        effectiveQty = 300;
-      } else if (quantityTier.includes('500 - 2000')) {
-        effectiveQty = 1000;
-      } else if (quantityTier.includes('+2000')) {
-        effectiveQty = 2500;
-      }
+      const qtyNum = Number(exactQuantity) || 100;
+      const budgetObj = BUDGET_OPTIONS.find(b => b.id === estimatedBudgetDZD);
+      const budgetLabel = budgetObj?.label || 'من 15 إلى 50 مليون سنتيم';
+      const isMicro = estimatedBudgetDZD === 'under_15m';
 
       let activeUserId = user?.id;
 
@@ -372,51 +382,65 @@ export default function TenderOnboardingPage() {
       }
 
       // 2. Prepare & Insert Custom Request (Tender) payload into Supabase
-      const isProductLink = productTitleOrLink.trim().startsWith('http://') || productTitleOrLink.trim().startsWith('https://');
-      const tenderTitle = isProductLink ? 'طلب استيراد بضاعة من رابط مباشر' : productTitleOrLink.trim();
-      const shippingLabel = 'شحن جوي سريع';
-
-      const tenderPayload = {
+      const shippingLabel = 'شحن جوي سريع (DDP)';
+      const tenderPayload: any = {
         merchant_id: activeUserId,
-        title: tenderTitle,
-        description: `طريقة الشحن المفضلة: ${shippingLabel}. الكمية المطلوبة: ${effectiveQtyTier}.${productNotes ? ' تفاصيل إضافية: ' + productNotes.trim() : ''}`,
-        quantity: effectiveQty,
-        product_link: isProductLink ? productTitleOrLink.trim() : null,
+        title: productName.trim(),
+        description: `طريقة الشحن: ${shippingLabel}. الكمية المطلوبة: ${qtyNum} قطعة. الميزانية التقديرية: ${budgetLabel}. ${isMicro ? '[تصنيف الطلب: تجريبي / ميكرو]' : ''} ${productNotes ? ' تفاصيل إضافية: ' + productNotes.trim() : ''}`,
+        quantity: qtyNum,
+        product_link: productLink.trim() || null,
         image_url: productImageUrl || null,
-        notes: `الكمية: ${effectiveQtyTier} | الشحن: ${shippingLabel} | ${productNotes ? productNotes.trim() : ''}`,
+        notes: `العدد: ${qtyNum} قطعة | الميزانية: ${budgetLabel} ${isMicro ? '[طلب ميكرو / تجريبي]' : ''} | الشحن: جوي سريع DDP ${productNotes ? '| ' + productNotes.trim() : ''}`,
         approx_weight_grams: 0,
         avg_price_china: 0,
         status: 'open',
       };
 
-      const { error: tenderError } = await supabase
+      // Try inserting with tier field first
+      let { error: tenderError } = await supabase
         .from('custom_requests')
-        .insert(tenderPayload);
+        .insert({
+          ...tenderPayload,
+          tier: isMicro ? 'micro' : 'standard',
+        });
+
+      // Fallback if column 'tier' does not exist in schema
+      if (tenderError && (tenderError.message?.toLowerCase().includes('tier') || tenderError.code === 'PGRST204')) {
+        const retry = await supabase
+          .from('custom_requests')
+          .insert(tenderPayload);
+        tenderError = retry.error;
+      }
 
       if (tenderError) {
         console.error('Error inserting tender request:', tenderError);
         throw new Error('تم تفعيل حسابك ولكن تعذر إدراج المناقصة تلقائياً. يمكنك نشرها مباشرة من فضاء التاجر.');
       }
 
-      // 3. Fire Meta Pixel Step 2 Conversion Event
-      if (!isAdmin) {
-        trackRegistrationStep2({
+      // 3. Fire Meta Pixel Conversion Events ONLY for serious qualified tenders (qty >= 100 AND budget !== 'under_15m')
+      if (!isMicro && qtyNum >= 100 && !isAdmin) {
+        trackQualifiedMerchantTender({
+          productName: productName.trim(),
+          exactQuantity: qtyNum,
+          estimatedBudgetDZD: estimatedBudgetDZD,
           wilaya: wilaya,
         });
+      } else {
+        console.log('🛡️ [MetaPixel] Micro/unqualified tender or admin: Meta conversion pixel suppressed.');
       }
 
       // 4. Notify suppliers & platform admins
       sendNotification(
         'all_suppliers',
-        'مناقصة جديدة من تاجر',
-        `طرح التاجر ${fullName.trim()} مناقصة جديدة: ${tenderTitle} (${effectiveQtyTier})`,
+        'مناقصة جملة جديدة من تاجر',
+        `طرح التاجر ${fullName.trim()} مناقصة: ${productName.trim()} (${qtyNum} قطعة - ${budgetLabel})`,
         'info'
       ).catch(() => { });
 
       sendNotification(
         'all_admins',
-        'تسجيل تاجر ومناقصة جديدة',
-        `سجل التاجر ${fullName.trim()} من ${wilaya} وطرح مناقصة: ${tenderTitle}`,
+        'تسجيل تاجر ومناقصة جملة جديدة',
+        `سجل التاجر ${fullName.trim()} من ${wilaya} وطرح مناقصة: ${productName.trim()} (${qtyNum} قطعة - ${budgetLabel})`,
         'info'
       ).catch(() => { });
 
@@ -626,83 +650,174 @@ export default function TenderOnboardingPage() {
                   {/* Headlines Inside Card */}
                   <div className="space-y-1 pt-1">
                     <h1 className="text-xl sm:text-2xl font-black text-[#12062E] leading-snug">
-                      اطلب تسعير منتجك الرابح من الموردين الموثوقين
+                      اطلب تسعير منتجك بالجملة من الموردين الموثوقين
                     </h1>
                     <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-                      أدخل تفاصيل السلعة والكمية لتصلك عروض أسعار الجملة من الصين إلى مخزنك
+                      أدخل اسم وموديل السلعة بدقة، الرابط أو الصورة، والعدد الدقيق لتصلك عروض الأسعار DDP إلى مخزنك
                     </p>
                   </div>
 
-                  {/* Field 1: productTitleOrLink */}
+                  {/* Field 1: productName (Min 10 characters) */}
                   <div className="space-y-1.5">
                     <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
-                      اسم المنتج أو رابطه (AliExpress / Alibaba / 1688) <span className="text-red-500">*</span>
+                      اسم وموديل المنتج بدقة <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
-                      value={productTitleOrLink}
+                      value={productName}
                       onChange={(e) => {
-                        setProductTitleOrLink(e.target.value);
+                        setProductName(e.target.value);
                         if (errorMsg) setErrorMsg('');
                       }}
-                      placeholder="مثال: خلاط محمول لاسلكي أو الصق رابط المنتج هنا..."
+                      placeholder="مثال: خلاط محمول لاسلكي 6 شفرات USB أو سماعات بلوتوث M10 Pro"
                       className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-sm text-gray-800 placeholder-gray-400"
                     />
+                    <p className="text-[11px] text-gray-400">
+                      يرجى كتابة اسم وموديل المنتج بدقة (10 أحرف على الأقل، تجنب الكلمات العامة مثل "ملابس" أو "هاتف")
+                    </p>
                   </div>
 
-                  {/* Field 2: quantityTier (Interactive Pill Selector) */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  {/* Field 2: productReference (Required Link OR Image) */}
+                  <div className="p-4 rounded-2xl border-2 border-[#7C3AED]/20 bg-purple-50/30 space-y-3 text-right">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
-                        الكمية التقديرية المطلوبة بالجملة <span className="text-red-500">*</span>
+                        مرجع المنتج (رابط أو صورة واضحة) <span className="text-red-500">*</span>
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setCustomQtyMode(!customQtyMode)}
-                        className="text-xs font-bold text-[#7C3AED] hover:underline"
-                      >
-                        {customQtyMode ? 'العودة للخيارات السريعة' : 'أدخل رقماً مخصصاً'}
-                      </button>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-[#5818B8] border border-purple-300">
+                        مطلوب رابط أو صورة لمطابقة المواصفات
+                      </span>
                     </div>
 
-                    {!customQtyMode ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        {QUANTITY_PRESETS.map((tier) => {
-                          const isSelected = quantityTier === tier;
-                          return (
-                            <button
-                              key={tier}
-                              type="button"
-                              onClick={() => setQuantityTier(tier)}
-                              className={`py-3 px-2 rounded-xl text-xs sm:text-sm font-bold border-2 transition-all cursor-pointer text-center ${isSelected
-                                ? 'bg-[#5818B8]/10 border-[#5818B8] text-[#5818B8] shadow-xs'
-                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
-                                }`}
-                            >
-                              {tier}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min={10}
-                          value={customQuantity}
-                          onChange={(e) => setCustomQuantity(e.target.value)}
-                          placeholder="مثال: 350 قطعة"
-                          className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-sm text-gray-800"
-                        />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
-                          قطعة
-                        </span>
-                      </div>
-                    )}
+                    {/* Sub-field A: productLink */}
+                    <div className="space-y-1">
+                      <input
+                        type="url"
+                        value={productLink}
+                        onChange={(e) => {
+                          setProductLink(e.target.value);
+                          if (errorMsg) setErrorMsg('');
+                        }}
+                        placeholder="https://... رابط المنتج من AliExpress أو Alibaba أو 1688 أو متجر منافس"
+                        className="w-full h-11 px-4 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-xs sm:text-sm text-gray-800 placeholder-gray-400 dir-ltr text-left font-mono"
+                        dir="ltr"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="h-px bg-gray-200 flex-1"></div>
+                      <span className="text-[11px] font-bold text-gray-400">أو ارفع صورة للمنتج</span>
+                      <div className="h-px bg-gray-200 flex-1"></div>
+                    </div>
+
+                    {/* Sub-field B: Image Upload Zone */}
+                    <label className="flex flex-col items-center justify-center p-3 sm:p-4 border-2 border-dashed border-gray-300 hover:border-[#7C3AED] rounded-xl bg-white hover:bg-purple-50/50 cursor-pointer transition group">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                      {imagePreview ? (
+                        <div className="flex items-center gap-3 w-full">
+                          <img
+                            src={imagePreview}
+                            alt="معاينة المنتج"
+                            className="w-12 h-12 object-cover rounded-lg border border-purple-200 shrink-0"
+                          />
+                          <div className="text-right flex-1 min-w-0">
+                            <p className="text-xs font-bold text-[#5818B8] truncate">تم حفظ صورة المنتج بنجاح ✓</p>
+                            <p className="text-[11px] text-gray-500">انقر لتغيير الصورة إذا رغبت</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-center text-gray-500 group-hover:text-[#5818B8]">
+                          <UploadCloud size={20} className={isUploadingImage ? 'animate-bounce text-[#7C3AED]' : ''} />
+                          <span className="text-xs font-medium">
+                            {isUploadingImage ? 'جاري رفع ومعالجة الصورة...' : 'اضغط لاختيار صورة من جهازك (JPG/PNG أقل من 5MB)'}
+                          </span>
+                        </div>
+                      )}
+                    </label>
                   </div>
 
-                  {/* Field 3: Shipping Method (Fast Air Freight Dedicated) */}
+                  {/* Field 3: exactQuantity (Numeric Input >= 100) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
+                        العدد المطلوب بالتحديد (100 قطعة فما فوق) <span className="text-red-500">*</span>
+                      </label>
+                      <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        استيراد جملة DDP
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={100}
+                        step={1}
+                        required
+                        value={exactQuantity}
+                        onChange={(e) => {
+                          setExactQuantity(e.target.value);
+                          if (errorMsg) setErrorMsg('');
+                        }}
+                        placeholder="أدخل العدد الدقيق للقطع (مثلاً: 100 أو 250)"
+                        className="w-full h-12 px-4 pr-4 pl-16 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-sm text-gray-800 font-mono font-bold"
+                      />
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-black text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg pointer-events-none">
+                        قطعة
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      الحد الأدنى لطلبات الاستيراد بالجملة والتخليص الجمركي هو 100 قطعة فما فوق
+                    </p>
+                  </div>
+
+                  {/* Field 4: estimatedBudgetDZD (Wholesale Budget Qualification Selector) */}
+                  <div className="space-y-2">
+                    <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
+                      الميزانية التقريبية المخصصة لهذه الطلبية (بالدينار الجزائري) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {BUDGET_OPTIONS.map((opt) => {
+                        const isSelected = estimatedBudgetDZD === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              setEstimatedBudgetDZD(opt.id);
+                              if (errorMsg) setErrorMsg('');
+                            }}
+                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-right flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? 'bg-[#5818B8]/10 border-[#5818B8] text-[#5818B8] shadow-sm'
+                                : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            <span className="text-xs sm:text-sm font-bold">{opt.label}</span>
+                            <span
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                                isSelected
+                                  ? 'bg-[#5818B8] text-white border-[#5818B8]'
+                                  : 'bg-gray-200 text-gray-600 border-gray-300'
+                              }`}
+                            >
+                              {opt.badge}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      المناقصات المخصصة للميزانيات من 15 مليون سنتيم فما فوق تحظى بأولوية قصوى وعروض أسعار فورية من كبار الموردين
+                    </p>
+                  </div>
+
+                  {/* Field 5: Shipping Method (Fast Air Freight Dedicated) */}
                   <div className="space-y-1.5">
                     <label className="block text-xs sm:text-sm font-bold text-[#12062E]">
                       طريقة الشحن المعتمدة
@@ -727,56 +842,18 @@ export default function TenderOnboardingPage() {
                     </div>
                   </div>
 
-                  {/* Field 4: Optional Image Upload & Specs */}
-                  <div className="space-y-3 pt-1">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-gray-600">
-                        مواصفات إضافية أو ملاحظات (اختياري)
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={productNotes}
-                        onChange={(e) => setProductNotes(e.target.value)}
-                        placeholder="مثال: أريد اللون الأسود فقط، التغليف بكرتون مخصص، أو عينة مسبقة..."
-                        className="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-xs sm:text-sm text-gray-800 placeholder-gray-400 resize-none"
-                      />
-                    </div>
-
-                    {/* Image Upload Zone */}
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-                        ارفع صورة للمنتج (اختياري)
-                      </label>
-                      <label className="flex flex-col items-center justify-center p-3 sm:p-4 border-2 border-dashed border-gray-300 hover:border-[#7C3AED] rounded-xl bg-gray-50/70 hover:bg-gray-50 cursor-pointer transition group">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageFileChange}
-                          disabled={isUploadingImage}
-                          className="hidden"
-                        />
-                        {imagePreview ? (
-                          <div className="flex items-center gap-3 w-full">
-                            <img
-                              src={imagePreview}
-                              alt="معاينة المنتج"
-                              className="w-12 h-12 object-cover rounded-lg border border-gray-200 shrink-0"
-                            />
-                            <div className="text-right flex-1 min-w-0">
-                              <p className="text-xs font-bold text-[#5818B8] truncate">تم تحميل الصورة بنجاح</p>
-                              <p className="text-[11px] text-gray-500">انقر لتغيير الصورة</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-center text-gray-500 group-hover:text-[#5818B8]">
-                            <UploadCloud size={20} className={isUploadingImage ? 'animate-bounce text-[#7C3AED]' : ''} />
-                            <span className="text-xs font-medium">
-                              {isUploadingImage ? 'جاري رفع ومعالجة الصورة...' : 'اضغط لاختيار صورة من جهازك'}
-                            </span>
-                          </div>
-                        )}
-                      </label>
-                    </div>
+                  {/* Field 6: Optional Specs & Notes */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-gray-600">
+                      مواصفات إضافية أو ملاحظات خاصة (اختياري)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={productNotes}
+                      onChange={(e) => setProductNotes(e.target.value)}
+                      placeholder="مثال: تفضيل اللون الأسود، نوع التغليف، أو طلب عينات قبل الشحن..."
+                      className="w-full p-3 rounded-xl border-2 border-gray-200 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/15 outline-none transition text-xs sm:text-sm text-gray-800 placeholder-gray-400 resize-none"
+                    />
                   </div>
 
                   {/* Step 1 Submit Button */}
@@ -785,11 +862,11 @@ export default function TenderOnboardingPage() {
                       type="submit"
                       className="w-full bg-[#5818B8] hover:bg-[#7C3AED] active:scale-[0.99] text-white font-extrabold text-base sm:text-lg py-4 rounded-xl shadow-lg shadow-[#5818B8]/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>متابعة لاستلام عروض أسعار الموردين</span>
+                      <span>متابعة وتأكيد بيانات الاستلام (خطوة واحدة أخيرة)</span>
                       <ArrowLeft size={20} />
                     </button>
                     <p className="text-center text-[11px] text-gray-400 mt-2 font-medium">
-                      خطوة سريعة واحدة متبقية لنشر طلبك مجاناً
+                      خطوة سريعة واحدة متبقية لنشر طلبك مجاناً وبدء استلام عروض الموردين
                     </p>
                   </div>
                 </form>
@@ -802,24 +879,24 @@ export default function TenderOnboardingPage() {
                 <form onSubmit={handleFinalSubmit} className="space-y-6">
 
                   {/* Dynamic Tender Summary Banner at Top */}
-                  <div className="bg-[#D1FAE5]/60 border border-[#10B981] rounded-2xl p-3.5 flex items-center justify-between gap-3 text-right">
+                  <div className="bg-[#D1FAE5]/70 border border-[#10B981] rounded-2xl p-3.5 flex items-center justify-between gap-3 text-right">
                     <div className="flex items-start gap-2.5 min-w-0">
                       <div className="p-1.5 rounded-full bg-emerald-500 text-white shrink-0 mt-0.5">
                         <CheckCircle2 size={16} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-emerald-950 truncate">
-                          طلب مناقصتك جاهز للنشر: <span className="font-extrabold text-emerald-700">{productTitleOrLink}</span>
+                        <p className="text-xs sm:text-sm font-bold text-emerald-950 truncate">
+                          طلب مناقصتك جاهز للنشر: <span className="font-extrabold text-emerald-700">{productName}</span>
                         </p>
-                        <p className="text-[11px] text-emerald-800">
-                          الكمية: {customQtyMode ? `${customQuantity} قطعة` : quantityTier} • الشحن: جوي سريع ✈️
+                        <p className="text-[11px] sm:text-xs text-emerald-800 mt-0.5">
+                          العدد الدقيق: <span className="font-black font-mono">{exactQuantity} قطعة</span> • الشحن: جوي سريع ✈️ • الميزانية: <span className="font-bold">{BUDGET_OPTIONS.find(b => b.id === estimatedBudgetDZD)?.label || ''}</span>
                         </p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 rounded-lg shrink-0 transition"
+                      className="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-300 rounded-lg shrink-0 transition cursor-pointer"
                     >
                       تعديل
                     </button>
@@ -1024,11 +1101,15 @@ export default function TenderOnboardingPage() {
                   <div className="bg-gray-50 rounded-2xl p-4 sm:p-5 border border-gray-200 text-right space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between items-center py-1 border-b border-gray-200">
                       <span className="text-gray-500">المنتج المطلوب:</span>
-                      <span className="font-bold text-gray-900 truncate max-w-[220px]">{productTitleOrLink}</span>
+                      <span className="font-bold text-gray-900 truncate max-w-[220px]">{productName}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-gray-200">
-                      <span className="text-gray-500">الكمية المقدرة:</span>
-                      <span className="font-bold text-gray-900">{customQtyMode ? `${customQuantity} قطعة` : quantityTier}</span>
+                      <span className="text-gray-500">العدد المطلوب:</span>
+                      <span className="font-bold font-mono text-gray-900">{exactQuantity} قطعة</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-200">
+                      <span className="text-gray-500">الميزانية التقريبية:</span>
+                      <span className="font-bold text-gray-900">{BUDGET_OPTIONS.find(b => b.id === estimatedBudgetDZD)?.label || ''}</span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-gray-200">
                       <span className="text-gray-500">طريقة الشحن:</span>

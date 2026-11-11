@@ -63,12 +63,24 @@ function App() {
   const { fetchNotifications, subscribeToNotifications } = useNotificationStore();
   const { fetchSettings } = useSettingsStore();
   const { theme } = useThemeStore();
-  // Show splash on native mobile application OR mobile web browser viewport
+  // Show splash ONLY on native mobile application (Capacitor).
+  // COMPLETELY DISABLED for web, mobile in-app browsers, and all ad landing funnels for 0ms instant render.
   const [showSplash, setShowSplash] = useState(() => {
-    if (Capacitor.isNativePlatform()) return true;
-    const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 768;
-    const hasSeen = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jiibha_splash_seen');
-    return Boolean(isMobileViewport && !hasSeen);
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      if (
+        path.startsWith('/ads') || 
+        path.includes('tender') || 
+        path.includes('join') ||
+        search.includes('utm_') ||
+        search.includes('fbclid')
+      ) {
+        return false;
+      }
+    }
+    // Only show on native Capacitor Android/iOS builds, never in web/in-app browsers
+    return Capacitor.isNativePlatform();
   });
 
   // Global notification listener: Ensure every notification entering the bell alerts the user immediately across any page

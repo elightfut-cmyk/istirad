@@ -3,6 +3,9 @@ import OneSignal, { LogLevel } from '@onesignal/capacitor-plugin';
 import { supabase } from './supabase';
 
 export const ONESIGNAL_APP_ID = 'daeaef49-9125-4ef2-8950-6c0428063f09';
+
+// 🔒 تنبيه أمني ومعماري صارم: مفتاح OneSignal REST API يُدار حصرياً عبر Supabase Environment Variables
+// يُمنع كتابة أي مفتاح سري هنا إطلاقاً، لأن رفعه إلى GitHub سيتسبب في كشفه ومحوه فوراً من GitHub Secret Scanning وتوقف الإشعارات.
 export const getOneSignalRestApiKey = (): string => {
   return '';
 };

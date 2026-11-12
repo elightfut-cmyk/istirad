@@ -65,6 +65,8 @@ export const sendPushNotification = async (payload: PushNotificationPayload): Pr
   return res.success;
 };
 
+// 🔒 تنبيه أمني ومعماري صارم: مفتاح OneSignal REST API محفوظ حصرياً في Supabase Environment Variables
+// يُمنع كتابة أي مفتاح سري هنا، وإلا سيكتشفه GitHub ويمحوه فوراً مما يؤدي لانهيار نظام الإشعارات.
 export const getOneSignalRestApiKey = async (): Promise<string> => {
   return '';
 };

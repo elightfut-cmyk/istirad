@@ -792,19 +792,17 @@ export default function TenderOnboardingPage() {
                               setEstimatedBudgetDZD(opt.id);
                               if (errorMsg) setErrorMsg('');
                             }}
-                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-right flex items-center justify-between gap-2 ${
-                              isSelected
+                            className={`p-3 rounded-xl border-2 transition-all cursor-pointer text-right flex items-center justify-between gap-2 ${isSelected
                                 ? 'bg-[#5818B8]/10 border-[#5818B8] text-[#5818B8] shadow-sm'
                                 : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-100'
-                            }`}
+                              }`}
                           >
                             <span className="text-xs sm:text-sm font-bold">{opt.label}</span>
                             <span
-                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                                isSelected
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${isSelected
                                   ? 'bg-[#5818B8] text-white border-[#5818B8]'
                                   : 'bg-gray-200 text-gray-600 border-gray-300'
-                              }`}
+                                }`}
                             >
                               {opt.badge}
                             </span>

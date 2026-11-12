@@ -1,13 +1,29 @@
 # التوثيق الهندسي الشامل والنهائي لنظام الإشعارات (Push Notifications Architecture)
 
 > **المرجع التقني النهائي لنظام الإشعارات الفورية والمحلية في منصة جيبها (Jiibha)**  
-> **الإصدار:** 3.0 (Zero-Click Server-Side Registration & Auto-Fallback Architecture)  
-> **تاريخ التوثيق:** 2026-10-24  
+> **الإصدار:** 3.1 (Zero-Click Server-Side Registration & Absolute Secret Isolation)  
+> **تاريخ التحديث:** 2026-11-12  
 > **حالة النظام:** معتمد ومثبت ميدانياً (Production Ready - 100% Automated)
 
 ---
 
+> [!CAUTION]
+> ### 🚨 تنبيه أمني ومعماري صارم: حظر كشف أو كتابة مفتاح OneSignal API في الكود نهائياً
+> **يُحظر منعاً باتاً وتحت أي ظرف كتابة مفتاح OneSignal REST API Key صراحة (Hardcoded) داخل أي ملف في المشروع (سواء في Frontend، Services، Helpers، أو كأمثلة نصوص صريحة في التوثيق).**
+> - **الاعتماد الحصري والمطلق على متغيرات البيئة السحابية (Supabase Secrets):**
+>   يجب أن يكون المفتاح مخزناً ومقروءاً حصرياً داخل متغيرات بيئة Supabase السحابية (Edge Function Environment Variables) عبر:
+>   `Deno.env.get('ONESIGNAL_REST_API_KEY')`
+>   ولا يُسمح لأي كود في الواجهة الأمامية بمحاولة قراءته، أو تخزينه في `localStorage`، أو إرساله في الطلبات من المتصفح.
+> - **كل موضع في الكود يعتمد على المتغير دون كتابته صريحاً:**
+>   أي عملية إرسال إشعار أو تسجيل جهاز تتم فقط عبر استدعاء الدالة السحابية:
+>   `supabase.functions.invoke('send-push', { body: { ... } })`
+> - **عقوبة المخالفة (الإلغاء الفوري وتوقف الإشعارات بالكامل):**
+>   إذا كُتب المفتاح صراحة وتم رفعه إلى GitHub، ستقوم روبوتات الفحص الأمني التلقائي في جيت هاب (**GitHub Secret Scanning**) باكتشافه فوراً وإرسال أمر إبطال آلي لمنصة OneSignal، مما يؤدي إلى محو المفتاح وتعطيل صلاحيته فوراً، وبالتالي انهيار نظام الإشعارات الفورية بالكامل (`401 Unauthorized / Access Denied`) وتوقف رنين الهواتف واستلام التنبيهات لدى جميع المستخدمين والتجار والإدارة.
+
+---
+
 ## فهرس المحتويات
+0. [المبدأ الأمني الأسمى: العزل التام للمفاتيح في Supabase Environment Variables](#0-المبدأ-الأمني-الأسمى-العزل-التام-للمفاتيح-في-supabase-environment-variables)
 1. [المعمارية العامة للنظام (System Architecture Overview)](#1-المعمارية-العامة-للنظام-system-architecture-overview)
 2. [التمييز بين إشعارات الهاتف الفورية وإشعارات الجرس الداخلية](#2-التمييز-بين-إشعارات-الهاتف-الفورية-وإشعارات-الجرس-الداخلية)
 3. [تهيئة البيئة الأصلية للأندرويد (Capacitor & Android Native Setup)](#3-تهيئة-البيئة-الأصلية-للأندرويد-capacitor--android-native-setup)
@@ -16,6 +32,35 @@
 6. [الضمان المزدوج للإرسال (Auto-Fallback Tag Targeting Architecture)](#6-الضمان-المزدوج-للإرسال-auto-fallback-tag-targeting-architecture)
 7. [تكامل قاعدة البيانات وأرشفة التنبيهات (Database & Realtime Integration)](#7-تكامل-قاعدة-البيانات-وأرشفة-التنبيهات-database--realtime-integration)
 8. [بروتوكول فحص الأخطاء والتشخيص (Troubleshooting & Testing Protocol)](#8-بروتوكول-فحص-الأخطاء-والتشخيص-troubleshooting--testing-protocol)
+
+---
+
+## 0. المبدأ الأمني الأسمى: العزل التام للمفاتيح في Supabase Environment Variables
+
+لضمان استمرارية عمل نظام الإشعارات الفورية وعدم توقفه أبداً، وضعت هذه القاعدة كأول وأهم معيار معماري للمنصة:
+
+### أ. أين يعيش المفتاح السري (`ONESIGNAL_REST_API_KEY`)؟
+- يُخزن المفتاح حصرياً في خوادم Supabase المشفرة عبر **Supabase Secrets**:
+  ```bash
+  supabase secrets set ONESIGNAL_REST_API_KEY="os_v2_app_..."
+  supabase secrets set ONESIGNAL_APP_ID="daeaef49-9125-4ef2-8950-6c0428063f09"
+  ```
+- لا يتم استدعاؤه إلا داخل الدالة السحابية (`supabase/functions/send-push/index.ts`):
+  ```typescript
+  const ONESIGNAL_REST_API_KEY = cleanSecret(Deno.env.get('ONESIGNAL_REST_API_KEY'));
+  ```
+
+### ب. خطورة كتابة المفتاح صراحة في الكود (Hardcoded Secret Exposure):
+1. منصة GitHub تملك نظام فحص تلقائي نشط (`GitHub Secret Scanning / Push Protection`).
+2. بمجرد تنفيذ أمر `git push` لملف يحتوي على مفتاح OneSignal REST API صريح، يتم إشعار OneSignal فوراً في أجزاء من الثانية.
+3. تقوم OneSignal فوراً بحذف/إلغاء المفتاح (`Revocation`) لحماية الحساب.
+4. بمجرد إلغاء المفتاح، تفشل كل محاولات إرسال الإشعارات وتظهر رسائل الخطأ:
+   `401 Unauthorized - Access denied`
+   وتتوقف الإشعارات عن الهواتف نهائياً.
+
+### ج. دور المطورين والذكاء الاصطناعي (AI & Developer Contract):
+- يمنع منعاً باتاً إعادة كتابة أي قيمة سرية لـ OneSignal داخل `src/lib/onesignal.ts` أو `src/services/pushNotificationService.ts` أو صفحات الـ Admin.
+- كل استدعاء للإشعارات من جهة العميل (Client) يجب أن يمر عبر `sendPushNotification()` الذي يخاطب `send-push` Edge Function دون معرفة المفتاح السري نهائياً.
 
 ---
 
